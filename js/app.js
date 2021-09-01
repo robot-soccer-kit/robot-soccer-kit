@@ -33,8 +33,9 @@ $(document).ready(function() {
 
     setInterval(function() {
         backend.getImage(function(image) {
-            $('.camera-image').attr('src', 'data:image/jpeg;base64,'+image);
-            console.log(image)
+            if (image) {
+                $('.camera-image').attr('src', 'data:image/jpeg;base64,'+image);
+            }
         });
-    }, 100);
+    }, 50);
 });
