@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets, QtWebChannel
 from PyQt5.QtCore import QVariant
 import video
+import robots
 
 class Backend(QtCore.QObject):
     @QtCore.pyqtSlot(result=QVariant)
@@ -21,3 +22,6 @@ class Backend(QtCore.QObject):
         video.setCameraSettings(brightness, contrast)
         return True
 
+    @QtCore.pyqtSlot(result=QVariant)
+    def listPorts(self):
+        return robots.ports

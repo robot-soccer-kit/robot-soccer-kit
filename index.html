@@ -3,35 +3,41 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="icons/font/bootstrap-icons.css" />
         <link rel="stylesheet" type="text/css" href="css/app.css" />
         <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
         <script type="text/javascript" src="jquery/jquery.js"></script>
         <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="js/video.js"></script>
+        <script type="text/javascript" src="js/robots.js"></script>
+        <script type="text/javascript" src="js/tabs.js"></script>
         <script type="text/javascript" src="js/app.js"></script>
     </head>
 
     <body>
       <ul class="nav nav-tabs mb-2">
-        <li class="nav-item">
+        <li class="nav-item" rel="vision">
           <a class="nav-link active" aria-current="page" href="#">
             Vision
+            <i class="vision-stop bi bi-stop-circle"></i>
+            <i class="vision-play bi bi-check-lg"></i>
           </a>
         </li>
 
-        <li class="nav-item">
+        <li class="nav-item" rel="robots">
           <a class="nav-link" aria-current="page" href="#">
             Robots
           </a>
         </li>
 
-        <li class="nav-item">
+        <li class="nav-item" rel="game">
           <a class="nav-link" aria-current="page" href="#">
             Game
           </a>
         </li>
       </ul>
 
-      <div class="page vision">
+      <div class="page page-vision">
         <div class="d-flex justify-content-center">
           <select class="m-1 cameras form-control"></select>
           <span class="m-1 btn btn-success start-capture">Start</span>
@@ -49,6 +55,26 @@
             Contrast
             <input type="number" class="text contrast form-control" value="10" />
           </label>
+        </div>
+      </div>
+
+      <div class="page page-robots">
+        <div class="robots">
+          <div class="robot">
+          <form>
+            <label>
+              
+            </label>
+          </form>
+          </div>
+
+        </div>
+
+        <div class="robot-add">
+          <div class="d-flex justify-content-center">
+            <select class="m-1 ports form-control"></select>
+            <span class="m-1 btn btn-success add-robot">Add</span>
+          </div>
         </div>
       </div>
 

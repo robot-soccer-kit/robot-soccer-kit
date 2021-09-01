@@ -1,3 +1,4 @@
+import robots
 from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets, QtWebChannel
 from backend import Backend
 import os, sys

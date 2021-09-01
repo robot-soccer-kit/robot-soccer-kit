@@ -1,0 +1,56 @@
+languageCode:           "en"
+title:                  "Bootstrap Icons"
+baseURL:                "https://icons.getbootstrap.com"
+enableInlineShortcodes: true
+enableRobotsTXT:        true
+metaDataFormat:         "yaml"
+disableKinds:           ["404", "taxonomy", "term", "RSS"]
+
+publishDir:             "_site"
+
+markup:
+  goldmark:
+    renderer:
+      unsafe:           true
+  highlight:
+    noClasses:          false
+
+module:
+  mounts:
+    - source:           docs/assets
+      target:           assets
+    - source:           docs/content
+      target:           content
+    - source:           docs/data
+      target:           data
+    - source:           docs/layouts
+      target:           layouts
+    - source:           docs/static
+      target:           static
+    - source:           docs/static/assets/img/favicons/apple-touch-icon.png
+      target:           static/apple-touch-icon.png
+    - source:           docs/static/assets/img/favicons/favicon.ico
+      target:           static/favicon.ico
+    - source:           bootstrap-icons.svg
+      target:           static/bootstrap-icons.svg
+    - source:           icons
+      target:           static/assets/icons
+    - source:           font
+      target:           static/font
+
+params:
+  description:          "Official open source SVG icon library for Bootstrap"
+  social_image_path:    /assets/img/bootstrap-icons-social.png
+
+  version:              "1.5.0"
+  bs_docs_version:      "5.0"
+
+  main:                 "https://getbootstrap.com"
+  github_org:           "https://github.com/twbs"
+  repo:                 "https://github.com/twbs/icons"
+  twitter:              "getbootstrap"
+  slack:                "https://bootstrap-slack.herokuapp.com"
+  blog:                 "https://blog.getbootstrap.com"
+  expo:                 "https://expo.getbootstrap.com"
+  themes:               "https://themes.getbootstrap.com"
+  opencollective:       "https://opencollective.com/bootstrap"

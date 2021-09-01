@@ -15,3 +15,15 @@ body {
 .brightness, .contrast {
     width:100px;
 }
+
+.vision-play {
+    display:none;
+}
+
+.vision-running .vision-play {
+    display:inline;
+}
+
+.vision-running .vision-stop {
+    display:none;
+}
