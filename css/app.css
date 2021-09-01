@@ -1,0 +1,17 @@
+body {
+    padding:5px;
+}
+
+.reload {
+    position:absolute;
+    right:0;
+    bottom:0;
+}
+
+.camera-area {
+    text-align: center;
+}
+
+.brightness, .contrast {
+    width:100px;
+}
