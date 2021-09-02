@@ -8,6 +8,7 @@ PACKET_MONITOR = 1
 PACKET_HOLO = 80
 PACKET_HOLO_CONTROL = 2
 PACKET_HOLO_KICK = 12
+PACKET_HOLO_BEEP = 3
 PACKET_MONITOR_DATA = 5
 
 class Packet:
@@ -116,6 +117,13 @@ class Robot:
 
             self.state = state
 
+    def beep(self, frequency, duration):
+        packet = Packet(PACKET_HOLO)
+        packet.appendByte(PACKET_HOLO_BEEP)
+        packet.appendShort(frequency)
+        packet.appendShort(duration)
+        self.send(packet)
+
     def kick(self, power = 1.):
         packet = Packet(PACKET_HOLO)
         packet.appendByte(PACKET_HOLO_KICK)
@@ -136,8 +144,10 @@ class Robot:
 
     def execute(self):
         self.bt = serial.Serial(self.port)
-        time.sleep(0.5)
+        time.sleep(0.1)
         self.bt.write(b"rhock\r\nrhock\r\nrhock\r\n")
+        time.sleep(0.1)
+        self.beep(880, 250)
         self.monitor(5)
 
         print('Reading...')
