@@ -9,4 +9,8 @@ function robots_initialize(backend)
 
         $('.ports').html(options);
     });
+
+    $('.add-robot').click(function() {
+        backend.addRobot($('.ports').val());
+    });
 }

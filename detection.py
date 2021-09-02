@@ -30,7 +30,7 @@ upper_orange = np.array([20, 255, 255])
 markers = {}
 ball = None
 
-def detectAruco(image):
+def detectAruco(image, draw_debug):
     global markers
 
     (corners, ids, rejected) = cv2.aruco.detectMarkers(image,
@@ -61,29 +61,31 @@ def detectAruco(image):
         
             # Draw the bounding box of the ArUCo detection
             item = arucoItems[markerID]
-            itemColor = arucoColors[item[0]]
-            cv2.line(image, topLeft, topRight, itemColor, 2)
-            cv2.line(image, topRight, bottomRight, itemColor, 2)
-            cv2.line(image, bottomRight, bottomLeft, itemColor, 2)
-            cv2.line(image, bottomLeft, topLeft, itemColor, 2)
 
-            # Compute and draw the center (x, y)-coordinates of the
-            # ArUco marker
-            cX = int((topLeft[0] + bottomRight[0]) / 2.0)
-            cY = int((topLeft[1] + bottomRight[1]) / 2.0)
-            cv2.circle(image, (cX, cY), 4, (0, 0, 255), -1)
-            fX = int((topLeft[0] + topRight[0]) / 2.0)
-            fY = int((topLeft[1] + topRight[1]) / 2.0)
-            cv2.line(image, (cX, cY), (fX, fY), (0, 0, 255), 2)
+            if draw_debug:
+                itemColor = arucoColors[item[0]]
+                cv2.line(image, topLeft, topRight, itemColor, 2)
+                cv2.line(image, topRight, bottomRight, itemColor, 2)
+                cv2.line(image, bottomRight, bottomLeft, itemColor, 2)
+                cv2.line(image, bottomLeft, topLeft, itemColor, 2)
 
-            cv2.putText(image, item, (cX-8, cY+4), cv2.FONT_HERSHEY_SIMPLEX, 0.5, itemColor, 2)
+                # Compute and draw the center (x, y)-coordinates of the
+                # ArUco marker
+                cX = int((topLeft[0] + bottomRight[0]) / 2.0)
+                cY = int((topLeft[1] + bottomRight[1]) / 2.0)
+                cv2.circle(image, (cX, cY), 4, (0, 0, 255), -1)
+                fX = int((topLeft[0] + topRight[0]) / 2.0)
+                fY = int((topLeft[1] + topRight[1]) / 2.0)
+                cv2.line(image, (cX, cY), (fX, fY), (0, 0, 255), 2)
+
+                cv2.putText(image, item, (cX-8, cY+4), cv2.FONT_HERSHEY_SIMPLEX, 0.5, itemColor, 2)
 
             new_markers[item] = [cX, cY]
 
     if len(new_markers):
         markers = new_markers
 
-def detectBall(image):
+def detectBall(image, draw_debug):
     global ball
 
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -101,7 +103,9 @@ def detectBall(image):
     blob_params.blobColor = 255
     detector = cv2.SimpleBlobDetector_create(blob_params)
     keypoints = detector.detect(gray)
-    cv2.drawKeypoints(image, keypoints, image, (255, 255, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+    if draw_debug:
+        cv2.drawKeypoints(image, keypoints, image, (255, 255, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
     if len(keypoints):
         position = keypoints[0].pt

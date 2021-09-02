@@ -26,11 +26,19 @@ class Backend(QtCore.QObject):
     def getVideo(self):
         return QVariant(video.getVideo())
 
-    @QtCore.pyqtSlot(int, int, result=bool)
-    def cameraSettings(self, brightness, contrast):
-        video.setCameraSettings(brightness, contrast)
+    @QtCore.pyqtSlot(bool)
+    def enableVideoDebug(self):
+        video.debug = True
+
+    @QtCore.pyqtSlot(int, int, int, result=bool)
+    def cameraSettings(self, brightness, contrast, saturation):
+        video.setCameraSettings(brightness, contrast, saturation)
         return True
 
     @QtCore.pyqtSlot(result=QVariant)
     def listPorts(self):
         return robots.ports
+    
+    @QtCore.pyqtSlot(str)
+    def addRobot(self, port):
+        robots.addRobot(port)

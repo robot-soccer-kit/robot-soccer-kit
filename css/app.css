@@ -8,7 +8,7 @@ body {
     bottom:0;
 }
 
-.brightness, .contrast {
+.brightness, .contrast, .saturation {
     width:100px;
 }
 

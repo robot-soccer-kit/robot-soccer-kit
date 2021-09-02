@@ -10,10 +10,11 @@ function video_initialize(backend)
 
     // Camera settings
     function sendSettings() {
-        backend.cameraSettings($('.brightness').val(), $('.contrast').val());
+        backend.cameraSettings($('.brightness').val(), $('.contrast').val(), $('.saturation').val());
     }
     $('.brightness').change(sendSettings);
     $('.contrast').change(sendSettings);
+    $('.saturation').change(sendSettings);
 
     // Starting the video capture
     $('.start-capture').click(function() {
@@ -27,23 +28,28 @@ function video_initialize(backend)
 
     // Retrieving the images
     setInterval(function() {
-        backend.getVideo(function(video) {
-            if (video.image) {
-                $('body').addClass('vision-running');
-                $('.camera-image').attr('src', 'data:image/jpeg;base64,'+video.image);
-            } else {
-                $('body').removeClass('vision-running');
-            }
-            $('.fps').text(video.fps);
+        is_vision = current_tab == 'vision';
+        backend.enableVideoDebug(is_vision);
 
-            let detection = ''
-            if (video.detection.ball) {
-                detection += 'ball: '+JSON.stringify(video.detection.ball)+"<br>";
-            }
-            for (let entry in video.detection.markers) {
-                detection += entry+': '+JSON.stringify(video.detection.markers[entry])+"<br>";
-            }
-            $('.detection').html(detection);
-        });
+        if (is_vision) {
+            backend.getVideo(function(video) {
+                if (video.image) {
+                    $('body').addClass('vision-running');
+                    $('.camera-image').attr('src', 'data:image/jpeg;base64,'+video.image);
+                } else {
+                    $('body').removeClass('vision-running');
+                }
+                $('.fps').text(video.fps);
+
+                let detection = ''
+                if (video.detection.ball) {
+                    detection += 'ball: '+JSON.stringify(video.detection.ball)+"<br>";
+                }
+                for (let entry in video.detection.markers) {
+                    detection += entry+': '+JSON.stringify(video.detection.markers[entry])+"<br>";
+                }
+                $('.detection').html(detection);
+            });
+        }
     }, 50);
 }

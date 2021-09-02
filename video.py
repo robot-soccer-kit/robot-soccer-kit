@@ -17,6 +17,8 @@ captures = {}
 capture = None
 # The last retrieved image
 image = None
+# Debug output
+debug = False
 
 def listCameras():
     indexes = []
@@ -47,10 +49,11 @@ def stopCapture():
     capture = None
     image = None
 
-def setCameraSettings(brightness, contrast):
+def setCameraSettings(brightness, contrast, saturation):
     if capture is not None:
         capture.stream.stream.set(cv2.CAP_PROP_BRIGHTNESS, brightness)
         capture.stream.stream.set(cv2.CAP_PROP_CONTRAST, contrast)
+        capture.stream.stream.set(cv2.CAP_PROP_SATURATION, saturation)
 
 def thread():
     global capture, image, period
@@ -60,8 +63,8 @@ def thread():
             image_captured = capture.read()
 
             # Process the image
-            detection.detectAruco(image_captured)
-            detection.detectBall(image_captured)
+            detection.detectAruco(image_captured, debug)
+            detection.detectBall(image_captured, debug)
 
             # Computing time
             current_period = time.time() - t0
