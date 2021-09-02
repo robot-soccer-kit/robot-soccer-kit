@@ -48,6 +48,9 @@ function video_initialize(backend)
                 for (let entry in video.detection.markers) {
                     detection += entry+': '+JSON.stringify(video.detection.markers[entry])+"<br>";
                 }
+                if (detection == '') {
+                    detection = 'no detection';
+                }
                 $('.detection').html(detection);
             });
         }

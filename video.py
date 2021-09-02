@@ -11,14 +11,14 @@ import field
 min_period = 1/30
 # Image retrieve and processing duration
 period = None
-# Current capture opened streams
-captures = {}
 # Current capture
 capture = None
 # The last retrieved image
 image = None
 # Debug output
 debug = False
+# Ask main thread to stop capture
+stop_capture = False
 
 def listCameras():
     indexes = []
@@ -32,22 +32,17 @@ def listCameras():
 def startCapture(index):
     global captures, capture, image
 
-    if index in captures:
-        capture = captures[index]
-    else:
-        capture = VideoStream(src=index, framerate=25)
-        capture.stream.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
-        capture.stream.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
-        capture.start()
-        captures[index] = capture
+    capture = VideoStream(src=index, framerate=25)
+    capture.stream.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+    capture.stream.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
+    capture.start()
 
     time.sleep(0.1)
     return image is not None
 
 def stopCapture():
-    global capture, image
-    capture = None
-    image = None
+    global stop_capture
+    stop_capture = True
 
 def setCameraSettings(brightness, contrast, saturation):
     if capture is not None:
@@ -56,7 +51,7 @@ def setCameraSettings(brightness, contrast, saturation):
         capture.stream.stream.set(cv2.CAP_PROP_SATURATION, saturation)
 
 def thread():
-    global capture, image, period
+    global capture, image, period, stop_capture
     while True:
         if capture is not None:
             t0 = time.time()
@@ -81,6 +76,13 @@ def thread():
                 capture = None
 
             image = image_captured
+
+            if stop_capture:
+                stop_capture = False
+                capture.stop()
+                del capture
+                capture = None
+                image = None
         else:
             time.sleep(0.1)
 

@@ -84,6 +84,8 @@ class Packet:
 class Robot:
     def __init__(self, port):
         self.port = port
+        self.bt = None
+        self.init = True
         self.thread = threading.Thread(target=lambda: self.execute())
         self.thread.start()
         self.state = {}
@@ -143,49 +145,53 @@ class Robot:
         self.control(0, 0, 0)
 
     def execute(self):
-        self.bt = serial.Serial(self.port)
-        time.sleep(0.1)
-        self.bt.write(b"rhock\r\nrhock\r\nrhock\r\n")
-        time.sleep(0.1)
-        self.beep(880, 250)
-        self.monitor(5)
-
-        print('Reading...')
-        state = 0
-        type_, length, payload = 0, 0, bytearray()
-
         while True:
-            byte = ord(self.bt.read(1))
-            if state == 0: # First header
-                if byte == 0xff:
-                    state += 1
-                else:
-                    state = 0
-            elif state == 1: # Second header
-                if byte == 0xaa:
-                    state += 1
-                else:
-                    state = 0
-            elif state == 2: # Packet type
-                type_ = byte
-                state += 1
-            elif state == 3: # Packet length
-                length = byte
-                state += 1
-            elif state == 4: # Payload
-                payload += bytearray((byte,))
-                if len(payload) >= length:
-                    state += 1
-            elif state == 5: # Checksum
-                if sum(payload)%256 == byte:
-                    self.process(Packet(type_, payload))
-                    type_, length, payload, checksum = 0, 0, bytearray(), 0
-                state = 0             
+            if self.init:
+                self.init = False
+                if self.bt is not None:
+                    self.bt.close()
+                self.bt = serial.Serial(self.port, timeout=1)
+                time.sleep(0.1)
+                self.bt.write(b"rhock\r\nrhock\r\nrhock\r\n")
+                time.sleep(0.1)
+                self.beep(880, 250)
+                self.monitor(5)
 
+                print('Reading...')
+                state = 0
+                type_, length, payload = 0, 0, bytearray()
 
+            byte = self.bt.read(1)
+            if len(byte):
+                byte = ord(byte)
+                if state == 0: # First header
+                    if byte == 0xff:
+                        state += 1
+                    else:
+                        state = 0
+                elif state == 1: # Second header
+                    if byte == 0xaa:
+                        state += 1
+                    else:
+                        state = 0
+                elif state == 2: # Packet type
+                    type_ = byte
+                    state += 1
+                elif state == 3: # Packet length
+                    length = byte
+                    state += 1
+                elif state == 4: # Payload
+                    payload += bytearray((byte,))
+                    if len(payload) >= length:
+                        state += 1
+                elif state == 5: # Checksum
+                    if sum(payload)%256 == byte:
+                        self.process(Packet(type_, payload))
+                        type_, length, payload, checksum = 0, 0, bytearray(), 0
+                    state = 0             
 
 if __name__ == '__main__':
-    r = Robot('/dev/rfcomm0')
+    r = Robot('/dev/ttyS4')
 
     while True:
         print(r.state)
