@@ -1,5 +1,5 @@
 body {
-    padding:5px;
+    font-size:20px;
 }
 
 .reload {
@@ -8,22 +8,23 @@ body {
     bottom:0;
 }
 
-.camera-area {
-    text-align: center;
-}
-
 .brightness, .contrast {
     width:100px;
 }
 
-.vision-play {
+.vision-show-running {
     display:none;
 }
 
-.vision-running .vision-play {
-    display:inline;
+.vision-running .vision-show-running {
+    display:block;
 }
 
-.vision-running .vision-stop {
+.vision-running .vision-hide-running {
     display:none;
+}
+
+.nav-item {
+    background-color:#333;
+    margin-right:5px;
 }

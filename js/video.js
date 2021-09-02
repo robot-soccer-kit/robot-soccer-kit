@@ -21,13 +21,29 @@ function video_initialize(backend)
         sendSettings();
     });
 
+    $('.stop-capture').click(function() {
+        backend.stopCapture();
+    });
+
     // Retrieving the images
     setInterval(function() {
-        backend.getImage(function(image) {
-            if (image) {
+        backend.getVideo(function(video) {
+            if (video.image) {
                 $('body').addClass('vision-running');
-                $('.camera-image').attr('src', 'data:image/jpeg;base64,'+image);
+                $('.camera-image').attr('src', 'data:image/jpeg;base64,'+video.image);
+            } else {
+                $('body').removeClass('vision-running');
             }
+            $('.fps').text(video.fps);
+
+            let detection = ''
+            if (video.detection.ball) {
+                detection += 'ball: '+JSON.stringify(video.detection.ball)+"<br>";
+            }
+            for (let entry in video.detection.markers) {
+                detection += entry+': '+JSON.stringify(video.detection.markers[entry])+"<br>";
+            }
+            $('.detection').html(detection);
         });
     }, 50);
 }
