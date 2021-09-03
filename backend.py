@@ -22,9 +22,9 @@ class Backend(QtCore.QObject):
         image = video.getImage()
         return image
 
-    @QtCore.pyqtSlot(result=QVariant)
-    def getVideo(self):
-        return QVariant(video.getVideo())
+    @QtCore.pyqtSlot(bool, result=QVariant)
+    def getVideo(self, with_image):
+        return QVariant(video.getVideo(with_image))
 
     @QtCore.pyqtSlot(bool)
     def enableVideoDebug(self):

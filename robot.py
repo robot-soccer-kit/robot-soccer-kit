@@ -210,6 +210,7 @@ class Robot:
                     time.sleep(0.1)
                     self.monitor(5)
                     self.beep(880, 250)
+                    self.applyLeds()
                     self.last_init = time.time()
                     state = 0
                     type_, length, payload = 0, 0, bytearray()
@@ -247,8 +248,8 @@ class Robot:
                 print(e)
                 self.init = True  
 
-            no_message = ((self.last_message is None) or (time.time() - self.last_message > 10))
-            old_init = time.time() - self.last_init > 10
+            no_message = ((self.last_message is None) or (time.time() - self.last_message > 5))
+            old_init = time.time() - self.last_init > 5
 
             if no_message and old_init:
                 self.init = True

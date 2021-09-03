@@ -18,17 +18,19 @@ function robots_initialize(backend)
         let warning = '<i class="bi text-warning bi-exclamation-circle"></i>';
 
         function updateInfos(div, infos) {
+            let hasWarning = false;
             let html = '';
 
             // Last communication message
             html += 'last message: ';
             if (infos.last_message) {
-                html += Math.round(infos.last_message, 2)+'s';
+                html += (Math.round(infos.last_message*100)/100)+'s';
             } else {
                 html += 'never';
             }
-            if (!infos.last_message || infos.last_message > 10) {
-                html += ' '+warning;
+            if (!infos.last_message || infos.last_message > 5) {
+                html += ' '+warning+' <span class="text-warning">no response</span>';
+                hasWarning = true;
             }
             html += '<br/>';
 
@@ -39,7 +41,8 @@ function robots_initialize(backend)
                     let voltage = infos.state.battery[k];
                     html += 'battery '+(k+1)+': '+voltage+'V';
                     if (voltage < 3.5) {
-                        html += warning;
+                        html += ' '+warning+' <span class="text-warning">low voltage</span>';
+                        hasWarning = true;
                     }
                     html += '<br/>';
                 }
@@ -55,16 +58,20 @@ function robots_initialize(backend)
                 $('.marker-image').html('N/A');
                 $('.marker-select').val('none');
             }
+
+            return hasWarning;
         }
 
         setInterval(function() {
             backend.getRobots(function(robots) {
-                console.log(robots);
+                let hasWarning = false;
+                let robotsOk = 0;
+                let robotsCount = 0;
+
                 for (let port in robots) {
                     let div = $('.robot[rel="'+port+'"]');
                     if (!div.length) {
                         let html = robot_template.replace(/{port}/g, port);
-                        console.log(html);
                         $('.robots').append(html);
 
                         let div = $('.robot[rel="'+port+'"]');
@@ -85,8 +92,16 @@ function robots_initialize(backend)
                         });
                     }
 
-                    updateInfos(div, robots[port]);
+                    let error = updateInfos(div, robots[port]);
+                    robotsCount += 1;
+                    if (!error) {
+                        robotsOk += 1;
+                    }
+                    hasWarning = hasWarning || error;
                 }
+
+                $('.robots-ok').text(robotsOk);
+                $('.robots-count').text(robotsCount);
 
                 $('.robot').each(function() {
                     let existingRobot = $('.robot');
@@ -96,6 +111,12 @@ function robots_initialize(backend)
                         }
                     }
                 });
+
+                if (hasWarning) {
+                    $('body').addClass('robots-warning');
+                } else {
+                    $('body').removeClass('robots-warning');
+                }
             });
         }, 100);
 
