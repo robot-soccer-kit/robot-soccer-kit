@@ -28,3 +28,11 @@ body {
     background-color:#333;
     margin-right:5px;
 }
+
+.robots-show-warning {
+    display:none;
+}
+
+.robots-warning .robots-show-warning {
+    display:inline;
+}

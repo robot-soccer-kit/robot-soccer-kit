@@ -21,12 +21,17 @@
                 <a class="nav-link active" aria-current="page" href="#">
                   <span class="input-group">
                   Vision&nbsp;
+                  <i class="text-warning bi bi-exclamation-circle vision-hide-running"></i>
                   <i class="text-success bi bi-check-lg vision-show-running"></i>
                   </span>
                 </a>
               </li>
               <li class="nav-item" rel="robots">
-                <a class="nav-link" href="#">Robots</a>
+                <a class="nav-link" href="#">
+                  Robots&nbsp;
+                  [<span class="text-success robots-ok">0</span>/<span class="text-success robots-count">0</span>]
+                  <i class="text-warning bi bi-exclamation-circle robots-show-warning"></i>
+                </a>
               </li>
               <li class="nav-item" rel="game">
                 <a class="nav-link" href="#">Game</a>
@@ -84,60 +89,7 @@
       </div>
 
       <div class="page page-robots">
-        <div class="card m-1">
-          <div class="row">
-            <div class="col-sm-8 p-4">
-              <h4>/dev/rfcomm1</h4>
-              <code>
-                battery: 7.4v<br/>
-                last update: 17s <i class="bi bi-exclamation-circle text-warning"></i>
-              </code>
-            </div>
-
-            <div class="col-sm-4 text-center d-flex align-items-center">
-              <div class="w-100 bg-light rounded-right p-2">
-                Marker
-                <br/>
-                <img class="m-2" src="markers/red2.svg" width="64" />
-                <br/>
-                <select class="form-select">
-                  <option value="none">none</option>
-                  <option value="r1">red 1</option>
-                  <option selected="selected" value="r2">red 2</option>
-                  <option value="b1">blue 1</option>
-                  <option value="b2">blue 2</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card m-1">
-          <div class="row">
-            <div class="col-sm-8 p-4">
-              <h4>/dev/rfcomm2</h4>
-              <code>
-                battery: 7.4v<br/>
-                last update: 0.2s
-              </code>
-            </div>
-
-            <div class="col-sm-4 text-center d-flex align-items-center">
-              <div class="w-100 bg-light rounded-right p-2">
-                Marker
-                <br/>
-                <img class="m-2" src="markers/blue1.svg" width="64" />
-                <br/>
-                <select class="form-select">
-                  <option value="none">none</option>
-                  <option value="r1">red 1</option>
-                  <option value="r2">red 2</option>
-                  <option selected="selected" value="b1">blue 1</option>
-                  <option value="b2">blue 2</option>
-                </select>
-              </div>
-            </div>
-          </div>
+        <div class="robots">
         </div>
 
         <div class="robot-add">

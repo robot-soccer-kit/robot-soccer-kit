@@ -31,28 +31,30 @@ function video_initialize(backend)
         is_vision = current_tab == 'vision';
         backend.enableVideoDebug(is_vision);
 
-        if (is_vision) {
-            backend.getVideo(function(video) {
-                if (video.image) {
-                    $('body').addClass('vision-running');
-                    $('.camera-image').attr('src', 'data:image/jpeg;base64,'+video.image);
-                } else {
-                    $('body').removeClass('vision-running');
-                }
-                $('.fps').text(video.fps);
+        backend.getVideo(is_vision, function(video) {
+            if (video.image) {
+                $('.camera-image').attr('src', 'data:image/jpeg;base64,'+video.image);
+            }
+        
+            if (video.running) {
+                $('body').addClass('vision-running');
+            } else {
+                $('body').removeClass('vision-running');
+            }
 
-                let detection = ''
-                if (video.detection.ball) {
-                    detection += 'ball: '+JSON.stringify(video.detection.ball)+"<br>";
-                }
-                for (let entry in video.detection.markers) {
-                    detection += entry+': '+JSON.stringify(video.detection.markers[entry])+"<br>";
-                }
-                if (detection == '') {
-                    detection = 'no detection';
-                }
-                $('.detection').html(detection);
-            });
-        }
+            $('.fps').text(video.fps);
+
+            let detection = ''
+            if (video.detection.ball) {
+                detection += 'ball: '+JSON.stringify(video.detection.ball)+"<br>";
+            }
+            for (let entry in video.detection.markers) {
+                detection += entry+': '+JSON.stringify(video.detection.markers[entry])+"<br>";
+            }
+            if (detection == '') {
+                detection = 'no detection';
+            }
+            $('.detection').html(detection);
+        });
     }, 50);
 }

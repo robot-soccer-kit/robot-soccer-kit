@@ -57,9 +57,10 @@ def thread():
             t0 = time.time()
             image_captured = capture.read()
 
-            # Process the image
-            detection.detectAruco(image_captured, debug)
-            detection.detectBall(image_captured, debug)
+            if image_captured is not None:
+                # Process the image
+                detection.detectAruco(image_captured, debug)
+                detection.detectBall(image_captured, debug)
 
             # Computing time
             current_period = time.time() - t0
@@ -94,13 +95,18 @@ def getImage():
     else:
         return ''
 
-def getVideo():
+def getVideo(with_image):
     global period
-    return {
-        'image': getImage(), 
+    data = {
+        'running': capture is not None,
         'fps': round(1/period, 2) if period is not None else 0,
         'detection': detection.getDetection()
     }
+
+    if with_image:
+        data['image'] = getImage()
+
+    return data
 
 # Listing available cameras
 cameras = listCameras()
