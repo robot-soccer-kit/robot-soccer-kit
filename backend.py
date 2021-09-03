@@ -42,3 +42,20 @@ class Backend(QtCore.QObject):
     @QtCore.pyqtSlot(str)
     def addRobot(self, port):
         robots.addRobot(port)
+
+    @QtCore.pyqtSlot(result=QVariant)
+    def getRobots(self):
+        return robots.getRobots()
+
+    @QtCore.pyqtSlot(str, str)
+    def setMarker(self, port, marker):
+        robots.setMarker(port, marker)
+
+    @QtCore.pyqtSlot(str)
+    def removeRobot(self, port):
+        robots.remove(port)
+
+    @QtCore.pyqtSlot(str)
+    def blink(self, port):
+        robots.blink(port)
+    

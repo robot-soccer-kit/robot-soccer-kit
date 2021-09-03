@@ -7,8 +7,10 @@ PACKET_ACK = 0
 PACKET_MONITOR = 1
 PACKET_HOLO = 80
 PACKET_HOLO_CONTROL = 2
-PACKET_HOLO_KICK = 12
 PACKET_HOLO_BEEP = 3
+PACKET_HOLO_LEDS_CUSTOM = 7
+PACKET_HOLO_LEDS_BREATH = 8
+PACKET_HOLO_KICK = 12
 PACKET_MONITOR_DATA = 5
 
 class Packet:
@@ -86,9 +88,14 @@ class Robot:
         self.port = port
         self.bt = None
         self.init = True
+        self.running = True
+        self.last_message = None
+        self.last_init = None
+        self.state = {}
+        self.marker = None
         self.thread = threading.Thread(target=lambda: self.execute())
         self.thread.start()
-        self.state = {}
+        self.ledsColor = None
 
     def send(self, packet):
         self.bt.write(packet.toRaw())
@@ -97,9 +104,37 @@ class Robot:
         packet = Packet(PACKET_MONITOR)
         packet.appendInt(frequency)
         self.send(packet)
+    
+    def applyLeds(self):
+        if self.ledsColor is None:
+            self.ledsBreath()
+        else:
+            self.leds(*self.ledsColor)
+
+    def blink(self):
+        for x in range(5):
+            self.leds(255, 255, 255)
+            time.sleep(0.25)
+            self.leds(0, 0, 0)
+            time.sleep(0.25)
+        self.applyLeds()
+
+    def setMarker(self, marker):
+        self.marker = marker
+
+        if marker.startswith('red'):
+            self.ledsColor = [255, 0, 0]
+        elif marker.startswith('blue'):
+            self.ledsColor = [0, 0, 255]
+        else:
+            self.ledsColor = None
+
+        self.applyLeds()
 
     def process(self, packet):
         if packet.type == PACKET_MONITOR_DATA:
+            self.last_message = time.time()
+
             state = {}
             state['version'] = packet.readByte()
             state['time'] = packet.readFloat()
@@ -141,58 +176,88 @@ class Robot:
         packet.appendShort(int(dturn))
         self.send(packet)
 
+    def ledsBreath(self):
+        packet = Packet(PACKET_HOLO)
+        packet.appendByte(PACKET_HOLO_LEDS_BREATH)
+        self.send(packet)
+
+    def leds(self, r, g, b):
+        packet = Packet(PACKET_HOLO)
+        packet.appendByte(PACKET_HOLO_LEDS_CUSTOM)
+        packet.appendByte(r)
+        packet.appendByte(g)
+        packet.appendByte(b)
+        self.send(packet)
+
     def stop(self):
         self.control(0, 0, 0)
 
-    def execute(self):
-        while True:
-            if self.init:
-                self.init = False
-                if self.bt is not None:
-                    self.bt.close()
-                self.bt = serial.Serial(self.port, timeout=1)
-                time.sleep(0.1)
-                self.bt.write(b"rhock\r\nrhock\r\nrhock\r\n")
-                time.sleep(0.1)
-                self.beep(880, 250)
-                self.monitor(5)
+    def close(self):
+        self.running = False
 
-                print('Reading...')
-                state = 0
-                type_, length, payload = 0, 0, bytearray()
+    def execute(self):        
+        while self.running:
+            try:
+                if self.init:
+                    print('Opening connection with ' + self.port)
+                    self.init = False
+                    if self.bt is not None:
+                        self.bt.close()
+                        del self.bt
+                    self.bt = serial.Serial(self.port, timeout=1)
+                    time.sleep(0.1)
+                    self.bt.write(b"rhock\r\nrhock\r\nrhock\r\n")
+                    time.sleep(0.1)
+                    self.monitor(5)
+                    self.beep(880, 250)
+                    self.last_init = time.time()
+                    state = 0
+                    type_, length, payload = 0, 0, bytearray()
 
-            byte = self.bt.read(1)
-            if len(byte):
-                byte = ord(byte)
-                if state == 0: # First header
-                    if byte == 0xff:
+                byte = self.bt.read(1)
+                if len(byte):
+                    byte = ord(byte)
+                    if state == 0: # First header
+                        if byte == 0xff:
+                            state += 1
+                        else:
+                            state = 0
+                    elif state == 1: # Second header
+                        if byte == 0xaa:
+                            state += 1
+                        else:
+                            state = 0
+                    elif state == 2: # Packet type
+                        type_ = byte
                         state += 1
-                    else:
-                        state = 0
-                elif state == 1: # Second header
-                    if byte == 0xaa:
+                    elif state == 3: # Packet length
+                        length = byte
                         state += 1
-                    else:
-                        state = 0
-                elif state == 2: # Packet type
-                    type_ = byte
-                    state += 1
-                elif state == 3: # Packet length
-                    length = byte
-                    state += 1
-                elif state == 4: # Payload
-                    payload += bytearray((byte,))
-                    if len(payload) >= length:
-                        state += 1
-                elif state == 5: # Checksum
-                    if sum(payload)%256 == byte:
-                        self.process(Packet(type_, payload))
-                        type_, length, payload, checksum = 0, 0, bytearray(), 0
-                    state = 0             
+                    elif state == 4: # Payload
+                        payload += bytearray((byte,))
+                        if len(payload) >= length:
+                            state += 1
+                    elif state == 5: # Checksum
+                        if sum(payload)%256 == byte:
+                            self.process(Packet(type_, payload))
+                            type_, length, payload = 0, 0, bytearray()
+                        state = 0  
+            except serial.serialutil.SerialException as e:
+                print('Exception')
+                print(e)
+                self.init = True  
+
+            no_message = ((self.last_message is None) or (time.time() - self.last_message > 10))
+            old_init = time.time() - self.last_init > 10
+
+            if no_message and old_init:
+                self.init = True
+        
+        self.bt.close()
 
 if __name__ == '__main__':
-    r = Robot('/dev/ttyS4')
+    r = Robot('/dev/rfcomm0')
 
     while True:
         print(r.state)
-        time.sleep(0.1)
+        time.sleep(5)
