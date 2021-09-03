@@ -31,8 +31,4 @@ def remove(port):
     robots[port].close()
     del robots[port]
 
-def blink(port):
-    if port in robots:
-        robots[port].blink()
-
 ports = [entry.device for entry in list_ports.comports()]

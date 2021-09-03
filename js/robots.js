@@ -90,6 +90,10 @@ function robots_initialize(backend)
                         div.find('.blink').click(function() {
                             backend.blink(port);
                         });
+
+                        div.find('.kick').click(function() {
+                            backend.kick(port);
+                        });
                     }
 
                     let error = updateInfos(div, robots[port]);

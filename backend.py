@@ -57,5 +57,11 @@ class Backend(QtCore.QObject):
 
     @QtCore.pyqtSlot(str)
     def blink(self, port):
-        robots.blink(port)
+        if port in robots.robots:
+            robots.robots[port].blink()
+
+    @QtCore.pyqtSlot(str)
+    def kick(self, port):
+        if port in robots.robots:
+            robots.robots[port].kick()
     
