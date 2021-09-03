@@ -2,4 +2,4 @@
 
 ## Dependencies
 
-    pip install opencv-contrib-python-headless opencv-python-headless
+    pip install opencv-contrib-python-headless opencv-python-headless imutils
