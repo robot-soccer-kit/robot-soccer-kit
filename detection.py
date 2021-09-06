@@ -1,10 +1,12 @@
 import numpy as np
 import cv2
+from field import Field
 
 # ArUco parameters
 arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
 arucoParams = cv2.aruco.DetectorParameters_create()
-arucoItems = {
+
+arucoItems = { # Maps ArUco IDs to tags
     0: 'c1',
     1: 'c2',
     2: 'c3',
@@ -16,7 +18,7 @@ arucoItems = {
     6: 'b1',
     7: 'b2',
 }
-arucoColors = {
+arucoColors = { # Colors for debug drawing
     'c': (0, 255, 0),
     'r': (0, 0, 128),
     'b': (128, 0, 0)
@@ -29,6 +31,7 @@ upper_orange = np.array([20, 255, 255])
 # Detection output
 markers = {}
 ball = None
+field = Field()
 
 def detectAruco(image, draw_debug):
     global markers
@@ -44,25 +47,22 @@ def detectAruco(image, draw_debug):
                 continue
 
             corners = markerCorner.reshape((4, 2))
-            (topLeft, topRight, bottomRight, bottomLeft) = corners
-            # convert each of the (x, y)-coordinate pairs to integers
-            topRight = (int(topRight[0]), int(topRight[1]))
-            bottomRight = (int(bottomRight[0]), int(bottomRight[1]))
-            bottomLeft = (int(bottomLeft[0]), int(bottomLeft[1]))
-            topLeft = (int(topLeft[0]), int(topLeft[1]))
-
-            # field.set_id_gfx_corners(int(markerID),
-            #                             {
-            #                                 'topRight' : (float(topRight[0]), float(topRight[1])),
-            #                                 'bottomRight' : (float(bottomRight[0]), float(bottomRight[1])),
-            #                                 'bottomLeft' : (float(bottomLeft[0]), float(bottomLeft[1])),
-            #                                 'topLeft' : (float(topLeft[0]), float(topLeft[1]))
-            #                             })
         
             # Draw the bounding box of the ArUCo detection
             item = arucoItems[markerID]
 
+            if item[0] == 'c':
+                field.set_corner_position(item, corners)
+            else:
+                if field.calibrated():
+                    print(field.pose_of_tag(corners))
+
             if draw_debug:
+                (topLeft, topRight, bottomRight, bottomLeft) = corners
+                topRight = (int(topRight[0]), int(topRight[1]))
+                bottomRight = (int(bottomRight[0]), int(bottomRight[1]))
+                bottomLeft = (int(bottomLeft[0]), int(bottomLeft[1]))
+                topLeft = (int(topLeft[0]), int(topLeft[1]))
                 itemColor = arucoColors[item[0]]
                 cv2.line(image, topLeft, topRight, itemColor, 2)
                 cv2.line(image, topRight, bottomRight, itemColor, 2)
@@ -81,6 +81,8 @@ def detectAruco(image, draw_debug):
                 cv2.putText(image, item, (cX-8, cY+4), cv2.FONT_HERSHEY_SIMPLEX, 0.5, itemColor, 2)
 
             new_markers[item] = [cX, cY]
+
+    field.update_homography(image)
 
     if len(new_markers):
         markers = new_markers

@@ -3,70 +3,90 @@ import cv2
 
 class Field:
     def __init__(self):
-        self.corner_tag_size = 0.072
+        self.corner_tag_size = 0.08
         self.robot_tag_size = 0.08
-        self.corner_ids = [0,5,25,20]
-        self.field_shape = [1.2,1.82]
         self.frame_point_list = None
         self.id_gfx_corners = {}
-        self.homography = None
-        
-    def set_id_gfx_corners(self, id, corners):
-        self.id_gfx_corners[id] = corners
 
-    def update_homography(self):
-        gframe = self.get_gfx_frame()
-        if gframe is not None:
-            H,mask = cv2.findHomography(gframe, self.get_frame_point_list())
-            if self.homography is None:
-                print('- homography ready')
-                self.homography = H
+        self.field_shape = [1.83, 1.22] # Field dimension (length, width)
+
+        self.corner_field_positions = {}
+        for (c, sx, sy) in (['c1', 1, 1], ['c2', 1, -1], ['c3', -1, 1], ['c4', -1, -1]):
+            cX = sx * self.field_shape[0]/2
+            cY = sy * self.field_shape[1]/2
+
+            self.corner_field_positions[c] = [
+                (cX + self.corner_tag_size/2, cY + self.corner_tag_size/2),
+                (cX + self.corner_tag_size/2, cY - self.corner_tag_size/2),
+                (cX - self.corner_tag_size/2, cY - self.corner_tag_size/2),
+                (cX - self.corner_tag_size/2, cY + self.corner_tag_size/2),
+            ]
+
+        self.corner_gfx_positions = {}
+
+        self.homography = None
+
+    def calibrated(self):
+        return self.homography is not None
+
+    def tag_position(self, corners, front = False):
+        if front:
+            pX = (corners[0][0] + corners[1][0])/2.0
+            pY = (corners[0][1] + corners[1][1])/2.0
+        else:
+            pX = (corners[0][0] + corners[2][0])/2.0
+            pY = (corners[0][1] + corners[2][1])/2.0
+
+        return pX, pY
+
+    def set_corner_position(self, corner, corners):
+        self.corner_gfx_positions[corner] = corners
+
+    def update_homography(self, debug):
+        if len(self.corner_gfx_positions) == len(self.corner_field_positions):
+            graphics_positions = []
+            field_positions = []
+            for key in self.corner_field_positions:
+                k = 0
+                for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
+                    graphics_positions.append(gfx)
+                    field_positions.append(real)
+
+                    # if k == 3:
+                    #     txt = '%.2f, %.2f' % real
+                    #     cv2.circle(debug, (int(gfx[0]), int(gfx[1])), 2, (255, 0, 0))
+                    #     cv2.putText(debug, txt, (int(gfx[0]), int(gfx[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0))
+                    # k += 1
+
+            graphics_positions = np.array(graphics_positions)
+            field_positions = np.array(field_positions)
+            print(field_positions)
+            H, mask = cv2.findHomography(graphics_positions, field_positions)
+            self.homography = H
+            # print(H)
+
+            # print('~')
+            # print(field_positions)
+            # print(self.pos_of_gfx(graphics_positions[0]))
+            # print(self.pos_of_gfx(graphics_positions[1]))
+            # print(self.pos_of_gfx(graphics_positions[2]))
+            # print(self.pos_of_gfx(graphics_positions[3]))
         
     def pos_of_gfx(self, pos):
-        M = np.ndarray(shape=(3,1), buffer = np.array([[pos[0]], [pos[1]], [1.0]]))
-        result = np.dot(self.homography,M)
-        return [ result[0], result[1] ]
+        M = np.ndarray(shape = (3,1), buffer = np.array([[pos[0]], [pos[1]], [1.0]]))
+        result = np.dot(self.homography, M)
+        return [result[0]/result[2], result[1]/result[2]]
 
-    def pose_of_tag(self, id):
-        try:
-            if id not in self.id_gfx_corners: return None
-            if self.homography is None: return None
-            pts = self.id_gfx_corners[id]
-            def f(v): return np.array(self.pos_of_gfx(np.array([v[0], v[1]])))
-            pts = dict(map(lambda kv: (kv[0], f(kv[1])), self.id_gfx_corners[id].items()))
-            center = (pts['topLeft'] + pts['bottomRight'])/2
-            dir = (pts['topLeft'] + pts['topRight'])/2 - center
-            orient = np.degrees(np.arctan2(dir[1], dir[0]))
-            return { 'center' : (float(center[0]) - self.field_shape[1]/2, float(center[1]) - self.field_shape[0]/2),
-                     'orient' : float(orient[0]) }
-        except:
-            raise
+    def pose_of_tag(self, corners):
+        if self.calibrated():
+            center = self.pos_of_gfx(self.tag_position(corners))
+            front = self.pos_of_gfx(self.tag_position(corners, front=True))
+            print(center)
+            print(front)
+
+            return {
+                'position': center,
+                'orientation': np.arctan2(front[1] - center[1], front[0] - center[0])
+            }
+        else:
             return None
-        
-    def get_frame_point_list(self):
-        if self.frame_point_list is not None:
-            return self.frame_point_list 
-        pts = []
-        for (x,y) in [ (0,0), (0,1), (1,1), (1,0) ]:
-            def npa(a,b): return np.array([a,b])
-            h = self.corner_tag_size / 2
-            lx = self.field_shape[1]
-            ly = self.field_shape[0]
-            C = np.array([x*lx, y*ly])
-            pts.append(C-npa(-h,-h))
-            pts.append(C-npa(-h,h))
-            pts.append(C-npa(h,h))
-            pts.append(C-npa(h,-h))
-        pts = list(map(lambda p: [p[0],p[1]], pts))
-        self.frame_point_list = np.array(pts)
-        return self.frame_point_list
-
-    def get_gfx_frame(self):
-        pts = []
-        for c in self.corner_ids:
-            if c not in self.id_gfx_corners: return None
-            pts.append(self.id_gfx_corners[c]['topLeft'])
-            pts.append(self.id_gfx_corners[c]['topRight'])
-            pts.append(self.id_gfx_corners[c]['bottomRight'])
-            pts.append(self.id_gfx_corners[c]['bottomLeft'])
-        return np.array(pts)
