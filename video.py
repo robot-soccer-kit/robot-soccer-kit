@@ -6,111 +6,109 @@ import threading
 import detection
 import field
 
-# Limitting the output period
-min_period = 1/30
-# Image retrieve and processing duration
-period = None
-# Current capture
-capture = None
-# The last retrieved image
-image = None
-# Debug output
-debug = False
-# Ask main thread to stop capture
-stop_capture = False
 
-def listCameras():
-    indexes = []
-    for index in range(10):
-        cap = cv2.VideoCapture(index)
-        if cap.read()[0]:
-            indexes.append(index)
-            cap.release()
-    return indexes
+class Video:
+    def __init__(self):
+        # Limitting the output period
+        self.min_period = 1/30
+        # Image retrieve and processing duration
+        self.period = None
+        # Current capture
+        self.capture = None
+        # The last retrieved image
+        self.image = None
+        # Debug output
+        self.debug = False
+        # Ask main thread to stop capture
+        self.stop_capture = False
 
-def startCapture(index):
-    global captures, capture, image
+        self.detection = detection.Detection()
 
-    capture = cv2.VideoCapture(index)
-    capture.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
-    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
-    capture.start()
+        # Listing available cameras
+        self.listCameras()
 
-    time.sleep(0.1)
-    return image is not None
+        # Starting the video processing thread
+        self.video_thread = threading.Thread(target=lambda: self.thread())
+        self.video_thread.start()
 
-def stopCapture():
-    global stop_capture
-    stop_capture = True
+    def listCameras(self):
+        indexes = []
+        for index in range(10):
+            cap = cv2.VideoCapture(index)
+            if cap.read()[0]:
+                indexes.append(index)
+                cap.release()
+        self.cameras = indexes
 
-def setCameraSettings(brightness, contrast, saturation):
-    if capture is not None:
-        capture.set(cv2.CAP_PROP_BRIGHTNESS, brightness)
-        capture.set(cv2.CAP_PROP_CONTRAST, contrast)
-        capture.set(cv2.CAP_PROP_SATURATION, saturation)
+    def startCapture(self, index):
+        self.capture = cv2.VideoCapture(index)
+        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
 
-def thread():
-    global capture, image, period, stop_capture
-    while True:
-        if capture is not None:
-            t0 = time.time()
-            grabbed, image_captured = capture.read()
+        time.sleep(0.1)
+        return self.image is not None
 
-            if image_captured is not None:
-                # Process the image
-                detection.detectAruco(image_captured, debug)
-                detection.detectBall(image_captured, debug)
-                detection.publish()
+    def stopCapture(self):
+        self.stop_capture = True
 
-            # Computing time
-            current_period = time.time() - t0
-            if current_period < min_period:
-                time.sleep(min_period - current_period)
-            current_period = time.time() - t0
+    def setCameraSettings(self, brightness, contrast, saturation):
+        if self.capture is not None:
+            self.capture.set(cv2.CAP_PROP_BRIGHTNESS, brightness)
+            self.capture.set(cv2.CAP_PROP_CONTRAST, contrast)
+            self.capture.set(cv2.CAP_PROP_SATURATION, saturation)
 
-            if period is None:
-                period = current_period
+    def thread(self):
+        while True:
+            if self.capture is not None:
+                t0 = time.time()
+                grabbed, image_captured = self.capture.read()
+
+                if image_captured is not None:
+                    # Process the image
+                    self.detection.detectAruco(image_captured, self.debug)
+                    self.detection.detectBall(image_captured, self.debug)
+                    self.detection.publish()
+
+                # Computing time
+                current_period = time.time() - t0
+                if current_period < self.min_period:
+                    time.sleep(self.min_period - current_period)
+                current_period = time.time() - t0
+
+                if self.period is None:
+                    self.period = current_period
+                else:
+                    self.period = self.period*0.95 + current_period*0.05
+
+                if image_captured is None:
+                    self.capture = None
+
+                self.image = image_captured
+
+                if self.stop_capture:
+                    self.stop_capture = False
+                    self.capture.release()
+                    del self.capture
+                    self.capture = None
+                    self.image = None
             else:
-                period = period*0.95 + current_period*0.05
+                time.sleep(0.1)
 
-            if image_captured is None:
-                capture = None
-
-            image = image_captured
-
-            if stop_capture:
-                stop_capture = False
-                capture.stop()
-                del capture
-                capture = None
-                image = None
+    def getImage(self):
+        if self.image is not None:
+            data = cv2.imencode('.jpg', self.image)
+            return base64.b64encode(data[1]).decode('utf-8')
         else:
-            time.sleep(0.1)
+            return ''
 
-def getImage():
-    global image
-    if image is not None:
-        data = cv2.imencode('.jpg', image)
-        return base64.b64encode(data[1]).decode('utf-8')
-    else:
-        return ''
+    def getVideo(self, with_image):
+        data = {
+            'running': self.capture is not None,
+            'fps': round(1/self.period, 2) if self.period is not None else 0,
+            'detection': self.detection.getDetection(),
+        }
 
-def getVideo(with_image):
-    global period
-    data = {
-        'running': capture is not None,
-        'fps': round(1/period, 2) if period is not None else 0,
-        'detection': detection.getDetection(),
-    }
+        if with_image:
+            data['image'] = self.getImage()
 
-    if with_image:
-        data['image'] = getImage()
-
-    return data
-
-# Listing available cameras
-cameras = listCameras()
-
-# Starting the video processing thread
-video_thread = threading.Thread(target=thread)
-video_thread.start()
+        return data

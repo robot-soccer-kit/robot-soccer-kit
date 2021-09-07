@@ -2,66 +2,77 @@ import zmq
 import threading
 import robots
 
-# Publishing server
-context = zmq.Context()
-socket = context.socket(zmq.REP)
-socket.bind("tcp://*:7558")
 
-teams = {
-    "red": {
-        "allow_control": True,
-        "key": "",
-        "packets": 0
-    },
-    "blue": {
-        "allow_control": True,
-        "key": "",
-        "packets": 0
-    }
-}
+class Control:
+    def __init__(self, robots):
+        self.robots = robots
 
-def thread():
-    while True:
-        json = socket.recv_json()
-        success = False
+        # Publishing server
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.REP)
+        self.socket.bind("tcp://*:7558")
 
-        if type(json) == list and len(json) == 4:
-            key, team, robot, command = json
+        self.teams = {
+            "red": {
+                "allow_control": True,
+                "key": "",
+                "packets": 0
+            },
+            "blue": {
+                "allow_control": True,
+                "key": "",
+                "packets": 0
+            }
+        }
 
-            if team in teams and teams[team]['key'] == key and teams[team]['allow_control']:
-                marker = "%s%d" % (team, robot)
-                if marker in robots.robots_by_marker:
-                    if type(command) == list:
-                        if command[0] == 'kick' and len(command) == 2:
-                            robots.robots_by_marker[marker].kick(float(command[1]))
-                            success = True
-                        if command[0] == 'control' and len(command) == 4:
-                            robots.robots_by_marker[marker].control(
-                                float(command[1]), float(command[2]), float(command[3]))
-                            success = True
+    def thread(self):
+        while True:
+            json = self.socket.recv_json()
+            response = [False, 'Unknown error']
 
-            if success:
-                teams[team]['packets'] += 1
+            if type(json) == list and len(json) == 4:
+                key, team, robot, command = json
 
-        socket.send_json(success)
+                if team in self.teams:
+                    if not self.teams[team]['allow_control']:
+                        response[1] = 'You are not allowed to control the robots of team '+team
+                    elif self.teams[team]['key'] != key:
+                        response[1] = 'Bad key for team '+team
+                    else:
+                        marker = "%s%d" % (team, robot)
+                        if marker in self.robots.robots_by_marker:
+                            if type(command) == list:
+                                if command[0] == 'kick' and len(command) == 2:
+                                    self.robots.robots_by_marker[marker].kick(
+                                        float(command[1]))
+                                    response = [True, 'ok']
+                                elif command[0] == 'control' and len(command) == 4:
+                                    self.robots.robots_by_marker[marker].control(
+                                        float(command[1]), float(command[2]), float(command[3]))
+                                    response = [True, 'ok']
+                                else:
+                                    response[1] = 'Unknown command'
 
-def start():
-    control_thread = threading.Thread(target=thread)
-    control_thread.start()
+                    self.teams[team]['packets'] += 1
 
-def status():
-    return teams
+            self.socket.send_json(response)
 
-def allowControl(team, allow):
-    global teams
-    teams[team]['allow_control'] = allow
+    def start(self):
+        control_thread = threading.Thread(target=lambda: self.thread())
+        control_thread.start()
 
-def emergency():
-    allowControl('red', False)
-    allowControl('blue', False)
+    def status(self):
+        return self.teams
 
-    for port in robots.robots:
-        robots.robots[port].control(0, 0, 0)
+    def allowControl(self, team, allow):
+        self.teams[team]['allow_control'] = allow
 
-def setKey(team, key):
-    teams[team]['key'] = key
+    def emergency(self):
+        self.allowControl('red', False)
+        self.allowControl('blue', False)
+
+        for port in self.robots.robots:
+            self.robots.robots[port].control(0, 0, 0)
+
+    def setKey(self, team, key):
+        self.teams[team]['key'] = key

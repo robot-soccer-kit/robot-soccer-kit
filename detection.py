@@ -4,150 +4,154 @@ from field import Field
 import zmq
 import time
 
-# Publishing server
-context = zmq.Context()
-socket = context.socket(zmq.PUB)
-socket.bind("tcp://*:7557")
 
-# ArUco parameters
-arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
-arucoParams = cv2.aruco.DetectorParameters_create()
-# arucoParams.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_APRILTAG
+class Detection:
+    def __init__(self):
 
-arucoItems = { 
-    # Corners
-    0: ['c1', (0, 255, 0)],
-    1: ['c2', (0, 255, 0)],
-    2: ['c3', (0, 255, 0)],
-    3: ['c4', (0, 255, 0)],
-    
-    # Red
-    4: ['red1', (0, 0, 128)],
-    5: ['red2', (0, 0, 128)],
-    
-    # Blue
-    6: ['blue1', (128, 0, 0)],
-    7: ['blue2', (128, 0, 0)],
-}
+        # Publishing server
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.PUB)
+        self.socket.bind("tcp://*:7557")
 
-# Ball parameters
-lower_orange = np.array([5, 150, 150])
-upper_orange = np.array([25, 255, 255])
+        # ArUco parameters
+        self.arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
+        self.arucoParams = cv2.aruco.DetectorParameters_create()
+        # arucoParams.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_APRILTAG
 
-# Detection output
-markers = {}
-last_updates = {}
-ball = None
-no_ball = 0
-field = Field()
+        self.arucoItems = {
+            # Corners
+            0: ['c1', (0, 255, 0)],
+            1: ['c2', (0, 255, 0)],
+            2: ['c3', (0, 255, 0)],
+            3: ['c4', (0, 255, 0)],
 
-def detectAruco(image, draw_debug):
-    global markers, last_updates
+            # Red
+            4: ['red1', (0, 0, 128)],
+            5: ['red2', (0, 0, 128)],
 
-    (corners, ids, rejected) = cv2.aruco.detectMarkers(image,
-                                                           arucoDict,
-                                                           parameters=arucoParams)                                      
+            # Blue
+            6: ['blue1', (128, 0, 0)],
+            7: ['blue2', (128, 0, 0)],
+        }
 
-    new_markers = {}
+        # Ball detection parameters (HSV thresholds)
+        self.lower_orange = np.array([5, 150, 150])
+        self.upper_orange = np.array([25, 255, 255])
 
-    if len(corners) > 0:
-        for (markerCorner, markerID) in zip(corners, ids.flatten()):
-            if markerID not in arucoItems:
-                continue
+        # Detection output
+        self.markers = {}
+        self.last_updates = {}
+        self.ball = None
+        self.no_ball = 0
+        self.field = Field()
 
-            corners = markerCorner.reshape((4, 2))
-        
-            # Draw the bounding box of the ArUCo detection
-            item = arucoItems[markerID][0]
+    def detectAruco(self, image, draw_debug):
 
-            if item[0] == 'c':
-                field.set_corner_position(item, corners)
+        (corners, ids, rejected) = cv2.aruco.detectMarkers(image,
+                                                           self.arucoDict,
+                                                           parameters=self.arucoParams)
 
-            if draw_debug:
-                (topLeft, topRight, bottomRight, bottomLeft) = corners
-                topRight = (int(topRight[0]), int(topRight[1]))
-                bottomRight = (int(bottomRight[0]), int(bottomRight[1]))
-                bottomLeft = (int(bottomLeft[0]), int(bottomLeft[1]))
-                topLeft = (int(topLeft[0]), int(topLeft[1]))
-                itemColor = arucoItems[markerID][1]
-                cv2.line(image, topLeft, topRight, itemColor, 2)
-                cv2.line(image, topRight, bottomRight, itemColor, 2)
-                cv2.line(image, bottomRight, bottomLeft, itemColor, 2)
-                cv2.line(image, bottomLeft, topLeft, itemColor, 2)
+        new_markers = {}
 
-                # Compute and draw the center (x, y)-coordinates of the
-                # ArUco marker
-                cX = int((topLeft[0] + bottomRight[0]) / 2.0)
-                cY = int((topLeft[1] + bottomRight[1]) / 2.0)
-                cv2.circle(image, (cX, cY), 4, (0, 0, 255), -1)
-                fX = int((topLeft[0] + topRight[0]) / 2.0)
-                fY = int((topLeft[1] + topRight[1]) / 2.0)
-                cv2.line(image, (cX, cY), (fX, fY), (0, 0, 255), 2)
+        if len(corners) > 0:
+            for (markerCorner, markerID) in zip(corners, ids.flatten()):
+                if markerID not in self.arucoItems:
+                    continue
 
-                cv2.putText(image, item, (cX-8, cY+4), cv2.FONT_HERSHEY_SIMPLEX, 0.5, itemColor, 2)
+                corners = markerCorner.reshape((4, 2))
 
-            if field.calibrated() and item[0] != 'c':
-                new_markers[item] = field.pose_of_tag(corners)
-                last_updates[item] = time.time()
+                # Draw the bounding box of the ArUCo detection
+                item = self.arucoItems[markerID][0]
 
-    field.update_homography(image)
+                if item[0] == 'c':
+                    self.field.set_corner_position(item, corners)
 
-    markers = new_markers
+                if draw_debug:
+                    (topLeft, topRight, bottomRight, bottomLeft) = corners
+                    topRight = (int(topRight[0]), int(topRight[1]))
+                    bottomRight = (int(bottomRight[0]), int(bottomRight[1]))
+                    bottomLeft = (int(bottomLeft[0]), int(bottomLeft[1]))
+                    topLeft = (int(topLeft[0]), int(topLeft[1]))
+                    itemColor = self.arucoItems[markerID][1]
+                    cv2.line(image, topLeft, topRight, itemColor, 2)
+                    cv2.line(image, topRight, bottomRight, itemColor, 2)
+                    cv2.line(image, bottomRight, bottomLeft, itemColor, 2)
+                    cv2.line(image, bottomLeft, topLeft, itemColor, 2)
 
-def detectBall(image, draw_debug):
-    global ball, no_ball
+                    # Compute and draw the center (x, y)-coordinates of the
+                    # ArUco marker
+                    cX = int((topLeft[0] + bottomRight[0]) / 2.0)
+                    cY = int((topLeft[1] + bottomRight[1]) / 2.0)
+                    cv2.circle(image, (cX, cY), 4, (0, 0, 255), -1)
+                    fX = int((topLeft[0] + topRight[0]) / 2.0)
+                    fY = int((topLeft[1] + topRight[1]) / 2.0)
+                    cv2.line(image, (cX, cY), (fX, fY), (0, 0, 255), 2)
 
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(hsv, lower_orange, upper_orange)
-    result = cv2.bitwise_and(image, image, mask = mask)
-    gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
-    blob_params = cv2.SimpleBlobDetector_Params()
-    blob_params.minThreshold = 1
-    blob_params.maxThreshold = 255
-    blob_params.filterByCircularity = False
-    blob_params.filterByConvexity = False
-    blob_params.filterByInertia = False
-    blob_params.filterByColor = True
-    blob_params.blobColor = 255
-    blob_params.minDistBetweenBlobs = 50
-    detector = cv2.SimpleBlobDetector_create(blob_params)
-    keypoints = detector.detect(gray)
+                    cv2.putText(image, item, (cX-8, cY+4),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, itemColor, 2)
 
-    if len(keypoints):
-        best = None
-        bestPx = None
-        bestDist = None
-        no_ball = 0
+                if self.field.calibrated() and item[0] != 'c':
+                    new_markers[item] = self.field.pose_of_tag(corners)
+                    self.last_updates[item] = time.time()
 
-        for point in keypoints:
-            if field.calibrated():
-                pos = field.pos_of_gfx(point.pt)
-            else:
-                pos = point.pt
+        self.field.update_homography(image)
+        self.markers = new_markers
 
-            if ball:
-                dist = np.linalg.norm(np.array(pos) - np.array(ball))
-            else:
-                dist = 0
+    def detectBall(self, image, draw_debug):
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv, self.lower_orange, self.upper_orange)
+        result = cv2.bitwise_and(image, image, mask=mask)
+        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+        blob_params = cv2.SimpleBlobDetector_Params()
+        blob_params.minThreshold = 1
+        blob_params.maxThreshold = 255
+        blob_params.filterByCircularity = False
+        blob_params.filterByConvexity = False
+        blob_params.filterByInertia = False
+        blob_params.filterByColor = True
+        blob_params.blobColor = 255
+        blob_params.minDistBetweenBlobs = 50
+        detector = cv2.SimpleBlobDetector_create(blob_params)
+        keypoints = detector.detect(gray)
 
-            if best is None or dist < bestDist:
-                bestDist = dist
-                best = pos
-                bestPx = point.pt
+        if len(keypoints):
+            best = None
+            bestPx = None
+            bestDist = None
+            no_ball = 0
 
-        ball = best
+            for point in keypoints:
+                if self.field.calibrated():
+                    pos = self.field.pos_of_gfx(point.pt)
+                else:
+                    pos = point.pt
 
-        if draw_debug and ball:
-            cv2.circle(image, (int(bestPx[0]), int(bestPx[1])), 3, (255, 255, 0), 3)
-    else:
-        no_ball += 1
-        if no_ball > 10:
-            ball = None
+                if self.ball:
+                    dist = np.linalg.norm(np.array(pos) - np.array(self.ball))
+                else:
+                    dist = 0
 
-def getDetection():
-    global ball, markers
+                if best is None or dist < bestDist:
+                    bestDist = dist
+                    best = pos
+                    bestPx = point.pt
 
-    return {'ball': ball, 'markers': markers, 'calibrated': field.calibrated()}
+            ball = best
 
-def publish():
-    socket.send_json(getDetection(), flags=zmq.NOBLOCK)
+            if draw_debug and ball:
+                cv2.circle(image, (int(bestPx[0]), int(
+                    bestPx[1])), 3, (255, 255, 0), 3)
+        else:
+            self.no_ball += 1
+            if self.no_ball > 10:
+                ball = None
+
+    def getDetection(self):
+        return {
+            'ball': self.ball, 
+            'markers': self.markers, 
+            'calibrated': self.field.calibrated()
+        }
+
+    def publish(self):
+        self.socket.send_json(self.getDetection(), flags=zmq.NOBLOCK)

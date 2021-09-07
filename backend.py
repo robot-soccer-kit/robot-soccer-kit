@@ -3,82 +3,88 @@ from PyQt5.QtCore import QVariant
 import video
 import robots
 import control
-import detection
 
 class Backend(QtCore.QObject):
+    def __init__(self):
+        super().__init__()
+
+        self.video = video.Video()
+        self.detection = self.video.detection
+        self.robots = robots.Robots(self.detection)
+
     @QtCore.pyqtSlot(result=QVariant)
     def cameras(self):
-        return QVariant(video.cameras)
+        return QVariant(self.video.cameras)
 
     @QtCore.pyqtSlot(int, result=bool)
     def startCapture(self, index):
-        return video.startCapture(index)
+        return self.video.startCapture(index)
 
     @QtCore.pyqtSlot()
     def stopCapture(self):
-        video.stopCapture()
+        self.video.stopCapture()
 
     @QtCore.pyqtSlot(result=str)
     def getImage(self):
-        image = video.getImage()
+        image = self.video.getImage()
         return image
 
     @QtCore.pyqtSlot(bool, result=QVariant)
     def getVideo(self, with_image):
-        return QVariant(video.getVideo(with_image))
+        return QVariant(self.video.getVideo(with_image))
 
     @QtCore.pyqtSlot(bool)
     def enableVideoDebug(self):
-        video.debug = True
+        self.video.debug = True
 
     @QtCore.pyqtSlot(int, int, int, result=bool)
     def cameraSettings(self, brightness, contrast, saturation):
-        video.setCameraSettings(brightness, contrast, saturation)
+        self.video.setCameraSettings(brightness, contrast, saturation)
         return True
 
     @QtCore.pyqtSlot(result=QVariant)
     def listPorts(self):
-        return robots.ports
+        return self.robots.ports
     
     @QtCore.pyqtSlot(str)
     def addRobot(self, port):
-        robots.addRobot(port)
+        self.robots.addRobot(port)
 
     @QtCore.pyqtSlot(result=QVariant)
     def getRobots(self):
-        return robots.getRobots()
+        return self.robots.getRobots()
 
     @QtCore.pyqtSlot(str, str)
     def setMarker(self, port, marker):
-        robots.setMarker(port, marker)
+        self.robots.setMarker(port, marker)
 
     @QtCore.pyqtSlot(str)
     def removeRobot(self, port):
-        robots.remove(port)
+        self.robots.remove(port)
 
     @QtCore.pyqtSlot(str)
     def blink(self, port):
-        if port in robots.robots:
-            robots.robots[port].blink()
+        if port in self.robots.robots:
+            self.robots.robots[port].blink()
 
     @QtCore.pyqtSlot(str)
     def kick(self, port):
-        if port in robots.robots:
-            robots.robots[port].kick()
+        if port in self.robots.robots:
+            self.robots.robots[port].kick()
 
     @QtCore.pyqtSlot(result=QVariant)
     def getGame(self):
-        return control.status()
+        return self.robots.control.status()
 
     @QtCore.pyqtSlot(str, bool)
     def allowControl(self, team, allow):
-        control.allowControl(team, allow)
+        self.robots.control.allowControl(team, allow)
 
     @QtCore.pyqtSlot()
     def emergency(self):
-        control.emergency()
+        self.robots.control.emergency()
 
     @QtCore.pyqtSlot(str, str)
     def setKey(self, team, key):
-        control.setKey(team, key)
+        self.robots.control.setKey(team, key)
     

@@ -75,7 +75,10 @@ class Controller:
 
     def command(self, color, number, name, parameters):
         self.req.send_json([self.key, color, number, [name, *parameters]])
-        return self.req.recv_json()
+
+        success, message = self.req.recv_json()
+        if not success:
+            raise Exception('Command "'+name+'" failed: '+message)
 
 
 if __name__ == '__main__':

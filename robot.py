@@ -208,6 +208,7 @@ class Robot:
                     self.bt.write(b"rhock\r\nrhock\r\nrhock\r\n")
                     time.sleep(0.1)
                     self.monitor(5)
+                    self.control(0, 0, 0)
                     self.beep(880, 250)
                     self.applyLeds()
                     self.last_init = time.time()
