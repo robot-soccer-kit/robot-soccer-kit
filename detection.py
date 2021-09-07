@@ -25,12 +25,13 @@ arucoColors = { # Colors for debug drawing
 }
 
 # Ball parameters
-lower_orange = np.array([5, 200, 200])
-upper_orange = np.array([20, 255, 255])
+lower_orange = np.array([5, 150, 150])
+upper_orange = np.array([25, 255, 255])
 
 # Detection output
 markers = {}
 ball = None
+no_ball = 0
 field = Field()
 
 def detectAruco(image, draw_debug):
@@ -53,9 +54,6 @@ def detectAruco(image, draw_debug):
 
             if item[0] == 'c':
                 field.set_corner_position(item, corners)
-            else:
-                if field.calibrated():
-                    print(field.pose_of_tag(corners))
 
             if draw_debug:
                 (topLeft, topRight, bottomRight, bottomLeft) = corners
@@ -80,7 +78,8 @@ def detectAruco(image, draw_debug):
 
                 cv2.putText(image, item, (cX-8, cY+4), cv2.FONT_HERSHEY_SIMPLEX, 0.5, itemColor, 2)
 
-            new_markers[item] = [cX, cY]
+            if field.calibrated() and item[0] != 'c':
+                new_markers[item] = field.pose_of_tag(corners)
 
     field.update_homography(image)
 
@@ -88,7 +87,7 @@ def detectAruco(image, draw_debug):
         markers = new_markers
 
 def detectBall(image, draw_debug):
-    global ball
+    global ball, no_ball
 
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_orange, upper_orange)
@@ -97,23 +96,46 @@ def detectBall(image, draw_debug):
     blob_params = cv2.SimpleBlobDetector_Params()
     blob_params.minThreshold = 1
     blob_params.maxThreshold = 255
-    blob_params.filterByArea = False
     blob_params.filterByCircularity = False
     blob_params.filterByConvexity = False
     blob_params.filterByInertia = False
     blob_params.filterByColor = True
     blob_params.blobColor = 255
+    blob_params.minDistBetweenBlobs = 50
     detector = cv2.SimpleBlobDetector_create(blob_params)
     keypoints = detector.detect(gray)
 
-    if draw_debug:
-        cv2.drawKeypoints(image, keypoints, image, (255, 255, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    # if draw_debug:
+    #     cv2.drawKeypoints(image, keypoints, image, (255, 255, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
     if len(keypoints):
-        position = keypoints[0].pt
-        ball = [int(position[0]), int(position[1])]
+        best = None
+        bestPx = None
+        bestDist = None
+        no_ball = 0
+
+        for point in keypoints:
+            pos = field.pos_of_gfx(point.pt)
+            if ball:
+                dist = np.linalg.norm(np.array(pos) - np.array(ball))
+            else:
+                dist = 0
+
+            if best is None or dist < bestDist:
+                bestDist = dist
+                best = pos
+                bestPx = point.pt
+
+        ball = best
+
+        if draw_debug and ball:
+            cv2.circle(image, (int(bestPx[0]), int(bestPx[1])), 3, (255, 255, 0), 3)
+    else:
+        no_ball += 1
+        if no_ball > 10:
+            ball = None
 
 def getDetection():
     global ball, markers
 
-    return {'ball': ball, 'markers': markers}
+    return {'ball': ball, 'markers': markers, 'calibrated': field.calibrated()}

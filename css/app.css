@@ -36,3 +36,7 @@ body {
 .robots-warning .robots-show-warning {
     display:inline;
 }
+
+.field-calibrated .vision-hide-calibrated {
+    display: none
+}

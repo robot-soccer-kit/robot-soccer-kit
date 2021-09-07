@@ -46,15 +46,29 @@ function video_initialize(backend)
 
             let detection = ''
             if (video.detection.ball) {
-                detection += 'ball: '+JSON.stringify(video.detection.ball)+"<br>";
+                detection += 'ball: x='+round(video.detection.ball[0])+', y='+round(video.detection.ball[1])+"<br>";
             }
             for (let entry in video.detection.markers) {
-                detection += entry+': '+JSON.stringify(video.detection.markers[entry])+"<br>";
+                let robot = video.detection.markers[entry];
+                detection += entry+': x='+round(robot.position[0])+', y='+round(robot.position[1])+', o='+round(robot.orientation)+"<br>";
             }
             if (detection == '') {
                 detection = 'no detection';
             }
             $('.detection').html(detection);
+
+            console.log(video.detection);
+            if (video.detection.calibrated) {
+                $('body').addClass('field-calibrated');
+                $('.calibrated').text('Field calibrated');
+                $('.calibrated').addClass('text-success');
+                $('.calibrated').removeClass('text-danger');
+            } else {
+                $('body').removeClass('field-calibrated');
+                $('.calibrated').html('Field not calibrated <i class="text-warning bi bi-exclamation-circle"></i>');
+                $('.calibrated').removeClass('text-success');
+                $('.calibrated').addClass('text-danger');
+            }
         });
     }, 50);
 }

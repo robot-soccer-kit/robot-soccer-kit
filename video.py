@@ -100,7 +100,7 @@ def getVideo(with_image):
     data = {
         'running': capture is not None,
         'fps': round(1/period, 2) if period is not None else 0,
-        'detection': detection.getDetection()
+        'detection': detection.getDetection(),
     }
 
     if with_image:

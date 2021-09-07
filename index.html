@@ -8,6 +8,7 @@
         <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
         <script type="text/javascript" src="jquery/jquery.js"></script>
         <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="js/utils.js"></script>
         <script type="text/javascript" src="js/video.js"></script>
         <script type="text/javascript" src="js/robots.js"></script>
         <script type="text/javascript" src="js/tabs.js"></script>
@@ -22,6 +23,7 @@
                 <span class="input-group">
                 Vision&nbsp;
                 <i class="text-warning bi bi-exclamation-circle vision-hide-running"></i>
+                <i class="text-warning bi bi-exclamation-circle vision-hide-calibrated"></i>
                 <i class="text-success bi bi-check-lg vision-show-running"></i>
                 </span>
               </a>
@@ -66,20 +68,21 @@
             <div class="w-50 p-2">
               <b>FPS</b>
               <kbd class="fps"></kbd>
+              <span class="calibrated"></span>
 
               <hr/>
 
               <label>
                 Brightness
-                <input type="number" class="text brightness form-control" value="100" />
+                <input type="number" class="text brightness form-control" value="125" />
               </label>
               <label>
                 Contrast
-                <input type="number" class="text contrast form-control" value="100" />
+                <input type="number" class="text contrast form-control" value="125" />
               </label>
               <label>
                 Saturation
-                <input type="number" class="text saturation form-control" value="100" />
+                <input type="number" class="text saturation form-control" value="125" />
               </label>
 
               <hr/>
