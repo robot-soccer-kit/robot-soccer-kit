@@ -1,15 +1,19 @@
 <div class="card">
 <div class="card-header">
-  <h4 class="card-title">{team}</h4>
+  <h4 class="card-title">
+    <img src="markers/{team}1.svg" width="32" class="m-1" />
+    <img src="markers/{team}2.svg" width="32" class="m-1" />
+    <b>{team}</b>
+  </h4>
 </div>
 <div class="card-body">
   <h6 class="card-subtitle mb-2 text-muted packets-{team}"></h6>
   <label>
     Allow control
-    <input type="checkbox" class="allow-{team}" />
+    <input type="checkbox" class="allow-{team} form-check-input" />
   </label>
-  <div class="float-end">
-    <i class="bi bi-key"></i>&nbsp;
-    <input type="password" class="key-{team}" placeholder="key" />
+  <div class="float-end d-flex">
+    <i class="bi bi-key m-1"></i>
+    <input type="password" class="key-{team} form-control" placeholder="(no key)" />
   </div>
 </div>
