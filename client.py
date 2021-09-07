@@ -81,10 +81,14 @@ class Controller:
 if __name__ == '__main__':
     controller = Controller('red')
 
-    while True:
-        controller.robots[1].control(100, 0, 0)
-        time.sleep(1)
-        controller.robots[1].control(0, 0, 0)
-        controller.robots[1].kick()
+    try:
+        while True:
+            controller.robots[1].control(100, 0, 0)
+            time.sleep(1)
+            controller.robots[1].control(0, 0, 0)
+            controller.robots[1].kick()
 
-        time.sleep(1)
+            time.sleep(1)
+    except KeyboardInterrupt:
+        controller.robots[1].control(0, 0, 0)
+        controller.robots[2].control(0, 0, 0)
