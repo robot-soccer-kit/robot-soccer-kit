@@ -52,11 +52,18 @@ function robots_initialize(backend)
 
             // Marker
             if (infos.marker) {
-                $('.marker-image').html('<img src="markers/'+infos.marker+'.svg" class="m-1" width="80" />');
-                $('.marker-select').val(infos.marker);
+                div.find('.marker-image').html('<img src="markers/'+infos.marker+'.svg" class="m-1" width="80" />');
+                div.find('.marker-select').val(infos.marker);
             } else {
-                $('.marker-image').html('N/A');
-                $('.marker-select').val('none');
+                div.find('.marker-image').html('N/A');
+                div.find('.marker-select').val('none');
+            }
+
+            if (infos.marker && (!infos.last_detection || infos.last_detection > 0.15)) {
+                hasWarning = true;
+                div.find('.not-detected').html('Not detected ' + warning);
+            } else {
+                div.find('.not-detected').html('');
             }
 
             return hasWarning;

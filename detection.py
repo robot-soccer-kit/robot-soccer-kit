@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from field import Field
 import zmq
+import time
 
 # Publishing server
 context = zmq.Context()
@@ -11,6 +12,7 @@ socket.bind("tcp://*:7557")
 # ArUco parameters
 arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
 arucoParams = cv2.aruco.DetectorParameters_create()
+# arucoParams.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_APRILTAG
 
 arucoItems = { 
     # Corners
@@ -34,16 +36,18 @@ upper_orange = np.array([25, 255, 255])
 
 # Detection output
 markers = {}
+last_updates = {}
 ball = None
 no_ball = 0
 field = Field()
 
 def detectAruco(image, draw_debug):
-    global markers
+    global markers, last_updates
 
     (corners, ids, rejected) = cv2.aruco.detectMarkers(image,
                                                            arucoDict,
-                                                           parameters=arucoParams)                                               
+                                                           parameters=arucoParams)                                      
+
     new_markers = {}
 
     if len(corners) > 0:
@@ -84,6 +88,7 @@ def detectAruco(image, draw_debug):
 
             if field.calibrated() and item[0] != 'c':
                 new_markers[item] = field.pose_of_tag(corners)
+                last_updates[item] = time.time()
 
     field.update_homography(image)
 

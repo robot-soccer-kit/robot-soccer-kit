@@ -48,3 +48,7 @@ body {
 .robots-warning .robots-show-warning {
     display:inline;
 }
+
+.detection-wrapper {
+    min-height:150px;
+}

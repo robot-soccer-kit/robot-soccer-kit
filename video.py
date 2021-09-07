@@ -2,7 +2,6 @@ import time
 import numpy as np
 import cv2
 import base64
-from imutils.video import VideoStream
 import threading
 import detection
 import field
@@ -32,9 +31,9 @@ def listCameras():
 def startCapture(index):
     global captures, capture, image
 
-    capture = VideoStream(src=index, framerate=25)
-    capture.stream.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
-    capture.stream.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
+    capture = cv2.VideoCapture(index)
+    capture.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
     capture.start()
 
     time.sleep(0.1)
@@ -46,16 +45,16 @@ def stopCapture():
 
 def setCameraSettings(brightness, contrast, saturation):
     if capture is not None:
-        capture.stream.stream.set(cv2.CAP_PROP_BRIGHTNESS, brightness)
-        capture.stream.stream.set(cv2.CAP_PROP_CONTRAST, contrast)
-        capture.stream.stream.set(cv2.CAP_PROP_SATURATION, saturation)
+        capture.set(cv2.CAP_PROP_BRIGHTNESS, brightness)
+        capture.set(cv2.CAP_PROP_CONTRAST, contrast)
+        capture.set(cv2.CAP_PROP_SATURATION, saturation)
 
 def thread():
     global capture, image, period, stop_capture
     while True:
         if capture is not None:
             t0 = time.time()
-            image_captured = capture.read()
+            grabbed, image_captured = capture.read()
 
             if image_captured is not None:
                 # Process the image
@@ -72,7 +71,7 @@ def thread():
             if period is None:
                 period = current_period
             else:
-                period = period*0.99 + current_period*0.01
+                period = period*0.95 + current_period*0.05
 
             if image_captured is None:
                 capture = None

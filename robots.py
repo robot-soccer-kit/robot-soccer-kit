@@ -2,6 +2,7 @@ from serial.tools import list_ports
 import time
 import robot
 import control
+import detection
 
 robots = {}
 robots_by_marker = {}
@@ -15,9 +16,14 @@ def addRobot(port):
 def getRobots():
     data = {}
     for entry in robots:
+        last_detection = None
+        if robots[entry].marker in detection.last_updates:
+            last_detection = time.time() - detection.last_updates[robots[entry].marker]
+
         data[entry] = {
             'state': robots[entry].state,
             'marker': robots[entry].marker,
+            'last_detection': last_detection,
             'last_message': time.time() - robots[entry].last_message if robots[entry].last_message is not None else None
         }
 
