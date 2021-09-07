@@ -24,6 +24,18 @@ body {
     display:none;
 }
 
+.vision-has-no-error {
+    display:none;
+}
+
+.vision-no-error .vision-has-no-error {
+    display:inline;
+}
+
+.vision-no-error .vision-has-error {
+    display:none;
+}
+
 .nav-item {
     background-color:#333;
     margin-right:5px;
@@ -35,8 +47,4 @@ body {
 
 .robots-warning .robots-show-warning {
     display:inline;
-}
-
-.field-calibrated .vision-hide-calibrated {
-    display: none
 }

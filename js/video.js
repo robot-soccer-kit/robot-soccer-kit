@@ -58,16 +58,21 @@ function video_initialize(backend)
             $('.detection').html(detection);
 
             console.log(video.detection);
+
             if (video.detection.calibrated) {
-                $('body').addClass('field-calibrated');
                 $('.calibrated').text('Field calibrated');
                 $('.calibrated').addClass('text-success');
                 $('.calibrated').removeClass('text-danger');
             } else {
-                $('body').removeClass('field-calibrated');
                 $('.calibrated').html('Field not calibrated <i class="text-warning bi bi-exclamation-circle"></i>');
                 $('.calibrated').removeClass('text-success');
                 $('.calibrated').addClass('text-danger');
+            }
+
+            if (video.running && video.detection.calibrated) {
+                $('body').addClass('vision-no-error');
+            } else {
+                $('body').removeClass('vision-no-error');
             }
         });
     }, 50);

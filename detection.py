@@ -83,8 +83,7 @@ def detectAruco(image, draw_debug):
 
     field.update_homography(image)
 
-    if len(new_markers):
-        markers = new_markers
+    markers = new_markers
 
 def detectBall(image, draw_debug):
     global ball, no_ball
@@ -105,9 +104,6 @@ def detectBall(image, draw_debug):
     detector = cv2.SimpleBlobDetector_create(blob_params)
     keypoints = detector.detect(gray)
 
-    # if draw_debug:
-    #     cv2.drawKeypoints(image, keypoints, image, (255, 255, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-
     if len(keypoints):
         best = None
         bestPx = None
@@ -115,7 +111,11 @@ def detectBall(image, draw_debug):
         no_ball = 0
 
         for point in keypoints:
-            pos = field.pos_of_gfx(point.pt)
+            if field.calibrated():
+                pos = field.pos_of_gfx(point.pt)
+            else:
+                pos = point.pt
+
             if ball:
                 dist = np.linalg.norm(np.array(pos) - np.array(ball))
             else:

@@ -43,10 +43,10 @@ class Field:
         self.corner_gfx_positions[corner] = corners
 
     def update_homography(self, debug):
-        if len(self.corner_gfx_positions) == len(self.corner_field_positions):
+        if len(self.corner_gfx_positions) >= 3: # We allow to compute homography with only 3 corners
             graphics_positions = []
             field_positions = []
-            for key in self.corner_field_positions:
+            for key in self.corner_gfx_positions:
                 k = 0
                 for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
                     graphics_positions.append(gfx)
@@ -57,6 +57,21 @@ class Field:
             field_positions = np.array(field_positions)
             H, mask = cv2.findHomography(graphics_positions, field_positions)
             self.homography = H
+
+        # We check that homography is consistent, note that this can happen (and should happen)
+        # with only one or two corners!
+        if self.homography is not None:
+            bad_homography = False
+            for key in self.corner_gfx_positions:
+                for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
+                    projected = self.pos_of_gfx(gfx)
+                    dist = np.linalg.norm(np.array(real) - np.array(projected))
+                    if dist > 0.1:
+                        bad_homography = True
+            if bad_homography:
+                self.homography = None
+
+        self.corner_gfx_positions = {}
         
     def pos_of_gfx(self, pos):
         M = np.ndarray(shape = (3,1), buffer = np.array([[pos[0]], [pos[1]], [1.0]]))
