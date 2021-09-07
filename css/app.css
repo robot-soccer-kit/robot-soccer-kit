@@ -2,6 +2,11 @@ body {
     font-size:20px;
 }
 
+.card {
+    filter: drop-shadow(-3px 3px 3px #ccc);
+    margin-bottom:20px;
+}
+
 .reload {
     position:absolute;
     right:0;
@@ -39,6 +44,16 @@ body {
 .nav-item {
     background-color:#333;
     margin-right:5px;
+}
+
+.nav-link {
+    border-radius:5px;
+    border:1px solid transparent;
+}
+
+.nav-link.active {
+    background-color:#444;
+    border:1px solid white;
 }
 
 .robots-show-warning {

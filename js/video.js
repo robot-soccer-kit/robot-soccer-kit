@@ -1,12 +1,16 @@
 function video_initialize(backend)
 {
-    backend.cameras(function(indexes) {
-        let options = '';
-        for (let index of indexes) {
-            options += "<option value="+index+">Camera "+index+"</option>";
-        }
-        $('.cameras').html(options);
-    });
+    function updateCameras() {
+        backend.cameras(function(indexes) {
+            let options = '';
+            for (let index of indexes) {
+                options += "<option value="+index+">Camera "+index+"</option>";
+            }
+            $('.cameras').html(options);
+        });
+    }
+    updateCameras();
+    $('.refresh-cameras').click(updateCameras);
 
     // Camera settings
     function sendSettings() {

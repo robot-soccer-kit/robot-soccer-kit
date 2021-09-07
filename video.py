@@ -24,21 +24,19 @@ class Video:
 
         self.detection = detection.Detection()
 
-        # Listing available cameras
-        self.listCameras()
-
         # Starting the video processing thread
         self.video_thread = threading.Thread(target=lambda: self.thread())
         self.video_thread.start()
 
-    def listCameras(self):
+    def cameras(self):
         indexes = []
         for index in range(10):
             cap = cv2.VideoCapture(index)
             if cap.read()[0]:
                 indexes.append(index)
                 cap.release()
-        self.cameras = indexes
+
+        return indexes
 
     def startCapture(self, index):
         self.capture = cv2.VideoCapture(index)

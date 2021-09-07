@@ -4,6 +4,7 @@ import video
 import robots
 import control
 
+
 class Backend(QtCore.QObject):
     def __init__(self):
         super().__init__()
@@ -14,7 +15,7 @@ class Backend(QtCore.QObject):
 
     @QtCore.pyqtSlot(result=QVariant)
     def cameras(self):
-        return QVariant(self.video.cameras)
+        return QVariant(self.video.cameras())
 
     @QtCore.pyqtSlot(int, result=bool)
     def startCapture(self, index):
@@ -43,9 +44,9 @@ class Backend(QtCore.QObject):
         return True
 
     @QtCore.pyqtSlot(result=QVariant)
-    def listPorts(self):
-        return self.robots.ports
-    
+    def ports(self):
+        return self.robots.ports()
+
     @QtCore.pyqtSlot(str)
     def addRobot(self, port):
         self.robots.addRobot(port)
@@ -87,4 +88,3 @@ class Backend(QtCore.QObject):
     @QtCore.pyqtSlot(str, str)
     def setKey(self, team, key):
         self.robots.control.setKey(team, key)
-    

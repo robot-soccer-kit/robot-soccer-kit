@@ -18,31 +18,44 @@
 
       <nav class="navbar navbar-expand navbar-dark bg-dark">
         <div class="container-fluid">
+          <a class="navbar-brand" href="#">
+            <img src="ball.png" width="32" />
+            Junior SSL
+          </a>
+
           <ul class="navbar-nav">
             <li class="nav-item nav-tab" rel="vision">
               <a class="nav-link active" aria-current="page" href="#">
                 <span class="input-group">
-                Vision&nbsp;
-                <i class="text-warning bi bi-exclamation-circle vision-has-error"></i>
-                <i class="text-success bi bi-check-lg vision-has-no-error"></i>
+                  <i class="bi bi-camera"></i>&nbsp;
+                  Vision&nbsp;
+                  <i class="text-warning bi bi-exclamation-circle vision-has-error"></i>
+                  <i class="text-success bi bi-check-lg vision-has-no-error"></i>
                 </span>
               </a>
             </li>
             <li class="nav-item nav-tab" rel="robots">
               <a class="nav-link" href="#">
+                <i class="bi bi-gear"></i>&nbsp;
                 Robots&nbsp;
                 [<span class="text-success robots-ok">0</span>/<span class="text-success robots-count">0</span>]
                 <i class="text-warning bi bi-exclamation-circle robots-show-warning"></i>
               </a>
             </li>
             <li class="nav-item nav-tab" rel="control">
-              <a class="nav-link" href="#">Control</a>
+              <a class="nav-link" href="#">
+                <i class="bi bi-arrows-move"></i>&nbsp;
+                Control
+              </a>
             </li>
           </ul>
 
           <ul class="navbar-nav">
             <li class="nav-item">
-              <a class="nav-link emergency bg-danger" href="#">Emergency</a>
+              <a class="nav-link emergency bg-danger" href="#">
+                <i class="bi bi-slash-circle"></i>
+                Emergency
+              </a>
             </li>
           </ul>
         </div>
@@ -51,13 +64,28 @@
       <div class="p-3">
       <div class="page page-vision">
         <div class="vision-hide-running">
-          <div class="mb-3 mt-5">
-              <label>Camera source</label>
-              <select class="m-1 cameras form-select"></select>
+
+          <div class="card">
+            <div class="card-header">
+              Starting camera detection
             </div>
-            <div class="d-flex justify-content-end">
-              <span class="m-1 btn btn-success start-capture">Start</span>
-            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label>Camera source</label>
+                <select class="m-1 cameras form-select"></select>
+              </div>
+              <div class="d-flex justify-content-end">
+                <span class="m-1 btn btn-primary refresh-cameras">
+                  <i class="bi bi-arrow-repeat"></i>
+                  Refresh cameras
+                </span>
+                <span class="m-1 btn btn-success start-capture">
+                  <i class="bi bi-play-fill"></i>
+                  Start
+                </span>
+              </div>
+            </div>  
+          </div>
         </div>
         <div class="vision-show-running">
           <div class="camera-area m-2 d-flex">
@@ -103,11 +131,29 @@
         <div class="robots">
         </div>
 
-        <div class="robot-add">
-          <div class="d-flex justify-content-center">
-            <select class="m-1 ports form-select"></select>
-            <span class="m-1 btn btn-success add-robot">Add</span>
+        <div class="card">
+          <div class="card-header">
+            Adding a port
           </div>
+          <div class="card-body">
+            <div class="justify-content-center">
+              <div class="mb-3">
+                <label>COM port</label>
+                <select class="m-1 ports form-select"></select>
+              </div>
+
+              <div class="d-flex justify-content-end">
+                <span class="m-1 btn btn-primary refresh-ports">
+                  <i class="bi bi-arrow-repeat"></i>
+                  Refresh ports
+                </span>
+                <span class="m-1 btn btn-success add-robot">
+                  <i class="bi bi-plus-circle"></i>
+                  Add
+                </span>
+              </div>
+            </div>
+        </div>
         </div>
       </div>
 

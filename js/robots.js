@@ -1,14 +1,18 @@
 function robots_initialize(backend)
 {
-    backend.listPorts(function(ports) {
-        let options = '';
+    function updatePorts() {
+        backend.ports(function(ports) {
+            let options = '';
 
-        for (let port of ports) {
-            options += '<option value="'+port+'">'+port+'</option>';
-        }
+            for (let port of ports) {
+                options += '<option value="'+port+'">'+port+'</option>';
+            }
 
-        $('.ports').html(options);
-    });
+            $('.ports').html(options);
+        });
+    }
+    updatePorts();
+    $('.refresh-ports').click(updatePorts);
 
     $('.add-robot').click(function() {
         backend.addRobot($('.ports').val());

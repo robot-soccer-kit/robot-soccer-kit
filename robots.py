@@ -12,10 +12,9 @@ class Robots:
 
         self.control = control.Control(self)
         self.control.start()
-        self.enumerateComPorts()
 
-    def enumerateComPorts(self):
-        self.ports = [entry.device for entry in list_ports.comports()]
+    def ports(self):
+        return [entry.device for entry in list_ports.comports()]
 
     def addRobot(self, port):
         if port not in self.robots:

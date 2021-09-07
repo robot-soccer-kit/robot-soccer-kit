@@ -1,5 +1,5 @@
 import robots
-from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets, QtWebChannel
+from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets, QtWebChannel
 from backend import Backend
 import os, sys
 
@@ -7,6 +7,7 @@ os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = '5422'
 
 app = QtWidgets.QApplication(sys.argv)
 app.setApplicationName("Junior SSL")
+app.setWindowIcon(QtGui.QIcon('ball.png'))
 
 backend = Backend()
 
