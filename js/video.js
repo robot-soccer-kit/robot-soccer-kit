@@ -57,8 +57,6 @@ function video_initialize(backend)
             }
             $('.detection').html(detection);
 
-            console.log(video.detection);
-
             if (video.detection.calibrated) {
                 $('.calibrated').text('Field calibrated');
                 $('.calibrated').addClass('text-success');

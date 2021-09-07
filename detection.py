@@ -1,27 +1,31 @@
 import numpy as np
 import cv2
 from field import Field
+import zmq
+
+# Publishing server
+context = zmq.Context()
+socket = context.socket(zmq.PUB)
+socket.bind("tcp://*:7557")
 
 # ArUco parameters
 arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
 arucoParams = cv2.aruco.DetectorParameters_create()
 
-arucoItems = { # Maps ArUco IDs to tags
-    0: 'c1',
-    1: 'c2',
-    2: 'c3',
-    3: 'c4',
+arucoItems = { 
+    # Corners
+    0: ['c1', (0, 255, 0)],
+    1: ['c2', (0, 255, 0)],
+    2: ['c3', (0, 255, 0)],
+    3: ['c4', (0, 255, 0)],
     
-    4: 'r1',
-    5: 'r2',
+    # Red
+    4: ['red1', (0, 0, 128)],
+    5: ['red2', (0, 0, 128)],
     
-    6: 'b1',
-    7: 'b2',
-}
-arucoColors = { # Colors for debug drawing
-    'c': (0, 255, 0),
-    'r': (0, 0, 128),
-    'b': (128, 0, 0)
+    # Blue
+    6: ['blue1', (128, 0, 0)],
+    7: ['blue2', (128, 0, 0)],
 }
 
 # Ball parameters
@@ -50,7 +54,7 @@ def detectAruco(image, draw_debug):
             corners = markerCorner.reshape((4, 2))
         
             # Draw the bounding box of the ArUCo detection
-            item = arucoItems[markerID]
+            item = arucoItems[markerID][0]
 
             if item[0] == 'c':
                 field.set_corner_position(item, corners)
@@ -61,7 +65,7 @@ def detectAruco(image, draw_debug):
                 bottomRight = (int(bottomRight[0]), int(bottomRight[1]))
                 bottomLeft = (int(bottomLeft[0]), int(bottomLeft[1]))
                 topLeft = (int(topLeft[0]), int(topLeft[1]))
-                itemColor = arucoColors[item[0]]
+                itemColor = arucoItems[markerID][1]
                 cv2.line(image, topLeft, topRight, itemColor, 2)
                 cv2.line(image, topRight, bottomRight, itemColor, 2)
                 cv2.line(image, bottomRight, bottomLeft, itemColor, 2)
@@ -139,3 +143,6 @@ def getDetection():
     global ball, markers
 
     return {'ball': ball, 'markers': markers, 'calibrated': field.calibrated()}
+
+def publish():
+    socket.send_json(getDetection(), flags=zmq.NOBLOCK)

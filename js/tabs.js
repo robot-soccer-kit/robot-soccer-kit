@@ -10,9 +10,9 @@ $(document).ready(function() {
         $('.nav-item[rel="'+page+'"] a').addClass('active');
     }
 
-    $('.nav-item').click(function() {
+    $('.nav-item.nav-tab').click(function() {
         setTab($(this).attr('rel'));
     });
 
-    setTab('vision');
+    setTab('control');
 });

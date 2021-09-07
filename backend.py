@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets, QtWebChannel
 from PyQt5.QtCore import QVariant
 import video
 import robots
+import control
 import detection
 
 class Backend(QtCore.QObject):
@@ -64,4 +65,20 @@ class Backend(QtCore.QObject):
     def kick(self, port):
         if port in robots.robots:
             robots.robots[port].kick()
+
+    @QtCore.pyqtSlot(result=QVariant)
+    def getGame(self):
+        return control.status()
+
+    @QtCore.pyqtSlot(str, bool)
+    def allowControl(self, team, allow):
+        control.allowControl(team, allow)
+
+    @QtCore.pyqtSlot()
+    def emergency(self):
+        control.emergency()
+
+    @QtCore.pyqtSlot(str, str)
+    def setKey(self, team, key):
+        control.setKey(team, key)
     

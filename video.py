@@ -61,6 +61,7 @@ def thread():
                 # Process the image
                 detection.detectAruco(image_captured, debug)
                 detection.detectBall(image_captured, debug)
+                detection.publish()
 
             # Computing time
             current_period = time.time() - t0

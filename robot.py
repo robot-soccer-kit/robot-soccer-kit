@@ -165,7 +165,6 @@ class Robot:
         packet = Packet(PACKET_HOLO)
         packet.appendByte(PACKET_HOLO_KICK)
         packet.appendByte(int(100*power))
-        print(packet.toRaw())
         self.send(packet)
 
     def control(self, dx, dy, dturn):

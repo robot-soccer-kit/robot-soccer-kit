@@ -1,8 +1,10 @@
 from serial.tools import list_ports
 import time
 import robot
+import control
 
 robots = {}
+robots_by_marker = {}
 
 def addRobot(port):
     global robots
@@ -22,8 +24,11 @@ def getRobots():
     return data
 
 def setMarker(port, marker):
+    global robots_by_marker
+
     if port in robots:
         robots[port].setMarker(marker)
+        robots_by_marker[marker] = robots[port]
 
 def remove(port):
     global robots
@@ -32,3 +37,4 @@ def remove(port):
     del robots[port]
 
 ports = [entry.device for entry in list_ports.comports()]
+control.start()
