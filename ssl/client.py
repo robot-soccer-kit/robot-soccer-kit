@@ -59,20 +59,24 @@ class Controller:
         robot.last_update = time.time()
 
     def sub_process(self):
+        self.sub.RCVTIMEO = 1000
         while self.running:
-            json = self.sub.recv_json()
-            if 'ball' in json:
-                self.ball = np.array(json['ball'])
+            try:
+                json = self.sub.recv_json()
+                if 'ball' in json:
+                    self.ball = np.array(json['ball'])
 
-            if 'markers' in json:
-                for entry in json['markers']:
-                    team = entry[:-1]
-                    number = int(entry[-1])
+                if 'markers' in json:
+                    for entry in json['markers']:
+                        team = entry[:-1]
+                        number = int(entry[-1])
 
-                    if team == self.color:
-                        self.update_robot(self.robots[number], json['markers'][entry])
-                    else:
-                        self.update_robot(self.opponents[number], json['markers'][entry])
+                        if team == self.color:
+                            self.update_robot(self.robots[number], json['markers'][entry])
+                        else:
+                            self.update_robot(self.opponents[number], json['markers'][entry])
+            except zmq.error.Again:
+                pass
 
     def command(self, color, number, name, parameters):
         self.req.send_json([self.key, color, number, [name, *parameters]])
@@ -83,7 +87,7 @@ class Controller:
 
 
 if __name__ == '__main__':
-    controller = Controller('red')
+    controller = Controller('blue')
 
     try:
         while True:
@@ -94,10 +98,8 @@ if __name__ == '__main__':
 
             time.sleep(1)
     except KeyboardInterrupt:
-        print('Exiting...')
-        #controller.robots[1].control(0, 0, 0)
-        #controller.robots[2].control(0, 0, 0)
+        print('Exiting')
     except Exception as e:
         print('Fatal error: '+str(e))
-    
-    controller.running = False
+    finally:
+        controller.running = False
