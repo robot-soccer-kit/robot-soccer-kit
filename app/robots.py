@@ -15,8 +15,9 @@ class Robots:
         self.control.start()
 
         for port, marker in config.config['robots']:
-            self.robots[port] = robot.Robot(port, marker)
-            if marker is not None:
+            self.robots[port] = robot.Robot(port)
+            if marker != "":
+                self.robots[port].setMarker(marker)
                 self.robots_by_marker[marker] = self.robots[port]
 
     def ports(self):

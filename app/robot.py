@@ -84,7 +84,7 @@ class Packet:
         return sum(self.payload) % 256
 
 class Robot:
-    def __init__(self, port, marker=None):
+    def __init__(self, port):
         self.port = port
         self.bt = None
         self.init = True
@@ -92,13 +92,14 @@ class Robot:
         self.last_message = None
         self.last_init = None
         self.state = {}
-        self.marker = marker
+        self.marker = None
         self.thread = threading.Thread(target=lambda: self.execute())
         self.thread.start()
         self.ledsColor = None
 
     def send(self, packet):
-        self.bt.write(packet.toRaw())
+        if self.bt is not None:
+            self.bt.write(packet.toRaw())
 
     def monitor(self, frequency):
         packet = Packet(PACKET_MONITOR)
