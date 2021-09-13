@@ -2,6 +2,7 @@ from serial.tools import list_ports
 import time
 import robot
 import control
+import config
 
 
 class Robots:
@@ -13,12 +14,24 @@ class Robots:
         self.control = control.Control(self)
         self.control.start()
 
+        for port, marker in config.config['robots']:
+            self.robots[port] = robot.Robot(port, marker)
+            if marker is not None:
+                self.robots_by_marker[marker] = self.robots[port]
+
     def ports(self):
         return [entry.device for entry in list_ports.comports()]
 
+    def saveConfig(self):
+        config.config['robots'] = []
+        for port in self.robots:
+            config.config['robots'].append([port, self.robots[port].marker])
+        config.save()
+        
     def addRobot(self, port):
         if port not in self.robots:
             self.robots[port] = robot.Robot(port)
+            self.saveConfig()
 
     def getRobots(self):
         data = {}
@@ -41,7 +54,9 @@ class Robots:
         if port in self.robots:
             self.robots[port].setMarker(marker)
             self.robots_by_marker[marker] = self.robots[port]
+            self.saveConfig()
 
     def remove(self, port):
         self.robots[port].close()
         del self.robots[port]
+        self.saveConfig()

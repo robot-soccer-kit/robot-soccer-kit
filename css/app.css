@@ -7,10 +7,10 @@ body {
     margin-bottom:20px;
 }
 
-.reload {
-    position:absolute;
-    right:0;
-    bottom:0;
+.buttons {
+    position:fixed;
+    left:5px;
+    bottom:5px;
 }
 
 .brightness, .contrast, .saturation {

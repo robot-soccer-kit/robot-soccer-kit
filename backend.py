@@ -17,6 +17,10 @@ class Backend(QtCore.QObject):
     def cameras(self):
         return QVariant(self.video.cameras())
 
+    @QtCore.pyqtSlot(result=QVariant)
+    def getCameraSettings(self):
+        return QVariant(self.video.settings)
+
     @QtCore.pyqtSlot(int, result=bool)
     def startCapture(self, index):
         return self.video.startCapture(index)
@@ -38,9 +42,9 @@ class Backend(QtCore.QObject):
     def enableVideoDebug(self):
         self.video.debug = True
 
-    @QtCore.pyqtSlot(int, int, int, result=bool)
-    def cameraSettings(self, brightness, contrast, saturation):
-        self.video.setCameraSettings(brightness, contrast, saturation)
+    @QtCore.pyqtSlot(QVariant, result=bool)
+    def cameraSettings(self, settings):
+        self.video.setCameraSettings(settings)
         return True
 
     @QtCore.pyqtSlot(result=QVariant)

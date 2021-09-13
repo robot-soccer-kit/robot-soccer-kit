@@ -84,7 +84,7 @@ class Packet:
         return sum(self.payload) % 256
 
 class Robot:
-    def __init__(self, port):
+    def __init__(self, port, marker=None):
         self.port = port
         self.bt = None
         self.init = True
@@ -92,7 +92,7 @@ class Robot:
         self.last_message = None
         self.last_init = None
         self.state = {}
-        self.marker = None
+        self.marker = marker
         self.thread = threading.Thread(target=lambda: self.execute())
         self.thread.start()
         self.ledsColor = None
@@ -249,12 +249,17 @@ class Robot:
                 self.init = True  
 
             no_message = ((self.last_message is None) or (time.time() - self.last_message > 5))
-            old_init = time.time() - self.last_init > 5
+
+            if self.last_init is None:
+                old_init = False
+            else:
+                old_init = time.time() - self.last_init > 5
 
             if no_message and old_init:
                 self.init = True
         
-        self.bt.close()
+        if self.bt is not None:
+            self.bt.close()
 
 if __name__ == '__main__':
     r = Robot('/dev/rfcomm0')

@@ -5,6 +5,7 @@ import base64
 import threading
 import detection
 import field
+import config
 
 
 class Video:
@@ -28,20 +29,44 @@ class Video:
         self.video_thread = threading.Thread(target=lambda: self.thread())
         self.video_thread.start()
 
+        self.settings = {
+            'brightness': 100,
+            'contrast': 100,
+            'saturation': 100
+        }
+        self.favourite_index = None
+
+        if 'camera' in config.config:
+            self.favourite_index = config.config['camera']['favourite_index']
+            self.settings = config.config['camera']['settings']
+            self.applyCameraSettings()
+
     def cameras(self):
         indexes = []
         for index in range(10):
             cap = cv2.VideoCapture(index)
             if cap.read()[0]:
+                if self.favourite_index is None:
+                    self.favourite_index = index
                 indexes.append(index)
                 cap.release()
 
-        return indexes
+        return [indexes, self.favourite_index]
+
+    def saveConfig(self):
+        config.config['camera'] = {
+            'favourite_index': self.favourite_index,
+            'settings': self.settings
+        }
+        config.save()
 
     def startCapture(self, index):
         self.capture = cv2.VideoCapture(index)
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
+
+        self.favourite_index = index
+        self.saveConfig()
 
         time.sleep(0.1)
         return self.image is not None
@@ -49,11 +74,17 @@ class Video:
     def stopCapture(self):
         self.stop_capture = True
 
-    def setCameraSettings(self, brightness, contrast, saturation):
+    def applyCameraSettings(self):
         if self.capture is not None:
-            self.capture.set(cv2.CAP_PROP_BRIGHTNESS, brightness)
-            self.capture.set(cv2.CAP_PROP_CONTRAST, contrast)
-            self.capture.set(cv2.CAP_PROP_SATURATION, saturation)
+            self.capture.set(cv2.CAP_PROP_BRIGHTNESS, self.settings['brightness'])
+            self.capture.set(cv2.CAP_PROP_CONTRAST, self.settings['contrast'])
+            self.capture.set(cv2.CAP_PROP_SATURATION, self.settings['saturation'])
+
+    def setCameraSettings(self, settings):
+        self.settings = settings
+        self.saveConfig()
+
+        self.applyCameraSettings()
 
     def thread(self):
         while True:

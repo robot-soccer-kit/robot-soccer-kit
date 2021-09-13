@@ -1,10 +1,16 @@
 function video_initialize(backend)
 {
     function updateCameras() {
-        backend.cameras(function(indexes) {
+        backend.cameras(function(data) {
+            indexes = data[0]
+            favourite_index = data[1]
             let options = '';
             for (let index of indexes) {
-                options += "<option value="+index+">Camera "+index+"</option>";
+                let selected = '';
+                if (index == favourite_index) {
+                    selected = 'selected="selected"';
+                }
+                options += "<option value="+index+" "+selected+">Camera "+index+"</option>";
             }
             $('.cameras').html(options);
         });
@@ -13,17 +19,23 @@ function video_initialize(backend)
     $('.refresh-cameras').click(updateCameras);
 
     // Camera settings
-    function sendSettings() {
-        backend.cameraSettings($('.brightness').val(), $('.contrast').val(), $('.saturation').val());
-    }
-    $('.brightness').change(sendSettings);
-    $('.contrast').change(sendSettings);
-    $('.saturation').change(sendSettings);
+    $.get('camera-setting.html', function(template) {
+        backend.getCameraSettings(function(settings) {
+            for (let key in settings) {
+                $('.camera-settings').append(template.replace(/{key}/g, key));
+                $('.'+key).val(settings[key]);
+    
+                $('.camera-settings .'+key).change(function() {
+                    settings[key] = parseInt($(this).val());
+                    backend.cameraSettings(settings);
+                });
+            }
+        });
+    });
 
     // Starting the video capture
     $('.start-capture').click(function() {
         backend.startCapture($('.cameras').val());
-        sendSettings();
     });
 
     $('.stop-capture').click(function() {
