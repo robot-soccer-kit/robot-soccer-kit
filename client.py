@@ -26,7 +26,8 @@ class ControllerRobot:
         return self.controller.command(self.color, self.number, 'control', [dx, dy, dturn])
 
 class Controller:
-    def __init__(self, color, host='localhost', key=''):
+    def __init__(self, color, host='127.0.0.1', key=''):
+        self.running = True
         self.context = zmq.Context()
         self.key = key
         self.color = color
@@ -58,7 +59,7 @@ class Controller:
         robot.last_update = time.time()
 
     def sub_process(self):
-        while True:
+        while self.running:
             json = self.sub.recv_json()
             if 'ball' in json:
                 self.ball = np.array(json['ball'])
@@ -93,5 +94,10 @@ if __name__ == '__main__':
 
             time.sleep(1)
     except KeyboardInterrupt:
-        controller.robots[1].control(0, 0, 0)
-        controller.robots[2].control(0, 0, 0)
+        print('Exiting...')
+        #controller.robots[1].control(0, 0, 0)
+        #controller.robots[2].control(0, 0, 0)
+    except Exception as e:
+        print('Fatal error: '+str(e))
+    
+    controller.running = False
