@@ -52,6 +52,8 @@ class Control:
                                     response = [True, 'ok']
                                 else:
                                     response[1] = 'Unknown command'
+                        else:
+                            response[1] = 'Unknown robot'
 
                     self.teams[team]['packets'] += 1
 
