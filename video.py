@@ -78,9 +78,6 @@ class Video:
                 else:
                     self.period = self.period*0.95 + current_period*0.05
 
-                if image_captured is None:
-                    self.capture = None
-
                 self.image = image_captured
 
                 if self.stop_capture:
