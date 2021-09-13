@@ -203,7 +203,7 @@ class Robot:
                     self.init = False
                     if self.bt is not None:
                         self.bt.close()
-                        del self.bt
+                        self.bt = None
                     self.bt = serial.Serial(self.port, timeout=1)
                     time.sleep(0.1)
                     self.bt.write(b"rhock\r\nrhock\r\nrhock\r\n")
