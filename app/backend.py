@@ -13,6 +13,10 @@ class Backend(QtCore.QObject):
         self.detection = self.video.detection
         self.robots = robots.Robots(self.detection)
 
+    def exit(self):
+        self.video.stop()
+        self.robots.stop()
+
     @QtCore.pyqtSlot(result=QVariant)
     def cameras(self):
         return QVariant(self.video.cameras())

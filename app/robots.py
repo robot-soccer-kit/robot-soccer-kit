@@ -61,3 +61,8 @@ class Robots:
         self.robots[port].close()
         del self.robots[port]
         self.saveConfig()
+
+    def stop(self):
+        self.control.stop()
+        for port in self.robots:
+            self.robots[port].close()

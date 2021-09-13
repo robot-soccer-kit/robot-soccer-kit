@@ -24,4 +24,7 @@ view.load(url)
 
 view.resize(1024, 720)
 view.show()
-sys.exit(app.exec_())
+
+r = app.exec_()
+backend.exit()
+sys.exit(r)

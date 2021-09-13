@@ -26,6 +26,7 @@ class Video:
         self.detection = detection.Detection()
 
         # Starting the video processing thread
+        self.running = True
         self.video_thread = threading.Thread(target=lambda: self.thread())
         self.video_thread.start()
 
@@ -74,6 +75,10 @@ class Video:
     def stopCapture(self):
         self.stop_capture = True
 
+    def stop(self):
+        self.running = False
+        self.stopCapture()
+
     def applyCameraSettings(self):
         if self.capture is not None:
             self.capture.set(cv2.CAP_PROP_BRIGHTNESS, self.settings['brightness'])
@@ -87,7 +92,7 @@ class Video:
         self.applyCameraSettings()
 
     def thread(self):
-        while True:
+        while self.running:
             if self.capture is not None:
                 t0 = time.time()
                 grabbed, image_captured = self.capture.read()
