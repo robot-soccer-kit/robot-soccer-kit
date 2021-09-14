@@ -123,7 +123,9 @@ class Robot:
     def setMarker(self, marker):
         self.marker = marker
 
-        if marker.startswith('red'):
+        if marker is None:
+            self.ledsColor = None
+        elif marker.startswith('red'):
             self.ledsColor = [255, 0, 0]
         elif marker.startswith('blue'):
             self.ledsColor = [0, 0, 255]

@@ -14,11 +14,12 @@ class Robots:
         self.control = control.Control(self)
         self.control.start()
 
-        for port, marker in config.config['robots']:
-            self.robots[port] = robot.Robot(port)
-            if marker != "":
-                self.robots[port].setMarker(marker)
-                self.robots_by_marker[marker] = self.robots[port]
+        if 'robots' in config.config:
+            for port, marker in config.config['robots']:
+                self.robots[port] = robot.Robot(port)
+                if marker != "":
+                    self.robots[port].setMarker(marker)
+                    self.robots_by_marker[marker] = self.robots[port]
 
     def ports(self):
         return [entry.device for entry in list_ports.comports()]
