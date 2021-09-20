@@ -4,6 +4,7 @@ import cv2
 class Field:
     def __init__(self):
         self.corner_tag_size = 0.08
+        self.corner_tag_border = 0.01
         self.robot_tag_size = 0.08
         self.frame_point_list = None
         self.id_gfx_corners = {}
@@ -12,13 +13,17 @@ class Field:
 
         self.corner_field_positions = {}
         for (c, sx, sy) in (['c1', 1, 1], ['c2', 1, -1], ['c3', -1, 1], ['c4', -1, -1]):
-            cX = sx * self.field_shape[0]/2
-            cY = sy * self.field_shape[1]/2
+            cX = sx * (self.field_shape[0]/2 + (self.corner_tag_size/2) + self.corner_tag_border)
+            cY = sy * (self.field_shape[1]/2 + (self.corner_tag_size/2) + self.corner_tag_border)
 
             self.corner_field_positions[c] = [
+                # Top left
                 (cX + self.corner_tag_size/2, cY + self.corner_tag_size/2),
+                # Top right
                 (cX + self.corner_tag_size/2, cY - self.corner_tag_size/2),
+                # Bottom right
                 (cX - self.corner_tag_size/2, cY - self.corner_tag_size/2),
+                # Bottom left
                 (cX - self.corner_tag_size/2, cY + self.corner_tag_size/2),
             ]
 
