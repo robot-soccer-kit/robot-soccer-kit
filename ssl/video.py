@@ -40,6 +40,7 @@ class Video:
         if 'camera' in config.config:
             self.favourite_index = config.config['camera']['favourite_index']
             self.settings = config.config['camera']['settings']
+            self.startCapture(self.favourite_index)
             self.applyCameraSettings()
 
     def cameras(self):
