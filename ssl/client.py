@@ -13,6 +13,9 @@ class ControllerRobot:
         self.orientation = None
         self.last_update = None
 
+    def has_position(self):
+        return (self.position is not None) and (self.orientation is not None)
+
     def age(self):
         if self.last_update is None:
             return None
@@ -77,6 +80,9 @@ class Controller:
                             self.update_robot(self.opponents[number], json['markers'][entry])
             except zmq.error.Again:
                 pass
+    
+    def stop(self):
+        self.running = False
 
     def command(self, color, number, name, parameters):
         self.req.send_json([self.key, color, number, [name, *parameters]])
@@ -87,14 +93,20 @@ class Controller:
 
 
 if __name__ == '__main__':
-    controller = Controller('blue')
+    red_controller = Controller('red')
+    blue_controller = Controller('blue')
 
     try:
         while True:
-            controller.robots[1].control(100, 0, 0)
-            time.sleep(1)
-            controller.robots[1].control(0, 0, 0)
-            controller.robots[1].kick()
+            for controller in red_controller, blue_controller:
+                for index in 1, 2:
+                    controller.robots[index].control(100, 0, 0)
+                    time.sleep(1)
+                    controller.robots[index].control(-100, 0, 0)
+                    time.sleep(1)
+                    controller.robots[index].control(0, 0, 0)
+                    controller.robots[index].kick()
+                    time.sleep(1)
 
             time.sleep(1)
     except KeyboardInterrupt:
@@ -102,4 +114,4 @@ if __name__ == '__main__':
     except Exception as e:
         print('Fatal error: '+str(e))
     finally:
-        controller.running = False
+        controller.stop()

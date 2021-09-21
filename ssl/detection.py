@@ -146,9 +146,9 @@ class Detection:
                     best = pos
                     bestPx = point.pt
 
-            ball = best
+            self.ball = best
 
-            if draw_debug and ball:
+            if draw_debug and self.ball:
                 cv2.circle(image, (int(bestPx[0]), int(
                     bestPx[1])), 3, (255, 255, 0), 3)
         else:

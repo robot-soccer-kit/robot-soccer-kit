@@ -1,6 +1,9 @@
 import numpy as np
 import cv2
 
+length = 1.83
+width = 1.22
+
 class Field:
     def __init__(self):
         self.corner_tag_size = 0.08
@@ -9,7 +12,7 @@ class Field:
         self.frame_point_list = None
         self.id_gfx_corners = {}
 
-        self.field_shape = [1.83, 1.22] # Field dimension (length, width)
+        self.field_shape = [length, width] # Field dimension (length, width)
 
         self.corner_field_positions = {}
         for (c, sx, sy) in (['c1', 1, 1], ['c2', 1, -1], ['c3', -1, 1], ['c4', -1, -1]):
