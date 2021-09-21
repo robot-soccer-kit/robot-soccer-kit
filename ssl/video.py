@@ -85,6 +85,8 @@ class Video:
             self.capture.set(cv2.CAP_PROP_BRIGHTNESS, self.settings['brightness'])
             self.capture.set(cv2.CAP_PROP_CONTRAST, self.settings['contrast'])
             self.capture.set(cv2.CAP_PROP_SATURATION, self.settings['saturation'])
+            self.capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+            self.capture.set(cv2.CAP_PROP_FOCUS, 0)
 
     def setCameraSettings(self, settings):
         self.settings = settings
@@ -113,7 +115,7 @@ class Video:
                 if self.period is None:
                     self.period = current_period
                 else:
-                    self.period = self.period*0.95 + current_period*0.05
+                    self.period = self.period*0.9 + current_period*0.1
 
                 self.image = image_captured
 
