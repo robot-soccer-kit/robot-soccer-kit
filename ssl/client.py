@@ -13,6 +13,9 @@ class ControllerRobot:
         self.orientation = None
         self.last_update = None
 
+    def ball(self):
+        return self.controller.ball
+
     def has_position(self):
         return (self.position is not None) and (self.orientation is not None)
 
@@ -67,7 +70,7 @@ class Controller:
             try:
                 json = self.sub.recv_json()
                 if 'ball' in json:
-                    self.ball = np.array(json['ball'])
+                    self.ball = None if json['ball'] is None else np.array(json['ball'])
 
                 if 'markers' in json:
                     for entry in json['markers']:
@@ -91,6 +94,11 @@ class Controller:
         if not success:
             raise Exception('Command "'+name+'" failed: '+message)
 
+def all_controllers():
+    return {
+        'red': Controller('red'),
+        'blue': Controller('blue')
+    }
 
 if __name__ == '__main__':
     red_controller = Controller('red')
