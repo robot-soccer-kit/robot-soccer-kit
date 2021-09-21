@@ -87,14 +87,20 @@ class Controller:
 
 
 if __name__ == '__main__':
-    controller = Controller('blue')
+    red_controller = Controller('red')
+    blue_controller = Controller('blue')
 
     try:
         while True:
-            controller.robots[1].control(100, 0, 0)
-            time.sleep(1)
-            controller.robots[1].control(0, 0, 0)
-            controller.robots[1].kick()
+            for controller in red_controller, blue_controller:
+                for index in 1, 2:
+                    controller.robots[index].control(100, 0, 0)
+                    time.sleep(1)
+                    controller.robots[index].control(-100, 0, 0)
+                    time.sleep(1)
+                    controller.robots[index].control(0, 0, 0)
+                    controller.robots[index].kick()
+                    time.sleep(1)
 
             time.sleep(1)
     except KeyboardInterrupt:
