@@ -52,6 +52,7 @@ class Controller:
         self.sub = self.context.socket(zmq.SUB)
         self.sub.connect('tcp://'+host+':7557')
         self.sub.subscribe('')
+        self.on_sub = None
         self.sub_thread = threading.Thread(target=lambda: self.sub_process())
         self.sub_thread.start()
 
@@ -66,9 +67,14 @@ class Controller:
 
     def sub_process(self):
         self.sub.RCVTIMEO = 1000
+        last_t = time.time()
         while self.running:
             try:
                 json = self.sub.recv_json()
+                ts = time.time()
+                dt = ts - last_t
+                last_t = ts
+
                 if 'ball' in json:
                     self.ball = None if json['ball'] is None else np.array(json['ball'])
 
@@ -81,6 +87,9 @@ class Controller:
                             self.update_robot(self.robots[number], json['markers'][entry])
                         else:
                             self.update_robot(self.opponents[number], json['markers'][entry])
+
+                if self.on_sub is not None:
+                    self.on_sub(self, dt)
             except zmq.error.Again:
                 pass
     
