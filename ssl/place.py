@@ -25,7 +25,7 @@ def goto(robot, target):
         error = np.linalg.inv(robot_frame(robot)) @ target_frame
         twist = sl.logm(error)
         dx, dy, dt = twist[0, 2], twist[1, 2], twist[1, 0]
-        robot.control(1000*dx, 1000*dy, np.rad2deg(dt))
+        robot.control(2500*dx, 2500*dy, 2.5*np.rad2deg(dt))
 
         return np.linalg.norm([dx, dy, dt]) < 0.05
     else:
