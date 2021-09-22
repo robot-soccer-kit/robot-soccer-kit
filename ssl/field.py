@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 
+goal_width = 0.6
 length = 1.83
 width = 1.22
 
