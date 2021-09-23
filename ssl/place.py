@@ -69,10 +69,10 @@ configurations = {
     ],
 
     'side': [
-        ['red', 1, (field.length/2 - 0.5, field.width/2, -np.pi/2)],
-        ['red', 2, (field.length/2 - 0.25, field.width/2, -np.pi/2)],
-        ['blue', 1, (field.length/2 - 0.75, field.width/2, -np.pi/2)],
-        ['blue', 2, (field.length/2 - 1.0, field.width/2, -np.pi/2)],
+        ['red', 1, (0.2, field.width/2, -np.pi/2)],
+        ['red', 2, (0.6, field.width/2, -np.pi/2)],
+        ['blue', 1, (-0.2, field.width/2, -np.pi/2)],
+        ['blue', 2, (-0.6, field.width/2, -np.pi/2)],
     ]
 }
 
