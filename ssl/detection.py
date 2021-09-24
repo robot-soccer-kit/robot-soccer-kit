@@ -154,7 +154,7 @@ class Detection:
         else:
             self.no_ball += 1
             if self.no_ball > 10:
-                ball = None
+                self.ball = None
 
     def getDetection(self):
         return {

@@ -3,9 +3,13 @@ import zmq
 import threading
 import time
 
+class ControlError(Exception):
+    pass
+
 class ControllerRobot:
     def __init__(self, color, number, controller):
         self.color = color
+        self.team = color
         self.number = number
         self.controller = controller
 
@@ -13,8 +17,11 @@ class ControllerRobot:
         self.orientation = None
         self.last_update = None
 
+    def ball(self):
+        return self.controller.ball
+
     def has_position(self):
-        return (self.position is not None) and (self.orientation is not None)
+        return (self.position is not None) and (self.orientation is not None) and self.age() < 1
 
     def age(self):
         if self.last_update is None:
@@ -29,26 +36,42 @@ class ControllerRobot:
         return self.controller.command(self.color, self.number, 'control', [dx, dy, dturn])
 
 class Controller:
-    def __init__(self, color, host='127.0.0.1', key=''):
+    def __init__(self, color='blue', host='127.0.0.1', key=''):
         self.running = True
-        self.context = zmq.Context()
         self.key = key
+
         self.color = color
         self.opponent_color = 'red' if color == 'blue' else 'blue'
+
+        self.teams = {
+            'red': {
+                1: ControllerRobot('red', 1, self),
+                2: ControllerRobot('red', 2, self)
+            },
+            'blue': {
+                1: ControllerRobot('blue', 1, self),
+                2: ControllerRobot('blue', 2, self)
+            }
+        }
+
         self.robots = {
-            1: ControllerRobot(self.color, 1, self),
-            2: ControllerRobot(self.color, 2, self)
+            1: self.teams[self.color][1],
+            2: self.teams[self.color][2],
         }
         self.opponents = {
-            1: ControllerRobot(self.opponent_color, 1, self),
-            2: ControllerRobot(self.opponent_color, 2, self)
+            1: self.teams[self.opponent_color][1],
+            2: self.teams[self.opponent_color][2],
         }
         self.ball = None
+
+        # ZMQ Context
+        self.context = zmq.Context()
 
         # Creating subscriber connection
         self.sub = self.context.socket(zmq.SUB)
         self.sub.connect('tcp://'+host+':7557')
         self.sub.subscribe('')
+        self.on_sub = None
         self.sub_thread = threading.Thread(target=lambda: self.sub_process())
         self.sub_thread.start()
 
@@ -63,11 +86,16 @@ class Controller:
 
     def sub_process(self):
         self.sub.RCVTIMEO = 1000
+        last_t = time.time()
         while self.running:
             try:
                 json = self.sub.recv_json()
+                ts = time.time()
+                dt = ts - last_t
+                last_t = ts
+
                 if 'ball' in json:
-                    self.ball = np.array(json['ball'])
+                    self.ball = None if json['ball'] is None else np.array(json['ball'])
 
                 if 'markers' in json:
                     for entry in json['markers']:
@@ -78,10 +106,20 @@ class Controller:
                             self.update_robot(self.robots[number], json['markers'][entry])
                         else:
                             self.update_robot(self.opponents[number], json['markers'][entry])
+
+                if self.on_sub is not None:
+                    self.on_sub(self, dt)
             except zmq.error.Again:
                 pass
     
     def stop(self):
+        for color in self.teams:
+            robots = self.teams[color]
+            for index in robots:
+                try:
+                    robots[index].control(0., 0., 0.)
+                except ControlError:
+                    pass
         self.running = False
 
     def command(self, color, number, name, parameters):
@@ -89,8 +127,13 @@ class Controller:
 
         success, message = self.req.recv_json()
         if not success:
-            raise Exception('Command "'+name+'" failed: '+message)
+            raise ControlError('Command "'+name+'" failed: '+message)
 
+def all_controllers():
+    return {
+        'red': Controller('red'),
+        'blue': Controller('blue')
+    }
 
 if __name__ == '__main__':
     red_controller = Controller('red')
@@ -111,7 +154,7 @@ if __name__ == '__main__':
             time.sleep(1)
     except KeyboardInterrupt:
         print('Exiting')
-    except Exception as e:
+    except ControlError as e:
         print('Fatal error: '+str(e))
     finally:
         controller.stop()
