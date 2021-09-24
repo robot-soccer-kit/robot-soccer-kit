@@ -1,6 +1,11 @@
 # Robots
 
-![Holo](/docs/img/holo.png)
+**Disclaimer: robots used in SSL are a fork of a previous project (holo). Current prototypes
+were hacked to add a kicker. In the future, this kicker will be integrated in the robot itself,
+and other useless robot features will be removed**
+
+![Holo](/docs/imgs/holo.png)
+
 
 ## Mechanics
 
@@ -28,10 +33,6 @@
 ## PCB
 
 Robot PCB can be found in the [/electronics/holo](/electronics/holo) directory of this repository.
-
-**Disclaimer: robots used in SSL are a fork of a previous project (holo). Current prototypes
-were hacked to add a kicker. In the future, this kicker will be integrated in the robot itself,
-and other useless robot features will be removed**
 
 ## Motors
 
