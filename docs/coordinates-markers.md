@@ -1,7 +1,7 @@
 # Coordinates and markers
 
 * [Field](/docs/field.pdf)
-* [Field markers](/docs/field-markers.pdf)
+* [Field corner markers](/docs/field-markers.pdf)
 * [Red team markers](/docs/red-markers.pdf)
 * [Blue team markers](/docs/blue-markers.pdf)
 
