@@ -4,10 +4,10 @@
 were hacked to add a kicker. In the future, this kicker will be integrated in the robot itself,
 and other useless robot features will be removed**
 
-![Holo](/docs/imgs/holo.png)
+![Holo](/docs/imgs/robots.jpg)
 
 
-## Mechanics
+## Structure
 
 * (TODO provide CAD) Top PMMA plate
 * (TODO provide CAD) Upper marker plate
