@@ -35,3 +35,10 @@ You can print [red]((/docs/red-markers.pdf)) and [blue](/docs/blue-markers.pdf) 
 place them on the robots:
 
 ![Robot markers](/docs/imgs/robots-markers-explain.png)
+
+## Camera
+
+The camera can be any USB camera that works with OpenCV, and it should be able to see the whole field
+
+TODO: Recommend one camera model
+TODO: Recommend some mechanical setup to install the camera

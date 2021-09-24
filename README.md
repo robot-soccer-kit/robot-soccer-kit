@@ -14,6 +14,5 @@ With this setup, it is possible for two teams to code a program and play against
 ## Documentation
 
 * TODO [Robots](/docs/robots.md)
-* TODO Field of play and camera
-* [Coordinates and markers](/docs/coordinates-markers.md)
+* [Coordinates, field and markers](/docs/coordinates-markers.md)
 * TODO Operating the Junior-SSL app, using and Python API
