@@ -4,7 +4,7 @@
 
 ## Presentation
 
-First, have a look at the [YouTube demonstration video](https://www.youtube.com/watch?v=4NFXbaom7YQ)
+[YouTube demonstration video](https://www.youtube.com/watch?v=4NFXbaom7YQ)
 
 The goal of this project is to provide an open-source material to build and operate a setup featuring
 omniwheel robots and a soccer field monitoring them with a camera.
