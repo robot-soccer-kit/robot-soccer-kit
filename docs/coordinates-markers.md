@@ -12,7 +12,7 @@
 You can either:
 
 * Print the [whole field](/docs/field.pdf)
-* Print only the [corner markers](/doc/field-markers.pdf) to stick them on existing field
+* Print only the [corner markers](/docs/field-markers.pdf) to stick them on existing field
 
 In the second case, this is where they are placed:
 
@@ -34,4 +34,4 @@ Roughly, the coordinates of the blue robot above will look like *(x=0.4, y=0.4, 
 You can print [red]((/docs/red-markers.pdf)) and [blue](/docs/blue-markers.pdf) markers and
 place them on the robots:
 
-![Robot markers](/docs/imgs/robot-markers-explain.png)
+![Robot markers](/docs/imgs/robots-markers-explain.png)
