@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "Maple/LibMaple/wirish/boards/maple_mini/include/"
+            ],
+            "defines": ["HAS_TERMINAL", "RHOCK", "HAS_RHOCK", "METABOT_VERSION=1"],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}
