@@ -4,15 +4,26 @@
 
 ## Mechanics
 
-TODO
+* (TODO provide CAD) Top PMMA plate
+* (TODO provide CAD) Upper marker plate
+* Structural screws
+    * 6x M3x35
+    * 6x M3x10 female-female spacer
+    * 6x M3x8 female-male spacer
+    * 6x M3x15 female-male spacer
 
 ## Wheels
 
-TODO
+(TODO provide CAD)
 
 * Bearings are V623ZZ, V shape 3x12x4mm
 * O-rings, ID 8mm, 2mm thickness
 * M3x6 cylindrical shaft
+* Screws & nuts
+    * 18x M3x8 screws
+    * 18x M3 nuts
+    * 9x M3x8 screws
+    * 9x M3 square nuts
 
 ## PCB
 
@@ -56,3 +67,4 @@ solenoid.
 ![Solenoid](/docs/imgs/solenoid.png)
 
 * 6V JF-0530B
+* (TODO provide CAD)
