@@ -69,3 +69,14 @@ solenoid.
 
 * 6V JF-0530B
 * (TODO provide CAD)
+
+### Operating
+
+![Kicker](/docs/imgs/kicker_pcb.png)
+
+The kicker is stepping up input voltage to approximate 20V to charge a bank of capacitors (9x 470uF rated
+for 25V).
+
+Thanks to a MOSFET transistor, the capacitors can be discharged directly in the solenoid, triggering the kicker.
+
+The duration of the pulse in the MOSFET allows to control the power of the kick.
