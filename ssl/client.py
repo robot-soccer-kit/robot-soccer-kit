@@ -126,7 +126,7 @@ class Client:
             for index in robots:
                 try:
                     robots[index].control(0., 0., 0.)
-                except ControlError:
+                except ClientError:
                     pass
         self.running = False
 
@@ -135,7 +135,7 @@ class Client:
 
         success, message = self.req.recv_json()
         if not success:
-            raise ControlError('Command "'+name+'" failed: '+message)
+            raise ClientError('Command "'+name+'" failed: '+message)
 
 if __name__ == '__main__':
     client = Client()
