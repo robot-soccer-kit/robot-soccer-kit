@@ -1,6 +1,5 @@
 import numpy as np
-import client
-import scipy.linalg as sl
+from client import Client
 import time
 import argparse
 import field
@@ -76,21 +75,21 @@ configurations = {
     ]
 }
 
-def goto_configuration(controller, target):
+def goto_configuration(client, target):
     targets = configurations[target]
 
     arrived = False
     while not arrived:
         arrived = True
         for color, index, target in targets:
-            robot = controller.teams[color][index]
+            robot = client.teams[color][index]
             arrived = goto(robot, target) and arrived
 
         time.sleep(0.05)
 
 
 if __name__ == '__main__':
-    controller = client.Controller()
+    client = client.Client
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--target', '-t', type=str, default='side')
@@ -103,9 +102,9 @@ if __name__ == '__main__':
         print('Placing to: '+args.target)
 
     try:
-        goto_configuration(controller, args.target)
+        goto_configuration(client, args.target)
     except KeyboardInterrupt:
         print('Interrupt, stopping robots')
     finally:
-        controller.stop()
+        client.stop()
 

@@ -3,22 +3,22 @@ import zmq
 import threading
 import time
 
-class ControlError(Exception):
+class ClientError(Exception):
     pass
 
-class ControllerRobot:
-    def __init__(self, color, number, controller):
+class ClientRobot:
+    def __init__(self, color, number, client):
         self.color = color
         self.team = color
         self.number = number
-        self.controller = controller
+        self.client = client
 
         self.position = None
         self.orientation = None
         self.last_update = None
 
     def ball(self):
-        return self.controller.ball
+        return self.client.ball
 
     def has_position(self):
         return (self.position is not None) and (self.orientation is not None) and self.age() < 1
@@ -30,12 +30,12 @@ class ControllerRobot:
         return time.time() - self.last_update
 
     def kick(self, power=1):
-        return self.controller.command(self.color, self.number, 'kick', [power])
+        return self.client.command(self.color, self.number, 'kick', [power])
 
     def control(self, dx, dy, dturn):
-        return self.controller.command(self.color, self.number, 'control', [dx, dy, dturn])
+        return self.client.command(self.color, self.number, 'control', [dx, dy, dturn])
 
-class Controller:
+class Client:
     def __init__(self, color='blue', host='127.0.0.1', key=''):
         self.running = True
         self.key = key
@@ -45,12 +45,12 @@ class Controller:
 
         self.teams = {
             'red': {
-                1: ControllerRobot('red', 1, self),
-                2: ControllerRobot('red', 2, self)
+                1: ClientRobot('red', 1, self),
+                2: ClientRobot('red', 2, self)
             },
             'blue': {
-                1: ControllerRobot('blue', 1, self),
-                2: ControllerRobot('blue', 2, self)
+                1: ClientRobot('blue', 1, self),
+                2: ClientRobot('blue', 2, self)
             }
         }
 
@@ -72,12 +72,18 @@ class Controller:
         self.sub.connect('tcp://'+host+':7557')
         self.sub.subscribe('')
         self.on_sub = None
+        self.sub_packets = 0
         self.sub_thread = threading.Thread(target=lambda: self.sub_process())
         self.sub_thread.start()
 
         # Creating request connection
         self.req = self.context.socket(zmq.REQ)
         self.req.connect('tcp://'+host+':7558')
+
+        # Waiting for the first packet to be received, guarantees to have robot state after
+        # client creation
+        while self.sub_packets < 1:
+            time.sleep(0.05)
 
     def update_robot(self, robot, infos):
         robot.position = infos['position']
@@ -109,6 +115,8 @@ class Controller:
 
                 if self.on_sub is not None:
                     self.on_sub(self, dt)
+
+                self.sub_packets += 1
             except zmq.error.Again:
                 pass
     
@@ -129,32 +137,25 @@ class Controller:
         if not success:
             raise ControlError('Command "'+name+'" failed: '+message)
 
-def all_controllers():
-    return {
-        'red': Controller('red'),
-        'blue': Controller('blue')
-    }
-
 if __name__ == '__main__':
-    red_controller = Controller('red')
-    blue_controller = Controller('blue')
+    client = Client()
 
     try:
         while True:
-            for controller in red_controller, blue_controller:
+            for color in 'red', 'blue':
                 for index in 1, 2:
-                    controller.robots[index].control(100, 0, 0)
+                    client.teams[color][index].control(100, 0, 0)
                     time.sleep(1)
-                    controller.robots[index].control(-100, 0, 0)
+                    client.teams[color][index].control(-100, 0, 0)
                     time.sleep(1)
-                    controller.robots[index].control(0, 0, 0)
-                    controller.robots[index].kick()
+                    client.teams[color][index].control(0, 0, 0)
+                    client.teams[color][index].kick()
                     time.sleep(1)
 
             time.sleep(1)
     except KeyboardInterrupt:
         print('Exiting')
-    except ControlError as e:
+    except ClientError as e:
         print('Fatal error: '+str(e))
     finally:
-        controller.stop()
+        client.stop()
