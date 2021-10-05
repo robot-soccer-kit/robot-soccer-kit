@@ -40,6 +40,7 @@ class ClientRobot:
         self.client = client
 
         self.position = None
+        self.pose = None
         self.orientation = None
         self.last_update = None
 
@@ -80,8 +81,7 @@ class ClientRobot:
             error_y = target_in_robot[1]
             error_orientation = utils.angle_wrap(orientation - self.orientation)
 
-            self.control(2500*error_x, 2500*error_y, 2.5 *
-                         np.rad2deg(error_orientation))
+            self.control(3*error_x, 3*error_y, 3*error_orientation)
 
             return np.linalg.norm([error_x, error_y, error_orientation]) < 0.05
         else:
@@ -139,9 +139,16 @@ class Client:
         while self.sub_packets < 1:
             time.sleep(0.05)
 
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, type, value, tb):
+        self.stop()
+
     def update_robot(self, robot, infos):
         robot.position = infos['position']
         robot.orientation = infos['orientation']
+        robot.pose = list(robot.position) + [robot.orientation]
         robot.last_update = time.time()
 
     def sub_process(self):

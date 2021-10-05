@@ -173,9 +173,9 @@ class Robot:
     def control(self, dx, dy, dturn):
         packet = Packet(PACKET_HOLO)
         packet.appendByte(PACKET_HOLO_CONTROL)
-        packet.appendShort(int(dx))
-        packet.appendShort(int(dy))
-        packet.appendShort(int(dturn))
+        packet.appendShort(int(1000*dx))
+        packet.appendShort(int(1000*dy))
+        packet.appendShort(int(np.rad2deg(dturn)))
         self.send(packet)
 
     def ledsBreath(self):
