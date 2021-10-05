@@ -43,6 +43,7 @@ class Video:
             self.favourite_index = config.config['camera']['favourite_index']
             self.settings = config.config['camera']['settings']
             self.startCapture(self.favourite_index)
+            time.sleep(1.0)
             self.applyCameraSettings()
 
     def cameras(self):
@@ -93,7 +94,7 @@ class Video:
             self.capture.set(cv2.CAP_PROP_EXPOSURE, self.settings['exposure'])
             self.capture.set(cv2.CAP_PROP_GAMMA, self.settings['gamma'])
             self.capture.set(cv2.CAP_PROP_GAIN, self.settings['gain'])
-            self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0)
+            self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)
             self.capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
             self.capture.set(cv2.CAP_PROP_FOCUS, 0)
 
