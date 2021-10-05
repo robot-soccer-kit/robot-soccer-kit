@@ -41,7 +41,8 @@ class Video:
 
         if 'camera' in config.config:
             self.favourite_index = config.config['camera']['favourite_index']
-            self.settings = config.config['camera']['settings']
+            for entry in config.config['camera']['settings']:
+                self.settings[entry] = config.config['camera']['settings'][entry]
             self.startCapture(self.favourite_index)
             self.applyCameraSettings()
 
