@@ -94,3 +94,7 @@ class Backend(QtCore.QObject):
     @QtCore.pyqtSlot(str, str)
     def setKey(self, team, key):
         self.robots.control.setKey(team, key)
+
+    @QtCore.pyqtSlot()
+    def identify(self):
+        self.robots.identify()

@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import cv2
+import os
 import base64
 import threading
 from . import detection, config
@@ -23,10 +24,7 @@ class Video:
 
         self.detection = detection.Detection()
 
-        # Starting the video processing thread
-        self.running = True
-        self.video_thread = threading.Thread(target=lambda: self.thread())
-        self.video_thread.start()
+        is_windows = os.name == 'nt'
 
         self.settings = {
             'brightness': 0,
@@ -35,7 +33,7 @@ class Video:
             'gamma': 0,
             'gain': 0,
             'zoom': 5,
-            'exposure': 100
+            'exposure': -7 if is_windows else 100
         }
         self.favourite_index = None
 
@@ -43,21 +41,26 @@ class Video:
             self.favourite_index = config.config['camera']['favourite_index']
             for entry in config.config['camera']['settings']:
                 self.settings[entry] = config.config['camera']['settings'][entry]
-            self.startCapture(self.favourite_index)
-            time.sleep(1.0)
-            self.applyCameraSettings()
+
+        # Starting the video processing thread
+        self.running = True
+        self.video_thread = threading.Thread(target=lambda: self.thread())
+        self.video_thread.start()
 
     def cameras(self):
-        indexes = []
-        for index in range(10):
-            cap = cv2.VideoCapture(index)
-            if cap.read()[0]:
-                if self.favourite_index is None:
-                    self.favourite_index = index
-                indexes.append(index)
-                cap.release()
+        if self.capture is None:
+            indexes = []
+            for index in range(10):
+                cap = cv2.VideoCapture(index)
+                if cap.read()[0]:
+                    if self.favourite_index is None:
+                        self.favourite_index = index
+                    indexes.append(index)
+                    cap.release()
 
-        return [indexes, self.favourite_index]
+            return [indexes, self.favourite_index]
+        else:
+            return [[], None]
 
     def saveConfig(self):
         config.config['camera'] = {
@@ -71,7 +74,7 @@ class Video:
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
         self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
-        self.capture.set(cv2.CAP_PROP_FPS, 30)
+        #self.capture.set(cv2.CAP_PROP_FPS, 30)
 
         self.favourite_index = index
         self.saveConfig()
@@ -92,12 +95,12 @@ class Video:
             self.capture.set(cv2.CAP_PROP_CONTRAST, self.settings['contrast'])
             self.capture.set(cv2.CAP_PROP_SATURATION, self.settings['saturation'])
             self.capture.set(cv2.CAP_PROP_ZOOM, self.settings['zoom'])
-            self.capture.set(cv2.CAP_PROP_EXPOSURE, self.settings['exposure'])
             self.capture.set(cv2.CAP_PROP_GAMMA, self.settings['gamma'])
             self.capture.set(cv2.CAP_PROP_GAIN, self.settings['gain'])
-            self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)
             self.capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
             self.capture.set(cv2.CAP_PROP_FOCUS, 0)
+            self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)
+            self.capture.set(cv2.CAP_PROP_EXPOSURE, self.settings['exposure'])
 
     def setCameraSettings(self, settings):
         self.settings = settings
@@ -106,6 +109,11 @@ class Video:
         self.applyCameraSettings()
 
     def thread(self):
+        if self.favourite_index is not None:
+            self.startCapture(self.favourite_index)
+            time.sleep(1.)
+            self.applyCameraSettings()
+
         while self.running:
             if self.capture is not None:
                 t0 = time.time()

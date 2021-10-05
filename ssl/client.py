@@ -181,6 +181,9 @@ class Client:
                 except ClientError:
                     pass
 
+    def em(self):
+        self.stop_motion()
+
     def stop(self):
         self.stop_motion()
         self.running = False

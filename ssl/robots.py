@@ -1,6 +1,7 @@
+import numpy as np
 from serial.tools import list_ports
 import time
-from . import config, control, robot
+from . import config, control, robot, utils
 
 
 class Robots:
@@ -18,6 +19,21 @@ class Robots:
                 if marker != "":
                     self.robots[port].setMarker(marker)
                     self.robots_by_marker[marker] = self.robots[port]
+
+    def identify(self):
+        for entry in self.robots:
+            before = self.detection.getDetection().copy()
+            self.robots[entry].control(0, 0, 30)
+            time.sleep(1)
+            self.robots[entry].control(0, 0, 0)
+            after = self.detection.getDetection().copy()
+            for marker in before['markers']:
+                if marker in after['markers']:
+                    a = before['markers'][marker]['orientation']
+                    b = after['markers'][marker]['orientation']
+                    delta = np.rad2deg(utils.angle_wrap(b-a))
+                    if delta > 10 and delta < 40:
+                        self.setMarker(entry, marker)
 
     def ports(self):
         return [entry.device for entry in list_ports.comports()]
@@ -52,6 +68,8 @@ class Robots:
 
     def setMarker(self, port, marker):
         if port in self.robots:
+            if port in self.robots_by_marker:
+                self.robots_by_marker[marker].setMarker(None)
             self.robots[port].setMarker(marker)
             self.robots_by_marker[marker] = self.robots[port]
             self.saveConfig()

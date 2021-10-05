@@ -17,6 +17,14 @@ function robots_initialize(backend)
     $('.add-robot').click(function() {
         backend.addRobot($('.ports').val());
     });
+    $('.add-all-robots').click(function() {
+        $('.ports option').each(function() {
+            backend.addRobot($(this).val());
+        });
+    });
+    $('.identify').click(function() {
+        backend.identify();
+    });
 
     $.get('robot.html', function(robot_template) {
         let warning = '<i class="bi text-warning bi-exclamation-circle"></i>';
