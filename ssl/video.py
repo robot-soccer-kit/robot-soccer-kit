@@ -31,9 +31,11 @@ class Video:
         self.video_thread.start()
 
         self.settings = {
-            'brightness': 100,
-            'contrast': 100,
-            'saturation': 100
+            'brightness': 0,
+            'contrast': 50,
+            'saturation': 50,
+            'zoom': 5,
+            'exposure': 125
         }
         self.favourite_index = None
 
@@ -64,8 +66,8 @@ class Video:
 
     def startCapture(self, index):
         self.capture = cv2.VideoCapture(index)
-        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
-        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
+        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
+        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
 
         self.favourite_index = index
         self.saveConfig()
@@ -85,6 +87,9 @@ class Video:
             self.capture.set(cv2.CAP_PROP_BRIGHTNESS, self.settings['brightness'])
             self.capture.set(cv2.CAP_PROP_CONTRAST, self.settings['contrast'])
             self.capture.set(cv2.CAP_PROP_SATURATION, self.settings['saturation'])
+            self.capture.set(cv2.CAP_PROP_ZOOM, self.settings['zoom'])
+            self.capture.set(cv2.CAP_PROP_EXPOSURE, self.settings['exposure'])
+            self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0)
             self.capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
             self.capture.set(cv2.CAP_PROP_FOCUS, 0)
 
