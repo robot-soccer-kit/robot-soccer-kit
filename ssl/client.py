@@ -2,7 +2,7 @@ import numpy as np
 import zmq
 import threading
 import time
-from . import field
+from . import field, utils
 
 configurations = {
     'dots': [
@@ -26,34 +26,6 @@ configurations = {
         ['blue', 2, (-0.6, field.width/2, -np.pi/2)],
     ]
 }
-
-
-def frame(x, y=0, orientation=0):
-    if type(x) is tuple:
-        x, y, orientation = x
-
-    cos, sin = np.cos(orientation), np.sin(orientation)
-
-    return np.array([[cos, -sin, x],
-                     [sin,  cos, y],
-                     [0,   0,  1]])
-
-
-def frame_inv(frame):
-    frame_inv = np.eye(3)
-    R = frame[:2, :2]
-    frame_inv[:2, :2] = R.T
-    frame_inv[:2, 2] = -R.T @ frame[:2, 2]
-    return frame_inv
-
-
-def robot_frame(robot):
-    pos = robot.position
-    return frame(pos[0], pos[1], robot.orientation)
-
-
-def angle_wrap(alpha):
-    return (alpha + np.pi) % (2 * np.pi) - np.pi
 
 
 class ClientError(Exception):
@@ -101,12 +73,12 @@ class ClientRobot:
                 target = target()
 
             x, y, orientation = target
-            Ti = frame_inv(robot_frame(self))
+            Ti = utils.frame_inv(utils.robot_frame(self))
             target_in_robot = Ti @ np.array([x, y, 1])
 
             error_x = target_in_robot[0]
             error_y = target_in_robot[1]
-            error_orientation = angle_wrap(orientation - self.orientation)
+            error_orientation = utils.angle_wrap(orientation - self.orientation)
 
             self.control(2500*error_x, 2500*error_y, 2.5 *
                          np.rad2deg(error_orientation))
