@@ -1,6 +1,6 @@
 import zmq
 import threading
-import robots
+from . import robots
 
 
 class Control:

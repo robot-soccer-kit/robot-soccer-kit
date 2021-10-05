@@ -3,9 +3,7 @@ import numpy as np
 import cv2
 import base64
 import threading
-import detection
-import field
-import config
+from . import detection, config
 
 
 class Video:
@@ -32,10 +30,12 @@ class Video:
 
         self.settings = {
             'brightness': 0,
-            'contrast': 50,
-            'saturation': 50,
+            'contrast': 0,
+            'saturation': 100,
+            'gamma': 0,
+            'gain': 0,
             'zoom': 5,
-            'exposure': 125
+            'exposure': 100
         }
         self.favourite_index = None
 
@@ -68,6 +68,8 @@ class Video:
         self.capture = cv2.VideoCapture(index)
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
+        self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+        self.capture.set(cv2.CAP_PROP_FPS, 30)
 
         self.favourite_index = index
         self.saveConfig()
@@ -89,6 +91,8 @@ class Video:
             self.capture.set(cv2.CAP_PROP_SATURATION, self.settings['saturation'])
             self.capture.set(cv2.CAP_PROP_ZOOM, self.settings['zoom'])
             self.capture.set(cv2.CAP_PROP_EXPOSURE, self.settings['exposure'])
+            self.capture.set(cv2.CAP_PROP_GAMMA, self.settings['gamma'])
+            self.capture.set(cv2.CAP_PROP_GAIN, self.settings['gain'])
             self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0)
             self.capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
             self.capture.set(cv2.CAP_PROP_FOCUS, 0)

@@ -1,8 +1,6 @@
 from serial.tools import list_ports
 import time
-import robot
-import control
-import config
+from . import config, control, robot
 
 
 class Robots:

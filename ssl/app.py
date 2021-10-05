@@ -1,7 +1,7 @@
-import robots
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets, QtWebChannel
-from backend import Backend
 import os, sys
+from .backend import Backend
+from . import robots
 
 os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = '5422'
 

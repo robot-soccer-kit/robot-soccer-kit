@@ -1,8 +1,8 @@
 import numpy as np
 import cv2
-from field import Field
 import zmq
 import time
+from .field import Field
 
 
 class Detection:

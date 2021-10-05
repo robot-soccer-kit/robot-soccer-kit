@@ -1,8 +1,6 @@
 from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets, QtWebChannel
 from PyQt5.QtCore import QVariant
-import video
-import robots
-import control
+from . import video, robots, control
 
 
 class Backend(QtCore.QObject):
