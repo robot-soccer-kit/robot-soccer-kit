@@ -1,5 +1,5 @@
 import numpy as np
-from client import Client
+from client import Client, ClientError
 import time
 import argparse
 import field
@@ -83,13 +83,16 @@ def goto_configuration(client, target):
         arrived = True
         for color, index, target in targets:
             robot = client.teams[color][index]
-            arrived = goto(robot, target) and arrived
+            try:
+                arrived = goto(robot, target) and arrived
+            except ClientError:
+                pass
 
         time.sleep(0.05)
 
 
 if __name__ == '__main__':
-    client = client.Client
+    client = Client()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--target', '-t', type=str, default='side')
