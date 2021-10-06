@@ -6,7 +6,7 @@ from . import robots
 os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = '5422'
 
 app = QtWidgets.QApplication(sys.argv)
-app.setApplicationName("Junior SSL")
+app.setApplicationName("Junior SSL - Game Controller")
 app.setWindowIcon(QtGui.QIcon('ball.png'))
 
 backend = Backend()
