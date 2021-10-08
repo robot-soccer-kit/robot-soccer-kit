@@ -32,17 +32,20 @@ class ClientError(Exception):
     pass
 
 
-class ClientRobot:
+class ClientTracked:
+    def __init__(self):
+        self.position = None
+        self.pose = None
+        self.orientation = None
+        self.last_update = None
+
+
+class ClientRobot(ClientTracked):
     def __init__(self, color, number, client):
         self.color = color
         self.team = color
         self.number = number
         self.client = client
-
-        self.position = None
-        self.pose = None
-        self.orientation = None
-        self.last_update = None
 
     def ball(self):
         return self.client.ball
@@ -62,7 +65,11 @@ class ClientRobot:
     def control(self, dx, dy, dturn):
         return self.client.command(self.color, self.number, 'control', [dx, dy, dturn])
 
-    def goto(self, target, wait=True):
+    def goto(self, target, y_=None, alpha_=None, wait=True):
+        # Supporting tuples and non tuples
+        if y_ is not None and alpha_ is not None:
+            target = (target, y_, alpha_)
+
         if wait:
             while not self.goto(target, wait=False):
                 time.sleep(0.05)
@@ -79,9 +86,10 @@ class ClientRobot:
 
             error_x = target_in_robot[0]
             error_y = target_in_robot[1]
-            error_orientation = utils.angle_wrap(orientation - self.orientation)
+            error_orientation = utils.angle_wrap(
+                orientation - self.orientation)
 
-            self.control(3*error_x, 3*error_y, 3*error_orientation)
+            self.control(1.5*error_x, 1.5*error_y, 1.5*error_orientation)
 
             return np.linalg.norm([error_x, error_y, error_orientation]) < 0.05
         else:
@@ -90,12 +98,9 @@ class ClientRobot:
 
 
 class Client:
-    def __init__(self, color='blue', host='127.0.0.1', key=''):
+    def __init__(self, host='127.0.0.1', key=''):
         self.running = True
         self.key = key
-
-        self.color = color
-        self.opponent_color = 'red' if color == 'blue' else 'blue'
 
         self.robots = {
             'red': {
@@ -108,14 +113,9 @@ class Client:
             }
         }
 
-        self.team = {
-            1: self.robots[self.color][1],
-            2: self.robots[self.color][2],
-        }
-        self.opponents = {
-            1: self.robots[self.opponent_color][1],
-            2: self.robots[self.opponent_color][2],
-        }
+        # Custom objects to track
+        self.objs = {n: ClientTracked() for n in range(1, 9)}
+
         self.ball = None
 
         # ZMQ Context
@@ -141,15 +141,15 @@ class Client:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, type, value, tb):
         self.stop()
 
-    def update_robot(self, robot, infos):
-        robot.position = infos['position']
-        robot.orientation = infos['orientation']
-        robot.pose = list(robot.position) + [robot.orientation]
-        robot.last_update = time.time()
+    def update_position(self, tracked, infos):
+        tracked.position = infos['position']
+        tracked.orientation = infos['orientation']
+        tracked.pose = list(tracked.position) + [tracked.orientation]
+        tracked.last_update = time.time()
 
     def sub_process(self):
         self.sub.RCVTIMEO = 1000
@@ -170,7 +170,11 @@ class Client:
                         team = entry[:-1]
                         number = int(entry[-1])
 
-                        self.update_robot(self.robots[team][number], json['markers'][entry])
+                        if team == 'obj':
+                            self.update_position(self.objs[number], json['markers'][entry])
+                        else:
+                            self.update_position(
+                                self.robots[team][number], json['markers'][entry])
 
                 if self.on_sub is not None:
                     self.on_sub(self, dt)
@@ -197,6 +201,7 @@ class Client:
 
     def command(self, color, number, name, parameters):
         self.req.send_json([self.key, color, number, [name, *parameters]])
+        time.sleep(0.01)
 
         success, message = self.req.recv_json()
         if not success:
@@ -215,30 +220,4 @@ class Client:
                 except ClientError:
                     pass
 
-            time.sleep(0.05)
-
         self.stop_motion()
-
-
-if __name__ == '__main__':
-    client = Client()
-
-    try:
-        while True:
-            for color in 'red', 'blue':
-                for index in 1, 2:
-                    client.robots[color][index].control(100, 0, 0)
-                    time.sleep(1)
-                    client.robots[color][index].control(-100, 0, 0)
-                    time.sleep(1)
-                    client.robots[color][index].control(0, 0, 0)
-                    client.robots[color][index].kick()
-                    time.sleep(1)
-
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print('Exiting')
-    except ClientError as e:
-        print('Fatal error: '+str(e))
-    finally:
-        client.stop()

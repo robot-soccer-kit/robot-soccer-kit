@@ -73,17 +73,21 @@ function video_initialize(backend)
             }
             $('.detection').html(detection);
 
-            if (video.detection.calibrated) {
+            if (video.detection.calibrated && video.detection.see_whole_field) {
                 $('.calibrated').text('Field calibrated');
                 $('.calibrated').addClass('text-success');
                 $('.calibrated').removeClass('text-danger');
             } else {
-                $('.calibrated').html('Field not calibrated <i class="text-warning bi bi-exclamation-circle"></i>');
+                if (video.detection.calibrated) {
+                    $('.calibrated').html('Can\'t see whole field <i class="text-warning bi bi-exclamation-circle"></i>');
+                } else {
+                    $('.calibrated').html('Field not calibrated <i class="text-warning bi bi-exclamation-circle"></i>');
+                }
                 $('.calibrated').removeClass('text-success');
                 $('.calibrated').addClass('text-danger');
             }
 
-            if (video.running && video.detection.calibrated) {
+            if (video.running && video.detection.calibrated && video.detection.see_whole_field) {
                 $('body').addClass('vision-no-error');
             } else {
                 $('body').removeClass('vision-no-error');

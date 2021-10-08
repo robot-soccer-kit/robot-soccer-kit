@@ -1,9 +1,15 @@
 import numpy as np
 import cv2
 
+# Field dimension
+length = 1.83  # x axis
+width = 1.22   # y axis
+
+# Width of the goal
 goal_width = 0.6
-length = 1.83
-width = 1.22
+
+# Side of the (green) border we should be able to see around the field
+border_size = 0.3
 
 class Field:
     def __init__(self):
@@ -34,6 +40,7 @@ class Field:
         self.corner_gfx_positions = {}
 
         self.homography = None
+        self.see_whole_field = False
 
     def calibrated(self):
         return self.homography is not None
@@ -51,7 +58,7 @@ class Field:
     def set_corner_position(self, corner, corners):
         self.corner_gfx_positions[corner] = corners
 
-    def update_homography(self, debug):
+    def update_homography(self, image, draw_debug=False):
         if len(self.corner_gfx_positions) >= 3: # We allow to compute homography with only 3 corners
             graphics_positions = []
             field_positions = []
@@ -66,6 +73,27 @@ class Field:
             field_positions = np.array(field_positions)
             H, mask = cv2.findHomography(graphics_positions, field_positions)
             self.homography = H
+            
+            H_i = np.linalg.inv(H)
+            image_height, image_width, _ = image.shape
+            image_points = []
+            self.see_whole_field = True
+            for sx, sy in [(-1, 1), (1, 1), (1, -1), (-1, -1)]:
+                x = sx * ((length / 2) + border_size)
+                y = sy * ((width / 2) + border_size)
+                img = (H_i @ np.array([x, y, 1]))
+                img[0] /= img[2]
+                img[1] /= img[2]
+                image_points.append((int(img[0]), int(img[1])))
+
+                if img[0] < 0 or img[0] > image_width or \
+                    img[1] < 0 or img[1] > image_height:
+                    self.see_whole_field = False
+
+            if draw_debug:
+                for k in range(4):
+                    cv2.line(image, image_points[(k-1)%4], image_points[k], (0, 0, 255), 2)
+
 
         # We check that homography is consistent, note that this can happen (and should happen)
         # with only one or two corners!
@@ -84,7 +112,7 @@ class Field:
         
     def pos_of_gfx(self, pos):
         M = np.ndarray(shape = (3,1), buffer = np.array([[pos[0]], [pos[1]], [1.0]]))
-        result = np.dot(self.homography, M)
+        result = self.homography @ M
         return [float(result[0]/result[2]), float(result[1]/result[2])]
 
     def pose_of_tag(self, corners):

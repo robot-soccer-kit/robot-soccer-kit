@@ -74,7 +74,9 @@ class Video:
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
         self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
-        #self.capture.set(cv2.CAP_PROP_FPS, 30)
+        # self.capture.set(cv2.CAP_PROP_FPS, 30)
+
+        self.applyCameraSettings()
 
         self.favourite_index = index
         self.saveConfig()
@@ -111,8 +113,6 @@ class Video:
     def thread(self):
         if self.favourite_index is not None:
             self.startCapture(self.favourite_index)
-            time.sleep(1.)
-            self.applyCameraSettings()
 
         while self.running:
             if self.capture is not None:

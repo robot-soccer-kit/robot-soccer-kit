@@ -1,6 +1,7 @@
 import numpy as np
 from serial.tools import list_ports
 import time
+import math
 from . import config, control, robot, utils
 
 
@@ -23,7 +24,7 @@ class Robots:
     def identify(self):
         for entry in self.robots:
             before = self.detection.getDetection().copy()
-            self.robots[entry].control(0, 0, 30)
+            self.robots[entry].control(0, 0, math.radians(30))
             time.sleep(1)
             self.robots[entry].control(0, 0, 0)
             after = self.detection.getDetection().copy()
