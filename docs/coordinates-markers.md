@@ -40,5 +40,19 @@ place them on the robots:
 
 The camera can be any USB camera that works with OpenCV, and it should be able to see the whole field
 
-TODO: Recommend one camera model
-TODO: Recommend some mechanical setup to install the camera
+We recommend using [**Spedal MF920Pro, 1080p and 120° angle**](https://www.amazon.com/Spedal-Conference-Streaming-Microphone-Desktop/dp/B07TDQ8NL3)
+
+## Markers
+
+Markers are ArUco 4x4, you can use tool like [this one](https://chev.me/arucogen/), printed with a scale
+of 8 cm. The ArUco ids are:
+
+* 0: field corner 1
+* 1: field corner 2
+* 2: field corner 3
+* 3: field corner 4
+* 4: robot red 1
+* 5: robot red 2
+* 6: robot blue 1
+* 7: robot blue 2
+* 8-15: generic objects
