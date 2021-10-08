@@ -42,6 +42,12 @@ The camera can be any USB camera that works with OpenCV, and it should be able t
 
 We recommend using [**Spedal MF920Pro, 1080p and 120° angle**](https://www.amazon.com/Spedal-Conference-Streaming-Microphone-Desktop/dp/B07TDQ8NL3)
 
+To assemble the structure, you can use 50mm PVC pipes, and attach the camera with a Ziptie:
+
+![Ziptie camera](/docs/imgs/camera_ziptie.png)
+
+(here, zip tie is a 7.5 x 300mm)
+
 ## Markers
 
 Markers are ArUco 4x4, you can use tool like [this one](https://chev.me/arucogen/), printed with a scale
