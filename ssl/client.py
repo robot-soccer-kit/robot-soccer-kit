@@ -32,17 +32,20 @@ class ClientError(Exception):
     pass
 
 
-class ClientRobot:
+class ClientTracked:
+    def __init__(self):
+        self.position = None
+        self.pose = None
+        self.orientation = None
+        self.last_update = None
+
+
+class ClientRobot(ClientTracked):
     def __init__(self, color, number, client):
         self.color = color
         self.team = color
         self.number = number
         self.client = client
-
-        self.position = None
-        self.pose = None
-        self.orientation = None
-        self.last_update = None
 
     def ball(self):
         return self.client.ball
@@ -83,7 +86,8 @@ class ClientRobot:
 
             error_x = target_in_robot[0]
             error_y = target_in_robot[1]
-            error_orientation = utils.angle_wrap(orientation - self.orientation)
+            error_orientation = utils.angle_wrap(
+                orientation - self.orientation)
 
             self.control(1.5*error_x, 1.5*error_y, 1.5*error_orientation)
 
@@ -108,6 +112,9 @@ class Client:
                 2: ClientRobot('blue', 2, self)
             }
         }
+
+        # Custom objects to track
+        self.objs = {n: ClientTracked() for n in range(1, 9)}
 
         self.ball = None
 
@@ -134,15 +141,15 @@ class Client:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, type, value, tb):
         self.stop()
 
-    def update_robot(self, robot, infos):
-        robot.position = infos['position']
-        robot.orientation = infos['orientation']
-        robot.pose = list(robot.position) + [robot.orientation]
-        robot.last_update = time.time()
+    def update_position(self, tracked, infos):
+        tracked.position = infos['position']
+        tracked.orientation = infos['orientation']
+        tracked.pose = list(tracked.position) + [tracked.orientation]
+        tracked.last_update = time.time()
 
     def sub_process(self):
         self.sub.RCVTIMEO = 1000
@@ -163,7 +170,11 @@ class Client:
                         team = entry[:-1]
                         number = int(entry[-1])
 
-                        self.update_robot(self.robots[team][number], json['markers'][entry])
+                        if team == 'obj':
+                            self.update_position(self.objs[number], json['markers'][entry])
+                        else:
+                            self.update_position(
+                                self.robots[team][number], json['markers'][entry])
 
                 if self.on_sub is not None:
                     self.on_sub(self, dt)
@@ -210,4 +221,3 @@ class Client:
                     pass
 
         self.stop_motion()
-
