@@ -104,7 +104,7 @@ class Detection:
                     new_markers[item] = self.field.pose_of_tag(corners)
                     self.last_updates[item] = time.time()
 
-        self.field.update_homography(image)
+        self.field.update_homography(image, draw_debug)
         self.markers = new_markers
 
     def detectBall(self, image, draw_debug):
@@ -160,7 +160,8 @@ class Detection:
         return {
             'ball': self.ball, 
             'markers': self.markers, 
-            'calibrated': self.field.calibrated()
+            'calibrated': self.field.calibrated(),
+            'see_whole_field': self.field.see_whole_field
         }
 
     def publish(self):
