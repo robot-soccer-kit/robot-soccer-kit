@@ -42,6 +42,7 @@ class ClientTracked:
 
 class ClientRobot(ClientTracked):
     def __init__(self, color, number, client):
+        super().__init__()
         self.color = color
         self.team = color
         self.number = number
