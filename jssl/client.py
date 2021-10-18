@@ -102,6 +102,7 @@ class Client:
     def __init__(self, host='127.0.0.1', key=''):
         self.running = True
         self.key = key
+        self.lock = threading.Lock()
 
         self.robots = {
             'red': {
@@ -147,9 +148,9 @@ class Client:
         self.stop()
 
     def update_position(self, tracked, infos):
-        tracked.position = infos['position']
+        tracked.position = np.array(infos['position'])
         tracked.orientation = infos['orientation']
-        tracked.pose = list(tracked.position) + [tracked.orientation]
+        tracked.pose = np.array(list(tracked.position) + [tracked.orientation])
         tracked.last_update = time.time()
 
     def sub_process(self):
@@ -201,10 +202,13 @@ class Client:
         self.running = False
 
     def command(self, color, number, name, parameters):
+        self.lock.acquire()
         self.req.send_json([self.key, color, number, [name, *parameters]])
+        success, message = self.req.recv_json()
+        self.lock.release()
+
         time.sleep(0.01)
 
-        success, message = self.req.recv_json()
         if not success:
             raise ClientError('Command "'+name+'" failed: '+message)
 
