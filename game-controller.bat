@@ -17,5 +17,5 @@ start "" "https://www.python.org/ftp/python/3.9.0/python-3.9.0-amd64.exe"
 goto :EOF
 
 :PYTHON_DOES_EXIST
-py -m pip install pyserial numpy zmq pyqt5 pyqtwebengine opencv-python-headless opencv-contrib-python-headless
+py -m install -U junior-ssl
 py -m jssl.game_controller
