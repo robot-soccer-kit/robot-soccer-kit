@@ -71,8 +71,8 @@ class Video:
 
     def startCapture(self, index):
         self.capture = cv2.VideoCapture(index)
-        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
-        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
+        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
+        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 544)
         self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         # self.capture.set(cv2.CAP_PROP_FPS, 30)
 

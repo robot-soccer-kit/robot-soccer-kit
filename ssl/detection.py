@@ -45,7 +45,7 @@ class Detection:
         }
 
         # Ball detection parameters (HSV thresholds)
-        self.lower_orange = np.array([5, 150, 150])
+        self.lower_orange = np.array([0, 150, 150])
         self.upper_orange = np.array([25, 255, 255])
 
         # Detection output
