@@ -104,14 +104,19 @@ class Client:
         self.key = key
         self.lock = threading.Lock()
 
+        self.red1 = ClientRobot('red', 1, self)
+        self.red2 = ClientRobot('red', 2, self)
+        self.blue1 = ClientRobot('blue', 1, self)
+        self.blue2 = ClientRobot('blue', 2, self)
+
         self.robots = {
             'red': {
-                1: ClientRobot('red', 1, self),
-                2: ClientRobot('red', 2, self)
+                1: self.red1,
+                2: self.red2,
             },
             'blue': {
-                1: ClientRobot('blue', 1, self),
-                2: ClientRobot('blue', 2, self)
+                1: self.blue1,
+                2: self.blue2,
             }
         }
 
