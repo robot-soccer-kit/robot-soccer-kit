@@ -18,7 +18,7 @@ this repository, if any question, do not hesitate to open an issue**
 
 * [Robots](/docs/robots.md)
 * [Coordinates, field and markers](/docs/coordinates-markers.md)
-* TODO Operating the Junior-SSL app, using and Python API
+* [Game Controller and Python API](/docs/programming.md)
 
 ## License
 
