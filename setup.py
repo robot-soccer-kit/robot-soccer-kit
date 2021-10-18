@@ -1,11 +1,19 @@
 import setuptools
+import os
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+def package_files(directory):
+    paths = []
+    for (path, directories, filenames) in os.walk(directory):
+        for filename in filenames:
+            paths.append(os.path.join('..', path, filename))
+    return paths
+
 setuptools.setup(
     name="junior-ssl",
-    version="0.1.3",
+    version="0.1.5",
     author="Rhoban team",
     author_email="team@rhoban.com",
     description="Junior SSL - An omniwheel soccer setup",
@@ -30,6 +38,6 @@ setuptools.setup(
         "opencv-contrib-python-headless"
     ],
     include_package_data=True,
-    package_data={"": ["*"]},
+    package_data={"": package_files("jssl")},
     python_requires='>=3.6',
 )
