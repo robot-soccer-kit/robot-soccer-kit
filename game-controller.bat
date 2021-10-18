@@ -18,4 +18,4 @@ goto :EOF
 
 :PYTHON_DOES_EXIST
 py -m pip install pyserial numpy zmq pyqt5 pyqtwebengine opencv-python-headless opencv-contrib-python-headless
-py -m ssl.game_controller
+py -m jssl.game_controller
