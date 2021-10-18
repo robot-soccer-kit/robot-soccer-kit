@@ -6,11 +6,11 @@ this is STILL A WORK IN PROGRESS**
 
 ![Holo](/docs/imgs/robots.jpg)
 
+[The full robot CAD can be found here (OnShape)](https://cad.onshape.com/documents/c5fe05581d14c59bfb08f79e/w/a8cb82e3a358c0b06e1cbf91/e/f45372d8263c18466905bd9b?renderMode=0&uiState=616d8b41f463de7ef1eedc0f)
+
 
 ## Structure
 
-* (TODO provide CAD) Top PMMA plate
-* (TODO provide CAD) Upper marker plate
 * Structural screws
     * 6x M3x35
     * 6x M3x10 female-female spacer
@@ -19,7 +19,7 @@ this is STILL A WORK IN PROGRESS**
 
 ## Wheels
 
-(TODO provide CAD)
+[Wheel CAD 3D design](https://cad.onshape.com/documents/beccbfab729802507eb805eb/w/eea13ac7371464cd172aefcf/e/76e58097a54be25b6c68caca?renderMode=0&uiState=616d8c2f00cc7207a3c8ae7b)
 
 * Bearings are V623ZZ, V shape 3x12x4mm
 * O-rings, ID 8mm, 2mm thickness
