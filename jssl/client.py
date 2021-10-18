@@ -66,11 +66,7 @@ class ClientRobot(ClientTracked):
     def control(self, dx, dy, dturn):
         return self.client.command(self.color, self.number, 'control', [dx, dy, dturn])
 
-    def goto(self, target, y_=None, alpha_=None, wait=True):
-        # Supporting tuples and non tuples
-        if y_ is not None and alpha_ is not None:
-            target = (target, y_, alpha_)
-
+    def goto(self, target, wait=True):
         if wait:
             while not self.goto(target, wait=False):
                 time.sleep(0.05)
