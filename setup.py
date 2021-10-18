@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="junior-ssl",
-    version="0.1",
+    version="0.1.1",
     author="Rhoban team",
     author_email="team@rhoban.com",
     description="Junior SSL - An omniwheel soccer setup",
@@ -29,5 +29,7 @@ setuptools.setup(
         "opencv-python-headless",
         "opencv-contrib-python-headless"
     ],
+    include_package_data=True,
+    package_data={'': ['jssl/*', 'README.md']},
     python_requires='>=3.6',
 )
