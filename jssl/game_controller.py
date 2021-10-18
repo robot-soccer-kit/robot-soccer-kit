@@ -7,7 +7,15 @@ os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = '5422'
 
 app = QtWidgets.QApplication(sys.argv)
 app.setApplicationName("Junior SSL - Game Controller")
-app.setWindowIcon(QtGui.QIcon('ball.png'))
+dirname = os.path.dirname(__file__)
+app_icon = QtGui.QIcon()
+app_icon.addFile(dirname+'/imgs/ball_16x16.png', QtCore.QSize(16,16))
+app_icon.addFile(dirname+'/imgs/ball_24x24.png', QtCore.QSize(24,24))
+app_icon.addFile(dirname+'/imgs/ball_32x32.png', QtCore.QSize(32,32))
+app_icon.addFile(dirname+'/imgs/ball_48x48.png', QtCore.QSize(48,48))
+app_icon.addFile(dirname+'/imgs/ball_256x256.png', QtCore.QSize(256,256))
+print(dirname+'/imgs/256x256.png')
+app.setWindowIcon(app_icon)
 
 backend = Backend()
 
