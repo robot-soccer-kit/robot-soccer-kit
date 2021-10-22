@@ -68,7 +68,6 @@ solenoid.
 ![Solenoid](/docs/imgs/solenoid.png)
 
 * 6V JF-0530B
-* (TODO provide CAD)
 
 ### Operating
 
