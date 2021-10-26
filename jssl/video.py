@@ -128,7 +128,7 @@ class Video:
                     new_size = np.array(
                         [FRAME_SIZE[0], FRAME_SIZE[1]]) * self.settings['rescale']
                     image_captured = cv2.resize(image_captured, (int(
-                        new_size[0]), int(new_size[1])), cv2.cv2.INTER_LINEAR)
+                        new_size[0]), int(new_size[1])), cv2.INTER_LINEAR)
 
                 if image_captured is not None:
                     # Process the image
