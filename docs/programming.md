@@ -17,6 +17,7 @@ You need to have Python version 3.8 newer.
 
 * **Windows**: `py -m pip install -U junior-ssl`
 * **Linux**: `pip install -U junior-ssl`
+  * [Specific instructions and troubleshooting for Linux](linux.md)
 
 ## Game Controller
 
