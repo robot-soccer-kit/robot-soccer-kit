@@ -6,6 +6,8 @@ import base64
 import threading
 from . import detection, config
 
+FRAME_SIZE = (1024, 768)
+
 
 class Video:
     def __init__(self):
@@ -33,6 +35,7 @@ class Video:
             'gamma': 0,
             'gain': 0,
             'zoom': 5,
+            'rescale': 1,
             'exposure': -7 if is_windows else 100
         }
         self.favourite_index = None
@@ -71,10 +74,10 @@ class Video:
 
     def startCapture(self, index):
         self.capture = cv2.VideoCapture(index)
-        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
-        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 544)
-        self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
-        # self.capture.set(cv2.CAP_PROP_FPS, 30)
+        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_SIZE[0])
+        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_SIZE[1])
+        self.capture.set(cv2.CAP_PROP_FOURCC,
+                         cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 
         self.applyCameraSettings()
 
@@ -93,9 +96,11 @@ class Video:
 
     def applyCameraSettings(self):
         if self.capture is not None:
-            self.capture.set(cv2.CAP_PROP_BRIGHTNESS, self.settings['brightness'])
+            self.capture.set(cv2.CAP_PROP_BRIGHTNESS,
+                             self.settings['brightness'])
             self.capture.set(cv2.CAP_PROP_CONTRAST, self.settings['contrast'])
-            self.capture.set(cv2.CAP_PROP_SATURATION, self.settings['saturation'])
+            self.capture.set(cv2.CAP_PROP_SATURATION,
+                             self.settings['saturation'])
             self.capture.set(cv2.CAP_PROP_ZOOM, self.settings['zoom'])
             self.capture.set(cv2.CAP_PROP_GAMMA, self.settings['gamma'])
             self.capture.set(cv2.CAP_PROP_GAIN, self.settings['gain'])
@@ -118,6 +123,12 @@ class Video:
             if self.capture is not None:
                 t0 = time.time()
                 grabbed, image_captured = self.capture.read()
+
+                if 'rescale' in self.settings and self.settings['rescale'] < 1.:
+                    new_size = np.array(
+                        [FRAME_SIZE[0], FRAME_SIZE[1]]) * self.settings['rescale']
+                    image_captured = cv2.resize(image_captured, (int(
+                        new_size[0]), int(new_size[1])), cv2.cv2.INTER_LINEAR)
 
                 if image_captured is not None:
                     # Process the image
