@@ -35,7 +35,7 @@ class Video:
             'gamma': 0,
             'gain': 0,
             'zoom': 5,
-            'rescale': 1,
+            'rescale': 100,
             'exposure': -7 if is_windows else 100
         }
         self.favourite_index = None
@@ -124,9 +124,9 @@ class Video:
                 t0 = time.time()
                 grabbed, image_captured = self.capture.read()
 
-                if 'rescale' in self.settings and self.settings['rescale'] < 1.:
+                if 'rescale' in self.settings and self.settings['rescale'] < 100 and self.settings['rescale'] > 0:
                     new_size = np.array(
-                        [FRAME_SIZE[0], FRAME_SIZE[1]]) * self.settings['rescale']
+                        [FRAME_SIZE[0], FRAME_SIZE[1]]) * self.settings['rescale']/100.
                     image_captured = cv2.resize(image_captured, (int(
                         new_size[0]), int(new_size[1])), cv2.INTER_LINEAR)
 
