@@ -98,7 +98,7 @@ class Robot:
         self.ledsColor = None
 
     def send(self, packet):
-        if self.bt is not None:
+        if self.bt is not None and self.bt.is_open:
             self.bt.write(packet.toRaw())
 
     def monitor(self, frequency):
@@ -247,9 +247,13 @@ class Robot:
                             type_, length, payload = 0, 0, bytearray()
                         state = 0  
             except serial.serialutil.SerialException as e:
-                print('Exception')
+                print('SerialException')
                 print(e)
                 self.init = True  
+            except OSError as e:
+                print('OSError')
+                print(e)
+                self.init = True
 
             no_message = ((self.last_message is None) or (time.time() - self.last_message > 5))
 
