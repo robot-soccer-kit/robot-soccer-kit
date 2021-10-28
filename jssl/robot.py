@@ -127,9 +127,9 @@ class Robot:
         if marker is None:
             self.ledsColor = None
         elif marker.startswith('red'):
-            self.ledsColor = [255, 0, 0]
+            self.ledsColor = [128, 0, 0]
         elif marker.startswith('blue'):
-            self.ledsColor = [0, 0, 255]
+            self.ledsColor = [0, 0, 128]
         else:
             self.ledsColor = None
 
