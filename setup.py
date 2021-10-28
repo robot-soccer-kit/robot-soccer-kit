@@ -13,7 +13,7 @@ def package_files(directory):
 
 setuptools.setup(
     name="junior-ssl",
-    version="0.2.2",
+    version="0.2.3",
     author="Rhoban team",
     author_email="team@rhoban.com",
     description="Junior SSL - An omniwheel soccer setup",
