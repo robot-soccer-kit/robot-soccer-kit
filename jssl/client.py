@@ -43,6 +43,7 @@ class ClientTracked:
 class ClientRobot(ClientTracked):
     def __init__(self, color, number, client):
         super().__init__()
+        self.moved = False
         self.color = color
         self.team = color
         self.number = number
@@ -64,6 +65,8 @@ class ClientRobot(ClientTracked):
         return self.client.command(self.color, self.number, 'kick', [power])
 
     def control(self, dx, dy, dturn):
+        self.moved = True
+
         return self.client.command(self.color, self.number, 'control', [dx, dy, dturn])
 
     def goto(self, target, wait=True):
@@ -126,6 +129,7 @@ class Client:
 
         # Creating subscriber connection
         self.sub = self.context.socket(zmq.SUB)
+        self.sub.set_hwm(1)
         self.sub.connect('tcp://'+host+':7557')
         self.sub.subscribe('')
         self.on_sub = None
@@ -174,7 +178,8 @@ class Client:
                         number = int(entry[-1])
 
                         if team == 'obj':
-                            self.update_position(self.objs[number], json['markers'][entry])
+                            self.update_position(
+                                self.objs[number], json['markers'][entry])
                         else:
                             self.update_position(
                                 self.robots[team][number], json['markers'][entry])
@@ -190,10 +195,11 @@ class Client:
         for color in self.robots:
             robots = self.robots[color]
             for index in robots:
-                try:
-                    robots[index].control(0., 0., 0.)
-                except ClientError:
-                    pass
+                if robots[index].moved:
+                    try:
+                        robots[index].control(0., 0., 0.)
+                    except ClientError:
+                        pass
 
     def em(self):
         self.stop_motion()

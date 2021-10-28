@@ -11,6 +11,7 @@ class Detection:
         # Publishing server
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
+        self.socket.set_hwm(1)
         self.socket.bind("tcp://*:7557")
 
         # ArUco parameters
@@ -158,8 +159,8 @@ class Detection:
 
     def getDetection(self):
         return {
-            'ball': self.ball, 
-            'markers': self.markers, 
+            'ball': self.ball,
+            'markers': self.markers,
             'calibrated': self.field.calibrated(),
             'see_whole_field': self.field.see_whole_field
         }
