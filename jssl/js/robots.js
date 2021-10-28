@@ -12,17 +12,23 @@ function robots_initialize(backend)
         });
     }
     updatePorts();
-    $('.refresh-ports').click(updatePorts);
+    $('.refresh-ports').click(function (event) {
+        event.preventDefault();
+        updatePorts();
+    });
 
-    $('.add-robot').click(function() {
+    $('.add-robot').click(function(event) {
+        event.preventDefault();
         backend.addRobot($('.ports').val());
     });
-    $('.add-all-robots').click(function() {
+    $('.add-all-robots').click(function(event) {
+        event.preventDefault();
         $('.ports option').each(function() {
             backend.addRobot($(this).val());
         });
     });
-    $('.identify').click(function() {
+    $('.identify').click(function(event) {
+        event.preventDefault();
         backend.identify();
     });
 
@@ -102,15 +108,18 @@ function robots_initialize(backend)
                             backend.setMarker(port, marker);
                         });
 
-                        div.find('.remove').click(function() {
+                        div.find('.remove').click(function(event) {
+                            event.preventDefault();
                             backend.removeRobot(port);
                         });
 
-                        div.find('.blink').click(function() {
+                        div.find('.blink').click(function(event) {
+                            event.preventDefault();
                             backend.blink(port);
                         });
 
-                        div.find('.kick').click(function() {
+                        div.find('.kick').click(function(event) {
+                            event.preventDefault();
                             backend.kick(port);
                         });
                     }
