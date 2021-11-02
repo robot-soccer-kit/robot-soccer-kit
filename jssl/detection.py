@@ -56,6 +56,16 @@ class Detection:
         self.no_ball = 0
         self.field = Field()
 
+        self.blob_params = cv2.SimpleBlobDetector_Params()
+        self.blob_params.minThreshold = 1
+        self.blob_params.maxThreshold = 255
+        self.blob_params.filterByCircularity = False
+        self.blob_params.filterByConvexity = False
+        self.blob_params.filterByInertia = False
+        self.blob_params.filterByColor = True
+        self.blob_params.blobColor = 255
+        self.blob_params.minDistBetweenBlobs = 50
+
     def detectAruco(self, image, draw_debug):
 
         (corners, ids, rejected) = cv2.aruco.detectMarkers(image,
@@ -113,16 +123,8 @@ class Detection:
         mask = cv2.inRange(hsv, self.lower_orange, self.upper_orange)
         result = cv2.bitwise_and(image, image, mask=mask)
         gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
-        blob_params = cv2.SimpleBlobDetector_Params()
-        blob_params.minThreshold = 1
-        blob_params.maxThreshold = 255
-        blob_params.filterByCircularity = False
-        blob_params.filterByConvexity = False
-        blob_params.filterByInertia = False
-        blob_params.filterByColor = True
-        blob_params.blobColor = 255
-        blob_params.minDistBetweenBlobs = 50
-        detector = cv2.SimpleBlobDetector_create(blob_params)
+        
+        detector = cv2.SimpleBlobDetector_create(self.blob_params)
         keypoints = detector.detect(gray)
 
         if len(keypoints):
