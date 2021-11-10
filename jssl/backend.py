@@ -20,12 +20,16 @@ class Backend(QtCore.QObject):
         return QVariant(self.video.cameras())
 
     @QtCore.pyqtSlot(result=QVariant)
+    def resolutions(self):
+        return QVariant(self.video.resolutions())
+
+    @QtCore.pyqtSlot(result=QVariant)
     def getCameraSettings(self):
         return QVariant(self.video.settings)
 
-    @QtCore.pyqtSlot(int, result=bool)
-    def startCapture(self, index):
-        return self.video.startCapture(index)
+    @QtCore.pyqtSlot(int, int, result=bool)
+    def startCapture(self, index, res):
+        return self.video.startCapture(index, res)
 
     @QtCore.pyqtSlot()
     def stopCapture(self):

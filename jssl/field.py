@@ -90,11 +90,6 @@ class Field:
                     img[1] < 0 or img[1] > image_height:
                     self.see_whole_field = False
 
-            if draw_debug:
-                for k in range(4):
-                    cv2.line(image, image_points[(k-1)%4], image_points[k], (0, 0, 255), 2)
-
-
         # We check that homography is consistent, note that this can happen (and should happen)
         # with only one or two corners!
         if self.homography is not None:
@@ -103,7 +98,7 @@ class Field:
                 for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
                     projected = self.pos_of_gfx(gfx)
                     dist = np.linalg.norm(np.array(real) - np.array(projected))
-                    if dist > 0.1:
+                    if dist > 0.05:
                         bad_homography = True
             if bad_homography:
                 self.homography = None
