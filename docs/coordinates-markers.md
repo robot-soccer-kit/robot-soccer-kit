@@ -31,7 +31,7 @@ Roughly, the coordinates of the blue robot above will look like *(x=0.4, y=0.4, 
 
 ## Robots
 
-You can print [red]((/docs/red-markers.pdf)) and [blue](/docs/blue-markers.pdf) markers and
+You can print [red](/docs/red-markers.pdf) and [blue](/docs/blue-markers.pdf) markers and
 place them on the robots:
 
 ![Robot markers](/docs/imgs/robots-markers-explain.png)
