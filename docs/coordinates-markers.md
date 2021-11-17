@@ -65,6 +65,6 @@ of 8 cm. The ArUco ids are:
 
 ## Ball
 
-![Balls](/docs/imgs/docs.png)
+![Balls](/docs/imgs/balls.png)
 
 For the ball, we use orange gold ball in PU (foam) material
