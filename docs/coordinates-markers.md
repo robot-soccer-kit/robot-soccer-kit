@@ -62,3 +62,9 @@ of 8 cm. The ArUco ids are:
 * 6: robot blue 1
 * 7: robot blue 2
 * 8-15: generic objects
+
+## Ball
+
+![Balls](/docs/imgs/docs.png)
+
+For the ball, we use orange gold ball in PU (foam) material
