@@ -31,7 +31,7 @@ Roughly, the coordinates of the blue robot above will look like *(x=0.4, y=0.4, 
 
 ## Robots
 
-You can print [red]((/docs/red-markers.pdf)) and [blue](/docs/blue-markers.pdf) markers and
+You can print [red](/docs/red-markers.pdf) and [blue](/docs/blue-markers.pdf) markers and
 place them on the robots:
 
 ![Robot markers](/docs/imgs/robots-markers-explain.png)
@@ -62,3 +62,9 @@ of 8 cm. The ArUco ids are:
 * 6: robot blue 1
 * 7: robot blue 2
 * 8-15: generic objects
+
+## Ball
+
+![Balls](/docs/imgs/balls.png)
+
+For the ball, we use orange gold ball in PU (foam) material

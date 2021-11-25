@@ -13,8 +13,9 @@ PACKET_HOLO_LEDS_BREATH = 8
 PACKET_HOLO_KICK = 12
 PACKET_MONITOR_DATA = 5
 
+
 class Packet:
-    def __init__(self, type_, payload = bytearray()):
+    def __init__(self, type_, payload=bytearray()):
         self.type = type_
         self.payload = payload.copy()
 
@@ -54,7 +55,7 @@ class Packet:
         return byte
 
     def readInt(self):
-        n = (self.readByte() << 24) 
+        n = (self.readByte() << 24)
         n = n | (self.readByte() << 16)
         n = n | (self.readByte() << 8)
         n = n | (self.readByte() << 0)
@@ -83,6 +84,7 @@ class Packet:
     def checksum(self):
         return sum(self.payload) % 256
 
+
 class Robot:
     def __init__(self, port):
         self.port = port
@@ -92,20 +94,19 @@ class Robot:
         self.last_message = None
         self.last_init = None
         self.state = {}
+        self.moved = False
         self.marker = None
         self.thread = threading.Thread(target=lambda: self.execute())
         self.thread.start()
         self.ledsColor = None
-
-    def send(self, packet):
-        if self.bt is not None and self.bt.is_open:
-            self.bt.write(packet.toRaw())
+        self.pending_packets = {}
+        self.lock = threading.Lock()
 
     def monitor(self, frequency):
         packet = Packet(PACKET_MONITOR)
         packet.appendInt(frequency)
-        self.send(packet)
-    
+        self.add_packet('monitor', packet)
+
     def applyLeds(self):
         if self.ledsColor is None:
             self.ledsBreath()
@@ -126,9 +127,9 @@ class Robot:
         if marker is None:
             self.ledsColor = None
         elif marker.startswith('red'):
-            self.ledsColor = [255, 0, 0]
+            self.ledsColor = [128, 0, 0]
         elif marker.startswith('blue'):
-            self.ledsColor = [0, 0, 255]
+            self.ledsColor = [0, 0, 128]
         else:
             self.ledsColor = None
 
@@ -157,18 +158,35 @@ class Robot:
 
             self.state = state
 
+    def add_packet(self, name, packet):
+        self.lock.acquire()
+        self.pending_packets[name] = packet
+        self.lock.release()
+
+    def pop_packet(self):
+        packet = None
+
+        self.lock.acquire()
+        if len(self.pending_packets) > 0:
+            name = next(iter(self.pending_packets))
+            packet = self.pending_packets[name]
+            del self.pending_packets[name]
+        self.lock.release()
+
+        return packet
+
     def beep(self, frequency, duration):
         packet = Packet(PACKET_HOLO)
         packet.appendByte(PACKET_HOLO_BEEP)
         packet.appendShort(frequency)
         packet.appendShort(duration)
-        self.send(packet)
+        self.add_packet('beep', packet)
 
-    def kick(self, power = 1.):
+    def kick(self, power=1.):
         packet = Packet(PACKET_HOLO)
         packet.appendByte(PACKET_HOLO_KICK)
         packet.appendByte(int(100*power))
-        self.send(packet)
+        self.add_packet('kick', packet)
 
     def control(self, dx, dy, dturn):
         packet = Packet(PACKET_HOLO)
@@ -176,12 +194,12 @@ class Robot:
         packet.appendShort(int(1000*dx))
         packet.appendShort(int(1000*dy))
         packet.appendShort(int(np.rad2deg(dturn)))
-        self.send(packet)
+        self.add_packet('control', packet)
 
     def ledsBreath(self):
         packet = Packet(PACKET_HOLO)
         packet.appendByte(PACKET_HOLO_LEDS_BREATH)
-        self.send(packet)
+        self.add_packet('leds', packet)
 
     def leds(self, r, g, b):
         packet = Packet(PACKET_HOLO)
@@ -189,7 +207,7 @@ class Robot:
         packet.appendByte(r)
         packet.appendByte(g)
         packet.appendByte(b)
-        self.send(packet)
+        self.add_packet('leds', packet)
 
     def stop(self):
         self.control(0, 0, 0)
@@ -197,7 +215,7 @@ class Robot:
     def close(self):
         self.running = False
 
-    def execute(self):        
+    def execute(self):
         while self.running:
             try:
                 if self.init:
@@ -206,7 +224,7 @@ class Robot:
                     if self.bt is not None:
                         self.bt.close()
                         self.bt = None
-                    self.bt = serial.Serial(self.port, timeout=1)
+                    self.bt = serial.Serial(self.port, timeout=0.02)
                     time.sleep(0.1)
                     self.bt.write(b"rhock\r\nrhock\r\nrhock\r\n")
                     time.sleep(0.1)
@@ -218,44 +236,52 @@ class Robot:
                     state = 0
                     type_, length, payload = 0, 0, bytearray()
 
+                # Receiving data
                 byte = self.bt.read(1)
                 if len(byte):
                     byte = ord(byte)
-                    if state == 0: # First header
+                    if state == 0:  # First header
                         if byte == 0xff:
                             state += 1
                         else:
                             state = 0
-                    elif state == 1: # Second header
+                    elif state == 1:  # Second header
                         if byte == 0xaa:
                             state += 1
                         else:
                             state = 0
-                    elif state == 2: # Packet type
+                    elif state == 2:  # Packet type
                         type_ = byte
                         state += 1
-                    elif state == 3: # Packet length
+                    elif state == 3:  # Packet length
                         length = byte
                         state += 1
-                    elif state == 4: # Payload
+                    elif state == 4:  # Payload
                         payload += bytearray((byte,))
                         if len(payload) >= length:
                             state += 1
-                    elif state == 5: # Checksum
-                        if sum(payload)%256 == byte:
+                    elif state == 5:  # Checksum
+                        if sum(payload) % 256 == byte:
                             self.process(Packet(type_, payload))
                             type_, length, payload = 0, 0, bytearray()
-                        state = 0  
-            except serial.serialutil.SerialException as e:
-                print('SerialException')
-                print(e)
-                self.init = True  
-            except OSError as e:
-                print('OSError')
+                        state = 0
+
+                # Sending pending packets
+                packet = self.pop_packet()
+                while packet is not None:
+                    if self.bt is not None and self.bt.is_open:
+                        self.bt.write(packet.toRaw())
+                    packet = self.pop_packet()
+
+            except (OSError, serial.serialutil.SerialException) as e:
+                # In case of exception, we re-init the connection
+                print('Error')
                 print(e)
                 self.init = True
 
-            no_message = ((self.last_message is None) or (time.time() - self.last_message > 5))
+            # If we didn't receive a message for more than 5s, we re-init the connection
+            no_message = ((self.last_message is None) or (
+                time.time() - self.last_message > 5))
 
             if self.last_init is None:
                 old_init = False
@@ -264,9 +290,10 @@ class Robot:
 
             if no_message and old_init:
                 self.init = True
-        
+
         if self.bt is not None:
             self.bt.close()
+
 
 if __name__ == '__main__':
     r = Robot('/dev/rfcomm0')

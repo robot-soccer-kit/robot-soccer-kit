@@ -14,6 +14,19 @@ function video_initialize(backend)
             }
             $('.cameras').html(options);
         });
+        backend.resolutions(function(data) {
+            let options = '';
+            let resolution = data[0];
+            let resolutions = data[1];
+            for (let index in resolutions) {
+                let selected = '';
+                if (index == resolution) {
+                    selected = 'selected="selected"';
+                }
+                options += '<option value="'+index+'" '+selected+'>'+resolutions[index]+'</option>';
+            }
+            $('.resolutions').html(options);
+        });
     }
     updateCameras();
     $('.refresh-cameras').click(updateCameras);
@@ -35,7 +48,7 @@ function video_initialize(backend)
 
     // Starting the video capture
     $('.start-capture').click(function() {
-        backend.startCapture($('.cameras').val());
+        backend.startCapture($('.cameras').val(), $('.resolutions').val());
     });
 
     $('.stop-capture').click(function() {
