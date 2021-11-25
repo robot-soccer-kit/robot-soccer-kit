@@ -48,6 +48,13 @@ To assemble the structure, you can use 50mm PVC pipes, and attach the camera wit
 
 (here, zip tie is a 7.5 x 300mm)
 
+## Bluetooth
+
+We recommend using USB external [ZEXMTE Bluetooth adapter](https://www.amazon.fr/gp/product/B08SC9M9K3/)
+
+On Linux, you might need to run the `./install.sh` script located in the [bluetooth directory](/bluetooth) of this
+repository to get it working.
+
 ## Markers
 
 Markers are ArUco 4x4, you can use tool like [this one](https://chev.me/arucogen/), printed with a scale
