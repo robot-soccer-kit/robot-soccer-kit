@@ -14,7 +14,7 @@ def package_files(directory):
 
 setuptools.setup(
     name="junior-ssl",
-    version="0.2.6",
+    version="0.2.7",
     author="Rhoban team",
     author_email="team@rhoban.com",
     description="Junior SSL - An omniwheel soccer setup",
@@ -33,7 +33,7 @@ setuptools.setup(
         "numpy",
         "zmq",
     ],
-    extra_requires={
+    extras_requires={
         'gc': [ # Game controller extra requirements
             "pyserial",
             "pyqt5",
