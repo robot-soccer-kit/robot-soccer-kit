@@ -1,3 +1,4 @@
+import signal
 import numpy as np
 import zmq
 import threading
@@ -209,10 +210,13 @@ class Client:
         self.running = False
 
     def command(self, color, number, name, parameters):
+        sigint_handler = signal.getsignal(signal.SIGINT)
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
         self.lock.acquire()
         self.req.send_json([self.key, color, number, [name, *parameters]])
         success, message = self.req.recv_json()
         self.lock.release()
+        signal.signal(signal.SIGINT, sigint_handler)
 
         time.sleep(0.01)
 
