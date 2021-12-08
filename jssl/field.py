@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-import field_dimensions
+from . import field_dimensions
 
 class Field:
     def __init__(self):
