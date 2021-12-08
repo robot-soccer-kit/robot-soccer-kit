@@ -3,28 +3,28 @@ import numpy as np
 import zmq
 import threading
 import time
-from . import field, utils
+from . import field_dimensions, utils
 
 configurations = {
     'dots': [
-        ['red', 1, (field.length/4, -field.width/4, np.pi)],
-        ['red', 2, (field.length/4, field.width/4, np.pi)],
-        ['blue', 1, (-field.length/4, field.width/4, 0)],
-        ['blue', 2, (-field.length/4, -field.width/4, 0)],
+        ['red', 1, (field_dimensions.length/4, -field_dimensions.width/4, np.pi)],
+        ['red', 2, (field_dimensions.length/4, field_dimensions.width/4, np.pi)],
+        ['blue', 1, (-field_dimensions.length/4, field_dimensions.width/4, 0)],
+        ['blue', 2, (-field_dimensions.length/4, -field_dimensions.width/4, 0)],
     ],
 
     'game': [
-        ['red', 1, (field.length/4, 0, np.pi)],
-        ['red', 2, (field.length/2, 0, np.pi)],
-        ['blue', 1, (-field.length/4, 0, 0)],
-        ['blue', 2, (-field.length/2, 0, 0)],
+        ['red', 1, (field_dimensions.length/4, 0, np.pi)],
+        ['red', 2, (field_dimensions.length/2, 0, np.pi)],
+        ['blue', 1, (-field_dimensions.length/4, 0, 0)],
+        ['blue', 2, (-field_dimensions.length/2, 0, 0)],
     ],
 
     'side': [
-        ['red', 1, (0.2, field.width/2, -np.pi/2)],
-        ['red', 2, (0.6, field.width/2, -np.pi/2)],
-        ['blue', 1, (-0.2, field.width/2, -np.pi/2)],
-        ['blue', 2, (-0.6, field.width/2, -np.pi/2)],
+        ['red', 1, (0.2, field_dimensions.width/2, -np.pi/2)],
+        ['red', 2, (0.6, field_dimensions.width/2, -np.pi/2)],
+        ['blue', 1, (-0.2, field_dimensions.width/2, -np.pi/2)],
+        ['blue', 2, (-0.6, field_dimensions.width/2, -np.pi/2)],
     ]
 }
 
