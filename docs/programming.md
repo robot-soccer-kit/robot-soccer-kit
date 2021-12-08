@@ -15,9 +15,13 @@ You need to have Python version 3.8 newer.
 
 `junior-ssl` is available as a package you can install using `pip`, simply run the following command:
 
-* **Windows**: `py -m pip install -U junior-ssl`
-* **Linux**: `pip install -U junior-ssl`
-  * [Specific instructions and troubleshooting for Linux](linux.md)
+* **Client only**
+    * **Windows**: `py -m pip install -U junior-ssl`
+    * **Linux**: `pip install -U junior-ssl`
+* **With the Game Controller**
+    * **Windows**: `py -m pip install -U junior-ssl[gc]`
+    * **Linux**: `pip install -U junior-ssl[gc]`
+* [Specific instructions and troubleshooting for Linux](linux.md)
 
 ## Game Controller
 

@@ -14,7 +14,7 @@ def package_files(directory):
 
 setuptools.setup(
     name="junior-ssl",
-    version="0.2.5",
+    version="0.2.6",
     author="Rhoban team",
     author_email="team@rhoban.com",
     description="Junior SSL - An omniwheel soccer setup",
@@ -30,14 +30,18 @@ setuptools.setup(
     ],
     keywords="robot holonomic omniwheel ssl robocup junior soccer standard localized tracking",
     install_requires=[
-        "pyserial",
         "numpy",
         "zmq",
-        "pyqt5",
-        "pyqtwebengine",
-        "opencv-python-headless",
-        "opencv-contrib-python-headless"
     ],
+    extra_requires={
+        'gc': [ # Game controller extra requirements
+            "pyserial",
+            "pyqt5",
+            "pyqtwebengine",
+            "opencv-python-headless",
+            "opencv-contrib-python-headless"
+        ]
+    },
     include_package_data=True,
     package_data={"": package_files("jssl")},
     python_requires='>=3.6',
