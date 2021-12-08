@@ -24,6 +24,7 @@ class Robots:
     def identify(self):
         for entry in self.robots:
             before = self.detection.getDetection().copy()
+            self.robots[entry].beep(200, 100)
             self.robots[entry].control(0, 0, math.radians(30))
             time.sleep(1)
             self.robots[entry].control(0, 0, 0)
