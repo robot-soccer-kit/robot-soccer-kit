@@ -47,7 +47,6 @@ class Video:
             'brightness': 0,
             'contrast': 0,
             'saturation': 100,
-            'gamma': 0,
             'gain': 0,
             'crop_x': 100,
             'crop_y': 100,
@@ -130,7 +129,6 @@ class Video:
             self.capture.set(cv2.CAP_PROP_CONTRAST, self.settings['contrast'])
             self.capture.set(cv2.CAP_PROP_SATURATION,
                              self.settings['saturation'])
-            self.capture.set(cv2.CAP_PROP_GAMMA, self.settings['gamma'])
             self.capture.set(cv2.CAP_PROP_GAIN, self.settings['gain'])
             self.capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
             self.capture.set(cv2.CAP_PROP_FOCUS, 0)
