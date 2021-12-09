@@ -50,6 +50,11 @@ class ClientRobot(ClientTracked):
         self.number = number
         self.client = client
 
+        self.x_max = field_dimensions.length/2 + field_dimensions.border_size/2.
+        self.x_min = -self.x_max
+        self.y_max = field_dimensions.width/2 + field_dimensions.border_size/2.
+        self.y_min = -self.y_max
+
     def ball(self):
         return self.client.ball
 
@@ -82,6 +87,8 @@ class ClientRobot(ClientTracked):
                 target = target()
 
             x, y, orientation = target
+            x = min(self.x_max, max(self.x_min, x))
+            y = min(self.y_max, max(self.y_min, y))
             Ti = utils.frame_inv(utils.robot_frame(self))
             target_in_robot = Ti @ np.array([x, y, 1])
 
