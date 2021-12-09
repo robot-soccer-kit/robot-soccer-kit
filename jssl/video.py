@@ -168,8 +168,8 @@ class Video:
                             image_captured = cv2.resize(image_captured, (int(
                                 new_size[0]), int(new_size[1])), cv2.INTER_LINEAR)
                         # Process the image
-                        self.detection.detectAruco(image_captured, self.debug)
                         self.detection.detectBall(image_captured, self.debug)
+                        self.detection.detectAruco(image_captured, self.debug)
                         self.detection.publish()
 
                     # Computing time
