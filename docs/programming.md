@@ -30,7 +30,7 @@ and the game referee.
 
 To run it:
 
-* **Windows**: `py -m pip jssl.game_controller`
+* **Windows**: `py -m jssl.game_controller`
 * **Linux**: `jssl-gc` (or `python -m jssl.game_controller`)
 
 ## Programming
