@@ -167,9 +167,13 @@ class Video:
                             new_size = frame_size * self.settings['rescale']/100.
                             image_captured = cv2.resize(image_captured, (int(
                                 new_size[0]), int(new_size[1])), cv2.INTER_LINEAR)
+
                         # Process the image
-                        self.detection.detectBall(image_captured, self.debug)
-                        self.detection.detectAruco(image_captured, self.debug)
+                        image_debug = None
+                        if self.debug:
+                            image_debug = image_captured.copy()
+                        self.detection.detectAruco(image_captured, image_debug)
+                        self.detection.detectBall(image_captured, image_debug)
                         self.detection.publish()
 
                     # Computing time
@@ -183,7 +187,7 @@ class Video:
                     else:
                         self.period = self.period*0.9 + current_period*0.1
 
-                    self.image = image_captured
+                    self.image = image_debug if image_debug is not None else image_captured
 
                     if self.stop_capture:
                         self.stop_capture = False

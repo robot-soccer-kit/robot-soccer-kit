@@ -19,7 +19,15 @@ class Robots:
                 self.robots[port] = robot.Robot(port)
                 if marker != "":
                     self.robots[port].setMarker(marker)
-                    self.robots_by_marker[marker] = self.robots[port]
+
+        self.update()
+
+    def update(self):
+        new_robots_by_marker = {}
+        for port in self.robots:
+            if self.robots[port].marker is not None:
+                new_robots_by_marker[self.robots[port].marker] = self.robots[port]
+        self.robots_by_marker = new_robots_by_marker
 
     def identify(self):
         for entry in self.robots:
@@ -70,16 +78,15 @@ class Robots:
 
     def setMarker(self, port, marker):
         if port in self.robots:
-            if port in self.robots_by_marker:
-                self.robots_by_marker[marker].setMarker(None)
             self.robots[port].setMarker(marker)
-            self.robots_by_marker[marker] = self.robots[port]
             self.saveConfig()
+            self.update()
 
     def remove(self, port):
         self.robots[port].close()
         del self.robots[port]
         self.saveConfig()
+        self.update()
 
     def stop(self):
         self.control.stop()

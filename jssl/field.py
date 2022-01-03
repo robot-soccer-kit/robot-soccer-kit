@@ -49,7 +49,7 @@ class Field:
     def set_corner_position(self, corner, corners):
         self.corner_gfx_positions[corner] = corners
 
-    def update_homography(self, image, draw_debug=False):
+    def update_homography(self, image):
         if len(self.corner_gfx_positions) >= 3 and self.homography is None: # We allow to compute homography with only 3 corners
             graphics_positions = []
             field_positions = []
