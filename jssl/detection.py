@@ -56,16 +56,6 @@ class Detection:
         self.no_ball = 0
         self.field = Field()
 
-        self.blob_params = cv2.SimpleBlobDetector_Params()
-        self.blob_params.minThreshold = 1
-        self.blob_params.maxThreshold = 255
-        self.blob_params.filterByCircularity = False
-        self.blob_params.filterByConvexity = False
-        self.blob_params.filterByInertia = False
-        self.blob_params.filterByColor = True
-        self.blob_params.blobColor = 255
-        self.blob_params.minDistBetweenBlobs = 50
-
     def detectAruco(self, image, image_debug = None):
 
         (corners, ids, rejected) = cv2.aruco.detectMarkers(image,
@@ -121,23 +111,30 @@ class Detection:
     def detectBall(self, image, image_debug):
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, self.lower_orange, self.upper_orange)
-        result = cv2.bitwise_and(image, image, mask=mask)
-        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
         
-        detector = cv2.SimpleBlobDetector_create(self.blob_params)
-        keypoints = detector.detect(gray)
+        output = cv2.connectedComponentsWithStats(mask, 8, cv2.CV_32S)
+        num_labels = output[0]
+        stats = output[2]
+        centroids = output[3]
 
-        if len(keypoints):
+        candidates = []
+        for k in range(1, num_labels):
+            if stats[k][4] > 3:
+                candidates.append(list(centroids[k]))
+                if len(candidates) > 16:
+                    break
+
+        if len(candidates):
             best = None
             bestPx = None
             bestDist = None
-            no_ball = 0
+            self.no_ball = 0
 
-            for point in keypoints:
+            for point in candidates:
                 if self.field.calibrated():
-                    pos = self.field.pos_of_gfx(point.pt)
+                    pos = self.field.pos_of_gfx(point)
                 else:
-                    pos = point.pt
+                    pos = point
 
                 if self.ball:
                     dist = np.linalg.norm(np.array(pos) - np.array(self.ball))
@@ -147,7 +144,7 @@ class Detection:
                 if best is None or dist < bestDist:
                     bestDist = dist
                     best = pos
-                    bestPx = point.pt
+                    bestPx = point
 
             self.ball = best
 
