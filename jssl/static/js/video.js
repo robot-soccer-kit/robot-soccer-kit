@@ -32,7 +32,7 @@ function video_initialize(backend)
     $('.refresh-cameras').click(updateCameras);
 
     // Camera settings
-    $.get('camera-setting.html', function(template) {
+    $.get('static/camera-setting.html', function(template) {
         backend.getCameraSettings(function(settings) {
             for (let key in settings) {
                 $('.camera-settings').append(template.replace(/{key}/g, key));

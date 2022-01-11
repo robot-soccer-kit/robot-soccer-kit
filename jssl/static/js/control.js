@@ -1,6 +1,6 @@
 
 function control_initialize(backend) {
-    $.get('team.html', function(team_template) {
+    $.get('static/team.html', function(team_template) {
 
         for (let team of ['green', 'blue']) {
             $('.teams').append(team_template.replace(/{team}/g, team));

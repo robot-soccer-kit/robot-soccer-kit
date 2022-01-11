@@ -1,38 +1,33 @@
-from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets, QtWebChannel
-import os, sys
+import os
+import json
+from flask import Flask, send_from_directory, jsonify, request
 from .backend import Backend
-from . import robots
-
-os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = '5422'
-
-app = QtWidgets.QApplication(sys.argv)
-app.setApplicationName("Junior SSL - Game Controller")
-dirname = os.path.dirname(__file__)
-app_icon = QtGui.QIcon()
-app_icon.addFile(dirname+'/imgs/ball_16x16.png', QtCore.QSize(16,16))
-app_icon.addFile(dirname+'/imgs/ball_24x24.png', QtCore.QSize(24,24))
-app_icon.addFile(dirname+'/imgs/ball_32x32.png', QtCore.QSize(32,32))
-app_icon.addFile(dirname+'/imgs/ball_48x48.png', QtCore.QSize(48,48))
-app_icon.addFile(dirname+'/imgs/ball_256x256.png', QtCore.QSize(256,256))
-print(dirname+'/imgs/256x256.png')
-app.setWindowIcon(app_icon)
+from . import api
 
 backend = Backend()
 
-view = QtWebEngineWidgets.QWebEngineView()
+static = os.path.dirname(__file__)+'/static/'
+app = Flask('Game controller', static_folder=static)
 
-channel = QtWebChannel.QWebChannel()
-view.page().setWebChannel(channel)
-channel.registerObject("backend", backend)
+@app.route('/api', methods=['GET'])
+def handle_api():
+    if 'command' in request.args and 'args' in request.args:
+        command = request.args['command']
+        args = json.loads(request.args['args'])
 
-current_dir = os.path.dirname(os.path.realpath(__file__))
-filename = os.path.join(current_dir, "index.html")
-url = QtCore.QUrl.fromLocalFile(filename)
-view.load(url)
+        if command in api.methods:
+            method = api.methods[command]
+            for k in range(len(method['args'])):
+                args[k] = method['args'][k](args[k])
+            result = method['func'](backend, *args)
+            return jsonify(result)
+        else:
+            return jsonify('Command not found')
+    else:
+        return jsonify('Error while processing command')
 
-view.resize(1024, 720)
-view.show()
+@app.route('/', methods=['GET'])
+def main():
+    return send_from_directory(static, 'index.html')
 
-r = app.exec_()
-backend.exit()
-sys.exit(r)
+app.run('127.0.0.1', 7070)

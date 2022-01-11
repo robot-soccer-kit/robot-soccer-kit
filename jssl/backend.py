@@ -1,9 +1,8 @@
-from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets, QtWebChannel
-from PyQt5.QtCore import QVariant
+from . import api
 from . import video, robots, control
 
 
-class Backend(QtCore.QObject):
+class Backend():
     def __init__(self):
         super().__init__()
 
@@ -15,90 +14,91 @@ class Backend(QtCore.QObject):
         self.video.stop()
         self.robots.stop()
 
-    @QtCore.pyqtSlot(result=QVariant)
+    @api.slot()
     def cameras(self):
-        return QVariant(self.video.cameras())
+        return self.video.cameras()
 
-    @QtCore.pyqtSlot(result=QVariant)
+    @api.slot()
     def resolutions(self):
-        return QVariant(self.video.resolutions())
+        return self.video.resolutions()
 
-    @QtCore.pyqtSlot(result=QVariant)
+    @api.slot()
     def getCameraSettings(self):
-        return QVariant(self.video.settings)
+        return self.video.settings
 
-    @QtCore.pyqtSlot(int, int, result=bool)
+    @api.slot(int, int, result=bool)
     def startCapture(self, index, res):
         return self.video.startCapture(index, res)
 
-    @QtCore.pyqtSlot()
+    @api.slot()
     def stopCapture(self):
         self.video.stopCapture()
 
-    @QtCore.pyqtSlot(result=str)
+    @api.slot(result=str)
     def getImage(self):
         image = self.video.getImage()
+        print(image)
         return image
 
-    @QtCore.pyqtSlot(bool, result=QVariant)
+    @api.slot(bool)
     def getVideo(self, with_image):
-        return QVariant(self.video.getVideo(with_image))
+        return self.video.getVideo(with_image)
 
-    @QtCore.pyqtSlot(bool)
-    def enableVideoDebug(self):
-        self.video.debug = True
+    @api.slot(bool)
+    def enableVideoDebug(self, enable=True):
+        self.video.debug = enable
 
-    @QtCore.pyqtSlot(QVariant, result=bool)
+    @api.slot()
     def cameraSettings(self, settings):
         self.video.setCameraSettings(settings)
         return True
 
-    @QtCore.pyqtSlot(result=QVariant)
+    @api.slot()
     def ports(self):
         return self.robots.ports()
 
-    @QtCore.pyqtSlot(str)
+    @api.slot(str)
     def addRobot(self, port):
         self.robots.addRobot(port)
 
-    @QtCore.pyqtSlot(result=QVariant)
+    @api.slot()
     def getRobots(self):
         return self.robots.getRobots()
 
-    @QtCore.pyqtSlot(str, str)
+    @api.slot(str, str)
     def setMarker(self, port, marker):
         self.robots.setMarker(port, marker)
 
-    @QtCore.pyqtSlot(str)
+    @api.slot(str)
     def removeRobot(self, port):
         self.robots.remove(port)
 
-    @QtCore.pyqtSlot(str)
+    @api.slot(str)
     def blink(self, port):
         if port in self.robots.robots:
             self.robots.robots[port].blink()
 
-    @QtCore.pyqtSlot(str)
+    @api.slot(str)
     def kick(self, port):
         if port in self.robots.robots:
             self.robots.robots[port].kick()
 
-    @QtCore.pyqtSlot(result=QVariant)
+    @api.slot()
     def getGame(self):
         return self.robots.control.status()
 
-    @QtCore.pyqtSlot(str, bool)
+    @api.slot(str, bool)
     def allowControl(self, team, allow):
         self.robots.control.allowControl(team, allow)
 
-    @QtCore.pyqtSlot()
+    @api.slot()
     def emergency(self):
         self.robots.control.emergency()
 
-    @QtCore.pyqtSlot(str, str)
+    @api.slot(str, str)
     def setKey(self, team, key):
         self.robots.control.setKey(team, key)
 
-    @QtCore.pyqtSlot()
+    @api.slot()
     def identify(self):
         self.robots.identify()

@@ -32,7 +32,7 @@ function robots_initialize(backend)
         backend.identify();
     });
 
-    $.get('robot.html', function(robot_template) {
+    $.get('static/robot.html', function(robot_template) {
         let warning = '<i class="bi text-warning bi-exclamation-circle"></i>';
 
         function updateInfos(div, infos) {
