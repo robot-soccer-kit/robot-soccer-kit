@@ -14,7 +14,7 @@
    viewBox="0 0 80 80"
    version="1.1"
    id="svg201"
-   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="red1.svg">
   <defs
      id="defs195" />
@@ -25,16 +25,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98994949"
-     inkscape:cx="108.01832"
-     inkscape:cy="248.13678"
+     inkscape:zoom="1.979899"
+     inkscape:cx="111.74182"
+     inkscape:cy="127.27832"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1920"
-     inkscape:window-height="1031"
-     inkscape:window-x="0"
-     inkscape:window-y="25"
+     inkscape:window-height="1056"
+     inkscape:window-x="1920"
+     inkscape:window-y="0"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata198">
@@ -44,7 +44,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -66,14 +66,14 @@
              width="80"
              y="59.269588"
              x="12.101576"
-             style="fill:#ff0000;stroke-width:13.33333302;shape-rendering:crispEdges" />
+             style="fill:#008000;stroke-width:13.33333302;shape-rendering:crispEdges" />
           <rect
              id="rect4072"
              y="72.602921"
              x="25.43491"
              height="13.333333"
              width="13.333333"
-             style="fill:#ff0000;stroke-width:13.33333302;shape-rendering:crispEdges" />
+             style="fill:#008000;stroke-width:13.33333302;shape-rendering:crispEdges" />
           <rect
              id="rect4074"
              y="72.602921"
@@ -87,7 +87,7 @@
              x="52.101574"
              height="13.333333"
              width="13.333333"
-             style="fill:#ff0000;stroke-width:13.33333302;shape-rendering:crispEdges" />
+             style="fill:#008000;stroke-width:13.33333302;shape-rendering:crispEdges" />
           <rect
              id="rect4078"
              y="72.602921"
@@ -101,7 +101,7 @@
              x="25.43491"
              height="13.333333"
              width="13.333333"
-             style="fill:#ff0000;stroke-width:13.33333302;shape-rendering:crispEdges" />
+             style="fill:#008000;stroke-width:13.33333302;shape-rendering:crispEdges" />
           <rect
              id="rect4082"
              y="85.936256"
@@ -115,14 +115,14 @@
              x="52.101574"
              height="13.333333"
              width="13.333333"
-             style="fill:#ff0000;stroke-width:13.33333302;shape-rendering:crispEdges" />
+             style="fill:#008000;stroke-width:13.33333302;shape-rendering:crispEdges" />
           <rect
              id="rect4086"
              y="85.936256"
              x="65.434906"
              height="13.333333"
              width="13.333333"
-             style="fill:#ff0000;stroke-width:13.33333302;shape-rendering:crispEdges" />
+             style="fill:#008000;stroke-width:13.33333302;shape-rendering:crispEdges" />
           <rect
              id="rect4088"
              y="99.269585"
@@ -136,14 +136,14 @@
              x="38.768242"
              height="13.333333"
              width="13.333333"
-             style="fill:#ff0000;stroke-width:13.33333302;shape-rendering:crispEdges" />
+             style="fill:#008000;stroke-width:13.33333302;shape-rendering:crispEdges" />
           <rect
              id="rect4092"
              y="99.269585"
              x="52.101574"
              height="13.333333"
              width="13.333333"
-             style="fill:#ff0000;stroke-width:13.33333302;shape-rendering:crispEdges" />
+             style="fill:#008000;stroke-width:13.33333302;shape-rendering:crispEdges" />
           <rect
              id="rect4094"
              y="99.269585"
@@ -178,7 +178,7 @@
              x="65.434906"
              height="13.333333"
              width="13.333333"
-             style="fill:#ff0000;stroke-width:13.33333302;shape-rendering:crispEdges" />
+             style="fill:#008000;stroke-width:13.33333302;shape-rendering:crispEdges" />
         </g>
       </g>
     </g>
