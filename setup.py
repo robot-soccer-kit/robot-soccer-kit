@@ -36,8 +36,8 @@ setuptools.setup(
     extras_require={
         'gc': [ # Game controller extra requirements
             "pyserial",
-            "pyqt5",
-            "pyqtwebengine",
+            "flask",
+            "waitress",
             "opencv-python-headless",
             "opencv-contrib-python-headless"
         ]
