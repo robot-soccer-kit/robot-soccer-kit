@@ -7,22 +7,22 @@ from . import field_dimensions, utils
 
 configurations = {
     'dots': [
-        ['red', 1, (field_dimensions.length/4, -field_dimensions.width/4, np.pi)],
-        ['red', 2, (field_dimensions.length/4, field_dimensions.width/4, np.pi)],
+        ['green', 1, (field_dimensions.length/4, -field_dimensions.width/4, np.pi)],
+        ['green', 2, (field_dimensions.length/4, field_dimensions.width/4, np.pi)],
         ['blue', 1, (-field_dimensions.length/4, field_dimensions.width/4, 0)],
         ['blue', 2, (-field_dimensions.length/4, -field_dimensions.width/4, 0)],
     ],
 
     'game': [
-        ['red', 1, (field_dimensions.length/4, 0, np.pi)],
-        ['red', 2, (field_dimensions.length/2, 0, np.pi)],
+        ['green', 1, (field_dimensions.length/4, 0, np.pi)],
+        ['green', 2, (field_dimensions.length/2, 0, np.pi)],
         ['blue', 1, (-field_dimensions.length/4, 0, 0)],
         ['blue', 2, (-field_dimensions.length/2, 0, 0)],
     ],
 
     'side': [
-        ['red', 1, (0.2, field_dimensions.width/2, -np.pi/2)],
-        ['red', 2, (0.6, field_dimensions.width/2, -np.pi/2)],
+        ['green', 1, (0.2, field_dimensions.width/2, -np.pi/2)],
+        ['green', 2, (0.6, field_dimensions.width/2, -np.pi/2)],
         ['blue', 1, (-0.2, field_dimensions.width/2, -np.pi/2)],
         ['blue', 2, (-0.6, field_dimensions.width/2, -np.pi/2)],
     ]
@@ -111,15 +111,15 @@ class Client:
         self.key = key
         self.lock = threading.Lock()
 
-        self.red1 = ClientRobot('red', 1, self)
-        self.red2 = ClientRobot('red', 2, self)
+        self.green1 = ClientRobot('green', 1, self)
+        self.green2 = ClientRobot('green', 2, self)
         self.blue1 = ClientRobot('blue', 1, self)
         self.blue2 = ClientRobot('blue', 2, self)
 
         self.robots = {
-            'red': {
-                1: self.red1,
-                2: self.red2,
+            'green': {
+                1: self.green1,
+                2: self.green2,
             },
             'blue': {
                 1: self.blue1,

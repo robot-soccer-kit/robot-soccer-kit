@@ -150,6 +150,7 @@ class Video:
                 try:
                     t0 = time.time()
                     grabbed, image_captured = self.capture.read()
+                    image_debug = None
 
                     if image_captured is not None:
                         height, width, channels = image_captured.shape
@@ -169,7 +170,6 @@ class Video:
                                 new_size[0]), int(new_size[1])), cv2.INTER_LINEAR)
 
                         # Process the image
-                        image_debug = None
                         if self.debug:
                             image_debug = image_captured.copy()
                         self.detection.detectAruco(image_captured, image_debug)

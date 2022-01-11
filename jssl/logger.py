@@ -5,9 +5,9 @@ import pandas as pd
 data = {'t': [], 'x': [], 'y': []}
 
 start = time.time()
-place.controllers['red'].robots[1].kick()
+place.controllers['green'].robots[1].kick()
 while time.time() - start < 5:
-    ball = place.controllers['red'].ball
+    ball = place.controllers['green'].ball
     if ball is not None:
         data['t'].append(time.time() - start)
         data['x'].append(ball[0])
