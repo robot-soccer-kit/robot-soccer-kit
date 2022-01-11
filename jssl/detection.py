@@ -146,11 +146,12 @@ class Detection:
                     best = pos
                     bestPx = point
 
-            self.ball = best
-
-            if image_debug is not None and self.ball:
+            if image_debug is not None and best:
                 cv2.circle(image_debug, (int(bestPx[0]), int(
                     bestPx[1])), 3, (255, 255, 0), 3)
+
+            if self.field.calibrated():
+                self.ball = best
         else:
             self.no_ball += 1
             if self.no_ball > 10:
