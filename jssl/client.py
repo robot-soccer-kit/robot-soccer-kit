@@ -1,29 +1,30 @@
+import signal
 import numpy as np
 import zmq
 import threading
 import time
-from . import field, utils
+from . import field_dimensions, utils
 
 configurations = {
     'dots': [
-        ['red', 1, (field.length/4, -field.width/4, np.pi)],
-        ['red', 2, (field.length/4, field.width/4, np.pi)],
-        ['blue', 1, (-field.length/4, field.width/4, 0)],
-        ['blue', 2, (-field.length/4, -field.width/4, 0)],
+        ['green', 1, (field_dimensions.length/4, -field_dimensions.width/4, np.pi)],
+        ['green', 2, (field_dimensions.length/4, field_dimensions.width/4, np.pi)],
+        ['blue', 1, (-field_dimensions.length/4, field_dimensions.width/4, 0)],
+        ['blue', 2, (-field_dimensions.length/4, -field_dimensions.width/4, 0)],
     ],
 
     'game': [
-        ['red', 1, (field.length/4, 0, np.pi)],
-        ['red', 2, (field.length/2, 0, np.pi)],
-        ['blue', 1, (-field.length/4, 0, 0)],
-        ['blue', 2, (-field.length/2, 0, 0)],
+        ['green', 1, (field_dimensions.length/4, 0, np.pi)],
+        ['green', 2, (field_dimensions.length/2, 0, np.pi)],
+        ['blue', 1, (-field_dimensions.length/4, 0, 0)],
+        ['blue', 2, (-field_dimensions.length/2, 0, 0)],
     ],
 
     'side': [
-        ['red', 1, (0.2, field.width/2, -np.pi/2)],
-        ['red', 2, (0.6, field.width/2, -np.pi/2)],
-        ['blue', 1, (-0.2, field.width/2, -np.pi/2)],
-        ['blue', 2, (-0.6, field.width/2, -np.pi/2)],
+        ['green', 1, (0.2, field_dimensions.width/2, -np.pi/2)],
+        ['green', 2, (0.6, field_dimensions.width/2, -np.pi/2)],
+        ['blue', 1, (-0.2, field_dimensions.width/2, -np.pi/2)],
+        ['blue', 2, (-0.6, field_dimensions.width/2, -np.pi/2)],
     ]
 }
 
@@ -48,6 +49,11 @@ class ClientRobot(ClientTracked):
         self.team = color
         self.number = number
         self.client = client
+
+        self.x_max = field_dimensions.length/2 + field_dimensions.border_size/2.
+        self.x_min = -self.x_max
+        self.y_max = field_dimensions.width/2 + field_dimensions.border_size/2.
+        self.y_min = -self.y_max
 
     def ball(self):
         return self.client.ball
@@ -81,6 +87,8 @@ class ClientRobot(ClientTracked):
                 target = target()
 
             x, y, orientation = target
+            x = min(self.x_max, max(self.x_min, x))
+            y = min(self.y_max, max(self.y_min, y))
             Ti = utils.frame_inv(utils.robot_frame(self))
             target_in_robot = Ti @ np.array([x, y, 1])
 
@@ -103,15 +111,15 @@ class Client:
         self.key = key
         self.lock = threading.Lock()
 
-        self.red1 = ClientRobot('red', 1, self)
-        self.red2 = ClientRobot('red', 2, self)
+        self.green1 = ClientRobot('green', 1, self)
+        self.green2 = ClientRobot('green', 2, self)
         self.blue1 = ClientRobot('blue', 1, self)
         self.blue2 = ClientRobot('blue', 2, self)
 
         self.robots = {
-            'red': {
-                1: self.red1,
-                2: self.red2,
+            'green': {
+                1: self.green1,
+                2: self.green2,
             },
             'blue': {
                 1: self.blue1,
@@ -209,10 +217,13 @@ class Client:
         self.running = False
 
     def command(self, color, number, name, parameters):
+        sigint_handler = signal.getsignal(signal.SIGINT)
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
         self.lock.acquire()
         self.req.send_json([self.key, color, number, [name, *parameters]])
         success, message = self.req.recv_json()
         self.lock.release()
+        signal.signal(signal.SIGINT, sigint_handler)
 
         time.sleep(0.01)
 

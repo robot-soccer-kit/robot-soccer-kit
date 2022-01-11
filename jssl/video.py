@@ -47,7 +47,6 @@ class Video:
             'brightness': 0,
             'contrast': 0,
             'saturation': 100,
-            'gamma': 0,
             'gain': 0,
             'crop_x': 100,
             'crop_y': 100,
@@ -130,7 +129,6 @@ class Video:
             self.capture.set(cv2.CAP_PROP_CONTRAST, self.settings['contrast'])
             self.capture.set(cv2.CAP_PROP_SATURATION,
                              self.settings['saturation'])
-            self.capture.set(cv2.CAP_PROP_GAMMA, self.settings['gamma'])
             self.capture.set(cv2.CAP_PROP_GAIN, self.settings['gain'])
             self.capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
             self.capture.set(cv2.CAP_PROP_FOCUS, 0)
@@ -152,6 +150,7 @@ class Video:
                 try:
                     t0 = time.time()
                     grabbed, image_captured = self.capture.read()
+                    image_debug = None
 
                     if image_captured is not None:
                         height, width, channels = image_captured.shape
@@ -169,9 +168,12 @@ class Video:
                             new_size = frame_size * self.settings['rescale']/100.
                             image_captured = cv2.resize(image_captured, (int(
                                 new_size[0]), int(new_size[1])), cv2.INTER_LINEAR)
+
                         # Process the image
-                        self.detection.detectAruco(image_captured, self.debug)
-                        self.detection.detectBall(image_captured, self.debug)
+                        if self.debug:
+                            image_debug = image_captured.copy()
+                        self.detection.detectAruco(image_captured, image_debug)
+                        self.detection.detectBall(image_captured, image_debug)
                         self.detection.publish()
 
                     # Computing time
@@ -185,7 +187,7 @@ class Video:
                     else:
                         self.period = self.period*0.9 + current_period*0.1
 
-                    self.image = image_captured
+                    self.image = image_debug if image_debug is not None else image_captured
 
                     if self.stop_capture:
                         self.stop_capture = False

@@ -6,11 +6,11 @@ from .client import Client, ClientError
 from . import field
 
 
-with Client() as client:
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--target', '-t', type=str, default='side')
-    args = parser.parse_args()
-
+parser = argparse.ArgumentParser()
+parser.add_argument('--target', '-t', type=str, default='side')
+parser.add_argument('--game-controller', '-g', type=str, default='127.0.0.1')
+args = parser.parse_args()
+with Client(args.game_controller) as client:
     if args.target not in configurations:
         print('Unknown target: '+args.target)
         exit()

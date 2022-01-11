@@ -15,9 +15,13 @@ You need to have Python version 3.8 newer.
 
 `junior-ssl` is available as a package you can install using `pip`, simply run the following command:
 
-* **Windows**: `py -m pip install -U junior-ssl`
-* **Linux**: `pip install -U junior-ssl`
-  * [Specific instructions and troubleshooting for Linux](linux.md)
+* **Client only**
+    * **Windows**: `py -m pip install -U junior-ssl`
+    * **Linux**: `pip install -U junior-ssl`
+* **With the Game Controller**
+    * **Windows**: `py -m pip install -U junior-ssl[gc]`
+    * **Linux**: `pip install -U junior-ssl[gc]`
+* [Specific instructions and troubleshooting for Linux](linux.md)
 
 ## Game Controller
 
@@ -26,20 +30,20 @@ and the game referee.
 
 To run it:
 
-* **Windows**: `py -m pip jssl.game_controller`
+* **Windows**: `py -m jssl.game_controller`
 * **Linux**: `jssl-gc` (or `python -m jssl.game_controller`)
 
 ## Programming
 
 ### Getting started
 
-Here is simple example creating a client for the API and getting the robot red1 kicking:
+Here is simple example creating a client for the API and getting the robot green1 kicking:
 
 ```python
 import jssl
 
 with jssl.Client() as client:
-    client.red1.kick()
+    client.green1.kick()
 ```
 
 Here:
@@ -47,7 +51,7 @@ Here:
 * `import jssl` imports the relevant Python package
 * The `with` statement ensures that the client will be properly closed at the end of the session.
   Especially, it forces the robots to stop moving at the end of the program.
-* `client.red1.kick()` asks the robot `red1` to kick
+* `client.green1.kick()` asks the robot `green1` to kick
 
 When creating a client, you can also provide the following arguments:
 
@@ -56,7 +60,7 @@ import jssl
 
 with jssl.Client(host='127.0.0.1', 
                 key='') as client:
-    client.robots['red'][1].kick()
+    client.robots['green'][1].kick()
 
 ```
 
@@ -72,14 +76,14 @@ Robots can be accessing using the following syntax:
 
 ```python
 # Shortcuts to access a robot
-client.red1
-client.red2
+client.green1
+client.green2
 client.blue1
 client.blue2
 
 # Full syntax allowing dynamic access
-client.robots['red'][1]
-client.robots['red'][2]
+client.robots['green'][1]
+client.robots['green'][2]
 client.robots['blue'][1]
 client.robots['blue'][2]
 ```
@@ -90,11 +94,11 @@ Localization is polled using a thread and can be continuously accessed through t
 
 ```python
 # Robot position (x [m], y [m]):
-client.red1.position
+client.green1.position
 # Robot orientation (theta [rad]):
-client.red1.orientation
+client.green1.orientation
 # Position + orientation (x [m], y [m], theta [rad])
-client.red1.pose
+client.green1.pose
 # Ball's position (x [m], y [m])
 client.ball
 ```

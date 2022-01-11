@@ -126,10 +126,10 @@ class Robot:
 
         if marker is None:
             self.ledsColor = None
-        elif marker.startswith('red'):
-            self.ledsColor = [128, 0, 0]
+        elif marker.startswith('green'):
+            self.ledsColor = [0, 32, 0]
         elif marker.startswith('blue'):
-            self.ledsColor = [0, 0, 128]
+            self.ledsColor = [0, 0, 32]
         else:
             self.ledsColor = None
 
@@ -275,8 +275,9 @@ class Robot:
 
             except (OSError, serial.serialutil.SerialException) as e:
                 # In case of exception, we re-init the connection
-                print('Error')
-                print(e)
+                print('Error: '+str(e))
+                if 'FileNotFoundError' in str(e):
+                    time.sleep(1.)
                 self.init = True
 
             # If we didn't receive a message for more than 5s, we re-init the connection

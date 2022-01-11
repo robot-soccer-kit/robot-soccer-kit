@@ -8,12 +8,13 @@ def package_files(directory):
     paths = []
     for (path, directories, filenames) in os.walk(directory):
         for filename in filenames:
-            paths.append(os.path.join('..', path, filename))
+            if '__pycache__' not in path:
+                paths.append(os.path.join('..', path, filename))
     return paths
 
 setuptools.setup(
     name="junior-ssl",
-    version="0.2.5",
+    version="0.3.2",
     author="Rhoban team",
     author_email="team@rhoban.com",
     description="Junior SSL - An omniwheel soccer setup",
@@ -29,14 +30,18 @@ setuptools.setup(
     ],
     keywords="robot holonomic omniwheel ssl robocup junior soccer standard localized tracking",
     install_requires=[
-        "pyserial",
         "numpy",
         "zmq",
-        "pyqt5",
-        "pyqtwebengine",
-        "opencv-python-headless",
-        "opencv-contrib-python-headless"
     ],
+    extras_require={
+        'gc': [ # Game controller extra requirements
+            "pyserial",
+            "pyqt5",
+            "pyqtwebengine",
+            "opencv-python-headless",
+            "opencv-contrib-python-headless"
+        ]
+    },
     include_package_data=True,
     package_data={"": package_files("jssl")},
     python_requires='>=3.6',

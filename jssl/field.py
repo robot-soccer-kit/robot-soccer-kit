@@ -1,15 +1,6 @@
 import numpy as np
 import cv2
-
-# Field dimension
-length = 1.83  # x axis
-width = 1.22   # y axis
-
-# Width of the goal
-goal_width = 0.6
-
-# Side of the (green) border we should be able to see around the field
-border_size = 0.3
+from . import field_dimensions
 
 class Field:
     def __init__(self):
@@ -19,7 +10,7 @@ class Field:
         self.frame_point_list = None
         self.id_gfx_corners = {}
 
-        self.field_shape = [length, width] # Field dimension (length, width)
+        self.field_shape = [field_dimensions.length, field_dimensions.width] # Field dimension (length, width)
 
         self.corner_field_positions = {}
         for (c, sx, sy) in (['c1', 1, 1], ['c2', 1, -1], ['c3', -1, 1], ['c4', -1, -1]):
@@ -58,7 +49,7 @@ class Field:
     def set_corner_position(self, corner, corners):
         self.corner_gfx_positions[corner] = corners
 
-    def update_homography(self, image, draw_debug=False):
+    def update_homography(self, image):
         if len(self.corner_gfx_positions) >= 3 and self.homography is None: # We allow to compute homography with only 3 corners
             graphics_positions = []
             field_positions = []
@@ -79,8 +70,8 @@ class Field:
             image_points = []
             self.see_whole_field = True
             for sx, sy in [(-1, 1), (1, 1), (1, -1), (-1, -1)]:
-                x = sx * ((length / 2) + border_size)
-                y = sy * ((width / 2) + border_size)
+                x = sx * ((field_dimensions.length / 2) + field_dimensions.border_size)
+                y = sy * ((field_dimensions.width / 2) + field_dimensions.border_size)
                 img = (H_i @ np.array([x, y, 1]))
                 img[0] /= img[2]
                 img[1] /= img[2]

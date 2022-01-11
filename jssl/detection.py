@@ -26,9 +26,9 @@ class Detection:
             2: ['c3', (0, 255, 0)],
             3: ['c4', (0, 255, 0)],
 
-            # Red
-            4: ['red1', (0, 0, 128)],
-            5: ['red2', (0, 0, 128)],
+            # Green
+            4: ['green1', (0, 128, 0)],
+            5: ['green2', (0, 128, 0)],
 
             # Blue
             6: ['blue1', (128, 0, 0)],
@@ -56,17 +56,7 @@ class Detection:
         self.no_ball = 0
         self.field = Field()
 
-        self.blob_params = cv2.SimpleBlobDetector_Params()
-        self.blob_params.minThreshold = 1
-        self.blob_params.maxThreshold = 255
-        self.blob_params.filterByCircularity = False
-        self.blob_params.filterByConvexity = False
-        self.blob_params.filterByInertia = False
-        self.blob_params.filterByColor = True
-        self.blob_params.blobColor = 255
-        self.blob_params.minDistBetweenBlobs = 50
-
-    def detectAruco(self, image, draw_debug):
+    def detectAruco(self, image, image_debug = None):
 
         (corners, ids, rejected) = cv2.aruco.detectMarkers(image,
                                                            self.arucoDict,
@@ -87,57 +77,64 @@ class Detection:
                 if item[0] == 'c':
                     self.field.set_corner_position(item, corners)
 
-                if draw_debug:
+                if image_debug is not None:
                     (topLeft, topRight, bottomRight, bottomLeft) = corners
                     topRight = (int(topRight[0]), int(topRight[1]))
                     bottomRight = (int(bottomRight[0]), int(bottomRight[1]))
                     bottomLeft = (int(bottomLeft[0]), int(bottomLeft[1]))
                     topLeft = (int(topLeft[0]), int(topLeft[1]))
                     itemColor = self.arucoItems[markerID][1]
-                    cv2.line(image, topLeft, topRight, itemColor, 2)
-                    cv2.line(image, topRight, bottomRight, itemColor, 2)
-                    cv2.line(image, bottomRight, bottomLeft, itemColor, 2)
-                    cv2.line(image, bottomLeft, topLeft, itemColor, 2)
+                    cv2.line(image_debug, topLeft, topRight, itemColor, 2)
+                    cv2.line(image_debug, topRight, bottomRight, itemColor, 2)
+                    cv2.line(image_debug, bottomRight, bottomLeft, itemColor, 2)
+                    cv2.line(image_debug, bottomLeft, topLeft, itemColor, 2)
 
                     # Compute and draw the center (x, y)-coordinates of the
                     # ArUco marker
                     cX = int((topLeft[0] + bottomRight[0]) / 2.0)
                     cY = int((topLeft[1] + bottomRight[1]) / 2.0)
-                    cv2.circle(image, (cX, cY), 4, (0, 0, 255), -1)
+                    cv2.circle(image_debug, (cX, cY), 4, (0, 0, 255), -1)
                     fX = int((topLeft[0] + topRight[0]) / 2.0)
                     fY = int((topLeft[1] + topRight[1]) / 2.0)
-                    cv2.line(image, (cX, cY), (fX, fY), (0, 0, 255), 2)
+                    cv2.line(image_debug, (cX, cY), (fX, fY), (0, 0, 255), 2)
 
-                    cv2.putText(image, item, (cX-8, cY+4),
+                    cv2.putText(image_debug, item, (cX-8, cY+4),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, itemColor, 2)
 
                 if self.field.calibrated() and item[0] != 'c':
                     new_markers[item] = self.field.pose_of_tag(corners)
                     self.last_updates[item] = time.time()
 
-        self.field.update_homography(image, draw_debug)
+        self.field.update_homography(image)
         self.markers = new_markers
 
-    def detectBall(self, image, draw_debug):
+    def detectBall(self, image, image_debug):
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, self.lower_orange, self.upper_orange)
-        result = cv2.bitwise_and(image, image, mask=mask)
-        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
         
-        detector = cv2.SimpleBlobDetector_create(self.blob_params)
-        keypoints = detector.detect(gray)
+        output = cv2.connectedComponentsWithStats(mask, 8, cv2.CV_32S)
+        num_labels = output[0]
+        stats = output[2]
+        centroids = output[3]
 
-        if len(keypoints):
+        candidates = []
+        for k in range(1, num_labels):
+            if stats[k][4] > 3:
+                candidates.append(list(centroids[k]))
+                if len(candidates) > 16:
+                    break
+
+        if len(candidates):
             best = None
             bestPx = None
             bestDist = None
-            no_ball = 0
+            self.no_ball = 0
 
-            for point in keypoints:
+            for point in candidates:
                 if self.field.calibrated():
-                    pos = self.field.pos_of_gfx(point.pt)
+                    pos = self.field.pos_of_gfx(point)
                 else:
-                    pos = point.pt
+                    pos = point
 
                 if self.ball:
                     dist = np.linalg.norm(np.array(pos) - np.array(self.ball))
@@ -147,12 +144,12 @@ class Detection:
                 if best is None or dist < bestDist:
                     bestDist = dist
                     best = pos
-                    bestPx = point.pt
+                    bestPx = point
 
             self.ball = best
 
-            if draw_debug and self.ball:
-                cv2.circle(image, (int(bestPx[0]), int(
+            if image_debug is not None and self.ball:
+                cv2.circle(image_debug, (int(bestPx[0]), int(
                     bestPx[1])), 3, (255, 255, 0), 3)
         else:
             self.no_ball += 1
