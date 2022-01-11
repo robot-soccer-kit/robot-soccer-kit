@@ -2,10 +2,10 @@
 
 ## Pairing the robots
 
-To pair the robots, you can simply go to the `bluetooth/` directory and run:
+To pair the robots, you can run:
 
 ```
-./bluetooth-pair.sh
+./bluetooth/pair.sh
 ```
 
 Then, wait for your robots to be detected
@@ -15,7 +15,7 @@ Then, wait for your robots to be detected
 Once you paired your robots, you can run:
 
 ```
-./bluetooth-mount.sh
+./bluetooth/mount.sh
 ```
 
 To mount them all as `/dev/rfcomm*` devices
@@ -25,7 +25,7 @@ To mount them all as `/dev/rfcomm*` devices
 If you want to clean up your paired devices, you can use:
 
 ```
-./bluetooth-remove-all.sh
+./bluetooth/remove-all.sh
 ```
 
 To remove all paired devices.
