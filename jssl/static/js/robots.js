@@ -70,7 +70,7 @@ function robots_initialize(backend)
 
             // Marker
             if (infos.marker) {
-                div.find('.marker-image').html('<img src="markers/'+infos.marker+'.svg" class="m-1" width="80" />');
+                div.find('.marker-image').html('<img src="static/markers/'+infos.marker+'.svg" class="m-1" width="80" />');
                 div.find('.marker-select').val(infos.marker);
             } else {
                 div.find('.marker-image').html('N/A');
