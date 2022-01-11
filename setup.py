@@ -37,6 +37,7 @@ setuptools.setup(
         'gc': [ # Game controller extra requirements
             "pyserial",
             "flask",
+            "flask-cors",
             "waitress",
             "opencv-python-headless",
             "opencv-contrib-python-headless"
