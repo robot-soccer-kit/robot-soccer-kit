@@ -31,6 +31,7 @@ class Field:
         self.corner_gfx_positions = {}
 
         self.homography = None
+        self.homography_inv = None
         self.see_whole_field = False
 
     def calibrated(self):
@@ -64,6 +65,7 @@ class Field:
             field_positions = np.array(field_positions)
             H, mask = cv2.findHomography(graphics_positions, field_positions)
             self.homography = H
+            self.homography_inv = np.linalg.inv(H)
             
             H_i = np.linalg.inv(H)
             image_height, image_width, _ = image.shape
@@ -100,6 +102,11 @@ class Field:
         M = np.ndarray(shape = (3,1), buffer = np.array([[pos[0]], [pos[1]], [1.0]]))
         result = self.homography @ M
         return [float(result[0]/result[2]), float(result[1]/result[2])]
+
+    def gfx_of_pos(self, pos):
+        M = np.ndarray(shape = (3,1), buffer = np.array([[pos[0]], [pos[1]], [1.0]]))
+        result = self.homography_inv @ M
+        return [int(result[0]/result[2]), int(result[1]/result[2])]
 
     def pose_of_tag(self, corners):
         if self.calibrated():
