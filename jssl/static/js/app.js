@@ -9,7 +9,17 @@ class APIBackend {
                         callback = args.pop();
                     }
 
-                    $.get(url, { 'command': name, 'args': JSON.stringify(args) }, callback);
+                    $.get(url, { 'command': name, 'args': JSON.stringify(args) }, function (result) {
+                        if (result) {
+                            if (result[0]) {
+                                if (callback) {
+                                    callback(result[1]);
+                                }
+                            } else {
+                                console.log('Error: ' + result[1]);
+                            }
+                        }
+                    });
                 }
             }
         });

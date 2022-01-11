@@ -29,11 +29,11 @@ def handle_api():
             for k in range(len(method['args'])):
                 args[k] = method['args'][k](args[k])
             result = method['func'](backend, *args)
-            return jsonify(result)
+            return jsonify([1,result])
         else:
-            return jsonify('Command not found')
+            return jsonify([0,'Command %s not found' % command])
     else:
-        return jsonify('Error while processing command')
+        return jsonify([0,'Error while processing command'])
 
 
 @app.route('/', methods=['GET'])
@@ -42,6 +42,7 @@ def main():
 
 logging.basicConfig(format='[%(levelname)s] %(asctime)s - %(name)s - %(message)s', level=logging.INFO)
 logging.getLogger('werkzeug').setLevel(logging.CRITICAL)
+logging.getLogger('junior-ssl').info('Starting Junior-SSL Game Controller')
 
 def run_browser():
     time.sleep(3)
