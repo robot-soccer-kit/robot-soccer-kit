@@ -2,7 +2,7 @@
 function control_initialize(backend) {
     $.get('team.html', function(team_template) {
 
-        for (let team of ['red', 'blue']) {
+        for (let team of ['green', 'blue']) {
             $('.teams').append(team_template.replace(/{team}/g, team));
 
             $('.allow-'+team).change(function() {
@@ -27,7 +27,7 @@ function control_initialize(backend) {
 
         setInterval(function() {
             backend.getGame(function(game) {
-                for (let team of ['red', 'blue']) {
+                for (let team of ['green', 'blue']) {
                     $('.allow-'+team).prop('checked', game[team]['allow_control']);
                     $('.packets-'+team).text(game[team]['packets']+' packets');
                     if (!$('.key-'+team).is(':focus')) {

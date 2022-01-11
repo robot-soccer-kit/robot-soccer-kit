@@ -13,7 +13,7 @@ class Control:
         self.socket.bind("tcp://*:7558")
 
         self.teams = {
-            "red": {
+            "green": {
                 "allow_control": True,
                 "key": "",
                 "packets": 0
@@ -78,7 +78,7 @@ class Control:
         self.teams[team]['allow_control'] = allow
 
     def emergency(self):
-        self.allowControl('red', False)
+        self.allowControl('green', False)
         self.allowControl('blue', False)
 
         for port in self.robots.robots:

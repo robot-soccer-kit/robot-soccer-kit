@@ -2,7 +2,7 @@
 
 * [Field](/docs/field.pdf)
 * [Field corner markers](/docs/field-markers.pdf)
-* [Red team markers](/docs/red-markers.pdf)
+* [Green team markers](/docs/green-markers.pdf)
 * [Blue team markers](/docs/blue-markers.pdf)
 
 ## Field
@@ -31,7 +31,7 @@ Roughly, the coordinates of the blue robot above will look like *(x=0.4, y=0.4, 
 
 ## Robots
 
-You can print [red](/docs/red-markers.pdf) and [blue](/docs/blue-markers.pdf) markers and
+You can print [green](/docs/green-markers.pdf) and [blue](/docs/blue-markers.pdf) markers and
 place them on the robots:
 
 ![Robot markers](/docs/imgs/robots-markers-explain.png)
@@ -64,8 +64,8 @@ of 8 cm. The ArUco ids are:
 * 1: field corner 2
 * 2: field corner 3
 * 3: field corner 4
-* 4: robot red 1
-* 5: robot red 2
+* 4: robot green 1
+* 5: robot green 2
 * 6: robot blue 1
 * 7: robot blue 2
 * 8-15: generic objects
