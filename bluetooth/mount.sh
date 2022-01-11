@@ -10,11 +10,6 @@ do
     sudo rfcomm unbind $id
 done
 
-echo "Restarting Bluetooth..."
-sudo /etc/init.d/bluetooth stop
-sleep 2
-sudo /etc/init.d/bluetooth start
-
 echo "Retrieving devices..."
 uids=`echo "paired-devices" | bluetoothctl | grep ^Device | grep $filter | cut -d" " -f2 | uniq | sort`
 k=0
