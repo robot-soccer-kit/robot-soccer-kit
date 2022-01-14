@@ -106,7 +106,7 @@ class ClientRobot(ClientTracked):
 
 
 class Client:
-    def __init__(self, host='127.0.0.1', key=''):
+    def __init__(self, host='127.0.0.1', key='', wait_ready=True):
         self.running = True
         self.key = key
         self.lock = threading.Lock()
@@ -151,7 +151,7 @@ class Client:
 
         # Waiting for the first packet to be received, guarantees to have robot state after
         # client creation
-        while self.sub_packets < 1:
+        while wait_ready and self.sub_packets < 1:
             time.sleep(0.05)
 
     def __enter__(self):
