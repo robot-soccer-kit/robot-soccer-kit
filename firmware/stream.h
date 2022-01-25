@@ -7,6 +7,8 @@ extern short api_dy;
 extern short api_turn;
 void api_disable();
 
+void bin_tick();
+
 #define RHOCK_CONTROLS 16
 extern short rhock_controls[RHOCK_CONTROLS];
 

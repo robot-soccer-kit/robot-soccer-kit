@@ -8,8 +8,6 @@ VERSION=`cat version`
 ## Local configuration
 LIB_MAPLE_HOME = ./Maple/LibMaple
 LIB_RHOBAN_HOME = ./Maple/LibRhoban
-LIB_RHOCK_HOME = ./Maple/LibRhock
-ENABLE_RHOCK := yes
 ENABLE_COMMANDS := yes
 ENABLE_DXL := no
 # PATH := $(CURDIR)/Maple/BinutilsArm/bin:$(PATH)
@@ -50,12 +48,6 @@ BOOTLOADER_PORT ?= /dev/ttyACM0
 # $(BOARD)- and $(MEMORY_TARGET)-specific configuration
 include $(MAKEDIR)/target-config.mk
 
-HAS_RHOCK :=
-ifeq ($(ENABLE_RHOCK),yes)
-LIBMAPLE_MODULES += $(LIB_RHOCK_HOME)
-HAS_RHOCK := -DHAS_RHOCK
-endif
-
 ##
 ## Build rules and useful templates
 ##
@@ -74,8 +66,7 @@ include $(MAKEDIR)/build-templates.mk
 # It slows compilation noticeably; remove after 1 release.
 TARGET_FLAGS    += -I$(LIBMAPLE_PATH)/include/libmaple \
                    -I$(WIRISH_PATH)/include/wirish \
-		   -I$(LIB_RHOBAN_HOME) \
-		   -I$(LIB_RHOCK_HOME)
+		   -I$(LIB_RHOBAN_HOME) 
 TARGET_FLAGS += -I$(LIBRARIES_PATH) # for internal lib. includes, e.g. <Wire/WireBase.h>
 GLOBAL_CFLAGS   := -Os -gdwarf-2 -nostdlib \
                    -ffunction-sections -fdata-sections \
@@ -83,8 +74,7 @@ GLOBAL_CFLAGS   := -Os -gdwarf-2 -nostdlib \
 		   -DRC=Serial2 \
 		   -DBOOTLOADER_$(BOOTLOADER) \
 		   -DMETABOT_VERSION=$(VERSION) \
-		   -DUSB_DISC_INVERTED \
-		   $(HAS_RHOCK)
+		   -DUSB_DISC_INVERTED 
 GLOBAL_CXXFLAGS := -fno-rtti -fno-exceptions -Wall $(TARGET_FLAGS)
 GLOBAL_ASFLAGS  := -x assembler-with-cpp $(TARGET_FLAGS)
 LDFLAGS  = $(TARGET_LDFLAGS) $(TOOLCHAIN_LDFLAGS) -mcpu=cortex-m3 -mthumb \
@@ -167,7 +157,7 @@ endif
 sketch: build-check MSG_INFO $(BUILD_PATH)/$(BOARD).bin
 
 clean:
-	rm -rf build LibMaple LibRhoban LibRhock Rhock
+	rm -rf build LibMaple LibRhoban
 
 mrproper: clean
 	rm -rf doxygen

@@ -16,14 +16,9 @@
 #include <main.h>
 #include <math.h>
 #include <rc.h>
-#include <rhock.h>
 #include <terminal.h>
 #include <wirish/wirish.h>
-#ifdef HAS_RHOCK
-#include "rhock-stream.h"
-#include <rhock/event.h>
-#include <rhock/stream.h>
-#endif
+#include "stream.h"
 
 bool isUSB = false;
 
@@ -115,10 +110,6 @@ void tick()
         dc_set_speed_target(0, 0, 0);
         led_set_mode(LEDS_BAD);
         buzzer_play(MELODY_ALERT, true);
-#ifdef HAS_RHOCK
-        // Killing all programs
-        rhock_program_killall();
-#endif
         return;
     } else {
       if (leds_are_bad()) {
@@ -171,10 +162,8 @@ void loop()
     // Updating the terminal
     terminal_tick();
 
-// Ticking Rhock
-#ifdef HAS_RHOCK
-    rhock_tick();
-#endif
+    // Ticking Binary
+    bin_tick();
 
     // If there is data in USB, switching the terminal to USB
     if (SerialUSB.available() && !isUSB) {
@@ -198,11 +187,6 @@ void loop()
 
 void emergency_stop()
 {
-#ifdef HAS_RHOCK
-    // Killing all programs
-    rhock_program_killall();
-#endif
-
     // Stopping orders
     motion_em();
 
