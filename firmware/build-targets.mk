@@ -2,12 +2,12 @@
 # Defines here your cpp source files
 # Ex : main.cpp test.cpp ...
 SRC_FILES = main.cpp leds.cpp \
-	    buzzer.cpp imu.cpp distance.cpp bt.cpp dc.cpp kicker.cpp \
-	    mux.cpp voltage.cpp charge.cpp motion.cpp buttons.cpp tests.cpp \
-		infos.cpp js_utils.cpp odometry.cpp
+	    buzzer.cpp bt.cpp dc.cpp kicker.cpp \
+	    mux.cpp voltage.cpp charge.cpp motion.cpp \
+		infos.cpp 
 
 ifeq ($(ENABLE_RHOCK),yes)
-SRC_FILES += rhock-functions.cpp rhock-stream.cpp
+SRC_FILES += rhock-stream.cpp
 endif
 
 # Uncomment to disable robot campus commands
@@ -42,8 +42,6 @@ $(BUILD_PATH)/$(BOARD).bin: $(BUILD_PATH)/$(BOARD).elf
 	@echo "Final Size:"
 	@$(SIZE) $<
 	@echo $(MEMORY_TARGET) > $(BUILD_PATH)/build-type
-	@echo "Loading preprograms"
-	php load-preprograms.php
 
 $(BUILDDIRS):
 	@mkdir -p $@

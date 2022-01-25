@@ -1,19 +1,15 @@
 #include <stdlib.h>
 #include "bt.h"
-#include "buttons.h"
 #include "buzzer.h"
 #include "charge.h"
 #include "dc.h"
-#include "distance.h"
 #include "hardware.h"
-#include "imu.h"
 #include "infos.h"
 #include "leds.h"
 #include "motion.h"
 #include "mux.h"
 #include "kicker.h"
 #include "voltage.h"
-#include "odometry.h"
 #include <commands.h>
 #include <dxl.h>
 #include <function.h>
@@ -24,7 +20,6 @@
 #include <terminal.h>
 #include <wirish/wirish.h>
 #ifdef HAS_RHOCK
-#include "rhock-functions.h"
 #include "rhock-stream.h"
 #include <rhock/event.h>
 #include <rhock/stream.h>
@@ -58,14 +53,8 @@ void setup()
     // This disables Serial2 from APB1
     RCC_BASE->APB1ENR &= ~RCC_APB1ENR_USART2EN;
 
-    // Initializing distance sensors
-    distance_init();
-
     // Initializing optical sensors
     kicker_init();
-
-    // Initializing IMU
-    imu_init();
 
     // Initializing terminal on the RC port
     bt_init();
@@ -96,9 +85,6 @@ void setup()
 
     // Motion reset
     motion_em();
-
-    // Reset odometry
-    reset_odometry();
 
     buzzer_play(MELODY_BOOT);
 }
@@ -208,25 +194,10 @@ void loop()
         if (tmp > loopd)
             loopd = tmp;
     }
-
-    // Ticking distance
-    distance_tick();
-
-    // Ticking IMU
-    imu_tick();
-
-    // Buttons tick
-    // buttons_tick();
-
-    // Odometry tick
-    odometry_tick();
 }
 
 void emergency_stop()
 {
-    // Resetting odometry (also stops goto order)
-    reset_odometry();
-
 #ifdef HAS_RHOCK
     // Killing all programs
     rhock_program_killall();

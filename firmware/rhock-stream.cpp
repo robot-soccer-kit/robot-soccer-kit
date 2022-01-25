@@ -4,14 +4,10 @@
 #include "hardware.h"
 #include "leds.h"
 #include "voltage.h"
-#include "opticals.h"
 #include "buzzer.h"
-#include "distance.h"
-#include "imu.h"
 #include "main.h"
 #include "math.h"
 #include "motion.h"
-#include "odometry.h"
 #include "kicker.h"
 #include <rhock/event.h>
 #include <rhock/stream.h>
@@ -22,7 +18,6 @@
 
 short rhock_controls[16] = { 0 };
 
-bool monitor_opticals_raw = false;
 bool monitor_encoders_values = false;
 
 #ifndef __EMSCRIPTEN__
@@ -53,7 +48,7 @@ char rhock_on_packet(uint8_t type)
                 break;
             case 2: // Rotate calibration
 #ifndef __EMSCRIPTEN__
-                imu_calib_rotate();
+                // imu_calib_rotate();
 #endif
                 return 1;
                 break;
@@ -111,7 +106,7 @@ char rhock_on_packet(uint8_t type)
             case 5: { // Calibrate opticals
 #ifndef __EMSCRIPTEN__
                 if (rhock_stream_available() == 1) {
-                    uint8_t black = rhock_stream_read();
+                    // uint8_t black = rhock_stream_read();
                     // opticals_calibrate(black);
                 }
 #endif
@@ -120,7 +115,7 @@ char rhock_on_packet(uint8_t type)
             }
             case 6: { // Rotate calibration
 #ifndef __EMSCRIPTEN__
-                imu_calib_rotate();
+                // imu_calib_rotate();
 #endif
                 return 1;
                 break;
@@ -145,7 +140,7 @@ char rhock_on_packet(uint8_t type)
             }
             case 9: { // Monitor opticals raw
                 if (rhock_stream_available() == 1) {
-                    monitor_opticals_raw = rhock_stream_read();
+                    // monitor_opticals_raw = rhock_stream_read();
                 }
 
                 return 1;
@@ -187,16 +182,12 @@ void rhock_on_monitor()
     rhock_stream_append(METABOT_VERSION);
     rhock_stream_append_int((uint32_t)millis());
 
-    // Distances sensor (converted from [cm] (float) to [mm] (int))
-    rhock_stream_append_short((uint16_t)((int16_t)(10 * get_distance())));
+    // Legacy/dummy: Distances sensor
+    rhock_stream_append_short((uint16_t)((int16_t)(10 * 0)));
 
-    // Opticals sensors, calibrated or raw (depending on config)
+    // Legacy/dummy: IMU
     for (int i = 0; i < OPTICAL_NB; i++) {
-        if (monitor_opticals_raw) {
-            rhock_stream_append((uint8_t)(0 >> 4));
-        } else {
             rhock_stream_append((uint8_t)(0 >> 2));
-        }
     }
 
     // Whell speeds in [deg/s] or encoders values
@@ -208,23 +199,16 @@ void rhock_on_monitor()
         }
     }
 
-    // IMU values
-#ifndef __EMSCRIPTEN__
-    rhock_stream_append_short((uint16_t)((int16_t)(imu_yaw() * 10)));
-    rhock_stream_append_short((uint16_t)((int16_t)(imu_gyro_yaw() * 10)));
-    rhock_stream_append_short((uint16_t)((int16_t)(imu_pitch() * 10)));
-    rhock_stream_append_short((uint16_t)((int16_t)(imu_roll() * 10)));
-#else
-    rhock_stream_append_short((uint16_t)((int16_t)(imu_yaw() * 10)));
+    // Legacy/dummy: IMU values
     rhock_stream_append_short(0);
     rhock_stream_append_short(0);
     rhock_stream_append_short(0);
-#endif
+    rhock_stream_append_short(0);
 
-    // Odometry
-    rhock_stream_append_short((int)get_odometry_x()); // X [mm]
-    rhock_stream_append_short((int)get_odometry_y()); // Y [mm]
-    rhock_stream_append_short((int)(get_odometry_yaw()*3600/(2*M_PI))); // Yaw [mm]
+    // LEgacy/dummy: odometry
+    rhock_stream_append_short(0);
+    rhock_stream_append_short(0);
+    rhock_stream_append_short(0);
 
     // Batteries voltage, 0/0 if the robot is off
     // Unit is 40th of volts

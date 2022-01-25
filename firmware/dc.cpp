@@ -14,7 +14,6 @@
 #ifndef __EMSCRIPTEN__
 #include "infos.h"
 #include "mux.h"
-#include "odometry.h"
 #include <wirish.h>
 #else
 #include <emscripten.h>

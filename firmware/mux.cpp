@@ -4,7 +4,6 @@
 #include <terminal.h>
 #include <adc.h>
 #include "mux.h"
-#include "opticals.h"
 
 // Current multiplexer address
 static volatile int mux_addr = 0;
