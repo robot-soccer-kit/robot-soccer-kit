@@ -154,7 +154,7 @@ void api_disable() {
   api_turn = 0;
 }
 
-const char bin_exit[] = "!rhock\r";
+const char bin_exit[] = "!bin\r";
 const int bin_exit_len = 7;
 int bin_exit_pos = 0;
 bool bin_mode = false;
