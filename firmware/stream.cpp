@@ -131,7 +131,6 @@ void bin_on_monitor() {
 
   // Batteries voltage, 0/0 if the robot is off
   // Unit is 40th of volts
-#ifndef __EMSCRIPTEN__
   if (voltage_is_robot_on()) {
     bin_stream_append(voltage_bat1() * 40);
     bin_stream_append(voltage_bat2() * 40);
@@ -139,10 +138,6 @@ void bin_on_monitor() {
     bin_stream_append(0);
     bin_stream_append(0);
   }
-#else
-  bin_stream_append(0);
-  bin_stream_append(0);
-#endif
 
   bin_stream_end();
 }

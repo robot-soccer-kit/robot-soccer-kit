@@ -6,15 +6,7 @@
 #endif
 
 // Config
-#ifndef __EMSCRIPTEN__
 HardwareTimer           timer(2);
-#endif
-
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#include <emscripten/bind.h>
-#include "js_utils.h"
-#endif
 
 // Partitions
 struct buzzer_note {
@@ -73,33 +65,16 @@ static int melody_st;
 static bool initialized = false;
 static unsigned int melody_num;
 
-#ifdef __EMSCRIPTEN__
-static int playing_note = 0;
-
-int buzzer_get_frequency()
-{
-    return playing_note;
-}
-
-EMSCRIPTEN_BINDINGS(buzzer) {
-    emscripten::function("buzzer_get_frequency", &buzzer_get_frequency);
-}
-#endif
 
 void buzzer_init()
 {
-#ifndef __EMSCRIPTEN__
     melody = NULL;
     pwmWrite(PIN_BUZZER, 0);
     pinMode(PIN_BUZZER, PWM);
-#endif
 }
 
 void buzzer_play_note(int note)
 {
-#ifdef __EMSCRIPTEN__
-    playing_note = note;
-#else
     timer.pause();
     timer.setPrescaleFactor(72000000 / (note * 100));
     timer.setOverflow(100);
@@ -113,7 +88,6 @@ void buzzer_play_note(int note)
         pinMode(PIN_BUZZER, PWM);
         pwmWrite(PIN_BUZZER, 50);
     }
-#endif
 }
 
 static void buzzer_enter(struct buzzer_note *note)
@@ -138,11 +112,9 @@ void buzzer_play(unsigned int melody_num_, bool repeat)
         return;
     }
 
-#ifndef __EMSCRIPTEN__
     if (voltage_error() && melody_num_ != MELODY_ALERT && melody_num_ != MELODY_ALERT_FAST) {
         return;
     }
-#endif
     
     if (!initialized) {
         buzzer_init();
@@ -188,9 +160,6 @@ void buzzer_stop()
     buzzer_play_note(0);
     melody = NULL;
     melody_repeat = NULL;
-#ifdef __EMSCRIPTEN__
-    playing_note = 0;
-#endif
 }
 
 bool buzzer_is_playing()

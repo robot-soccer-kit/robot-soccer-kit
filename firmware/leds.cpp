@@ -2,24 +2,13 @@
 #include <stdio.h>
 #include "leds.h"
 #include "hardware.h"
-#ifdef RHOCK
-#include <rhock/stream.h>
-#endif
-#ifndef __EMSCRIPTEN__
 #include <wirish/HardwareSPI.h>
 #include <dma.h>
 #include <terminal.h>
 #include <dxl.h>
-#endif
 #include <function.h>
 
-#ifndef __EMSCRIPTEN__
 HardwareSPI spi(LEDS_SPI);
-#else
-#include <emscripten.h>
-#include <emscripten/bind.h>
-#include "js_utils.h"
-#endif
 
 // Having references to the GPIO device and bit provide a faster further
 // access to this pin
@@ -47,7 +36,6 @@ uint8_t led2b_r, led2b_g, led2b_b;
 uint8_t led3_r, led3_g, led3_b;
 uint8_t led3b_r, led3b_g, led3b_b;
 
-#ifndef __EMSCRIPTEN__
 static dma_tube_config tube_config;
 static uint8_t data[250];
 static int data_pos = 0;
@@ -145,11 +133,9 @@ static void send_bits()
     dma_enable(DMA1, DMA_CH5);
     spi_tx_dma_enable(spi.c_dev());
 }
-#endif
 
 void led_update()
 {
-#ifndef __EMSCRIPTEN__
     if (dma_transmitting) {
         return;
     }
@@ -182,15 +168,12 @@ void led_update()
     data_pos += 16;
 
     send_bits();
-#endif
 }
 
 void leds_init()
 {
-#ifndef __EMSCRIPTEN__
     spi.begin(SPI_9MHZ, MSBFIRST, 0);
     dma_init(DMA1);
-#endif
 
     breathPhase = 0;
     breathPhase2 = 0;
@@ -448,7 +431,6 @@ void led_set_blink_duration(int duration)
     blink_duration = duration;
 }
 
-#ifndef __EMSCRIPTEN__
 #ifdef DEBUG
 TERMINAL_COMMAND(ld, "Test")
 {
@@ -502,7 +484,6 @@ TERMINAL_COMMAND(ledsBlink, "test blink mode") {
     led_set_blink_duration(atoi(argv[0]));
   }
 }
-#endif
 
 TERMINAL_COMMAND(leds, "test the leds") {
     if (argc >= 3) {
@@ -510,12 +491,5 @@ TERMINAL_COMMAND(leds, "test the leds") {
     } else {
         led_set_mode(LEDS_BREATH);
     }
-}
-#endif
-
-#ifdef __EMSCRIPTEN__
-EMSCRIPTEN_BINDINGS(leds) {
-  emscripten::function("led_get", &led_get);
-  emscripten::function("led_reset_all", &led_reset_all);
 }
 #endif

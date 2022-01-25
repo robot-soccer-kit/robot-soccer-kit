@@ -11,15 +11,9 @@
 #include <terminal.h>
 #endif
 
-#ifndef __EMSCRIPTEN__
 #include "infos.h"
 #include "mux.h"
 #include <wirish.h>
-#else
-#include <emscripten.h>
-#include <emscripten/bind.h>
-#include "js_utils.h"
-#endif
 
 // Speed targets, in firmware unit [step/speed_dt ms]
 static float speed_target[3] = { 0 };
@@ -78,7 +72,6 @@ static struct dc_motor motors[3] = {
     { PIN_M3A, PIN_M3B, (float)-sin(wheel3_rad), (float)cos(wheel3_rad) },
 };
 
-#ifndef __EMSCRIPTEN__
 static void encoder_update(int k, int phase)
 {
     if (encoder_phase[k] != phase) {
@@ -219,7 +212,6 @@ void dc_command(int m1, int m2, int m3)
     pwmWrite(PIN_M3A, m3 > 0 ? m3 : 0);
     pwmWrite(PIN_M3B, m3 < 0 ? -m3 : 0);
 }
-#endif
 
 // Converts [rad/s] to firmware unit [step / speed_dt ms]
 static int _convert(float w)
@@ -240,33 +232,18 @@ float delta_enc_to_delta_rad(int delta)
 
 float wheel_speed(uint8_t wheel_id)
 {
-#ifndef __EMSCRIPTEN__
     if (wheel_id >= 3)
         return 0.0;
 
     return _inverse_convert(encoder_speed[wheel_id]);
-#else
-    struct motion_order orders = motion_get_order();
-    float dx = orders.dx;
-    float dy = orders.dy;
-    float dt = orders.turn * DEG2RAD;
-    return (motors[wheel_id].x * dx + motors[wheel_id].y * dy
-            + MODEL_ROBOT_RADIUS * dt)
-      / (MODEL_WHEEL_RADIUS);
-#endif
 }
 
 int encoder_position(uint8_t wheel_id)
 {
-
-#ifndef __EMSCRIPTEN__
     if (wheel_id >= 3)
         return 0;
 
     return encoder_value[wheel_id];
-#else
-    return 0;
-#endif
 }
 
 
@@ -277,7 +254,6 @@ void dc_fk(float w1, float w2, float w3, float *dx, float *dy, float *dt)
     *dt = MODEL_WHEEL_RADIUS*(w1*(motors[1].x*motors[2].y - motors[1].y*motors[2].x) - w2*(motors[0].x*motors[2].y - motors[0].y*motors[2].x) + w3*(motors[0].x*motors[1].y - motors[0].y*motors[1].x))/(MODEL_ROBOT_RADIUS*(motors[0].x*motors[1].y - motors[0].x*motors[2].y - motors[0].y*motors[1].x + motors[0].y*motors[2].x + motors[1].x*motors[2].y - motors[1].y*motors[2].x));
 }
 
-#ifndef __EMSCRIPTEN__
 float get_wheel_speed_target(uint8_t wheel_id)
 {
     if (wheel_id < 0 && wheel_id >= 3)
@@ -603,5 +579,4 @@ TERMINAL_COMMAND(eb, "Encoders benchmark")
     }
     terminal_io()->println(avg / 10000);
 }
-#endif
 #endif

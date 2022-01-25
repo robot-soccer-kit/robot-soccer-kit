@@ -6,12 +6,6 @@
 
 #include "motion.h"
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#include <emscripten/bind.h>
-#include "js_utils.h"
-#endif
-
 #define PGM_ORDERS  3
 #define ORDERS      (PGM_ORDERS+2)
 
@@ -124,7 +118,6 @@ void motion_em()
     }
 }
 
-#ifdef __EMSCRIPTEN__
 float get_dx()
 {
     return motion_get_order().dx;
@@ -140,11 +133,3 @@ float get_turn()
   return motion_get_order().turn;
 }
 
-
- EMSCRIPTEN_BINDINGS(motion)
- {
-     emscripten::function("get_dx", &get_dx);
-     emscripten::function("get_dy", &get_dy);
-     emscripten::function("get_turn", &get_turn);
- }
-#endif
