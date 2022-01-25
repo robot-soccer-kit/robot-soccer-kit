@@ -7,7 +7,7 @@ SRC_FILES = main.cpp leds.cpp \
 		stream.cpp bin_stream.cpp
 
 # Uncomment to disable robot campus commands
-CFLAGS += -DHAS_TERMINAL -DDISABLE_SERVOS_COMMANDS
+CFLAGS += -DDISABLE_SERVOS_COMMANDS
 # CFLAGS += -DDXL_VERSION_1
 
 OBJ_FILES_CPP = $(SRC_FILES:.cpp=.o)

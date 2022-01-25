@@ -6,10 +6,7 @@
 #include "hardware.h"
 #include <math.h>
 #include "motion.h"
-
-#ifdef HAS_TERMINAL
 #include <terminal.h>
-#endif
 
 #include "mux.h"
 #include <wirish.h>

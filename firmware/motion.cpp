@@ -1,8 +1,4 @@
-#ifdef HAS_TERMINAL
 #include <terminal.h>
-#else
-#include "no_terminal.h"
-#endif
 
 #include "motion.h"
 
@@ -16,7 +12,6 @@ TERMINAL_PARAMETER_FLOAT(dx, "dx [mm/s]", 0);
 TERMINAL_PARAMETER_FLOAT(dy, "dy [mm/s]", 0);
 TERMINAL_PARAMETER_FLOAT(turn, "turn [deg/s]", 0);
 
-#ifdef HAS_TERMINAL
 TERMINAL_COMMAND(joy, "Joystick control")
 {
     if (argc < 3) {
@@ -27,7 +22,6 @@ TERMINAL_COMMAND(joy, "Joystick control")
         turn = terminal_atof(argv[2]);
     }
 }
-#endif
 
 void motion_set_api_order(float dx, float dy, float turn)
 {

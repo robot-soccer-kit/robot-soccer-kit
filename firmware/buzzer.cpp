@@ -1,9 +1,7 @@
 #include "buzzer.h"
 #include "voltage.h"
 #include "hardware.h"
-#ifdef HAS_TERMINAL
 #include <terminal.h>
-#endif
 
 // Config
 HardwareTimer           timer(2);
@@ -187,7 +185,7 @@ bool buzzer_is_melody_alert()
 {
     return melody_num == MELODY_ALERT;
 }
-#ifdef HAS_TERMINAL
+
 TERMINAL_COMMAND(play, "Play a melody")
 {
     int melnum = atoi(argv[0]);
@@ -207,4 +205,4 @@ TERMINAL_COMMAND(beep, "Plays a beep")
         terminal_io()->println("Usage: beep freq [duration]");
     }
 }
-#endif
+

@@ -45,7 +45,7 @@ void charge_tick()
     }
 }
 
-#ifdef HAS_TERMINAL
+
 TERMINAL_COMMAND(charge, "Charge status")
 {
     if (charge_is_fast) {
@@ -70,4 +70,4 @@ TERMINAL_COMMAND(fastCharge, "Force fast charge")
         }
     }
 }
-#endif
+
