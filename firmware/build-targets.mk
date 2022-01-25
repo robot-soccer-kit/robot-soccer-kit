@@ -4,7 +4,7 @@
 SRC_FILES = main.cpp leds.cpp \
 	    buzzer.cpp bt.cpp dc.cpp kicker.cpp \
 	    mux.cpp voltage.cpp charge.cpp motion.cpp \
-		infos.cpp stream.cpp bin_stream.cpp
+		stream.cpp bin_stream.cpp
 
 # Uncomment to disable robot campus commands
 CFLAGS += -DHAS_TERMINAL -DDISABLE_SERVOS_COMMANDS

@@ -11,7 +11,6 @@
 #include <terminal.h>
 #endif
 
-#include "infos.h"
 #include "mux.h"
 #include <wirish.h>
 

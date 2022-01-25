@@ -4,7 +4,6 @@
 #include "charge.h"
 #include "dc.h"
 #include "hardware.h"
-#include "infos.h"
 #include "leds.h"
 #include "motion.h"
 #include "mux.h"
@@ -74,9 +73,6 @@ void setup()
 
     // Voltage monitor
     voltage_init();
-
-    // Infos
-    infos_init();
 
     // Motion reset
     motion_em();
