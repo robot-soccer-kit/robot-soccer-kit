@@ -17,10 +17,15 @@ void bin_stream_ack(int code) {
 void bin_stream_process() {
   switch (in.type) {
   case BIN_STREAM_MONITOR:
-    monitor_dt = 1000 / bin_stream_read_int();
+    // Sets the monitor frequency (will call bin_on_monitor periodically)
+    monitor_dt = (1000 / bin_stream_read_int());
+    if (monitor_dt < 10) {
+      monitor_dt = 10;
+    }
     monitor_last = millis();
     break;
   default:
+    // Call user logic
     if (!bin_on_packet(in.type)) {
       bin_stream_ack(BIN_UNKNOWN_COMMAND);
     }

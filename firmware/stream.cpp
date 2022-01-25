@@ -196,7 +196,7 @@ void bin_tick() {
 
       bin_stream_recv(c);
     }
-  }
 
-  bin_stream_tick();
+    bin_stream_tick();
+  }
 }
