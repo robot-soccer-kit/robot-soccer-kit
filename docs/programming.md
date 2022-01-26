@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-You need to have Python version 3.8 newer.
+You need to have Python version 3.8 or newer.
 
 * **Windows**:
     * You can install Python from the Windows Store
