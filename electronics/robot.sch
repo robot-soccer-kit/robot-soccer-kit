@@ -14100,7 +14100,7 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <attribute name="FARNELL" value="2666560"/>
 </part>
 <part name="R2" library="SparkFun-Resistors" deviceset="0.3OHM" device="-0805-1/8W-1%" value="2k">
-<attribute name="FARNELL" value="MCWR08X2001FTL"/>
+<attribute name="FARNELL" value="2447622"/>
 </part>
 <part name="R6" library="SparkFun-Resistors" deviceset="0.3OHM" device="-0805-1/8W-1%">
 <attribute name="FARNELL" value="2447648"/>
@@ -14108,7 +14108,9 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <part name="D1" library="nxp_60" deviceset="PMEG4030E" device="P">
 <attribute name="FARNELL" value="1829201 "/>
 </part>
-<part name="U2" library="ESP32-WROOM-32E__16MB_" deviceset="ESP32-WROOM-32E_(16MB)" device=""/>
+<part name="U2" library="ESP32-WROOM-32E__16MB_" deviceset="ESP32-WROOM-32E_(16MB)" device="">
+<attribute name="FARNELL" value="ESP32-WROOM"/>
+</part>
 <part name="U3" library="rhoban" deviceset="S8252" device="">
 <attribute name="FARNELL" value="https://www.digikey.fr/fr/products/detail/ablic-u-s-a-inc/S-8252AAL-M6T1U/6121452"/>
 <attribute name="REF" value="S-8252AAL-M6T1U"/>
@@ -14134,7 +14136,9 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <part name="U1" library="rhoban" deviceset="FT232" device="L">
 <attribute name="FARNELL" value="1146032"/>
 </part>
-<part name="J6" library="rhoban" deviceset="KICKER" device=""/>
+<part name="J6" library="rhoban" deviceset="KICKER" device="">
+<attribute name="FARNELL" value="JF-0530B"/>
+</part>
 <part name="C19" library="rcl" deviceset="CPOL-EU" device="E5-13" value="2200uF">
 <attribute name="FARNELL" value="1902893"/>
 </part>
@@ -14199,7 +14203,9 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <instance part="J1" gate="G$1" x="-119.38" y="7.62" rot="R180">
 <attribute name="FARNELL" x="-119.38" y="7.62" size="1.778" layer="96" rot="R180" display="off"/>
 </instance>
-<instance part="U2" gate="G$1" x="40.64" y="-20.32"/>
+<instance part="U2" gate="G$1" x="40.64" y="-20.32">
+<attribute name="FARNELL" x="40.64" y="-20.32" size="1.778" layer="96" display="off"/>
+</instance>
 <instance part="U1" gate="1" x="-33.02" y="-15.24">
 <attribute name="FARNELL" x="-33.02" y="-15.24" size="1.778" layer="96" display="off"/>
 </instance>
@@ -15276,7 +15282,9 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <instance part="D1" gate="G$1" x="2.54" y="12.7">
 <attribute name="FARNELL" x="2.54" y="12.7" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="J6" gate="A" x="104.14" y="-10.16"/>
+<instance part="J6" gate="A" x="104.14" y="-10.16">
+<attribute name="FARNELL" x="104.14" y="-10.16" size="1.778" layer="96" display="off"/>
+</instance>
 <instance part="C19" gate="G$1" x="40.64" y="-17.78">
 <attribute name="FARNELL" x="40.64" y="-17.78" size="1.778" layer="96" display="off"/>
 </instance>
