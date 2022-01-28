@@ -16145,10 +16145,10 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <part name="R7" library="SparkFun-Resistors" deviceset="0.3OHM" device="-0805-1/8W-1%" value="470">
 <attribute name="FARNELL" value="2447662"/>
 </part>
-<part name="R9" library="SparkFun-Resistors" deviceset="0.3OHM" device="-0805-1/8W-1%" value="10K">
+<part name="R9" library="SparkFun-Resistors" deviceset="0.3OHM" device="-0805-1/8W-1%" value="470">
 <attribute name="FARNELL" value="2074334RL"/>
 </part>
-<part name="R10" library="SparkFun-Resistors" deviceset="0.3OHM" device="-0805-1/8W-1%" value="10K">
+<part name="R10" library="SparkFun-Resistors" deviceset="0.3OHM" device="-0805-1/8W-1%" value="470">
 <attribute name="FARNELL" value="2074334RL"/>
 </part>
 <part name="R11" library="SparkFun-Resistors" deviceset="0.3OHM" device="-0805-1/8W-1%" value="2K">
