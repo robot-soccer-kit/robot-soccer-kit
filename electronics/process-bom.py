@@ -1,4 +1,10 @@
 import csv
+import os
+from pprint import pprint
+from pyFarnell import pyFarnell
+import json
+
+farnell = pyFarnell.Farnell(os.getenv('FARNELL'))
 
 all_items = {}
 
@@ -26,14 +32,24 @@ with open('bom.csv', 'w') as csvfile:
     writer.writerow(['Item #', 'Ref', 'Qty', 'Manufacturer', 'Mfg Part #', 'Description', 'Package', 'Type', 'Instruction'])
 
     for sku in all_items:
+        data = farnell.get_part_number(sku)
+        data = json.loads(data['_content'])
+        manufacturer = ''
+        product = ''
+
+        if 'products' in data['premierFarnellPartNumberReturn']:
+            products = data['premierFarnellPartNumberReturn']['products']
+            manufacturer = products[0]['brandName']
+            product = products[0]['translatedManufacturerPartNumber']
+
         items = all_items[sku]
         n += 1
         row = []
         row.append(n)
         row.append(', '.join([v['Name'] for v in items]))
         row.append(len(items))
-        row.append('')
-        row.append('')
+        row.append(manufacturer)
+        row.append(product)
         row.append(items[0]['Value'])
         row.append('')
         row.append('')
