@@ -17389,11 +17389,11 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <instance part="C4" gate="G$1" x="-55.88" y="22.86">
 <attribute name="FARNELL" x="-55.88" y="22.86" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="C5" gate="G$1" x="5.08" y="20.32">
-<attribute name="FARNELL" x="5.08" y="20.32" size="1.778" layer="96" display="off"/>
+<instance part="C5" gate="G$1" x="10.16" y="22.86">
+<attribute name="FARNELL" x="10.16" y="22.86" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="C6" gate="G$1" x="71.12" y="17.78">
-<attribute name="FARNELL" x="71.12" y="17.78" size="1.778" layer="96" display="off"/>
+<instance part="C6" gate="G$1" x="73.66" y="22.86">
+<attribute name="FARNELL" x="73.66" y="22.86" size="1.778" layer="96" display="off"/>
 </instance>
 </instances>
 <busses>
@@ -17436,13 +17436,13 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <pinref part="C4" gate="G$1" pin="2"/>
 </segment>
 <segment>
-<wire x1="5.08" y1="17.78" x2="5.08" y2="12.7" width="0.1524" layer="91"/>
-<label x="5.08" y="12.7" size="1.27" layer="95" xref="yes"/>
+<wire x1="10.16" y1="20.32" x2="10.16" y2="15.24" width="0.1524" layer="91"/>
+<label x="10.16" y="15.24" size="1.27" layer="95" xref="yes"/>
 <pinref part="C5" gate="G$1" pin="2"/>
 </segment>
 <segment>
-<wire x1="71.12" y1="15.24" x2="71.12" y2="10.16" width="0.1524" layer="91"/>
-<label x="71.12" y="10.16" size="1.27" layer="95" xref="yes"/>
+<wire x1="73.66" y1="20.32" x2="73.66" y2="15.24" width="0.1524" layer="91"/>
+<label x="73.66" y="15.24" size="1.27" layer="95" xref="yes"/>
 <pinref part="C6" gate="G$1" pin="2"/>
 </segment>
 </net>
@@ -17510,8 +17510,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <label x="-7.62" y="17.78" size="1.27" layer="95" xref="yes"/>
 </segment>
 <segment>
-<wire x1="5.08" y1="25.4" x2="5.08" y2="30.48" width="0.1524" layer="91"/>
-<label x="5.08" y="30.48" size="1.27" layer="95" xref="yes"/>
+<wire x1="10.16" y1="27.94" x2="10.16" y2="33.02" width="0.1524" layer="91"/>
+<label x="10.16" y="33.02" size="1.27" layer="95" xref="yes"/>
 <pinref part="C5" gate="G$1" pin="1"/>
 </segment>
 <segment>
@@ -17525,8 +17525,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <label x="58.42" y="17.78" size="1.27" layer="95" xref="yes"/>
 </segment>
 <segment>
-<wire x1="71.12" y1="22.86" x2="71.12" y2="27.94" width="0.1524" layer="91"/>
-<label x="71.12" y="27.94" size="1.27" layer="95" xref="yes"/>
+<wire x1="73.66" y1="27.94" x2="73.66" y2="33.02" width="0.1524" layer="91"/>
+<label x="73.66" y="33.02" size="1.27" layer="95" xref="yes"/>
 <pinref part="C6" gate="G$1" pin="1"/>
 </segment>
 <segment>
