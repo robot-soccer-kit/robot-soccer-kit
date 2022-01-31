@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.001" unitdist="inch" unit="inch" style="lines" multiple="2" display="yes" altdistance="0.25" altunitdist="mm" altunit="mm"/>
+<grid distance="0.0254" unitdist="mm" unit="mm" style="lines" multiple="2" display="yes" altdistance="0.25" altunitdist="mm" altunit="mm"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
 <layer number="2" name="Route2" color="1" fill="3" visible="no" active="no"/>
@@ -3953,6 +3953,7 @@ design rules under a new name.</description>
 <contactref element="U$25" pad="2"/>
 <contactref element="C13" pad="2"/>
 <contactref element="C14" pad="2"/>
+<contactref element="U1" pad="26"/>
 <wire x1="-66.09005625" y1="-32.6132375" x2="-68.94794375" y2="-34.2632375" width="0" layer="19" extent="1-16"/>
 <wire x1="-62.7435" y1="-33.1465875" x2="-66.09005625" y2="-32.6132375" width="0" layer="19" extent="1-1"/>
 <wire x1="-18.844878125" y1="-39.226390625" x2="-62.7435" y2="-33.1465875" width="0" layer="19" extent="1-1"/>
@@ -3983,6 +3984,7 @@ design rules under a new name.</description>
 <wire x1="0.6444" y1="-31.485" x2="0.6444" y2="-32.4025" width="0" layer="19" extent="1-1"/>
 <wire x1="8.1444" y1="-40.82" x2="2.4794" y2="-35.155" width="0" layer="19" extent="1-1"/>
 <wire x1="12.885" y1="-36.505" x2="8.1444" y2="-40.82" width="0" layer="19" extent="1-1"/>
+<wire x1="20.135" y1="-33.905" x2="20.135" y2="-34.555" width="0" layer="19" extent="1-1"/>
 <wire x1="15.483" y1="-30.226" x2="17.3228" y2="-34.555" width="0" layer="19" extent="1-16"/>
 <wire x1="5.3594" y1="-23.31" x2="2.4794" y2="-31.485" width="0" layer="19" extent="1-1"/>
 <wire x1="5.7294" y1="-50.4444" x2="8.1444" y2="-40.82" width="0" layer="19" extent="1-1"/>
@@ -4145,9 +4147,6 @@ design rules under a new name.</description>
 <contactref element="LED3" pad="4-DIN"/>
 <wire x1="69.32894375" y1="-35.0252375" x2="-68.947940625" y2="-34.2632375" width="0" layer="19" extent="1-16"/>
 </signal>
-<signal name="LEDS_SUITE">
-<contactref element="LED6" pad="2-DOUT"/>
-</signal>
 <signal name="N$30">
 <contactref element="LED4" pad="2-DOUT"/>
 <contactref element="LED5" pad="4-DIN"/>
@@ -4216,8 +4215,8 @@ design rules under a new name.</description>
 </signal>
 <signal name="M1C1">
 <contactref element="J3" pad="4"/>
-<contactref element="U2" pad="23"/>
-<wire x1="-4.8006" y1="-23.31" x2="-18.7821125" y2="-31.239165625" width="0" layer="19" extent="1-1"/>
+<contactref element="U2" pad="26"/>
+<wire x1="-8.8556" y1="-25.58" x2="-18.7821125" y2="-31.239165625" width="0" layer="19" extent="1-1"/>
 </signal>
 <signal name="M1C2">
 <contactref element="J3" pad="3"/>
@@ -4253,7 +4252,7 @@ design rules under a new name.</description>
 <contactref element="L1" pad="1"/>
 <contactref element="U7" pad="1"/>
 <contactref element="D1" pad="2"/>
-<wire x1="-45.05204375" y1="4.821184375" x2="-43.408521875" y2="2.40045625" width="0" layer="19" extent="1-1"/>
+<wire x1="-43.408521875" y1="2.40045625" x2="-45.05204375" y2="4.821184375" width="1.6764" layer="1"/>
 <wire x1="-35.136334375" y1="5.044246875" x2="-43.408521875" y2="2.40045625" width="0" layer="19" extent="1-1"/>
 </signal>
 <signal name="3.3V">
@@ -4298,7 +4297,7 @@ design rules under a new name.</description>
 <contactref element="C16" pad="1"/>
 <contactref element="D1" pad="1"/>
 <contactref element="R14" pad="2"/>
-<wire x1="-48.527525" y1="10.938759375" x2="-47.252046875" y2="8.63169375" width="0" layer="19" extent="1-1"/>
+<wire x1="-47.252046875" y1="8.63169375" x2="-48.527525" y2="10.938759375" width="1.6764" layer="1"/>
 <wire x1="-43.082875" y1="7.18245" x2="-47.252046875" y2="8.63169375" width="0" layer="19" extent="1-1"/>
 <wire x1="-40.6435875" y1="10.318953125" x2="-43.082875" y2="7.18245" width="0" layer="19" extent="1-1"/>
 </signal>

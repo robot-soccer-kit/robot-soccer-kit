@@ -16712,6 +16712,9 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <pinref part="U1" gate="1" pin="GND@2"/>
 <wire x1="-17.78" y1="-40.64" x2="-10.16" y2="-40.64" width="0.1524" layer="91"/>
 <label x="-10.16" y="-43.18" size="1.27" layer="95" xref="yes"/>
+<pinref part="U1" gate="1" pin="TEST"/>
+<wire x1="-17.78" y1="-30.48" x2="-10.16" y2="-30.48" width="0.1524" layer="91"/>
+<wire x1="-10.16" y1="-30.48" x2="-10.16" y2="-35.56" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="C9" gate="G$1" pin="2"/>
@@ -16797,9 +16800,9 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </net>
 <net name="M1C1" class="0">
 <segment>
-<pinref part="U2" gate="G$1" pin="IO15"/>
-<wire x1="60.96" y1="-12.7" x2="66.04" y2="-12.7" width="0.1524" layer="91"/>
-<label x="66.04" y="-12.7" size="1.27" layer="95" xref="yes"/>
+<pinref part="U2" gate="G$1" pin="IO4"/>
+<wire x1="60.96" y1="0" x2="66.04" y2="0" width="0.1524" layer="91"/>
+<label x="66.04" y="0" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
 <net name="M1A" class="0">
@@ -17462,13 +17465,6 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <pinref part="LED2" gate="G$1" pin="DO"/>
 <pinref part="LED3" gate="G$1" pin="DI"/>
 <wire x1="-30.48" y1="-5.08" x2="-25.4" y2="-5.08" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="LEDS_SUITE" class="0">
-<segment>
-<pinref part="LED6" gate="G$1" pin="DO"/>
-<wire x1="96.52" y1="-5.08" x2="104.14" y2="-5.08" width="0.1524" layer="91"/>
-<label x="104.14" y="-5.08" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
 <net name="N$30" class="0">
