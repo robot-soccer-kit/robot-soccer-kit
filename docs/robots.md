@@ -1,6 +1,6 @@
 # Robots
 
-**Disclaimer: robots used in Junior SSL are a fork of a previous project (holo). Current prototypes
+**Disclaimer: robots used in Robot Soccer Kit are a fork of a previous project (holo). Current prototypes
 were hacked to add a kicker. In the future, this kicker will be integrated in the robot itself,
 this is STILL A WORK IN PROGRESS**
 

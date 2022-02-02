@@ -10,4 +10,4 @@ upload-test:
 	python3 -m twine upload --repository testpypi dist/*
 
 clean:
-	rm -rf build dist junior_ssl.egg-info
+	rm -rf build dist robot_soccer_kit.egg-info
