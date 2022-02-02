@@ -32,7 +32,7 @@ this is STILL A WORK IN PROGRESS**
 
 ## PCB
 
-Robot PCB can be found in the [/electronics/holo](/electronics/holo) directory of this repository.
+Robot PCB can be found in the [/electronics/](/electronics/) directory of this repository.
 
 ## Motors
 

@@ -75,3 +75,8 @@ of 8 cm. The ArUco ids are:
 ![Balls](/docs/imgs/balls.png)
 
 For the ball, we use orange gold ball in PU (foam) material
+
+## Field
+
+The field material can be anything, but we strongly recommend that you use thick carpet. If you don't, the ball will
+not be stopped enough and the game experiences will be very poor.
