@@ -47,7 +47,7 @@ def main():
 logging.basicConfig(
     format='[%(levelname)s] %(asctime)s - %(name)s - %(message)s', level=logging.INFO)
 logging.getLogger('werkzeug').setLevel(logging.CRITICAL)
-logging.getLogger('junior-ssl').info('Starting Junior-SSL Game Controller')
+logging.getLogger('robot-soccer-kit').info('Starting robot-soccer-kit Game Controller')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--port', '-p', type=str, default='7070')

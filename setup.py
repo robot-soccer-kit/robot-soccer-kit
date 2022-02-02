@@ -13,16 +13,15 @@ def package_files(directory):
     return paths
 
 setuptools.setup(
-    name="junior-ssl",
+    name="robot-soccer-kit",
     version="0.5.0",
     author="Rhoban team",
     author_email="team@rhoban.com",
-    description="Junior SSL - An omniwheel soccer setup",
+    description="Robot Soccer Kit",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/rhoban/junior-ssl/",
+    url="https://github.com/rhoban/robot-soccer-kit/",
     packages=setuptools.find_packages(),
-    scripts=['jssl-gc'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: Free for non-commercial use",
@@ -44,6 +43,6 @@ setuptools.setup(
         ]
     },
     include_package_data=True,
-    package_data={"": package_files("jssl")},
+    package_data={"": package_files("rsk")},
     python_requires='>=3.6',
 )

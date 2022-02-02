@@ -1,4 +1,4 @@
-# Junior SSL (Omniwheel soccer setup)
+# Robot Soccer Kit
 
 ![Robots](/docs/imgs/cover.jpg)
 

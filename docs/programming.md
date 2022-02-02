@@ -11,16 +11,16 @@ You need to have Python version 3.8 or newer.
     * Or download the [installer for Python 3.9](https://www.python.org/ftp/python/3.9.0/python-3.9.0-amd64.exe)
 * **Ubuntu**: run `sudo apt-get install python3 python3-pip`
 
-### Installing `junior-ssl` package
+### Installing `robot-soccer-kit` package
 
-`junior-ssl` is available as a package you can install using `pip`, simply run the following command:
+`robot-soccer-kit` is available as a package you can install using `pip`, simply run the following command:
 
 * **Client only**
-    * **Windows**: `py -m pip install -U junior-ssl`
-    * **Linux**: `pip install -U junior-ssl`
+    * **Windows**: `py -m pip install -U robot-soccer-kit`
+    * **Linux**: `pip install -U robot-soccer-kit`
 * **With the Game Controller**
-    * **Windows**: `py -m pip install -U junior-ssl[gc]`
-    * **Linux**: `pip install -U junior-ssl[gc]`
+    * **Windows**: `py -m pip install -U robot-soccer-kit[gc]`
+    * **Linux**: `pip install -U robot-soccer-kit[gc]`
 * [Specific instructions and troubleshooting for Linux](linux.md)
 
 ## Game Controller
@@ -30,8 +30,8 @@ and the game referee.
 
 To run it:
 
-* **Windows**: `py -m jssl.game_controller`
-* **Linux**: `jssl-gc` (or `python -m jssl.game_controller`)
+* **Windows**: `py -m rsk.game_controller`
+* **Linux**: `python -m rsk.game_controller`
 
 ## Programming
 
@@ -40,15 +40,15 @@ To run it:
 Here is simple example creating a client for the API and getting the robot green1 kicking:
 
 ```python
-import jssl
+import rsk
 
-with jssl.Client() as client:
+with rsk.Client() as client:
     client.green1.kick()
 ```
 
 Here:
 
-* `import jssl` imports the relevant Python package
+* `import rsk` imports the relevant Python package
 * The `with` statement ensures that the client will be properly closed at the end of the session.
   Especially, it forces the robots to stop moving at the end of the program.
 * `client.green1.kick()` asks the robot `green1` to kick
@@ -56,9 +56,9 @@ Here:
 When creating a client, you can also provide the following arguments:
 
 ```python
-import jssl
+import rsk
 
-with jssl.Client(host='127.0.0.1', 
+with rsk.Client(host='127.0.0.1', 
                 key='') as client:
     client.robots['green'][1].kick()
 
