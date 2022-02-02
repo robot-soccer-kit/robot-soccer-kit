@@ -58,7 +58,7 @@ repository to get it working.
 ## Markers
 
 Markers are ArUco 4x4, you can use tool like [this one](https://chev.me/arucogen/), printed with a scale
-of 8 cm. The ArUco ids are:
+of 8 cm. The PDF provided previously are 1:1 scale. The ArUco ids are:
 
 * 0: field corner 1
 * 1: field corner 2
