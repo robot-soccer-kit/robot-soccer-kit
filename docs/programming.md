@@ -138,7 +138,7 @@ To control the robots, you can use the following functions:
 robot.kick()
 
 # Controls the robots in its own frame, arguments are x speed [m/s],
-# y spoeed [m/s] and rotation speed [rad/s]
+# y speed [m/s] and rotation speed [rad/s]
 
 # Go forward, 0.25 m/s
 robot.control(0.25, 0., 0.)
