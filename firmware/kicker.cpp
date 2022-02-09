@@ -18,6 +18,12 @@ void kicker_tick() {
 
 void kicker_kick(uint8_t power) {
   if ((millis() - last_kick) > CHARGE_TIME) {
+    if (power < 10) {
+      power = 10;
+    }
+    if (power > 100) {
+      power = 100;
+    }
     last_kick = millis();
     digitalWrite(PIN_OPTICAL_EN1, HIGH);
     delay_us((power * KICK_DURATION)/100);
