@@ -140,7 +140,7 @@ class Client:
         self.sub.set_hwm(1)
         self.sub.connect('tcp://'+host+':7557')
         self.sub.subscribe('')
-        self.on_sub = None
+        self.on_update = None
         self.sub_packets = 0
         self.sub_thread = threading.Thread(target=lambda: self.sub_process())
         self.sub_thread.start()
@@ -192,8 +192,8 @@ class Client:
                             self.update_position(
                                 self.robots[team][number], json['markers'][entry])
 
-                if self.on_sub is not None:
-                    self.on_sub(self, dt)
+                if self.on_update is not None:
+                    self.on_update(self, dt)
 
                 self.sub_packets += 1
             except zmq.error.Again:
