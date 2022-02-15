@@ -22,3 +22,7 @@
 #define MOTOR3_PWM2    23
 #define MOTOR3_ENC1    25
 #define MOTOR3_ENC2    26
+
+#define LEDS  27
+
+#define BUZZER 32
