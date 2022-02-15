@@ -2,6 +2,12 @@
 
 #define KICK_PIN 33
 
+// Wheels gear reduction ratio
+#define REDUCTION_RATIO        210
+
+// Cycles per revolution [cycles/turn]
+#define WHEELS_CPR   (7*4*REDUCTION_RATIO)
+
 #define MOTOR1_PWM1    13
 #define MOTOR1_PWM2    14
 #define MOTOR1_ENC1    4
