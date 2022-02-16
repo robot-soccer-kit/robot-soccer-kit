@@ -35,8 +35,8 @@ struct Motor {
   bool enabled;
 };
 
-SHELL_PARAMETER_FLOAT(kp, "Kp", 5000);
-SHELL_PARAMETER_FLOAT(ki, "Ki", 2500);
+SHELL_PARAMETER_FLOAT(kp, "Kp", 1500);
+SHELL_PARAMETER_FLOAT(ki, "Ki", 750);
 
 #define DEG2RAD(x) (x*M_PI/180.0)
 
