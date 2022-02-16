@@ -81,7 +81,7 @@ void motors_servo(void *args) {
       motors[k].error_accumulator += ki * error / 1000.0;
       _bound_pwm(&motors[k].error_accumulator);
 
-      float pwm = -kp * error - motors[k].error_accumulator;
+      float pwm = kp * error + motors[k].error_accumulator;
       _bound_pwm(&pwm);
 
       motors_set_pwm(k, pwm);

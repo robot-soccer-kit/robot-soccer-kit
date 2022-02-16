@@ -6,7 +6,8 @@
 #define REDUCTION_RATIO        210
 
 // Cycles per revolution [cycles/turn]
-#define WHEELS_CPR   (7*4*REDUCTION_RATIO)
+// The minus sign is here because encoder increments in reverted order with respect to pwm
+#define WHEELS_CPR   -(7*4*REDUCTION_RATIO)
 
 // Window size for speed estimation (since we are servoing at 1Khz; this can be considered as the amount of
 // milliseconds used for finite differences speed estimation)
@@ -20,11 +21,11 @@
 #define WHEEL2_ALPHA    -90
 #define WHEEL3_ALPHA    30
 
-// Wheel radius [mm]
-#define MODEL_WHEEL_RADIUS    35
+// Wheel radius [m]
+#define MODEL_WHEEL_RADIUS    0.035
 
-// Distance from robot center to wheel [mm]
-#define MODEL_ROBOT_RADIUS    51.4
+// Distance from robot center to wheel [m]
+#define MODEL_ROBOT_RADIUS    0.0514
 
 // Motors wiring (PWM for the two directions and A/B encoders)
 #define MOTOR1_PWM1    13
