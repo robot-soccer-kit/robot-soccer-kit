@@ -1,7 +1,10 @@
 #include "motors.h"
+#include "utils.h"
+#include "buzzer.h"
 #include "config.h"
 #include "pwm_channels.h"
 #include "shell.h"
+#include "voltage.h"
 #include <Arduino.h>
 #include <ESP32Encoder.h>
 #include <math.h>
@@ -128,19 +131,24 @@ void motors_init() {
 }
 
 void motors_set_pwm(int index, int16_t pwm) {
-  if (index >= 0 && index < 3) {
-    if (pwm < -1024)
-      pwm = -1024;
-    if (pwm > 1024)
-      pwm = 1024;
+  if (voltage_can_move() || pwm == 0) {
+    if (index >= 0 && index < 3) {
+      if (pwm < -1024)
+        pwm = -1024;
+      if (pwm > 1024)
+        pwm = 1024;
 
-    if (pwm > 0) {
-      ledcWrite(motors[index].pwm_chan1, pwm);
-      ledcWrite(motors[index].pwm_chan2, 0);
-    } else {
-      ledcWrite(motors[index].pwm_chan1, 0);
-      ledcWrite(motors[index].pwm_chan2, -pwm);
+      if (pwm > 0) {
+        ledcWrite(motors[index].pwm_chan1, pwm);
+        ledcWrite(motors[index].pwm_chan2, 0);
+      } else {
+        ledcWrite(motors[index].pwm_chan1, 0);
+        ledcWrite(motors[index].pwm_chan2, -pwm);
+      }
     }
+  } else {
+    buzzer_play(MELODY_WARNING);
+    motors_disable();
   }
 }
 
@@ -202,7 +210,7 @@ SHELL_COMMAND(pwms, "Test motor (set pwms)") {
 
 SHELL_COMMAND(servo, "Servo targets") {
   if (argc > 2) {
-    motors_set_speed(atof(argv[0]), atof(argv[1]), atof(argv[2]));
+    motors_set_speed(atof_nonan(argv[0]), atof_nonan(argv[1]), atof_nonan(argv[2]));
   } else {
     shell_stream()->println("Usage: servo [speed1] [speed2] [speed3]");
   }
@@ -210,9 +218,17 @@ SHELL_COMMAND(servo, "Servo targets") {
 
 SHELL_COMMAND(ik, "Servo chassis speed") {
   if (argc > 2) {
-    motors_set_ik(atof(argv[0]), atof(argv[1]), atof(argv[2]));
+    motors_set_ik(atof_nonan(argv[0]), atof_nonan(argv[1]), atof_nonan(argv[2]));
   } else {
     shell_stream()->println("Usage: ik [dx] [dy] [dt]");
+  }
+}
+
+SHELL_COMMAND(joy, "Control with joystick [mm/s] [mm/s] [deg/s]") {
+  if (argc > 2) {
+    motors_set_ik(atof_nonan(argv[0])/1000., atof_nonan(argv[1])/1000., atof_nonan(argv[2])*M_PI/180.);
+  } else {
+    shell_stream()->println("Usage: joy [dx] [dy] [dt]");
   }
 }
 

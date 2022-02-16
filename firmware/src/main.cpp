@@ -1,29 +1,27 @@
-#include <WiFi.h>
-#include "shell.h"
-#include "kicker.h"
-#include "motors.h"
-#include "buzzer.h"
-#include "leds.h"
-#include "voltage.h"
 #include "alert.h"
+#include "com.h"
+#include "buzzer.h"
+#include "kicker.h"
+#include "leds.h"
+#include "motors.h"
+#include "voltage.h"
+#include <WiFi.h>
 
-void setup()
-{
-  shell_init();
+void setup() {
+
   leds_init();
   kicker_init();
   motors_init();
   buzzer_init();
   voltage_init();
+  com_init();
   buzzer_play(MELODY_BOOT);
 }
 
-void loop()
-{
-  shell_tick();
+void loop() {
   buzzer_tick();
   kicker_tick();
   voltage_tick();
   alert_tick();
+  com_tick();
 }
-

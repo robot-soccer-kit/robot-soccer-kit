@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 static int last_measurement = 0;
-static float voltage = 0.0;
+SHELL_PARAMETER_FLOAT(voltage, "Voltage", 0.0);
 static bool voltage_error = false;
 #define DIVIDER_RATIO (VOLTAGE_R2 / ((float)(VOLTAGE_R1 + VOLTAGE_R2)))
 
@@ -23,6 +23,8 @@ static void voltage_sample(bool first = false) {
 void voltage_init() {
   pinMode(VOLTAGE, ANALOG);
   voltage_error = false;
+
+  voltage_sample(true);
 }
 
 // Update the voltage measurement
@@ -46,6 +48,8 @@ void voltage_tick() {
 bool voltage_is_error() { return voltage_error; }
 
 bool voltage_can_move() { return voltage > VOLTAGE_MIN; }
+
+float voltage_value() { return voltage; }
 
 SHELL_COMMAND(volt, "Shows input voltage") {
   shell_stream()->print("Voltage: ");

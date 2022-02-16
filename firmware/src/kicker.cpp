@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kicker.h"
+#include "utils.h"
 #include "config.h"
 #include "shell.h"
 #include <Arduino.h>
@@ -32,7 +33,7 @@ void kicker_kick(float power) {
 SHELL_COMMAND(kick, "Kick") {
   float power = 1.0;
   if (argc) {
-    power = atof(argv[0]);
+    power = atof_nonan(argv[0]);
   }
   kicker_kick(power);
 }
