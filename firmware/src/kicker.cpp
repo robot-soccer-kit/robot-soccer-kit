@@ -29,4 +29,10 @@ void kicker_kick(float power) {
   }
 }
 
-SHELL_COMMAND(kick, "Kick") { kicker_kick(); }
+SHELL_COMMAND(kick, "Kick") {
+  float power = 1.0;
+  if (argc) {
+    power = atof(argv[0]);
+  }
+  kicker_kick(power);
+}
