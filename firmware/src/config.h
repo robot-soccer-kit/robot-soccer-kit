@@ -13,6 +13,9 @@
 #define SPEED_WINDOW 10
 
 // Wheels orientations [deg]
+// In chassis frame, the front axis is the x axis running through the kicker of the robot
+// Those are orientation of (positive PWM) driving direction of the wheels (direct angle from chassis x to the
+// vector)
 #define WHEEL1_ALPHA    150
 #define WHEEL2_ALPHA    -90
 #define WHEEL3_ALPHA    30
@@ -51,3 +54,6 @@
 // Voltage divider resistors (Kohms)
 #define VOLTAGE_R1  20
 #define VOLTAGE_R2  10
+
+// Maximum kick duration (microseconds)
+#define KICK_MAX_DURATION 5000

@@ -1,10 +1,10 @@
+#include "motors.h"
+#include "config.h"
+#include "pwm_channels.h"
+#include "shell.h"
 #include <Arduino.h>
 #include <ESP32Encoder.h>
 #include <math.h>
-#include "motors.h"
-#include "config.h"
-#include "shell.h"
-#include "pwm_channels.h"
 
 struct Motor {
   // Pins for PWM control
@@ -38,21 +38,20 @@ struct Motor {
 SHELL_PARAMETER_FLOAT(kp, "Kp", 1500);
 SHELL_PARAMETER_FLOAT(ki, "Ki", 750);
 
-#define DEG2RAD(x) (x*M_PI/180.0)
+#define DEG2RAD(x) (x * M_PI / 180.0)
 
 struct Motor motors[] = {
-    {MOTOR1_PWM1, MOTOR1_PWM2, MOTOR1_ENC1, MOTOR1_ENC2, 
-      (float)cos(DEG2RAD(WHEEL1_ALPHA)), (float)sin(DEG2RAD(WHEEL1_ALPHA))},
-    {MOTOR2_PWM1, MOTOR2_PWM2, MOTOR2_ENC1, MOTOR2_ENC2, 
-      (float)cos(DEG2RAD(WHEEL2_ALPHA)), (float)sin(DEG2RAD(WHEEL2_ALPHA))},
-    {MOTOR3_PWM1, MOTOR3_PWM2, MOTOR3_ENC1, MOTOR3_ENC2, 
-      (float)cos(DEG2RAD(WHEEL3_ALPHA)), (float)sin(DEG2RAD(WHEEL3_ALPHA))},
+    {MOTOR1_PWM1, MOTOR1_PWM2, MOTOR1_ENC1, MOTOR1_ENC2,
+     (float)cos(DEG2RAD(WHEEL1_ALPHA)), (float)sin(DEG2RAD(WHEEL1_ALPHA))},
+    {MOTOR2_PWM1, MOTOR2_PWM2, MOTOR2_ENC1, MOTOR2_ENC2,
+     (float)cos(DEG2RAD(WHEEL2_ALPHA)), (float)sin(DEG2RAD(WHEEL2_ALPHA))},
+    {MOTOR3_PWM1, MOTOR3_PWM2, MOTOR3_ENC1, MOTOR3_ENC2,
+     (float)cos(DEG2RAD(WHEEL3_ALPHA)), (float)sin(DEG2RAD(WHEEL3_ALPHA))},
 };
 
 SHELL_PARAMETER_INT(n, "Counting", 0);
 
-void _bound_pwm(float *value)
-{
+void _bound_pwm(float *value) {
   if (*value < -1024) {
     *value = -1024;
   }
@@ -151,17 +150,29 @@ void motors_set_pwms(int16_t motor1, int16_t motor2, int16_t motor3) {
   motors_set_pwm(2, motor3);
 }
 
-void motors_set_speed(int index, int speed)
-{
+void motors_set_speed(int index, int speed) {
   motors[index].speed_target = speed;
   motors[index].enabled = true;
 }
 
-void motors_set_speed(float s1, float s2, float s3)
-{
-  motors_set_speed(0, s1);
-  motors_set_speed(1, s2);
-  motors_set_speed(2, s3);
+void motors_set_speed(float w1, float w2, float w3) {
+  motors_set_speed(0, w1);
+  motors_set_speed(1, w2);
+  motors_set_speed(2, w3);
+}
+
+void motors_set_ik(float dx, float dy, float dt) {
+  float w1 = (motors[0].drive_x * dx + motors[0].drive_y * dy +
+              MODEL_ROBOT_RADIUS * dt) /
+             (MODEL_WHEEL_RADIUS);
+  float w2 = (motors[1].drive_x * dx + motors[1].drive_y * dy +
+              MODEL_ROBOT_RADIUS * dt) /
+             (MODEL_WHEEL_RADIUS);
+  float w3 = (motors[2].drive_x * dx + motors[2].drive_y * dy +
+              MODEL_ROBOT_RADIUS * dt) /
+             (MODEL_WHEEL_RADIUS);
+
+  motors_set_speed(w1, w2, w3);
 }
 
 SHELL_COMMAND(motors, "Motors status") {
@@ -191,25 +202,25 @@ SHELL_COMMAND(pwms, "Test motor (set pwms)") {
 
 SHELL_COMMAND(servo, "Servo targets") {
   if (argc > 2) {
-    motors[0].speed_target = atof(argv[0]);
-    motors[0].enabled = true;
-    motors[1].speed_target = atof(argv[1]);
-    motors[1].enabled = true;
-    motors[2].speed_target = atof(argv[2]);
-    motors[2].enabled = true;
+    motors_set_speed(atof(argv[0]), atof(argv[1]), atof(argv[2]));
   } else {
     shell_stream()->println("Usage: servo [speed1] [speed2] [speed3]");
   }
 }
 
-void motors_disable()
-{
+SHELL_COMMAND(ik, "Servo chassis speed") {
+  if (argc > 2) {
+    motors_set_ik(atof(argv[0]), atof(argv[1]), atof(argv[2]));
+  } else {
+    shell_stream()->println("Usage: ik [dx] [dy] [dt]");
+  }
+}
+
+void motors_disable() {
   for (int k = 0; k < 3; k++) {
     motors[k].enabled = false;
   }
   motors_set_pwms(0, 0, 0);
 }
 
-SHELL_COMMAND(em, "Stop") {
-  motors_disable();
-}
+SHELL_COMMAND(em, "Stop") { motors_disable(); }

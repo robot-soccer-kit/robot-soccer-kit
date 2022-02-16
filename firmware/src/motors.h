@@ -9,5 +9,9 @@ void motors_set_pwms(int16_t motor1, int16_t motor2, int16_t motor3);
 
 // Set target speeds for motors (rad/s)
 void motors_set_speed(int index, int speed);
-void motors_set_speed(float s1, float s2, float s3);
+void motors_set_speed(float w1, float w2, float w3);
+
+// Set target chassis speed (m/s, m/s, rad/s)
+void motors_set_ik(float dx, float dy, float dt);
+
 void motors_disable();

@@ -19,5 +19,6 @@ void loop()
 {
   shell_tick();
   buzzer_tick();
+  kicker_tick();
 }
 
