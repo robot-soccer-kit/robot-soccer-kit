@@ -158,12 +158,12 @@ void motors_set_pwms(int16_t motor1, int16_t motor2, int16_t motor3) {
   motors_set_pwm(2, motor3);
 }
 
-void motors_set_speed(int index, int speed) {
+void motors_set_speed(int index, float speed) {
   motors[index].speed_target = speed;
   motors[index].enabled = true;
 }
 
-void motors_set_speed(float w1, float w2, float w3) {
+void motors_set_speeds(float w1, float w2, float w3) {
   motors_set_speed(0, w1);
   motors_set_speed(1, w2);
   motors_set_speed(2, w3);
@@ -180,7 +180,7 @@ void motors_set_ik(float dx, float dy, float dt) {
               MODEL_ROBOT_RADIUS * dt) /
              (MODEL_WHEEL_RADIUS);
 
-  motors_set_speed(w1, w2, w3);
+  motors_set_speeds(w1, w2, w3);
 }
 
 SHELL_COMMAND(motors, "Motors status") {
@@ -210,7 +210,7 @@ SHELL_COMMAND(pwms, "Test motor (set pwms)") {
 
 SHELL_COMMAND(servo, "Servo targets") {
   if (argc > 2) {
-    motors_set_speed(atof_nonan(argv[0]), atof_nonan(argv[1]), atof_nonan(argv[2]));
+    motors_set_speeds(atof_nonan(argv[0]), atof_nonan(argv[1]), atof_nonan(argv[2]));
   } else {
     shell_stream()->println("Usage: servo [speed1] [speed2] [speed3]");
   }
