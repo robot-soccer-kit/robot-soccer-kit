@@ -138,24 +138,31 @@ class Robot:
     def process(self, packet):
         if packet.type == PACKET_MONITOR_DATA:
             self.last_message = time.time()
-
             state = {}
-            state['version'] = packet.readByte()
-            state['time'] = packet.readFloat()
-            state['distance'] = packet.readSmallFloat()
-            state['optics'] = [packet.readByte() for optic in range(7)]
-            state['wheels'] = [packet.readSmallFloat() for w in range(3)]
-            state['yaw'] = packet.readSmallFloat()
-            state['gyro_yaw'] = packet.readSmallFloat()
-            state['pitch'] = packet.readSmallFloat()
-            state['roll'] = packet.readSmallFloat()
-            state['odometry'] = {
-                'x': packet.readShort()/1000.,
-                'y': packet.readShort()/1000.,
-                'yaw': packet.readSmallFloat()
-            }
-            state['battery'] = [packet.readByte()/40., packet.readByte()/40.]
+            version = packet.readByte()
+            state['version'] = version
 
+            if version == 1:
+                state['time'] = packet.readFloat()
+                state['distance'] = packet.readSmallFloat()
+                state['optics'] = [packet.readByte() for optic in range(7)]
+                state['wheels'] = [packet.readSmallFloat() for w in range(3)]
+                state['yaw'] = packet.readSmallFloat()
+                state['gyro_yaw'] = packet.readSmallFloat()
+                state['pitch'] = packet.readSmallFloat()
+                state['roll'] = packet.readSmallFloat()
+                state['odometry'] = {
+                    'x': packet.readShort()/1000.,
+                    'y': packet.readShort()/1000.,
+                    'yaw': packet.readSmallFloat()
+                }
+                state['battery'] = [packet.readByte()/40., packet.readByte()/40.]
+
+            elif version == 2:
+                state['time'] = packet.readFloat()
+                state['battery'] = [packet.readByte()/10.]
+            else:
+                print('Unknown firmware version')
             self.state = state
 
     def add_packet(self, name, packet):
