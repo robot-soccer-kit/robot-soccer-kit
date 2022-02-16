@@ -7,15 +7,17 @@
 
 void setup()
 {
+  shell_init();
   leds_init();
   kicker_init();
-  shell_init();
   motors_init();
   buzzer_init();
+  buzzer_play(MELODY_BOOT);
 }
 
 void loop()
 {
   shell_tick();
+  buzzer_tick();
 }
 

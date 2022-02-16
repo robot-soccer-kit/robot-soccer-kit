@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "pinout.h"
+#include "config.h"
 #include "shell.h"
 
 void kicker_init()
