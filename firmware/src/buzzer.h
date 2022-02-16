@@ -15,3 +15,4 @@
 void buzzer_init();
 void buzzer_play(unsigned int melody, bool repeat=false);
 void buzzer_tick();
+void buzzer_stop();

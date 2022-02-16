@@ -58,3 +58,10 @@
 
 // Maximum kick duration (microseconds)
 #define KICK_MAX_DURATION 5000
+
+// Below this voltage, the robot won't start moving, between USB voltage (see below) and this voltage,
+// the robot will enter alarm mode
+#define VOLTAGE_MIN 7.0
+
+// Below this voltage, the robot is considered operated with USB
+#define VOLTAGE_USB 5.0

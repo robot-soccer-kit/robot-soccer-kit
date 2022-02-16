@@ -3,6 +3,7 @@
 #include "shell.h"
 #include "pwm_channels.h"
 #include "buzzer.h"
+#include "voltage.h"
 
 static int buzzer_pwm_channel;
 
@@ -91,8 +92,13 @@ static void buzzer_enter(struct buzzer_note *note)
 
 void buzzer_play(unsigned int melody_num_, bool repeat)
 {
-    // Avoid playing another melody when there is a battery alert
+    // Avoiding entering a melody that is not over yet
     if (melody_num_ == melody_num && melody != NULL && melody_num != MELODY_CUSTOM){
+        return;
+    }
+
+    // Avoid playing another melody when there is a battery alert
+    if (voltage_is_error() && melody_num_ != MELODY_ALERT && melody_num_ != MELODY_ALERT_FAST) {
         return;
     }
     
