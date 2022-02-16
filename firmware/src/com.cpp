@@ -70,6 +70,7 @@ char bin_on_packet(uint8_t type) {
   }
   return 0;
 }
+
 void bin_on_monitor() {
   bin_stream_begin(BIN_STREAM_USER);
 
@@ -81,7 +82,9 @@ void bin_on_monitor() {
   bin_stream_end();
 }
 
-void bin_stream_send(uint8_t c) { shell_stream()->write(c); }
+void bin_stream_send(uint8_t c) {
+  shell_stream()->write(c);
+}
 
 void com_init() {
   // The robot name will be RSK

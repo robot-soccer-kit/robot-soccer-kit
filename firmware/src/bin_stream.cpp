@@ -1,16 +1,11 @@
 #include "bin_stream.h"
 #include "shell.h"
-#include <stdio.h>
 #include <Arduino.h>
+#include <stdio.h>
 
 static uint32_t monitor_dt = 0;
 static uint32_t monitor_last = 0;
 static struct bin_stream_packet in = {0}, out = {0};
-
-SHELL_COMMAND(dbg, "Debug")
-{
-  shell_stream()->println(monitor_dt);
-}
 
 void bin_stream_ack(int code) {
   if (code != BIN_NO_ACK) {
@@ -21,21 +16,22 @@ void bin_stream_ack(int code) {
 }
 
 void bin_stream_process() {
-  switch (in.type) {
-  case BIN_STREAM_MONITOR:
-    // Sets the monitor frequency (will call bin_on_monitor periodically)
-    monitor_dt = (1000 / bin_stream_read_int());
-    if (monitor_dt < 10) {
-      monitor_dt = 10;
+  if (in.type == BIN_STREAM_MONITOR) {
+    uint8_t frequency = bin_stream_read_int();
+    if (frequency == 0) {
+      monitor_dt = 0;
+    } else {
+      monitor_dt = (1000 / frequency);
+      if (monitor_dt < 10) {
+        monitor_dt = 10;
+      }
     }
-    monitor_last = millis();
-    break;
-  default:
+    bin_on_monitor();
+  } else {
     // Call user logic
     if (!bin_on_packet(in.type)) {
       bin_stream_ack(BIN_UNKNOWN_COMMAND);
     }
-    break;
   }
 }
 
