@@ -23,7 +23,7 @@
             <img src="static/imgs/ball.png" width="32" />
             Robot Soccer Kit
           </a>
-
+          
           <ul class="navbar-nav">
             <li class="nav-item rounded nav-tab" rel="vision">
               <a class="nav-link active" aria-current="page" href="#">
@@ -56,13 +56,11 @@
               </a>
             </li>
           </ul>
-
-          <ul class="navbar-nav">
-            <li class="nav-item">
-              <a class="nav-link emergency bg-danger" href="#">
-                <i class="bi bi-slash-circle"></i>
-                Emergency
-              </a>
+          
+          <ul class="navbar-nav p-2">
+            <li class="style_fps rounded">
+              <span class="navbar-text p-2 fps">
+              </span>
             </li>
           </ul>
         </div>
@@ -111,8 +109,6 @@
                     <b>Camera detection settings</b>
                 </div>
                 <div class="p-2 card-body">
-                  <b>FPS</b>
-                  <kbd class="fps"></kbd>
                   <span class="calibrated"></span>
 
                   <hr/>
@@ -126,7 +122,7 @@
                   </div>
 
                   <hr/>
-                  <span class="btn btn-danger stop-capture">
+                  <span class="btn btn-warning stop-capture">
                     <i class="bi bi-stop-fill"></i>&nbsp;
                     Stop
                   </span>
@@ -212,8 +208,9 @@
         </div>
       </div>
     <div class="buttons p-2">
-      <span class="reload btn btn-danger">
-        Reload
+      <span class="reload btn emergency btn-danger">
+        <i class="bi bi-slash-circle"></i>
+        Emergency
       </span>
     </div>
     </body>

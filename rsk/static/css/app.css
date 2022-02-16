@@ -2,6 +2,11 @@ body {
     font-size:20px;
 }
 
+.style_fps {
+    background-color:#333;
+    margin-left: 20px; 
+  }
+
 .card {
     filter: drop-shadow(-3px 3px 3px #ccc);
     margin-bottom:20px;
@@ -67,3 +72,4 @@ body {
 .detection-wrapper {
     min-height:150px;
 }
+

@@ -211,7 +211,7 @@ class Video:
     def getVideo(self, with_image):
         data = {
             'running': self.capture is not None,
-            'fps': round(1/self.period, 2) if self.period is not None else 0,
+            'fps': round(1/self.period, 1) if self.period is not None else 0,
             'detection': self.detection.getDetection(),
         }
 
