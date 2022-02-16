@@ -87,6 +87,10 @@ void motors_servo(void *args) {
       float pwm = kp * error + motors[k].error_accumulator;
       _bound_pwm(&pwm);
 
+      if (fabs(motors[k].speed_target) < 1e-3) {
+        pwm = 0.0;
+      }
+
       motors_set_pwm(k, pwm);
     } else {
       motors[k].error_accumulator = 0;
