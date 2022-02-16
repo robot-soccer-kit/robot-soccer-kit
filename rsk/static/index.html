@@ -49,10 +49,10 @@
                 Control
               </a>
             </li>
-            <li class="nav-item rounded nav-tab" rel="arbitration">
+            <li class="nav-item rounded nav-tab" rel="referee">
               <a class="nav-link" href="#">
                 <i class="bi bi-binoculars"></i>&nbsp;
-                Arbitration
+                Referee
               </a>
             </li>
           </ul>
@@ -95,37 +95,43 @@
             </div>  
           </div>
         </div>
+
+        
         <div class="vision-show-running">
-          <div class="camera-area m-2 d-flex">
-            <div class="w-50 m-2">
-              <img class="card camera-image w-100" />
-            </div>
-
-            <div class="card w-50 m-2">
-              <div class="card-header">
-                  <b>Camera setection settings</b>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="camera-area d-flex">
+                  <img class="card camera-image w-100" />
               </div>
-              <div class="p-2 card-body">
-                <b>FPS</b>
-                <kbd class="fps"></kbd>
-                <span class="calibrated"></span>
-
-                <hr/>
-
-                <div class="camera-settings">
-                </div>
-
-                <hr/>
-                <div class="detection-wrapper">
-                <code class="detection"></code>
-                </div>
-
-                <hr/>
-                <span class="btn btn-danger stop-capture">
-                  <i class="bi bi-stop-fill"></i>&nbsp;
-                  Stop
-                </span>
             </div>
+
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header">
+                    <b>Camera detection settings</b>
+                </div>
+                <div class="p-2 card-body">
+                  <b>FPS</b>
+                  <kbd class="fps"></kbd>
+                  <span class="calibrated"></span>
+
+                  <hr/>
+
+                  <div class="camera-settings">
+                  </div>
+
+                  <hr/>
+                  <div class="detection-wrapper">
+                  <code class="detection"></code>
+                  </div>
+
+                  <hr/>
+                  <span class="btn btn-danger stop-capture">
+                    <i class="bi bi-stop-fill"></i>&nbsp;
+                    Stop
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -173,8 +179,38 @@
         <div class="teams"></div>
       </div>
 
-    </div>
+      <div class="page page-referee">
+        <div class="referee"></div>
 
+        <div class="vision-hide-running">
+          <div class="alert alert-warning d-flex align-items-center" role="alert">
+            <div>
+              <i class="bi bi-exclamation-triangle-fill"></i>&nbsp;
+              Detection algorithm is not running, please go to <a href="#" class="alert-link goto-tab" rel="vision">Vision tab</a> to start it.
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="vision-show-running">
+              <div class="camera-area d-flex">
+                  <img class="card camera-image w-100" />
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <b>TEST arbitrage</b>
+              </div>
+              <div class="p-2 card-body">
+                <b>Hello World</b>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     <div class="buttons p-2">
       <span class="reload btn btn-danger">
         Reload
