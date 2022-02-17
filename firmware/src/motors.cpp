@@ -6,8 +6,11 @@
 #include "shell.h"
 #include "voltage.h"
 #include <Arduino.h>
+#include <Ticker.h>
 #include <ESP32Encoder.h>
 #include <math.h>
+
+Ticker servoTicker;
 
 struct Motor {
   // Pins for PWM control
@@ -63,7 +66,7 @@ void _bound_pwm(float *value) {
   }
 }
 
-void motors_servo(void *args) {
+void motors_servo() {
   for (int k = 0; k < 3; k++) {
     int64_t count = motors[k].encoder.getCount();
     motors[k].encoder_window_index += 1;
@@ -125,13 +128,7 @@ void motors_init() {
   }
 
   // Configuring a 1000 Hz timer
-  esp_timer_create_args_t periodic_timer_args;
-  periodic_timer_args.callback = &motors_servo;
-  periodic_timer_args.name = "servo";
-
-  esp_timer_handle_t periodic_timer;
-  ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, 1000));
+  servoTicker.attach_ms(1, motors_servo);
 }
 
 void motors_set_pwm(int index, int16_t pwm) {
