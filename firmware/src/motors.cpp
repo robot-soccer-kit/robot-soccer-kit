@@ -1,13 +1,13 @@
 #include "motors.h"
-#include "utils.h"
 #include "buzzer.h"
 #include "config.h"
 #include "pwm_channels.h"
 #include "shell.h"
+#include "utils.h"
 #include "voltage.h"
 #include <Arduino.h>
-#include <Ticker.h>
 #include <ESP32Encoder.h>
+#include <Ticker.h>
 #include <math.h>
 
 Ticker servoTicker;
@@ -181,6 +181,14 @@ void motors_set_ik(float dx, float dy, float dt) {
               MODEL_ROBOT_RADIUS * dt) /
              (MODEL_WHEEL_RADIUS);
 
+  float max_speed = fmax(fmax(fabs(w1), fabs(w2)), fabs(w3));
+  if (max_speed > MAX_WHEEL_SPEEDS) {
+    float ratio = MAX_WHEEL_SPEEDS / max_speed;
+    w1 *= ratio;
+    w2 *= ratio;
+    w3 *= ratio;
+  }
+
   motors_set_speeds(w1, w2, w3);
 }
 
@@ -211,7 +219,8 @@ SHELL_COMMAND(pwms, "Test motor (set pwms)") {
 
 SHELL_COMMAND(servo, "Servo targets") {
   if (argc > 2) {
-    motors_set_speeds(atof_nonan(argv[0]), atof_nonan(argv[1]), atof_nonan(argv[2]));
+    motors_set_speeds(atof_nonan(argv[0]), atof_nonan(argv[1]),
+                      atof_nonan(argv[2]));
   } else {
     shell_stream()->println("Usage: servo [speed1] [speed2] [speed3]");
   }
@@ -219,7 +228,8 @@ SHELL_COMMAND(servo, "Servo targets") {
 
 SHELL_COMMAND(ik, "Servo chassis speed") {
   if (argc > 2) {
-    motors_set_ik(atof_nonan(argv[0]), atof_nonan(argv[1]), atof_nonan(argv[2]));
+    motors_set_ik(atof_nonan(argv[0]), atof_nonan(argv[1]),
+                  atof_nonan(argv[2]));
   } else {
     shell_stream()->println("Usage: ik [dx] [dy] [dt]");
   }
@@ -227,7 +237,8 @@ SHELL_COMMAND(ik, "Servo chassis speed") {
 
 SHELL_COMMAND(joy, "Control with joystick [mm/s] [mm/s] [deg/s]") {
   if (argc > 2) {
-    motors_set_ik(atof_nonan(argv[0])/1000., atof_nonan(argv[1])/1000., atof_nonan(argv[2])*M_PI/180.);
+    motors_set_ik(atof_nonan(argv[0]) / 1000., atof_nonan(argv[1]) / 1000.,
+                  atof_nonan(argv[2]) * M_PI / 180.);
   } else {
     shell_stream()->println("Usage: joy [dx] [dy] [dt]");
   }

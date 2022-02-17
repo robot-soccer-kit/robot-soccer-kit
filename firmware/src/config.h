@@ -27,6 +27,9 @@
 // Distance from robot center to wheel [m]
 #define MODEL_ROBOT_RADIUS    0.0514
 
+// Maximum wheels speed [rad/s]
+#define MAX_WHEEL_SPEEDS 8
+
 // Motors wiring (PWM for the two directions and A/B encoders)
 #define MOTOR1_PWM1    13
 #define MOTOR1_PWM2    14
