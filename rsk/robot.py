@@ -143,7 +143,7 @@ class Robot:
             version = packet.readByte()
             state['version'] = version
 
-            if version == 1:
+            if version == 11:
                 state['time'] = packet.readFloat()
                 state['distance'] = packet.readSmallFloat()
                 state['optics'] = [packet.readByte() for optic in range(7)]
@@ -163,7 +163,7 @@ class Robot:
                 state['time'] = packet.readFloat()
                 state['battery'] = [packet.readByte()/10.]
             else:
-                print('Unknown firmware version')
+                print('Unknown firmware version %d' % version)
             self.state = state
 
     def add_packet(self, name, packet):
