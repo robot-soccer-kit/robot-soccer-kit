@@ -55,9 +55,13 @@ function robots_initialize(backend)
 
             // Battery level
             if ('battery' in infos.state) {
-                for (let k=0; k<=1; k++) {
+                for (let k in infos.state.battery) {
                     let voltage = infos.state.battery[k];
-                    html += 'battery '+(k+1)+': '+voltage+'V';
+                    html += 'battery';
+                    if (infos.state.battery.length > 1) {
+                        html += ' '+(parseInt(k)+1);
+                    }
+                    html += ': '+voltage+'V';
                     if (voltage < 3.5) {
                         html += ' '+warning+' <span class="text-warning">low voltage</span>';
                         hasWarning = true;

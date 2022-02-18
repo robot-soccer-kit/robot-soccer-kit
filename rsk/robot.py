@@ -92,6 +92,7 @@ class Robot:
         self.init = True
         self.running = True
         self.last_message = None
+        self.last_sent_message = None
         self.last_init = None
         self.state = {}
         self.moved = False
@@ -138,24 +139,31 @@ class Robot:
     def process(self, packet):
         if packet.type == PACKET_MONITOR_DATA:
             self.last_message = time.time()
-
             state = {}
-            state['version'] = packet.readByte()
-            state['time'] = packet.readFloat()
-            state['distance'] = packet.readSmallFloat()
-            state['optics'] = [packet.readByte() for optic in range(7)]
-            state['wheels'] = [packet.readSmallFloat() for w in range(3)]
-            state['yaw'] = packet.readSmallFloat()
-            state['gyro_yaw'] = packet.readSmallFloat()
-            state['pitch'] = packet.readSmallFloat()
-            state['roll'] = packet.readSmallFloat()
-            state['odometry'] = {
-                'x': packet.readShort()/1000.,
-                'y': packet.readShort()/1000.,
-                'yaw': packet.readSmallFloat()
-            }
-            state['battery'] = [packet.readByte()/40., packet.readByte()/40.]
+            version = packet.readByte()
+            state['version'] = version
 
+            if version == 11:
+                state['time'] = packet.readFloat()
+                state['distance'] = packet.readSmallFloat()
+                state['optics'] = [packet.readByte() for optic in range(7)]
+                state['wheels'] = [packet.readSmallFloat() for w in range(3)]
+                state['yaw'] = packet.readSmallFloat()
+                state['gyro_yaw'] = packet.readSmallFloat()
+                state['pitch'] = packet.readSmallFloat()
+                state['roll'] = packet.readSmallFloat()
+                state['odometry'] = {
+                    'x': packet.readShort()/1000.,
+                    'y': packet.readShort()/1000.,
+                    'yaw': packet.readSmallFloat()
+                }
+                state['battery'] = [packet.readByte()/40., packet.readByte()/40.]
+
+            elif version == 2:
+                state['time'] = packet.readFloat()
+                state['battery'] = [packet.readByte()/10.]
+            else:
+                print('Unknown firmware version %d' % version)
             self.state = state
 
     def add_packet(self, name, packet):
@@ -228,11 +236,12 @@ class Robot:
                     time.sleep(0.1)
                     self.bt.write(b"rhock\r\nrhock\r\nrhock\r\n")
                     time.sleep(0.1)
-                    self.monitor(1)
+                    self.monitor(5)
                     self.control(0, 0, 0)
                     self.beep(880, 250)
                     self.applyLeds()
                     self.last_init = time.time()
+                    self.last_sent_message = None
                     state = 0
                     type_, length, payload = 0, 0, bytearray()
 
@@ -266,9 +275,15 @@ class Robot:
                             type_, length, payload = 0, 0, bytearray()
                         state = 0
 
+                # Asking periodically for robot monitor status
+                if self.last_sent_message is None or time.time() - self.last_sent_message > 1.0:
+                    self.monitor(1)
+
                 # Sending pending packets
                 packet = self.pop_packet()
                 while packet is not None:
+                    self.last_sent_message = time.time()
+                    self.last_sent_message = time.time()
                     if self.bt is not None and self.bt.is_open:
                         self.bt.write(packet.toRaw())
                     packet = self.pop_packet()
