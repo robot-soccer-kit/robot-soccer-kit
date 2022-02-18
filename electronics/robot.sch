@@ -285,23 +285,6 @@ reflow soldering</description>
 <text x="0" y="2.794" size="0.4064" layer="27" ratio="6" rot="SR0" align="center">&gt;VALUE</text>
 <circle x="-0.762" y="1.778" radius="0.254" width="0.127" layer="21"/>
 </package>
-<package name="L202021MA04Q">
-<pad name="P6" x="0" y="4.5974" drill="2.032" shape="square"/>
-<pad name="P5" x="0" y="0" drill="2.032" shape="square"/>
-<pad name="P4" x="0" y="-4.5974" drill="2.032" shape="square"/>
-<pad name="P3" x="6.9088" y="4.5974" drill="2.032" shape="square"/>
-<pad name="P2" x="6.9088" y="0" drill="2.032" shape="square"/>
-<pad name="P1" x="6.9088" y="-4.5974" drill="2.032" shape="square"/>
-<wire x1="-3.81" y1="10.16" x2="11.43" y2="10.16" width="0.127" layer="21"/>
-<wire x1="11.43" y1="10.16" x2="11.43" y2="5.08" width="0.127" layer="21"/>
-<wire x1="11.43" y1="5.08" x2="11.43" y2="0" width="0.127" layer="21"/>
-<wire x1="11.43" y1="0" x2="11.43" y2="-10.16" width="0.127" layer="21"/>
-<wire x1="11.43" y1="-10.16" x2="-3.81" y2="-10.16" width="0.127" layer="21"/>
-<wire x1="-3.81" y1="-10.16" x2="-3.81" y2="10.16" width="0.127" layer="21"/>
-<wire x1="11.43" y1="5.08" x2="20.32" y2="5.08" width="0.127" layer="21"/>
-<wire x1="20.32" y1="5.08" x2="20.32" y2="0" width="0.127" layer="21"/>
-<wire x1="20.32" y1="0" x2="11.43" y2="0" width="0.127" layer="21"/>
-</package>
 <package name="TRACOPOWER">
 <wire x1="0" y1="0" x2="11.7" y2="0" width="0.127" layer="21"/>
 <wire x1="11.7" y1="0" x2="11.7" y2="7.6" width="0.127" layer="21"/>
@@ -472,6 +455,18 @@ http://www.ftdichip.com/Documents/DataSheets/DS_FT232R_v104.pdf</description>
 <rectangle x1="-2.7432" y1="-3.6576" x2="-1.8796" y2="-1.8034" layer="51"/>
 <rectangle x1="1.8796" y1="-3.6576" x2="2.7432" y2="-1.8034" layer="51"/>
 </package>
+<package name="L102011ML04Q">
+<pad name="P$1" x="0" y="0" drill="2" shape="square"/>
+<pad name="P$2" x="0" y="4.75" drill="2" shape="square"/>
+<pad name="P$3" x="0" y="9.5" drill="2" shape="square"/>
+<wire x1="-5.24" y1="-5.08" x2="4.76" y2="-5.08" width="0.127" layer="21"/>
+<wire x1="4.76" y1="-5.08" x2="4.76" y2="14.92" width="0.127" layer="21"/>
+<wire x1="4.76" y1="14.92" x2="-5.24" y2="14.92" width="0.127" layer="21"/>
+<wire x1="-5.24" y1="14.92" x2="-5.24" y2="-5.08" width="0.127" layer="21"/>
+<wire x1="-5" y1="-1" x2="-14" y2="-1" width="0.127" layer="21"/>
+<wire x1="-14" y1="-1" x2="-14" y2="4" width="0.127" layer="21"/>
+<wire x1="-14" y1="4" x2="-5" y2="4" width="0.127" layer="21"/>
+</package>
 </packages>
 <symbols>
 <symbol name="NPN">
@@ -518,23 +513,6 @@ http://www.ftdichip.com/Documents/DataSheets/DS_FT232R_v104.pdf</description>
 <pin name="IN" x="-22.86" y="7.62" length="middle"/>
 <pin name="GND" x="-7.62" y="-2.54" length="middle" rot="R90"/>
 <pin name="OUT" x="7.62" y="7.62" length="middle" rot="R180"/>
-</symbol>
-<symbol name="DPDT">
-<wire x1="-10.16" y1="0" x2="-5.08" y2="0" width="0.254" layer="94"/>
-<wire x1="-5.08" y1="0" x2="7.62" y2="2.54" width="0.254" layer="94"/>
-<wire x1="10.16" y1="2.54" x2="17.78" y2="2.54" width="0.254" layer="94"/>
-<wire x1="10.16" y1="-2.54" x2="17.78" y2="-2.54" width="0.254" layer="94"/>
-<wire x1="-10.16" y1="-12.7" x2="-5.08" y2="-12.7" width="0.254" layer="94"/>
-<wire x1="-5.08" y1="-12.7" x2="7.62" y2="-10.16" width="0.254" layer="94"/>
-<wire x1="10.16" y1="-10.16" x2="17.78" y2="-10.16" width="0.254" layer="94"/>
-<wire x1="10.16" y1="-15.24" x2="17.78" y2="-15.24" width="0.254" layer="94"/>
-<wire x1="2.54" y1="5.08" x2="2.54" y2="-17.78" width="0.254" layer="94" style="shortdash"/>
-<pin name="P$1" x="-15.24" y="0" length="middle"/>
-<pin name="P$2" x="-15.24" y="-12.7" length="middle"/>
-<pin name="P$3" x="22.86" y="2.54" length="middle" rot="R180"/>
-<pin name="P$4" x="22.86" y="-2.54" length="middle" rot="R180"/>
-<pin name="P$5" x="22.86" y="-10.16" length="middle" rot="R180"/>
-<pin name="P$6" x="22.86" y="-15.24" length="middle" rot="R180"/>
 </symbol>
 <symbol name="IGFET-EN-GDS">
 <wire x1="-2.54" y1="-2.54" x2="-1.2192" y2="-2.54" width="0.1524" layer="94"/>
@@ -620,6 +598,15 @@ http://www.ftdichip.com/Documents/DataSheets/DS_FT232R_v104.pdf</description>
 <pin name="OUT" x="10.16" y="0" length="short" direction="out" rot="R180"/>
 <pin name="GND" x="0" y="-7.62" visible="pad" length="short" direction="pwr" rot="R90"/>
 </symbol>
+<symbol name="SPDT">
+<wire x1="-10.16" y1="0" x2="-2.54" y2="0" width="0.254" layer="94"/>
+<wire x1="-2.54" y1="0" x2="7.62" y2="5.08" width="0.254" layer="94"/>
+<wire x1="10.16" y1="5.08" x2="12.7" y2="5.08" width="0.254" layer="94"/>
+<wire x1="10.16" y1="0" x2="12.7" y2="0" width="0.254" layer="94"/>
+<pin name="COM" x="-15.24" y="0" length="middle"/>
+<pin name="A" x="17.78" y="5.08" length="middle" rot="R180"/>
+<pin name="B" x="17.78" y="0" length="middle" rot="R180"/>
+</symbol>
 </symbols>
 <devicesets>
 <deviceset name="NPN">
@@ -686,26 +673,6 @@ http://www.ftdichip.com/Documents/DataSheets/DS_FT232R_v104.pdf</description>
 <connect gate="G$1" pin="OA" pad="1"/>
 <connect gate="G$1" pin="OB" pad="4"/>
 <connect gate="G$1" pin="VCC" pad="2 3"/>
-</connects>
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
-<deviceset name="DPDT">
-<gates>
-<gate name="G$1" symbol="DPDT" x="-5.08" y="5.08"/>
-</gates>
-<devices>
-<device name="" package="L202021MA04Q">
-<connects>
-<connect gate="G$1" pin="P$1" pad="P2"/>
-<connect gate="G$1" pin="P$2" pad="P5"/>
-<connect gate="G$1" pin="P$3" pad="P1"/>
-<connect gate="G$1" pin="P$4" pad="P3"/>
-<connect gate="G$1" pin="P$5" pad="P4"/>
-<connect gate="G$1" pin="P$6" pad="P6"/>
 </connects>
 <technologies>
 <technology name=""/>
@@ -858,6 +825,23 @@ http://www.ftdichip.com/Documents/DataSheets/DS_FT232R_v104.pdf</description>
 <connect gate="G$1" pin="GND" pad="2"/>
 <connect gate="G$1" pin="IN" pad="1"/>
 <connect gate="G$1" pin="OUT" pad="3"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="L102011ML04Q">
+<gates>
+<gate name="G$1" symbol="SPDT" x="-2.54" y="0"/>
+</gates>
+<devices>
+<device name="" package="L102011ML04Q">
+<connects>
+<connect gate="G$1" pin="A" pad="P$1"/>
+<connect gate="G$1" pin="B" pad="P$3"/>
+<connect gate="G$1" pin="COM" pad="P$2"/>
 </connects>
 <technologies>
 <technology name=""/>
@@ -16448,9 +16432,6 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <part name="J5" library="jst" deviceset="B6B-ZR" device="">
 <attribute name="FARNELL" value="9491805"/>
 </part>
-<part name="S1" library="rhoban" deviceset="DPDT" device="">
-<attribute name="FARNELL" value="2435159"/>
-</part>
 <part name="REG1" library="rhoban" deviceset="REG_5V" device="">
 <attribute name="FARNELL" value="1696320"/>
 </part>
@@ -16618,6 +16599,20 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <attribute name="PROD_ID" value="CAP-08469"/>
 <attribute name="VALUE" value="0.33µF"/>
 </part>
+<part name="Q7" library="rhoban" deviceset="IRLMS2002TRPBF" device="">
+<attribute name="FARNELL" value="2577180RL"/>
+</part>
+<part name="R18" library="SparkFun-Resistors" deviceset="0.3OHM" device="-0805-1/8W-1%" value="56K">
+<attribute name="FARNELL" value="2074486"/>
+<attribute name="PROD_ID" value="RES-11622"/>
+<attribute name="VALUE" value="0.3"/>
+</part>
+<part name="C17" library="SparkFun-Capacitors" deviceset="0.33UF/330NF" device="-0805-50V-10%" value="1µF">
+<attribute name="FARNELL" value="3010154"/>
+<attribute name="PROD_ID" value="CAP-08469"/>
+<attribute name="VALUE" value="0.33µF"/>
+</part>
+<part name="U$1" library="rhoban" deviceset="L102011ML04Q" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -17038,9 +17033,6 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <instance part="R5" gate="G$1" x="-68.58" y="-27.94" rot="R90">
 <attribute name="FARNELL" x="-68.58" y="-27.94" size="1.778" layer="96" rot="R90" display="off"/>
 </instance>
-<instance part="S1" gate="G$1" x="-50.8" y="38.1">
-<attribute name="FARNELL" x="-50.8" y="38.1" size="1.778" layer="96" display="off"/>
-</instance>
 <instance part="REG1" gate="G$1" x="7.62" y="-33.02" smashed="yes">
 <attribute name="FARNELL" x="7.62" y="-33.02" size="1.778" layer="96" display="off"/>
 </instance>
@@ -17075,20 +17067,30 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <instance part="C8" gate="G$1" x="-2.54" y="38.1">
 <attribute name="FARNELL" x="-2.54" y="38.1" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="U$25" gate="G$1" x="63.5" y="-20.32">
-<attribute name="FARNELL" x="63.5" y="-20.32" size="1.778" layer="96" display="off"/>
+<instance part="U$25" gate="G$1" x="71.12" y="-25.4">
+<attribute name="FARNELL" x="71.12" y="-25.4" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="GND17" gate="1" x="63.5" y="-10.16"/>
-<instance part="D3" gate="G$1" x="63.5" y="-40.64">
-<attribute name="FARNELL" x="63.5" y="-40.64" size="1.778" layer="96" display="off"/>
+<instance part="GND17" gate="1" x="76.2" y="-10.16"/>
+<instance part="D3" gate="G$1" x="71.12" y="-45.72">
+<attribute name="FARNELL" x="71.12" y="-45.72" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="C13" gate="G$1" x="63.5" y="-2.54">
-<attribute name="FARNELL" x="63.5" y="-2.54" size="1.778" layer="96" display="off"/>
+<instance part="C13" gate="G$1" x="76.2" y="-2.54">
+<attribute name="FARNELL" x="76.2" y="-2.54" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="GND1" gate="1" x="53.34" y="-10.16"/>
-<instance part="C14" gate="G$1" x="53.34" y="-2.54">
-<attribute name="FARNELL" x="53.34" y="-2.54" size="1.778" layer="96" display="off"/>
+<instance part="GND1" gate="1" x="66.04" y="-10.16"/>
+<instance part="C14" gate="G$1" x="66.04" y="-2.54">
+<attribute name="FARNELL" x="66.04" y="-2.54" size="1.778" layer="96" display="off"/>
 </instance>
+<instance part="Q7" gate="G$1" x="27.94" y="5.08">
+<attribute name="FARNELL" x="27.94" y="5.08" size="1.778" layer="96" display="off"/>
+</instance>
+<instance part="R18" gate="G$1" x="7.62" y="-2.54" rot="R90">
+<attribute name="FARNELL" x="7.62" y="-2.54" size="1.778" layer="96" rot="R90" display="off"/>
+</instance>
+<instance part="C17" gate="G$1" x="7.62" y="7.62">
+<attribute name="FARNELL" x="7.62" y="7.62" size="1.778" layer="96" display="off"/>
+</instance>
+<instance part="U$1" gate="G$1" x="-50.8" y="38.1"/>
 </instances>
 <busses>
 </busses>
@@ -17115,17 +17117,17 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </segment>
 <segment>
 <pinref part="U$25" gate="G$1" pin="GND"/>
-<wire x1="63.5" y1="-27.94" x2="63.5" y2="-33.02" width="0.1524" layer="91"/>
-<label x="63.5" y="-33.02" size="1.27" layer="95" xref="yes"/>
+<wire x1="71.12" y1="-33.02" x2="71.12" y2="-38.1" width="0.1524" layer="91"/>
+<label x="71.12" y="-38.1" size="1.27" layer="95" xref="yes"/>
 </segment>
 <segment>
 <pinref part="GND17" gate="1" pin="GND"/>
-<wire x1="63.5" y1="-7.62" x2="63.5" y2="-5.08" width="0.1524" layer="91"/>
+<wire x1="76.2" y1="-7.62" x2="76.2" y2="-5.08" width="0.1524" layer="91"/>
 <pinref part="C13" gate="G$1" pin="2"/>
 </segment>
 <segment>
 <pinref part="GND1" gate="1" pin="GND"/>
-<wire x1="53.34" y1="-7.62" x2="53.34" y2="-5.08" width="0.1524" layer="91"/>
+<wire x1="66.04" y1="-7.62" x2="66.04" y2="-5.08" width="0.1524" layer="91"/>
 <pinref part="C14" gate="G$1" pin="2"/>
 </segment>
 </net>
@@ -17136,18 +17138,25 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <label x="-17.78" y="-25.4" size="1.27" layer="95" rot="R180" xref="yes"/>
 </segment>
 <segment>
-<pinref part="S1" gate="G$1" pin="P$4"/>
 <label x="-22.86" y="35.56" size="1.27" layer="95" rot="R90" xref="yes"/>
-<wire x1="-27.94" y1="35.56" x2="-20.32" y2="35.56" width="0.1524" layer="91"/>
+<wire x1="-30.48" y1="35.56" x2="-20.32" y2="35.56" width="0.1524" layer="91"/>
 <pinref part="R7" gate="G$1" pin="2"/>
 <pinref part="R9" gate="G$1" pin="1"/>
 <wire x1="-20.32" y1="35.56" x2="-15.24" y2="35.56" width="0.1524" layer="91"/>
 <junction x="-20.32" y="35.56"/>
+<wire x1="-30.48" y1="35.56" x2="-30.48" y2="43.18" width="0.1524" layer="91"/>
+<pinref part="U$1" gate="G$1" pin="A"/>
+<wire x1="-30.48" y1="43.18" x2="-33.02" y2="43.18" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="R3" gate="G$1" pin="2"/>
 <wire x1="-68.58" y1="-10.16" x2="-68.58" y2="-7.62" width="0.1524" layer="91"/>
 <label x="-68.58" y="-7.62" size="1.27" layer="95" xref="yes"/>
+</segment>
+<segment>
+<pinref part="C17" gate="G$1" pin="1"/>
+<wire x1="7.62" y1="12.7" x2="7.62" y2="15.24" width="0.1524" layer="91"/>
+<label x="7.62" y="15.24" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
 <net name="VCC" class="1">
@@ -17158,12 +17167,12 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </segment>
 <segment>
 <pinref part="U$25" gate="G$1" pin="IN"/>
-<wire x1="53.34" y1="-20.32" x2="43.18" y2="-20.32" width="0.1524" layer="91"/>
-<label x="43.18" y="-20.32" size="1.27" layer="95" rot="R90" xref="yes"/>
+<wire x1="60.96" y1="-25.4" x2="50.8" y2="-25.4" width="0.1524" layer="91"/>
+<label x="50.8" y="-25.4" size="1.27" layer="95" rot="R90" xref="yes"/>
 </segment>
 <segment>
-<wire x1="66.04" y1="-40.64" x2="76.2" y2="-40.64" width="0.1524" layer="91"/>
-<label x="76.2" y="-40.64" size="1.27" layer="95" xref="yes"/>
+<wire x1="73.66" y1="-45.72" x2="83.82" y2="-45.72" width="0.1524" layer="91"/>
+<label x="83.82" y="-45.72" size="1.27" layer="95" xref="yes"/>
 <pinref part="D3" gate="G$1" pin="C"/>
 </segment>
 </net>
@@ -17194,7 +17203,6 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <wire x1="0" y1="7.62" x2="0" y2="25.4" width="0.1524" layer="91"/>
 <wire x1="-20.32" y1="7.62" x2="-25.4" y2="7.62" width="0.1524" layer="91"/>
 <wire x1="-25.4" y1="7.62" x2="-25.4" y2="27.94" width="0.1524" layer="91"/>
-<pinref part="S1" gate="G$1" pin="P$5"/>
 <wire x1="-25.4" y1="27.94" x2="-27.94" y2="27.94" width="0.1524" layer="91"/>
 <pinref part="C7" gate="G$1" pin="2"/>
 </segment>
@@ -17208,12 +17216,22 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <wire x1="58.42" y1="40.64" x2="60.96" y2="40.64" width="0.1524" layer="91"/>
 <label x="60.96" y="40.64" size="1.27" layer="95" xref="yes"/>
 </segment>
+<segment>
+<pinref part="Q7" gate="G$1" pin="S"/>
+<wire x1="33.02" y1="2.54" x2="33.02" y2="-2.54" width="0.1524" layer="91"/>
+<label x="33.02" y="-2.54" size="1.27" layer="95" xref="yes"/>
+</segment>
+<segment>
+<pinref part="R18" gate="G$1" pin="1"/>
+<wire x1="7.62" y1="-7.62" x2="7.62" y2="-10.16" width="0.1524" layer="91"/>
+<label x="7.62" y="-10.16" size="1.27" layer="95" xref="yes"/>
+</segment>
 </net>
 <net name="N$7" class="1">
 <segment>
-<pinref part="S1" gate="G$1" pin="P$1"/>
 <pinref part="J2" gate="G$1" pin="2"/>
 <wire x1="-66.04" y1="38.1" x2="-73.66" y2="38.1" width="0.1524" layer="91"/>
+<pinref part="U$1" gate="G$1" pin="COM"/>
 </segment>
 </net>
 <net name="N$8" class="0">
@@ -17274,35 +17292,46 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <wire x1="33.02" y1="15.24" x2="33.02" y2="25.4" width="0.1524" layer="91"/>
 <pinref part="U3" gate="G$1" pin="VM"/>
 <wire x1="33.02" y1="25.4" x2="27.94" y2="25.4" width="0.1524" layer="91"/>
-<pinref part="S1" gate="G$1" pin="P$2"/>
-<wire x1="-66.04" y1="25.4" x2="-68.58" y2="25.4" width="0.1524" layer="91"/>
-<wire x1="-68.58" y1="25.4" x2="-68.58" y2="-2.54" width="0.1524" layer="91"/>
-<wire x1="-68.58" y1="-2.54" x2="33.02" y2="-2.54" width="0.1524" layer="91"/>
-<wire x1="33.02" y1="-2.54" x2="33.02" y2="15.24" width="0.1524" layer="91"/>
+<pinref part="Q7" gate="G$1" pin="D"/>
+<wire x1="33.02" y1="7.62" x2="33.02" y2="15.24" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="VUSB" class="0">
 <segment>
-<wire x1="60.96" y1="-40.64" x2="53.34" y2="-40.64" width="0.1524" layer="91"/>
-<label x="53.34" y="-40.64" size="1.27" layer="95" rot="R180" xref="yes"/>
+<wire x1="68.58" y1="-45.72" x2="60.96" y2="-45.72" width="0.1524" layer="91"/>
+<label x="60.96" y="-45.72" size="1.27" layer="95" rot="R180" xref="yes"/>
 <pinref part="D3" gate="G$1" pin="A"/>
 </segment>
 </net>
 <net name="3.3V" class="0">
 <segment>
-<wire x1="53.34" y1="2.54" x2="53.34" y2="7.62" width="0.1524" layer="91"/>
-<label x="53.34" y="7.62" size="1.27" layer="95" xref="yes"/>
+<wire x1="66.04" y1="2.54" x2="66.04" y2="7.62" width="0.1524" layer="91"/>
+<label x="66.04" y="7.62" size="1.27" layer="95" xref="yes"/>
 <pinref part="C14" gate="G$1" pin="1"/>
 </segment>
 <segment>
-<wire x1="63.5" y1="2.54" x2="63.5" y2="7.62" width="0.1524" layer="91"/>
-<label x="63.5" y="7.62" size="1.27" layer="95" xref="yes"/>
+<wire x1="76.2" y1="2.54" x2="76.2" y2="7.62" width="0.1524" layer="91"/>
+<label x="76.2" y="7.62" size="1.27" layer="95" xref="yes"/>
 <pinref part="C13" gate="G$1" pin="1"/>
 </segment>
 <segment>
 <pinref part="U$25" gate="G$1" pin="OUT"/>
-<wire x1="73.66" y1="-20.32" x2="86.36" y2="-20.32" width="0.1524" layer="91"/>
-<label x="86.36" y="-20.32" size="1.27" layer="95" rot="R90" xref="yes"/>
+<wire x1="81.28" y1="-25.4" x2="93.98" y2="-25.4" width="0.1524" layer="91"/>
+<label x="93.98" y="-25.4" size="1.27" layer="95" rot="R90" xref="yes"/>
+</segment>
+</net>
+<net name="N$18" class="0">
+<segment>
+<wire x1="-66.04" y1="25.4" x2="-68.58" y2="25.4" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$19" class="0">
+<segment>
+<pinref part="Q7" gate="G$1" pin="G"/>
+<wire x1="22.86" y1="2.54" x2="7.62" y2="2.54" width="0.1524" layer="91"/>
+<pinref part="R18" gate="G$1" pin="2"/>
+<pinref part="C17" gate="G$1" pin="2"/>
+<wire x1="7.62" y1="5.08" x2="7.62" y2="2.54" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
