@@ -14,5 +14,5 @@ $(document).ready(function() {
         setTab($(this).attr('rel'));
     });
 
-    setTab('vision');
+    setTab('referee');
 });
