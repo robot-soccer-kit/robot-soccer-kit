@@ -3,7 +3,7 @@
 #include "shell.h"
 #include <Arduino.h>
 
-static int last_measurement = 0;
+static unsigned long last_measurement = 0;
 SHELL_PARAMETER_FLOAT(voltage, "Voltage", 0.0);
 static bool voltage_error = false;
 #define DIVIDER_RATIO (VOLTAGE_R2 / ((float)(VOLTAGE_R1 + VOLTAGE_R2)))

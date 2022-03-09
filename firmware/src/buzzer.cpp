@@ -32,7 +32,7 @@ static struct buzzer_note melody_custom[] = {{0, 0}, {0, 0}};
 // Status
 static struct buzzer_note *melody;
 static struct buzzer_note *melody_repeat;
-static int melody_st;
+static unsigned long melody_st;
 static bool initialized = false;
 static unsigned int melody_num;
 

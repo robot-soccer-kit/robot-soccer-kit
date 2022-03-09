@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 static uint32_t monitor_dt = 0;
-static uint32_t monitor_last = 0;
+static unsigned long monitor_last = 0;
 static struct bin_stream_packet in = {0}, out = {0};
 
 void bin_stream_ack(int code) {

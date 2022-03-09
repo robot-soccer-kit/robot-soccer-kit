@@ -3,7 +3,7 @@
 #include "voltage.h"
 #include "motors.h"
 
-static int last_update = 0;
+static unsigned long last_update = 0;
 static int leds_blink = 0;
 static bool is_alert = false;
 CRGB leds_save[6];
