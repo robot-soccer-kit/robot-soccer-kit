@@ -151,8 +151,16 @@ class Client:
 
         # Waiting for the first packet to be received, guarantees to have robot state after
         # client creation
+        dt = 0.05
+        t = 0
+        warning_showed = False
         while wait_ready and self.sub_packets < 1:
-            time.sleep(0.05)
+            t += dt
+            time.sleep(dt)
+            if t > 3 and not warning_showed:
+                warning_showed = True
+                print('WARNING: Still no message from vision after 3s')
+                print('if you want to operate without vision, pass wait_ready=False to the client')
 
     def __enter__(self):
         return self
