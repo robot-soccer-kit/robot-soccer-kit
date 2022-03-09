@@ -6,7 +6,7 @@
 #include "shell.h"
 #include <Arduino.h>
 
-static int kick_end = 0;
+static unsigned long kick_end = 0;
 static bool kicking = false;
 
 void kicker_init() { pinMode(KICK_PIN, OUTPUT); }
