@@ -30,7 +30,7 @@ setuptools.setup(
     keywords="robot holonomic omniwheel ssl robocup junior soccer standard localized tracking",
     install_requires=[
         "numpy",
-        "zmq",
+        "pyzmq",
     ],
     extras_require={
         'gc': [ # Game controller extra requirements
