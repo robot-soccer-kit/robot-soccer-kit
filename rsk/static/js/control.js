@@ -8,6 +8,9 @@ function control_initialize(backend) {
             $('.allow-'+team).change(function() {
                 backend.allowControl(team, $(this).is(':checked'));
             });
+            $('.allow-beep-'+team).change(function() {
+                backend.allowBeeping(team, $(this).is(':checked'));
+            });
 
             $('.key-'+team).change(function() {
                 backend.setKey(team, $(this).val());
@@ -29,6 +32,7 @@ function control_initialize(backend) {
             backend.getGame(function(game) {
                 for (let team of ['green', 'blue']) {
                     $('.allow-'+team).prop('checked', game[team]['allow_control']);
+                    $('.allow-beep-'+team).prop('clicked', game[team]['allow_beeping'])
                     $('.packets-'+team).text(game[team]['packets']+' packets');
                     if (!$('.key-'+team).is(':focus')) {
                         $('.key-'+team).val(game[team]['key']);

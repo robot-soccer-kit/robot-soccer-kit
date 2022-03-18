@@ -99,6 +99,10 @@ class Backend():
     def setKey(self, team, key):
         self.robots.control.setKey(team, key)
 
+    @api.slot(str, bool)
+    def allowBeeping(self, team, allow):
+        self.robots.control.allowBeeping(team, allow)
+
     @api.slot()
     def identify(self):
         self.robots.identify()

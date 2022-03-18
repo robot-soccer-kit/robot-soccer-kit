@@ -15,11 +15,13 @@ class Control:
         self.teams = {
             "green": {
                 "allow_control": True,
+                "allow_beeping": True,
                 "key": "",
                 "packets": 0
             },
             "blue": {
                 "allow_control": True,
+                "allow_beeping": True,
                 "key": "",
                 "packets": 0
             }
@@ -52,6 +54,13 @@ class Control:
                                         self.robots.robots_by_marker[marker].control(
                                             float(command[1]), float(command[2]), float(command[3]))
                                         response = [True, 'ok']
+                                    elif command[0] == 'beep' and len(command) == 3:
+                                        if self.teams[team]['allow_beeping']:
+                                            self.robots.robots_by_marker[marker].beep(
+                                                float(command[1]), float(command[2]))
+                                            response = [True, 'ok']
+                                        else:
+                                            response[1] = 'Beeping is disabled for your team'
                                     else:
                                         response[1] = 'Unknown command'
                             else:
@@ -76,6 +85,9 @@ class Control:
 
     def allowControl(self, team, allow):
         self.teams[team]['allow_control'] = allow
+
+    def allowBeeping(self, team, allow):
+        self.teams[team]['allow_beeping'] = allow
 
     def emergency(self):
         self.allowControl('green', False)
