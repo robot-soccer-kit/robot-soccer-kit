@@ -57,7 +57,7 @@ class Control:
                                     elif command[0] == 'beep' and len(command) == 3:
                                         if self.teams[team]['allow_beeping']:
                                             self.robots.robots_by_marker[marker].beep(
-                                                float(command[1]), float(command[2]))
+                                                int(command[1]), int(command[2]))
                                             response = [True, 'ok']
                                         else:
                                             response[1] = 'Beeping is disabled for your team'
