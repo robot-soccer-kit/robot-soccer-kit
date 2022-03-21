@@ -76,7 +76,7 @@ class ClientRobot(ClientTracked):
         return self.client.command(self.color, self.number, 'control', [dx, dy, dturn])
 
     def beep(self, frequency, duration):
-        return self.client.command(self.color, self.number, 'beep', [frequency, duration])
+        return self.client.command(self.color, self.number, 'beep', [int(frequency), int(duration)])
 
     def goto(self, target, wait=True):
         if wait:
