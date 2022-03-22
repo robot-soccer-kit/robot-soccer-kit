@@ -4,7 +4,8 @@ body {
 
 .style_fps {
     background-color:#333;
-    margin-left: 20px; 
+    margin-left: 0px; 
+    font-size:28px;
   }
 
 .card {

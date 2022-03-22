@@ -1,3 +1,7 @@
+import os
+
+os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
+
 methods = {}
 
 
@@ -10,7 +14,6 @@ def slot(*args, result=None):
             'args': args,
             'result': result
         }
-
         return func
 
     return decorate
