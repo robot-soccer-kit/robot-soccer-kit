@@ -28,11 +28,14 @@ def handle_api():
         args = json.loads(request.args['args'])
 
         if command in api.methods:
-            method = api.methods[command]
-            for k in range(len(method['args'])):
-                args[k] = method['args'][k](args[k])
-            result = method['func'](backend, *args)
-            return jsonify([1, result])
+            try:
+                method = api.methods[command]
+                for k in range(len(method['args'])):
+                    args[k] = method['args'][k](args[k])
+                result = method['func'](backend, *args)
+                return jsonify([1, result])
+            except ValueError:
+                return jsonify([0, 'Bad argument type for command %s' % command])    
         else:
             return jsonify([0, 'Command %s not found' % command])
     else:

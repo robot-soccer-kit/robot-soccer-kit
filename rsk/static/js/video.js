@@ -57,7 +57,7 @@ function video_initialize(backend)
 
     // Retrieving the images
     setInterval(function() {
-        is_vision = current_tab == 'vision';
+        is_vision = current_tab == 'vision' || 'referee';
         backend.enableVideoDebug(is_vision);
 
         backend.getVideo(is_vision, function(video) {
@@ -71,7 +71,7 @@ function video_initialize(backend)
                 $('body').removeClass('vision-running');
             }
 
-            $('.fps').text(video.fps);
+            $('.fps').text("FPS : " + video.fps.toFixed(1));
 
             let detection = ''
             if (video.detection.ball) {
@@ -90,6 +90,7 @@ function video_initialize(backend)
                 $('.calibrated').text('Field calibrated');
                 $('.calibrated').addClass('text-success');
                 $('.calibrated').removeClass('text-danger');
+                $('.calibrated').html('Field detected and calibrated <i class="text-success"></i>');
             } else {
                 if (video.detection.calibrated) {
                     $('.calibrated').html('Can\'t see whole field <i class="text-warning bi bi-exclamation-circle"></i>');

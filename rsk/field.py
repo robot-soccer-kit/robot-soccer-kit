@@ -1,6 +1,9 @@
 import numpy as np
 import cv2
 from . import field_dimensions
+import os 
+
+os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 class Field:
     def __init__(self):

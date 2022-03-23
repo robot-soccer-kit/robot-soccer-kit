@@ -4,7 +4,9 @@ import zmq
 import time
 from .field import Field
 from . import field_dimensions
+import os 
 
+os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 class Detection:
     def __init__(self):

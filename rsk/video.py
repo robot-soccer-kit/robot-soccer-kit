@@ -24,10 +24,12 @@ resolutions =[
     (1920,1080),
 ]
 
+is_windows = os.name == 'nt'
+
 class Video:
     def __init__(self):
         # Limitting the output period
-        self.min_period = 1/30
+        self.min_period = 1/60
         # Image retrieve and processing duration
         self.period = None
         # Current capture
@@ -40,8 +42,6 @@ class Video:
         self.stop_capture = False
 
         self.detection = detection.Detection()
-
-        is_windows = os.name == 'nt'
 
         self.settings = {
             'brightness': 0,
@@ -73,7 +73,7 @@ class Video:
         if self.capture is None:
             indexes = []
             for index in range(10):
-                cap = cv2.VideoCapture(index)
+                cap = cv2.VideoCapture(index,cv2.CAP_DSHOW if is_windows else None)
                 if cap.read()[0]:
                     if self.favourite_index is None:
                         self.favourite_index = index
@@ -99,7 +99,8 @@ class Video:
 
     def startCapture(self, index, resolution):
         self.capture = cv2.VideoCapture(index)
-        w, h = resolutions[self.resolution]
+        w, h = resolutions[resolution]
+        self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, w)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
 
@@ -211,7 +212,7 @@ class Video:
     def getVideo(self, with_image):
         data = {
             'running': self.capture is not None,
-            'fps': round(1/self.period, 2) if self.period is not None else 0,
+            'fps': round(1/self.period, 1) if self.period is not None else 0,
             'detection': self.detection.getDetection(),
         }
 

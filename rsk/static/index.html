@@ -13,6 +13,7 @@
         <script type="text/javascript" src="static/js/control.js"></script>
         <script type="text/javascript" src="static/js/tabs.js"></script>
         <script type="text/javascript" src="static/js/app.js"></script>
+        <script type="text/javascript" src="static/js/chrono.js"></script>
         <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon">
         <title>Robot Soccer Kit</title>
     </head>
@@ -23,19 +24,19 @@
             <img src="static/imgs/ball.png" width="32" />
             Robot Soccer Kit
           </a>
-
+          
           <ul class="navbar-nav">
-            <li class="nav-item nav-tab" rel="vision">
+            <li class="nav-item rounded nav-tab" rel="vision">
               <a class="nav-link active" aria-current="page" href="#">
                 <span class="input-group">
-                  <i class="bi bi-camera"></i>&nbsp;
+                  <i class="bi bi-webcam"></i>&nbsp;
                   Vision&nbsp;
                   <i class="text-warning bi bi-exclamation-circle vision-has-error"></i>
                   <i class="text-success bi bi-check-lg vision-has-no-error"></i>
                 </span>
               </a>
             </li>
-            <li class="nav-item nav-tab" rel="robots">
+            <li class="nav-item rounded nav-tab" rel="robots">
               <a class="nav-link" href="#">
                 <i class="bi bi-gear"></i>&nbsp;
                 Robots&nbsp;
@@ -43,20 +44,25 @@
                 <i class="text-warning bi bi-exclamation-circle robots-show-warning"></i>
               </a>
             </li>
-            <li class="nav-item nav-tab" rel="control">
+            <li class="nav-item rounded nav-tab" rel="control">
               <a class="nav-link" href="#">
                 <i class="bi bi-arrows-move"></i>&nbsp;
                 Control
               </a>
             </li>
-          </ul>
-
-          <ul class="navbar-nav">
-            <li class="nav-item">
-              <a class="nav-link emergency bg-danger" href="#">
-                <i class="bi bi-slash-circle"></i>
-                Emergency
+<!--         Referee under development    
+            <li class="nav-item rounded nav-tab" rel="referee">
+              <a class="nav-link" href="#">
+                <i class="bi bi-binoculars"></i>&nbsp;
+                Referee (<i class="bi bi-cone-striped"></i> Under Development <i class="bi bi-cone-striped"></i>)
               </a>
+            </li> -->
+          </ul>
+          
+          <ul class="navbar-nav p-2">
+            <li class="style_fps rounded">
+              <span class="navbar-text p-2 fps">
+              </span>
             </li>
           </ul>
         </div>
@@ -68,7 +74,7 @@
 
           <div class="card">
             <div class="card-header">
-              Starting camera detection
+              <b>Camera detection</b>
             </div>
             <div class="card-body">
               <div class="mb-3">
@@ -89,31 +95,41 @@
             </div>  
           </div>
         </div>
+
+        
         <div class="vision-show-running">
-          <div class="camera-area m-2 d-flex">
-            <div class="w-50">
-              <img class="camera-image w-100" />
+          <div class="row">
+            <div class="col-md-6">
+              <div class="camera-area d-flex">
+                  <img class="card camera-image w-100" />
+              </div>
             </div>
-            
-            <div class="w-50 p-2">
-              <b>FPS</b>
-              <kbd class="fps"></kbd>
-              <span class="calibrated"></span>
 
-              <hr/>
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header">
+                    <b>Camera detection settings</b>
+                </div>
+                <div class="p-2 card-body">
+                  <span class="calibrated"></span>
 
-              <div class="camera-settings">
+                  <hr/>
+
+                  <div class="camera-settings">
+                  </div>
+
+                  <hr/>
+                  <div class="detection-wrapper">
+                  <code class="detection"></code>
+                  </div>
+
+                  <hr/>
+                  <span class="btn btn-warning stop-capture">
+                    <i class="bi bi-stop-fill"></i>&nbsp;
+                    Stop
+                  </span>
+                </div>
               </div>
-
-              <hr/>
-              <div class="detection-wrapper">
-              <code class="detection"></code>
-              </div>
-
-              <hr/>
-              <span class="btn btn-danger stop-capture">
-                Stop
-              </span>
             </div>
           </div>
         </div>
@@ -125,7 +141,7 @@
 
         <div class="card">
           <div class="card-header">
-            Adding a port
+            <b>Adding a port</b>
           </div>
           <div class="card-body">
             <div class="justify-content-center">
@@ -161,11 +177,176 @@
         <div class="teams"></div>
       </div>
 
-    </div>
+      <div class="page page-referee">
+        <div class="referee"></div>
+
+        <div class="vision-hide-running">
+          <div class="alert alert-warning d-flex align-items-center" role="alert">
+            <div>
+              <i class="bi bi-exclamation-triangle-fill"></i>&nbsp;
+              Detection algorithm is not running, please go to <a href="#" class="alert-link goto-tab" rel="vision">Vision tab</a> to start it.
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-7">
+            <div class="row">
+              <div class="col-12">
+                <div class="vision-show-running">
+                  <div class="camera-area d-flex">
+                      <img class="card camera-image w-100" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-6">
+                <div class="card text-center border-blue">
+                  <div class="card-header bg-head-blue">
+                    <b>Blue</b>
+                  </div>
+                  <div class="p-2 card-body bg-body-blue">
+                    <div class="row vert-align my-1">
+                      <div class="col-2">
+                        <img
+                        src="static/imgs/robotblue1.svg"
+                        alt="Robot Blue 1"
+                        height="50px"/>
+                      </div>
+                      <div class="col-7">
+                        <div class="progress ">
+                          <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                      </div>
+                      <div class="col-1 p-0 m-0">
+                        <span class="btn btn-primary btn-sm">
+                          5s
+                        </span>
+                      </div>
+                      <div class="col-1 p-2 m-0">
+                        <span class="btn btn-danger btn-sm">
+                          <i class="bi bi-x-circle"></i>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="row vert-align my-1">
+                      <div class="col-2">
+                        <img
+                        src="static/imgs/robotblue2.svg"
+                        alt="Robot Blue 2"
+                        height="50px"/>
+                      </div>
+                      <div class="col-7">
+                        <div class="progress">
+                          <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                      </div>
+                      <div class="col-1 p-0 m-0">
+                        <span class="btn btn-primary btn-sm">
+                          5s
+                        </span>
+                      </div>
+                      <div class="col-1 p-2 m-0">
+                        <span class="btn btn-danger btn-sm">
+                          <i class="bi bi-x-circle"></i>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="card text-center border-green">
+                  <div class="card-header bg-head-green">
+                    <b>Green</b>
+                  </div>
+                  <div class="p-2 card-body bg-body-green">
+                    <div class="row vert-align my-1">
+                      <div class="col-2">
+                        <img
+                        src="static/imgs/robotgreen1.svg"
+                        alt="Robot Green 1"
+                        height="50"/>
+                      </div>
+                      <div class="col-7">
+                        <div class="progress">
+                          <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                      </div>
+                      <div class="col-1 p-0 m-0">
+                        <span class="btn btn-success btn-sm">
+                          5s
+                        </span>
+                      </div>
+                      <div class="col-1 p-2 m-0">
+                        <span class="btn btn-danger btn-sm">
+                          <i class="bi bi-x-circle"></i>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="row vert-align my-1">
+                      <div class="col-2">
+                        <img
+                        src="static/imgs/robotgreen2.svg"
+                        alt="Robot Green 2"
+                        height="50px"/>
+                      </div>
+                      <div class="col-7">
+                        <div class="progress">
+                          <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                      </div>
+                      <div class="col-1 p-0 m-0">
+                        <span class="btn btn-success btn-sm">
+                          5s
+                        </span>
+                      </div>
+                      <div class="col-1 p-2 m-0">
+                        <span class="btn btn-danger btn-sm">
+                          <i class="bi bi-x-circle"></i>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-5">
+            <div class="row">
+              <div class="col-12">
+                <div class="card text-center">
+                  <div class="card-header">
+                    <b>Placement des joueurs</b>
+                  </div>
+                  <div class="p-2 card-body">
+                    Chrono
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <div class="card text-center">
+                  <div class="card-header">
+                    <b>Tchat d'arbitrage</b>
+                  </div>
+                  <div class="p-2 card-body">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
 
     <div class="buttons p-2">
-      <span class="reload btn btn-danger">
-        Reload
+      <span class="btn emergency btn-danger">
+        <i class="bi bi-slash-circle"></i>
+        Emergency
       </span>
     </div>
     </body>

@@ -2,8 +2,14 @@ body {
     font-size:20px;
 }
 
+.style_fps {
+    background-color:#333;
+    margin-left: 0px; 
+    font-size:28px;
+  }
+
 .card {
-    filter: drop-shadow(-3px 3px 3px #ccc);
+    filter: drop-shadow(-5px 5px 5px #ccc);
     margin-bottom:20px;
 }
 
@@ -48,12 +54,12 @@ body {
 
 .nav-link {
     border-radius:5px;
-    border:1px solid transparent;
+    border:2px solid transparent;
 }
 
 .nav-link.active {
     background-color:#444;
-    border:1px solid white;
+    border:2px solid white;
 }
 
 .robots-show-warning {
@@ -66,4 +72,33 @@ body {
 
 .detection-wrapper {
     min-height:150px;
+}
+
+.bg-head-green{
+    background-color: rgb(10, 148, 0);
+}
+.bg-body-green{
+    background-color: rgba(10, 148, 0, 0.205);
+}
+.border-green{
+    border:1px solid rgb(10, 148, 0);
+}
+
+.bg-head-blue{
+    background-color: rgb(3, 102, 184);
+}
+.bg-body-blue{
+    background-color: rgb(3, 102, 184,0.205);
+}
+.border-blue{
+    border:1px solid rgb(3, 102, 184);
+}
+
+.vert-align{
+  display:flex;
+  align-items:center;
+}
+
+div.progress{
+  margin:0;
 }
