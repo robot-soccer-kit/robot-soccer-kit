@@ -16493,11 +16493,11 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <part name="J6" library="rhoban" deviceset="KICKER" device="">
 <attribute name="FARNELL" value="JF-0530B"/>
 </part>
-<part name="C19" library="rcl" deviceset="CPOL-EU" device="E5-13" value="2200uF">
-<attribute name="FARNELL" value="2749341"/>
+<part name="C19" library="rcl" deviceset="CPOL-EU" device="E5-13" value="3300uF">
+<attribute name="MOUSER" value="710-860160278042 "/>
 </part>
-<part name="C20" library="rcl" deviceset="CPOL-EU" device="E5-13" value="2200uF">
-<attribute name="FARNELL" value="2749341"/>
+<part name="C20" library="rcl" deviceset="CPOL-EU" device="E5-13" value="3300uF">
+<attribute name="MOUSER" value="710-860160278042 "/>
 </part>
 <part name="C1" library="SparkFun-Capacitors" deviceset="0.33UF/330NF" device="-0805-50V-10%" value="0.1µF">
 <attribute name="FARNELL" value="2688486RL"/>
@@ -17888,10 +17888,10 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <attribute name="FARNELL" x="104.14" y="-10.16" size="1.778" layer="96" display="off"/>
 </instance>
 <instance part="C19" gate="G$1" x="40.64" y="-17.78">
-<attribute name="FARNELL" x="40.64" y="-17.78" size="1.778" layer="96" display="off"/>
+<attribute name="MOUSER" x="40.64" y="-17.78" size="1.778" layer="96" display="off"/>
 </instance>
 <instance part="C20" gate="G$1" x="48.26" y="-17.78">
-<attribute name="FARNELL" x="48.26" y="-17.78" size="1.778" layer="96" display="off"/>
+<attribute name="MOUSER" x="48.26" y="-17.78" size="1.778" layer="96" display="off"/>
 </instance>
 <instance part="R6" gate="G$1" x="76.2" y="-27.94" rot="R90">
 <attribute name="FARNELL" x="76.2" y="-27.94" size="1.27" layer="96" rot="R90" display="off"/>
