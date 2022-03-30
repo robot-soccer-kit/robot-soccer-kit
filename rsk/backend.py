@@ -1,5 +1,5 @@
 from . import api
-from . import video, robots, control
+from . import video, robots, control, referee
 
 
 class Backend():
@@ -9,6 +9,7 @@ class Backend():
         self.video = video.Video()
         self.detection = self.video.detection
         self.robots = robots.Robots(self.detection)
+        self.referee = referee.Referee(self.detection)
 
     def exit(self):
         self.video.stop()
@@ -102,3 +103,11 @@ class Backend():
     @api.slot()
     def identify(self):
         self.robots.identify()
+
+    @api.slot()
+    def startReferee(self):
+        self.referee.startReferee()
+
+    @api.slot()
+    def stopReferee(self):
+        self.referee.stopReferee()

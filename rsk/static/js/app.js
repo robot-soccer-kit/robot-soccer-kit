@@ -33,6 +33,7 @@ $(document).ready(function () {
     video_initialize(backend);
     robots_initialize(backend);
     control_initialize(backend);
+    referee_initialize(backend);
 
     // (dev) Reload the window
     $('.reload').click(function () {

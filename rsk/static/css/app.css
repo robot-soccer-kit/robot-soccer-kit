@@ -47,6 +47,18 @@ body {
     display:none;
 }
 
+.referee-show-running {
+    display:none;
+}
+
+.referee-running .referee-show-running {
+    display:inline;
+}
+
+.referee-running .referee-hide-running {
+    display:none;
+}
+
 .nav-item {
     background-color:#333;
     margin-right:5px;

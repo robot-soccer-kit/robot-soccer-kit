@@ -10,6 +10,7 @@
         <script type="text/javascript" src="static/js/utils.js"></script>
         <script type="text/javascript" src="static/js/video.js"></script>
         <script type="text/javascript" src="static/js/robots.js"></script>
+        <script type="text/javascript" src="static/js/referee.js"></script>
         <script type="text/javascript" src="static/js/control.js"></script>
         <script type="text/javascript" src="static/js/tabs.js"></script>
         <script type="text/javascript" src="static/js/app.js"></script>
@@ -50,13 +51,12 @@
                 Control
               </a>
             </li>
-<!--         Referee under development    
             <li class="nav-item rounded nav-tab" rel="referee">
               <a class="nav-link" href="#">
                 <i class="bi bi-binoculars"></i>&nbsp;
                 Referee (<i class="bi bi-cone-striped"></i> Under Development <i class="bi bi-cone-striped"></i>)
               </a>
-            </li> -->
+            </li>
           </ul>
           
           <ul class="navbar-nav p-2">
@@ -89,7 +89,7 @@
                 </span>
                 <span class="m-1 btn btn-success start-capture">
                   <i class="bi bi-play-fill"></i>
-                  Start
+                  Start Vision
                 </span>
               </div>
             </div>  
@@ -126,7 +126,7 @@
                   <hr/>
                   <span class="btn btn-warning stop-capture">
                     <i class="bi bi-stop-fill"></i>&nbsp;
-                    Stop
+                    Stop Vision
                   </span>
                 </div>
               </div>
@@ -216,7 +216,7 @@
                       </div>
                       <div class="col-7">
                         <div class="progress ">
-                          <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
+                          <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                       </div>
                       <div class="col-1 p-0 m-0">
@@ -239,7 +239,7 @@
                       </div>
                       <div class="col-7">
                         <div class="progress">
-                          <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                          <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                       </div>
                       <div class="col-1 p-0 m-0">
@@ -271,7 +271,7 @@
                       </div>
                       <div class="col-7">
                         <div class="progress">
-                          <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
+                          <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                       </div>
                       <div class="col-1 p-0 m-0">
@@ -294,7 +294,7 @@
                       </div>
                       <div class="col-7">
                         <div class="progress">
-                          <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                          <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                       </div>
                       <div class="col-1 p-0 m-0">
@@ -320,8 +320,15 @@
                   <div class="card-header">
                     <b>Placement des joueurs</b>
                   </div>
-                  <div class="p-2 card-body">
-                    Chrono
+                  <div class="p-2 card-body PlcmPLayer">
+                    <span class="m-1 btn btn-success start-referee referee-hide-running">
+                      <i class="bi bi-play-fill"></i>
+                      Start Referee
+                    </span>
+                    <span class="btn btn-warning stop-referee referee-show-running">
+                      <i class="bi bi-stop-fill"></i>&nbsp;
+                      Stop Referee
+                    </span>
                   </div>
                 </div>
               </div>
