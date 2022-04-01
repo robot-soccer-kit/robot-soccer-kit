@@ -26,3 +26,23 @@ def robot_frame(robot):
 
 def angle_wrap(alpha):
     return (alpha + np.pi) % (2 * np.pi) - np.pi
+
+def intersect(A,B,C,D):
+
+    u = (B-A)
+    v = (D-C)
+
+    uv=np.vstack((u, -v)).T
+
+    if(np.linalg.det(uv)==0):
+        return None
+    else: 
+        lambdas = np.linalg.inv(uv)@(C-A)
+
+        V = np.all(0<=lambdas) and np.all(lambdas<=1)
+
+        if V:
+            P = A + lambdas[0] * u
+            return P
+        else:
+            return None

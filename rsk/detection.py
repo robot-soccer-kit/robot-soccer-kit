@@ -58,10 +58,6 @@ class Detection:
         self.ball = None
         self.no_ball = 0
         self.field = Field()
-        self.goals_lines = {
-            'green_goals': None,
-            'blue_goals': None
-        }
 
         self.on_update = None
 
@@ -70,7 +66,6 @@ class Detection:
         (corners, ids, rejected) = cv2.aruco.detectMarkers(image,
                                                            self.arucoDict,
                                                            parameters=self.arucoParams)
-        goals_coord = [[],[],[],[]]
         new_markers = {}
 
         if len(corners) > 0:
@@ -121,6 +116,9 @@ class Detection:
 
         if self.field.calibrated() and image_debug is not None:
             for sign, color in [(-1, (255, 0, 0)), (1, (0, 255, 0))]:
+                C = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), -sign*field_dimensions.goal_width / 2.])
+                D = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), sign*field_dimensions.goal_width / 2.])
+                cv2.line(image_debug, C, D, color, 5)
                 for post in [-1, 1]:
                     A = self.field.gfx_of_pos([sign*(.05 + field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
                     B = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
@@ -132,19 +130,6 @@ class Detection:
             A = self.field.gfx_of_pos([0, 0])
             B = self.field.gfx_of_pos([0, 0.2])
             cv2.line(image_debug, A, B, (0, 255, 0), 1)
-
-
-            for sign, color, i in [(-1, (255, 0, 0), 0), (1, (0, 255, 0), 2)]:
-                A = [sign*(field_dimensions.length / 2.), -sign*field_dimensions.goal_width / 2.]
-                B = [sign*(field_dimensions.length / 2.), sign*field_dimensions.goal_width / 2.]
-                A_px = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), -sign*field_dimensions.goal_width / 2.])
-                B_px = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), sign*field_dimensions.goal_width / 2.])
-                cv2.line(image_debug, A_px, B_px, color, 5)
-                goals_coord[i] = A
-                goals_coord[i+1] = B
-
-            self.goals_lines['green_goals'] = [goals_coord[0], goals_coord[1]]
-            self.goals_lines['blue_goals'] = [goals_coord[2], goals_coord[3]]
 
         self.field.update_homography(image)
         self.markers = new_markers
@@ -204,7 +189,6 @@ class Detection:
             'markers': self.markers,
             'calibrated': self.field.calibrated(),
             'see_whole_field': self.field.see_whole_field,
-            'goals_lines': self.goals_lines
         }
 
     def publish(self):
