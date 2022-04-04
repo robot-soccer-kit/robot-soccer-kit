@@ -15,7 +15,7 @@ body {
 
 .buttons {
     position:fixed;
-    left:5px;
+    right:5px;
     bottom:5px;
 }
 
@@ -52,11 +52,15 @@ body {
 }
 
 .referee-running .referee-show-running {
-    display:inline;
+    display:block;
 }
 
 .referee-running .referee-hide-running {
     display:none;
+}
+
+.start-referee{
+    display:block
 }
 
 .nav-item {
@@ -94,6 +98,11 @@ body {
 }
 .border-green{
     border:1px solid rgb(10, 148, 0);
+}
+
+.form_green_border:focus{
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
 }
 
 .bg-head-blue{

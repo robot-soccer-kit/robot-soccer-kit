@@ -11,7 +11,7 @@ goal_width = 0.6
 border_size = 0.3
 
 # Field coordinates 
-def fieldCoord():
+def fieldCoord() -> np.ndarray:
     field_coord = [[],[],[],[]]
     for sign, i in [(1,0), (-1,2)]:
         C = [sign*(length / 2.), sign*width / 2.]

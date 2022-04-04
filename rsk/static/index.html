@@ -203,7 +203,7 @@
             <div class="row">
               <div class="col-6">
                 <div class="card text-center border-blue">
-                  <div class="card-header bg-head-blue">
+                  <div class="card-header bg-head-blue text-light">
                     <b>Blue</b>
                   </div>
                   <div class="p-2 card-body bg-body-blue">
@@ -258,7 +258,7 @@
               </div>
               <div class="col-6">
                 <div class="card text-center border-green">
-                  <div class="card-header bg-head-green">
+                  <div class="card-header bg-head-green text-light">
                     <b>Green</b>
                   </div>
                   <div class="p-2 card-body bg-body-green">
@@ -313,21 +313,102 @@
               </div>
             </div>
           </div>
-          <div class="col-5">
+          <div class="col-5 PlcmPLayer">
+            <div class="row">
+              <div class="col-12">
+                <span class="m-1 btn btn-success start-referee referee-hide-running">
+                  <i class="bi bi-play-fill"></i>
+                  Start Referee
+                </span>
+                <span class="m-1 btn btn-warning stop-referee referee-show-running">
+                  <i class="bi bi-stop-fill"></i>&nbsp;
+                  Stop Referee
+                </span>
+              </div>
+            </div>
             <div class="row">
               <div class="col-12">
                 <div class="card text-center">
                   <div class="card-header">
                     <b>Placement des joueurs</b>
                   </div>
-                  <div class="p-2 card-body PlcmPLayer">
-                    <span class="m-1 btn btn-success start-referee referee-hide-running">
-                      <i class="bi bi-play-fill"></i>
-                      Start Referee
-                    </span>
-                    <span class="btn btn-warning stop-referee referee-show-running">
+                  <div class="p-2 card-body">
+                    <div class="row align-items-center">
+                      <div class="col-4">
+                        <div class="card bg-body-green m-1">
+                          <div class="card-body p-2" >
+                            <h1 id="GreenScore"></h1>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-1 p-0">
+                        <div class="row">
+                          <div class="col-12">
+                            <span class="btn rounded-circle btn-success btn-sm green-up-score">
+                              <i class="bi bi-caret-up-fill"></i>
+                            </span>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-12">
+                            <span class="btn rounded-circle btn-success btn-sm green-down-score">
+                              <i class="bi bi-caret-down-fill"></i>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-2 p-0">
+                        <span class="btn btn-danger reset-score">
+                          Reset
+                        </span>
+                      </div>
+                      <div class="col-1 p-0">
+                        <div class="row">
+                          <div class="col-12">
+                            <span class="btn rounded-circle btn-primary btn-sm blue-up-score">
+                              <i class="bi bi-caret-up-fill"></i>
+                            </span>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-12">
+                            <span class="btn rounded-circle btn-primary btn-sm blue-down-score">
+                              <i class="bi bi-caret-down-fill"></i>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-4">
+                        <div class="card bg-body-blue m-1">
+                          <div class="card-body p-2">
+                            <h1 id="BlueScore"></h1>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div  class="row">
+                      <div class="col-4">
+                        <input id="GreenTeamNameInput" class="form-control team-name form_green_border" type="text" placeholder="Green Team Name">
+                        <h5 id="GreenTeamNameDisplay" class="d-none">
+                        </h5>
+                      </div>
+                      <div class="col-4">
+                        <span class="btn btn-outline-secondary edit-teams-name d-none">
+                          <i class="bi bi-pencil-fill"></i>
+                        </span>
+                        <span class="btn btn-success validate-teams-name ">
+                          <i class="bi bi-check-lg"></i>
+                        </span>
+                      </div>
+                      <div class="col-4">
+                        <input id="BlueTeamNameInput" class="form-control team-name text-end" type="text" placeholder="Blue Team Name">
+                        <h5 id="BlueTeamNameDisplay" class="d-none">
+                        </h5>
+                      </div>
+                    </div>
+                    <span class="m-1 btn btn-warning referee-show-running">
                       <i class="bi bi-stop-fill"></i>&nbsp;
-                      Stop Referee
+                      End Match
                     </span>
                   </div>
                 </div>

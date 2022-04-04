@@ -111,3 +111,15 @@ class Backend():
     @api.slot()
     def stopReferee(self):
         self.referee.stopReferee()
+    
+    @api.slot()
+    def updateScore(self, team, increment):
+        self.referee.updateScore(team, increment)
+    
+    @api.slot()
+    def resetScore(self):
+        self.referee.resetScore()
+    
+    @api.slot(str)
+    def getScore(self, team):
+        return self.referee.getScore(team)
