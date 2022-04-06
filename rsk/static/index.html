@@ -6,7 +6,7 @@
         <link rel="stylesheet" type="text/css" href="static/icons/font/bootstrap-icons.css" />
         <link rel="stylesheet" type="text/css" href="static/css/app.css" />
         <script type="text/javascript" src="static/jquery/jquery.js"></script>
-        <script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="static/bootstrap/js/bootstrap.bundle.min.js"></script>
         <script type="text/javascript" src="static/js/utils.js"></script>
         <script type="text/javascript" src="static/js/video.js"></script>
         <script type="text/javascript" src="static/js/robots.js"></script>
@@ -124,7 +124,7 @@
                   </div>
 
                   <hr/>
-                  <span class="btn btn-warning stop-capture">
+                  <span class="btn btn-danger stop-capture">
                     <i class="bi bi-stop-fill"></i>&nbsp;
                     Stop Vision
                   </span>
@@ -133,6 +133,9 @@
             </div>
           </div>
         </div>
+        <button class="btn btn-outline-light btn-lg settings-button border-0 vision-show-running display-python-settings" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSettings" aria-controls="offcanvasSettings">
+          <i class="bi bi-gear-fill"></i>
+       </button>
       </div>
 
       <div class="page page-robots">
@@ -317,10 +320,10 @@
             <div class="row">
               <div class="col-12">
                 <span class="m-1 btn btn-success start-referee referee-hide-running">
-                  <i class="bi bi-play-fill"></i>
+                  <i class="bi bi-play-fill"></i>&nbsp;
                   Start Referee
                 </span>
-                <span class="m-1 btn btn-warning stop-referee referee-show-running">
+                <span class="m-1 btn btn-danger stop-referee referee-show-running">
                   <i class="bi bi-stop-fill"></i>&nbsp;
                   Stop Referee
                 </span>
@@ -406,9 +409,18 @@
                         </h5>
                       </div>
                     </div>
-                    <span class="m-1 btn btn-warning referee-show-running">
-                      <i class="bi bi-stop-fill"></i>&nbsp;
-                      End Match
+                    <span class="mt-2 btn btn-success referee-show-running start-match">
+                      <i class="bi bi-play-fill"></i>&nbsp;
+                      Start Match
+                    </span>
+                    <span class="mt-2 btn-group match-pause-stop referee-show-running d-none" role="group">
+                      <span class="btn btn-warning pause-match">
+                        <i class="bi bi-pause-fill"></i>&nbsp;
+                        Pause Match</span>
+                      <span class="btn btn-danger stop-match">
+                        <i class="bi bi-stop-fill"></i>&nbsp;
+                        Stop Match
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -428,10 +440,78 @@
           </div>
 
         </div>
+        <span class="btn btn-outline-light btn-lg settings-button border-0 vision-show-running display-python-settings" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSettings" aria-controls="offcanvasSettings">
+          <i class="bi bi-gear-fill"></i>
+        </span>
       </div>
 
 
-    <div class="buttons p-2">
+
+      <!-- Settings Panel -->
+      <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasSettings" aria-labelledby="offcanvasSettingsLabel">
+        <div class="offcanvas-header">
+          <h4 class="offcanvas-title" id="offcanvasSettingsLabel">Settings</h4>
+          <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body pt-0">
+          <div class="pb-4">
+            Here, you can change what is drawn on the camera image (disabling drawings can improve performances for slow computers)
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="aruco">
+            <label class="form-check-label" for="flexSwitchCheckDefault">
+              ArUco Markers
+            </label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="goals">
+            <label class="form-check-label" for="flexSwitchCheckDefault">
+              Goals
+            </label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="ball">
+            <label class="form-check-label" for="flexSwitchCheckDefault">
+              Ball
+            </label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="exclusion_circle">
+            <label class="form-check-label" for="flexSwitchCheckDefault">
+              Exclusion Circle
+            </label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="sideline">
+            <label class="form-check-label" for="flexSwitchCheckDefault">
+              Sideline Delimitations
+            </label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="landmark">
+            <label class="form-check-label" for="flexSwitchCheckDefault">
+              Center Landmark
+            </label>
+          </div>
+          <div class="btn-group pt-4" role="group" aria-label="Basic mixed styles example">
+            <button type="button" id = "apply-settings" class="btn btn-outline-success">
+              Apply
+              <i class="bi bi-check2"></i>
+            </button>
+            <button type="button" id = "default-settings" class="btn btn-outline-warning">
+              Default
+              <i class="bi bi-arrow-counterclockwise"></i>
+            </button>
+            <button type="button" class="btn btn-outline-danger display-python-settings">
+              Cancel
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- End Settings Panel -->
+
+    <div class="emergency-button p-2">
       <span class="btn emergency btn-danger">
         <i class="bi bi-slash-circle"></i>
         Emergency

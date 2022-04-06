@@ -43,6 +43,6 @@ def intersect(A,B,C,D):
 
         if V:
             P = A + lambdas[0] * u
-            return P
+            return (True, P)
         else:
-            return None
+            return (False, None)

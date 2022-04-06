@@ -112,7 +112,7 @@ class Backend():
     def stopReferee(self):
         self.referee.stopReferee()
     
-    @api.slot()
+    @api.slot(str, int)
     def updateScore(self, team, increment):
         self.referee.updateScore(team, increment)
     
@@ -120,6 +120,30 @@ class Backend():
     def resetScore(self):
         self.referee.resetScore()
     
-    @api.slot(str)
+    @api.slot(str, result=int)
     def getScore(self, team):
         return self.referee.getScore(team)
+    
+    @api.slot(list)
+    def setDisplaySettings(self, display_settings):
+        self.detection.setDisplaySettings(display_settings)
+    
+    @api.slot(result=list)
+    def getDisplaySettings(self):
+        return self.detection.getDisplaySettings()
+
+    @api.slot(result=list)
+    def getDefaultDisplaySettings(self):
+        return self.detection.getDefaultDisplaySettings()
+
+    @api.slot()
+    def startMatch(self):
+        self.referee.startMatch()
+    
+    @api.slot()
+    def pauseMatch(self):
+        self.referee.pauseMatch()
+    
+    @api.slot()
+    def stopMatch(self):
+        self.referee.stopMatch()

@@ -16,8 +16,8 @@ def fieldCoord() -> np.ndarray:
     for sign, i in [(1,0), (-1,2)]:
         C = [sign*(length / 2.), sign*width / 2.]
         D = [sign*(length / 2.), -sign*width / 2.]
-        field_coord[i] = C
-        field_coord[i+1] = D
+        field_coord[i] = np.array(C)
+        field_coord[i+1] = np.array(D)
     return field_coord
 
 # Goals coordinates
@@ -28,9 +28,19 @@ def goalsCoord(goals_color: str) -> np.ndarray:
         B = [sign*(length / 2.), sign*goal_width / 2.]
         goals_coord[i] = A
         goals_coord[i+1] = B
-    green_goals_coord = np.array([goals_coord[0],goals_coord[1]])
-    blue_goals_coord =  np.array([goals_coord[2],goals_coord[3]])
+    blue_goals_coord = np.array([goals_coord[0],goals_coord[1]])
+    green_goals_coord =  np.array([goals_coord[2],goals_coord[3]])
     if goals_color == "green":
         return green_goals_coord
     elif goals_color == "blue":
         return blue_goals_coord
+
+# Field coordinates with margins (For goals and sideline)
+def fieldCoordMargin(margin: float) -> np.ndarray:
+    field_coord = [[],[],[],[]]
+    for sign, i in [(1,0), (-1,2)]:
+        C = [sign*((length / 2.)+margin), sign*((width / 2.)+margin)]
+        D = [sign*((length / 2.)+margin), -sign*((width / 2.)+margin)]
+        field_coord[i] = np.array(C)
+        field_coord[i+1] = np.array(D)
+    return field_coord

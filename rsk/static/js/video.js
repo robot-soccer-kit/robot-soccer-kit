@@ -1,5 +1,6 @@
 function video_initialize(backend)
 {
+    
     function updateCameras() {
         backend.cameras(function(data) {
             indexes = data[0]
@@ -28,8 +29,48 @@ function video_initialize(backend)
             $('.resolutions').html(options);
         });
     }
+
     updateCameras();
     $('.refresh-cameras').click(updateCameras);
+
+    function getDisplaySettings() {
+        backend.getDisplaySettings(function(display_settings_bool) {
+            console.log(display_settings_bool);
+            $('#aruco').prop('checked', display_settings_bool[0]);
+            $('#goals').prop('checked', display_settings_bool[1]);
+            $('#ball').prop('checked', display_settings_bool[2]);
+            $('#exclusion_circle').prop('checked', display_settings_bool[3]);
+            $('#sideline').prop('checked', display_settings_bool[4]);
+            $('#landmark').prop('checked', display_settings_bool[5]);
+        });
+    }
+
+    $('#apply-settings').click(function() {
+        let aruco = $('#aruco:checked').val();
+        let goals = $('#goals:checked').val();
+        let ball = $('#ball:checked').val();
+        let exclusion_circle = $('#exclusion_circle:checked').val();
+        let sideline = $('#sideline:checked').val();
+        let landmark = $('#landmark:checked').val();
+        display_settings = [aruco,goals,ball,exclusion_circle,sideline,landmark]
+        backend.setDisplaySettings(display_settings)
+    });
+
+    $('.display-python-settings').click(function() {
+        getDisplaySettings()
+    });
+
+    $('#default-settings').click(function() {
+        backend.getDefaultDisplaySettings(function(display_settings_bool) {
+            $('#aruco').prop('checked', display_settings_bool[0]);
+            $('#goals').prop('checked', display_settings_bool[1]);
+            $('#ball').prop('checked', display_settings_bool[2]);
+            $('#exclusion_circle').prop('checked', display_settings_bool[3]);
+            $('#sideline').prop('checked', display_settings_bool[4]);
+            $('#landmark').prop('checked', display_settings_bool[5]);
+        });
+    });
+
 
     // Camera settings
     $.get('static/camera-setting.html', function(template) {

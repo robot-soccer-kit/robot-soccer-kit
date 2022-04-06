@@ -11,6 +11,7 @@ function referee_initialize(backend)
 
     }, 200);
 
+
     $('.start-referee').click(function() {
         backend.startReferee();
         $('.PlcmPLayer').addClass('referee-running');
@@ -18,9 +19,28 @@ function referee_initialize(backend)
 
     $('.stop-referee').click(function() {
         backend.stopReferee();
+        // backend.stopMatch();
         $('.PlcmPLayer').removeClass('referee-running');
     });
 
+    $('.start-match').click(function() {
+        // backend.startMatch();
+        $('.PlcmPLayer').addClass('match-running');
+        $('.start-match').addClass('d-none')
+        $('.match-pause-stop').removeClass('d-none')
+    });
+
+    $('.pause-match').click(function() {
+        // backend.pauseMatch();
+    });
+
+    $('.stop-match').click(function() {
+        // backend.stopMatch();
+        $('.PlcmPLayer').removeClass('match-running');
+        $('.start-match').removeClass('d-none')
+        $('.match-pause-stop').addClass('d-none')
+    });
+    
     $('.edit-teams-name').click(function() {
         $('.edit-teams-name').addClass('d-none')
         $('.validate-teams-name').removeClass('d-none')
@@ -32,8 +52,8 @@ function referee_initialize(backend)
     });
 
     $('.validate-teams-name').click(function() {
-        $BlueTeamName = $( "#BlueTeamNameInput" ).val()
-        $GreenTeamName = $( "#GreenTeamNameInput" ).val()
+        let $BlueTeamName = $( "#BlueTeamNameInput" ).val()
+        let $GreenTeamName = $( "#GreenTeamNameInput" ).val()
         $( "#BlueTeamNameDisplay" ).html($BlueTeamName)
         $( "#GreenTeamNameDisplay" ).html($GreenTeamName)
 

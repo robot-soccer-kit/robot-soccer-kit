@@ -13,10 +13,16 @@ body {
     margin-bottom:20px;
 }
 
-.buttons {
+.emergency-button {
     position:fixed;
     right:5px;
     bottom:5px;
+}
+
+.settings-button {
+    position:absolute;
+    left:18px;
+    top:92px;
 }
 
 .brightness, .contrast, .saturation {
@@ -60,7 +66,7 @@ body {
 }
 
 .start-referee{
-    display:block
+    display:block;
 }
 
 .nav-item {
