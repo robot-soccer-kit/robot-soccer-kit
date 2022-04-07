@@ -128,6 +128,10 @@ class Backend():
     def setDisplaySettings(self, display_settings):
         self.detection.setDisplaySettings(display_settings)
     
+    @api.slot()
+    def saveDisplaySettings(self):
+        self.detection.saveDisplaySettings()
+    
     @api.slot(result=list)
     def getDisplaySettings(self):
         return self.detection.getDisplaySettings()

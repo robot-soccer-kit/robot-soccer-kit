@@ -1,6 +1,4 @@
-from dataclasses import field
 import numpy as np
-import cv2
 import threading
 from . import field_dimensions, utils, config
 from .field import Field
@@ -17,6 +15,7 @@ class Referee:
         self.blue_score = 0
 
         self.running = False
+        self.sideline_intersect = (False, np.array([0,0]))
 
         # Starting the Referee thread
         self.referee_thread = threading.Thread(target=lambda: self.thread())
@@ -69,6 +68,9 @@ class Referee:
         #     print(self.detection_info)
         pass
 
+    def getIntersection(self):
+        return self.sideline_intersect
+
     def thread(self):
         # Initialisation coordinates goals
         [green_goals_low,green_goals_high] = field_dimensions.goalsCoord("green")
@@ -119,6 +121,10 @@ class Referee:
                             intersect_field_out = bool(intersect_field_Upline_out[0] or intersect_field_RightLine_out[0] or intersect_field_DownLine_out[0] or intersect_field_LeftLine_out[0])
                             
                             if intersect_field_out and not (intersect_blue_goal[0] or intersect_green_goal[0]) and memory == 0:
+                                for i in (intersect_field_Upline_out, intersect_field_DownLine_out, intersect_field_LeftLine_out, intersect_field_RightLine_out):
+                                    if i[0]:
+                                        self.sideline_intersect = (True, i[1])
+                                    pass
                                 memory = 1
                                 print("line crossed")
 

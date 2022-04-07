@@ -11,6 +11,7 @@ function referee_initialize(backend)
 
     }, 200);
 
+    $('.toast').toast('show')
 
     $('.start-referee').click(function() {
         backend.startReferee();

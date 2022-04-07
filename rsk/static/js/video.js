@@ -54,6 +54,7 @@ function video_initialize(backend)
         let landmark = $('#landmark:checked').val();
         display_settings = [aruco,goals,ball,exclusion_circle,sideline,landmark]
         backend.setDisplaySettings(display_settings)
+        backend.saveDisplaySettings()
     });
 
     $('.display-python-settings').click(function() {

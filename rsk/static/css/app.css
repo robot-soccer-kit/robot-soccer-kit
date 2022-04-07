@@ -13,6 +13,15 @@ body {
     margin-bottom:20px;
 }
 
+.camera-area-referee {
+    width: 100%; 
+    height: calc(100vh - 305px);
+}
+
+.tchat-dim {
+    height: calc(100vh - 428px)
+}
+
 .emergency-button {
     position:fixed;
     right:5px;
@@ -104,6 +113,11 @@ body {
 }
 .border-green{
     border:1px solid rgb(10, 148, 0);
+}
+
+.blue-toast-position{
+    margin-left: auto; 
+    margin-right: 0;
 }
 
 .form_green_border:focus{

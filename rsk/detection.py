@@ -31,6 +31,10 @@ class Detection:
             'landmark': True
         }
 
+        if 'display_settings' in config.config:
+            for entry in config.config['display_settings']:
+                self.displaySettings[entry] = config.config['display_settings'][entry]
+
         self.arucoItems = {
             # Corners
             0: ['c1', (128, 128, 0)],
@@ -100,12 +104,12 @@ class Detection:
 
     def saveDisplaySettings(self):
         config.config['display_settings'] = {
-            'aruco': self.favourite_index,
-            'goals': self.resolution,
-            'ball': self.settings,
-            'exclusion_circle': self.settings,
-            'sideline': self.settings,
-            'landmark': self.settings,
+            'aruco': self.displaySettings['aruco'],
+            'goals': self.displaySettings['goals'],
+            'ball': self.displaySettings['ball'],
+            'exclusion_circle': self.displaySettings['exclusion_circle'],
+            'sideline':  self.displaySettings['sideline'],
+            'landmark': self.displaySettings['landmark']
         }
         config.save()
 

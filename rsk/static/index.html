@@ -193,12 +193,12 @@
         </div>
 
         <div class="row">
-          <div class="col-7">
+          <div id="first-col" class="col-7">
             <div class="row">
               <div class="col-12">
                 <div class="vision-show-running">
-                  <div class="camera-area d-flex">
-                      <img class="card camera-image w-100" />
+                  <div class="camera-area-referee justify-content-center d-flex">
+                      <img class="card camera-image"/>
                   </div>
                 </div>
               </div>
@@ -264,7 +264,7 @@
                   <div class="card-header bg-head-green text-light">
                     <b>Green</b>
                   </div>
-                  <div class="p-2 card-body bg-body-green">
+                  <div id ="green-referee-body" class="p-2 card-body bg-body-green">
                     <div class="row vert-align my-1">
                       <div class="col-2">
                         <img
@@ -333,10 +333,10 @@
               <div class="col-12">
                 <div class="card text-center">
                   <div class="card-header">
-                    <b>Placement des joueurs</b>
+                    <b>Match State</b>
                   </div>
                   <div class="p-2 card-body">
-                    <div class="row align-items-center">
+                    <div class="row align-it ems-center">
                       <div class="col-4">
                         <div class="card bg-body-green m-1">
                           <div class="card-body p-2" >
@@ -430,17 +430,71 @@
               <div class="col-12">
                 <div class="card text-center">
                   <div class="card-header">
-                    <b>Tchat d'arbitrage</b>
+                    <b>Referee History</b>
                   </div>
-                  <div class="p-2 card-body">
+                  <div id="tchat" class="p-2 card-body overflow-auto tchat-dim">
+                    <!-- Position it: -->
+                    <!-- - `.toast-container` for spacing between toasts -->
+                    <!-- - `.position-absolute`, `top-0` & `end-0` to position the toasts in the upper right corner -->
+                    <!-- - `.p-3` to prevent the toasts from sticking to the edge of the container  -->
+                    <div class="toast-container position-relative top-0 p-3 w-100" >
+                  
+
+                      <div class="toast border-green" role="alert" aria-live="assertive" aria-atomic="true"data-bs-autohide="false">
+                        <div class="toast-header bg-head-green">
+                          <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
+                          <strong class="me-auto text-light">Goal Green Team</strong>
+                          <small class="text-white">just now</small>
+                          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body bg-body-green">
+                          See? Just like this.
+                        </div>
+                      </div>
+                  
+                      <div class="toast blue-toast-position border-blue" role="alert" aria-live="assertive" aria-atomic="true"data-bs-autohide="false">
+                        <div class="toast-header bg-head-blue">
+                          <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
+                          <strong class="me-auto text-light">Goal Blue Team</strong>
+                          <small class="text-white">just now</small>
+                          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body bg-body-blue">
+                          See? Just like this.
+                        </div>
+                      </div>
+
+                      <div class="toast border-green" role="alert" aria-live="assertive" aria-atomic="true"data-bs-autohide="false">
+                        <div class="toast-header bg-head-green">
+                          <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
+                          <strong class="me-auto text-light">Goal Green Team</strong>
+                          <small class="text-white">just now</small>
+                          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body bg-body-green">
+                          See? Just like this.
+                        </div>
+                      </div>
+
+                      <div class="toast blue-toast-position border-blue" role="alert" aria-live="assertive" aria-atomic="true"data-bs-autohide="false">
+                        <div class="toast-header bg-head-blue">
+                          <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
+                          <strong class="me-auto text-light">Goal Blue Team</strong>
+                          <small class="text-white">just now</small>
+                          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body bg-body-blue">
+                          See? Just like this.
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
         </div>
-        <span class="btn btn-outline-light btn-lg settings-button border-0 vision-show-running display-python-settings" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSettings" aria-controls="offcanvasSettings">
+        <span class="btn btn-outline-dark btn-lg settings-button border-0 vision-show-running display-python-settings" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSettings" aria-controls="offcanvasSettings">
           <i class="bi bi-gear-fill"></i>
         </span>
       </div>
