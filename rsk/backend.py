@@ -141,13 +141,21 @@ class Backend():
         return self.detection.getDefaultDisplaySettings()
 
     @api.slot()
-    def startMatch(self):
-        self.referee.startMatch()
+    def startGame(self):
+        self.referee.startGame()
     
     @api.slot()
-    def pauseMatch(self):
-        self.referee.pauseMatch()
+    def pauseGame(self):
+        self.referee.pauseGame()
+
+    @api.slot()
+    def resumeGame(self):
+        self.referee.resumeGame()
     
     @api.slot()
-    def stopMatch(self):
-        self.referee.stopMatch()
+    def stopGame(self):
+        self.referee.stopGame()
+
+    @api.slot()
+    def homographyRefresh(self):
+        self.detection.homographyRefresh()

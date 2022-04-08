@@ -72,6 +72,10 @@ function video_initialize(backend)
         });
     });
 
+    $('.homography-refresh').click(function() {
+        backend.homographyRefresh()
+        settings_changed = false
+    });
 
     // Camera settings
     $.get('static/camera-setting.html', function(template) {
@@ -86,6 +90,12 @@ function video_initialize(backend)
                 });
             }
         });
+    });
+
+    var settings_changed = false
+
+    $('.camera-settings').change(function() {
+        settings_changed = true
     });
 
     // Starting the video capture
@@ -128,22 +138,25 @@ function video_initialize(backend)
             }
             $('.detection').html(detection);
 
-            if (video.detection.calibrated && video.detection.see_whole_field) {
+            if (video.detection.calibrated[0] && video.detection.calibrated[1] && video.detection.see_whole_field && !settings_changed) {
                 $('.calibrated').text('Field calibrated');
                 $('.calibrated').addClass('text-success');
                 $('.calibrated').removeClass('text-danger');
-                $('.calibrated').html('Field detected and calibrated <i class="text-success"></i>');
-            } else {
-                if (video.detection.calibrated) {
+                $('.calibrated').html('<i class="bi bi-check2-circle text-success"></i> Field detected and calibrated');
+                // settings_changed = false;
+            } 
+            else {
+                if (video.detection.calibrated[0] && video.detection.calibrated[1] && !video.detection.see_whole_field) {
                     $('.calibrated').html('Can\'t see whole field <i class="text-warning bi bi-exclamation-circle"></i>');
-                } else {
-                    $('.calibrated').html('Field not calibrated <i class="text-warning bi bi-exclamation-circle"></i>');
+                } 
+                else {
+                    $('.calibrated').html('<i class="text-warning bi bi-exclamation-circle"></i> Field detected please calibrate &nbsp; <i class="bi bi-arrow-right"></i>');
                 }
                 $('.calibrated').removeClass('text-success');
                 $('.calibrated').addClass('text-danger');
             }
 
-            if (video.running && video.detection.calibrated && video.detection.see_whole_field) {
+            if (video.running && video.detection.calibrated[0] && video.detection.calibrated[1] && video.detection.see_whole_field && !settings_changed) {
                 $('body').addClass('vision-no-error');
             } else {
                 $('body').removeClass('vision-no-error');

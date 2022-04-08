@@ -110,10 +110,20 @@
                 <div class="card-header">
                     <b>Camera detection settings</b>
                 </div>
-                <div class="p-2 card-body">
-                  <span class="calibrated"></span>
+                <div class="p-2 card-body ">
+                  <div class="mx-1 row d-flex align-items-center"> 
+                    <div class="col-8">
+                      <span class="calibrated">
+                      </span>
+                    </div>
+                    <div class="col-4 text-end">
+                      <span class="btn btn-secondary homography-refresh">
+                        Calibrate Field
+                      </span>
+                    </div>
+                  </div>
 
-                  <hr/>
+                  <hr class="m-2" />
 
                   <div class="camera-settings">
                   </div>
@@ -318,14 +328,40 @@
           </div>
           <div class="col-5 PlcmPLayer">
             <div class="row">
-              <div class="col-12">
-                <span class="m-1 btn btn-success start-referee referee-hide-running">
+              <div class="col-4">
+                <span class="mb-2 btn btn-success start-referee referee-hide-running">
                   <i class="bi bi-play-fill"></i>&nbsp;
                   Start Referee
                 </span>
-                <span class="m-1 btn btn-danger stop-referee referee-show-running">
+                <span class="mb-2 btn btn-danger stop-referee referee-show-running">
                   <i class="bi bi-stop-fill"></i>&nbsp;
                   Stop Referee
+                </span>
+              </div>
+              <div class="col-8">
+                <span class="mb-2 btn btn-success disabled w-100 start-game">
+                  <i class="bi bi-play-fill"></i>&nbsp;
+                  Start Game
+                </span>
+                <span class="mb-2 btn-group pause-game-grp w-100 d-none" role="group">
+                  <span class="btn btn-warning pause-game">
+                    <i class="bi bi-pause-fill"></i>&nbsp;
+                    Pause Game
+                  </span>
+                  <span class="btn btn-danger stop-game">
+                    <i class="bi bi-stop-fill"></i>&nbsp;
+                    Stop Game
+                  </span>
+                </span>
+                <span class="mb-2 btn-group resume-game-grp w-100 d-none" role="group">
+                  <span class="btn btn-success resume-game">
+                    <i class="bi bi-play-fill"></i>&nbsp;
+                    Resume Game
+                  </span>
+                  <span class="btn btn-danger stop-game">
+                    <i class="bi bi-stop-fill"></i>&nbsp;
+                    Stop Game
+                  </span>
                 </span>
               </div>
             </div>
@@ -333,10 +369,10 @@
               <div class="col-12">
                 <div class="card text-center">
                   <div class="card-header">
-                    <b>Match State</b>
+                    <b>Game State</b>
                   </div>
                   <div class="p-2 card-body">
-                    <div class="row align-it ems-center">
+                    <div class="row align-items-center">
                       <div class="col-4">
                         <div class="card bg-body-green m-1">
                           <div class="card-body p-2" >
@@ -409,19 +445,6 @@
                         </h5>
                       </div>
                     </div>
-                    <span class="mt-2 btn btn-success referee-show-running start-match">
-                      <i class="bi bi-play-fill"></i>&nbsp;
-                      Start Match
-                    </span>
-                    <span class="mt-2 btn-group match-pause-stop referee-show-running d-none" role="group">
-                      <span class="btn btn-warning pause-match">
-                        <i class="bi bi-pause-fill"></i>&nbsp;
-                        Pause Match</span>
-                      <span class="btn btn-danger stop-match">
-                        <i class="bi bi-stop-fill"></i>&nbsp;
-                        Stop Match
-                      </span>
-                    </span>
                   </div>
                 </div>
               </div>
@@ -445,7 +468,6 @@
                           <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
                           <strong class="me-auto text-light">Goal Green Team</strong>
                           <small class="text-white">just now</small>
-                          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
                         <div class="toast-body bg-body-green">
                           See? Just like this.
@@ -457,7 +479,6 @@
                           <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
                           <strong class="me-auto text-light">Goal Blue Team</strong>
                           <small class="text-white">just now</small>
-                          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
                         <div class="toast-body bg-body-blue">
                           See? Just like this.
@@ -469,7 +490,6 @@
                           <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
                           <strong class="me-auto text-light">Goal Green Team</strong>
                           <small class="text-white">just now</small>
-                          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
                         <div class="toast-body bg-body-green">
                           See? Just like this.
@@ -481,7 +501,6 @@
                           <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
                           <strong class="me-auto text-light">Goal Blue Team</strong>
                           <small class="text-white">just now</small>
-                          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
                         <div class="toast-body bg-body-blue">
                           See? Just like this.

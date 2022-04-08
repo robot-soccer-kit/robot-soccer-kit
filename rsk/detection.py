@@ -113,6 +113,10 @@ class Detection:
         }
         config.save()
 
+    def homographyRefresh(self):
+        self.field.homography = None
+        self.field.wait_calibrate = True
+
     def detectAruco(self, image, image_debug = None):
 
         (corners, ids, rejected) = cv2.aruco.detectMarkers(image,
@@ -163,11 +167,11 @@ class Detection:
                         cv2.putText(image_debug, text, (cX-4, cY+4),
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, itemColor, 2)
 
-                if self.field.calibrated() and item[0] != 'c':
+                if self.field.calibrated()[0] and item[0] != 'c':
                     new_markers[item] = self.field.pose_of_tag(corners)
                     self.last_updates[item] = time.time()
 
-        if self.field.calibrated() and image_debug is not None:
+        if self.field.calibrated()[0] and image_debug is not None:
             if self.displaySettings['sideline']:
                 [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoordMargin(-0.1)
                 A = self.field.gfx_of_pos(field_UpRight)
@@ -232,7 +236,7 @@ class Detection:
             self.no_ball = 0
 
             for point in candidates:
-                if self.field.calibrated():
+                if self.field.calibrated()[0]:
                     pos = self.field.pos_of_gfx(point)
                 else:
                     pos = point
@@ -252,7 +256,7 @@ class Detection:
                     cv2.circle(image_debug, (int(bestPx[0]), int(
                         bestPx[1])), 3, (255, 255, 0), 3)
 
-            if self.field.calibrated():
+            if self.field.calibrated()[0]:
                 self.ball = best
         else:
             self.no_ball += 1

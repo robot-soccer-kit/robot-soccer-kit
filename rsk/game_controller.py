@@ -67,4 +67,4 @@ def run_browser():
 t = threading.Thread(target=run_browser)
 t.start()
 
-waitress.serve(app, listen='%s:%s' % (args.ip, args.port))
+waitress.serve(app, listen='%s:%s' % (args.ip, args.port),threads=8)

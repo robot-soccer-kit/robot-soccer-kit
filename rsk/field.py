@@ -12,6 +12,7 @@ class Field:
         self.robot_tag_size = 0.08
         self.frame_point_list = None
         self.id_gfx_corners = {}
+        self.wait_calibrate = False
 
         self.field_shape = [field_dimensions.length, field_dimensions.width] # Field dimension (length, width)
 
@@ -38,7 +39,7 @@ class Field:
         self.see_whole_field = False
 
     def calibrated(self):
-        return self.homography is not None
+        return (self.homography is not None, self.wait_calibrate)
 
     def tag_position(self, corners, front = False):
         if front:
@@ -94,7 +95,7 @@ class Field:
                 for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
                     projected = self.pos_of_gfx(gfx)
                     dist = np.linalg.norm(np.array(real) - np.array(projected))
-                    if dist > 0.05:
+                    if dist > 0.03:
                         bad_homography = True
             if bad_homography:
                 self.homography = None

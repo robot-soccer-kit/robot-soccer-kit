@@ -16,30 +16,48 @@ function referee_initialize(backend)
     $('.start-referee').click(function() {
         backend.startReferee();
         $('.PlcmPLayer').addClass('referee-running');
+        $('.start-game').removeClass('disabled')
     });
 
     $('.stop-referee').click(function() {
+        backend.stopGame();
         backend.stopReferee();
-        // backend.stopMatch();
         $('.PlcmPLayer').removeClass('referee-running');
+        $('.start-game').addClass('disabled');
+        $('.start-game').removeClass('d-none');
+        $('.resume-game-grp').addClass('d-none');
+        $('.pause-game-grp').addClass('d-none');
     });
 
-    $('.start-match').click(function() {
-        // backend.startMatch();
-        $('.PlcmPLayer').addClass('match-running');
-        $('.start-match').addClass('d-none')
-        $('.match-pause-stop').removeClass('d-none')
+    $('.start-game').click(function() {
+        backend.startGame();
+        $('.start-game').addClass('d-none');
+        $('.pause-game-grp').removeClass('d-none');
     });
 
-    $('.pause-match').click(function() {
-        // backend.pauseMatch();
+    $('.pause-game').click(function() {
+        backend.pauseGame();
     });
 
-    $('.stop-match').click(function() {
-        // backend.stopMatch();
-        $('.PlcmPLayer').removeClass('match-running');
-        $('.start-match').removeClass('d-none')
-        $('.match-pause-stop').addClass('d-none')
+    $('.resume-game').click(function() {
+        backend.resumeGame();
+    });
+    
+    $('.pause-game').click(function() {
+        $('.resume-game-grp').removeClass('d-none');
+        $('.pause-game-grp').addClass('d-none');
+    });
+
+    $('.resume-game').click(function() {
+        $('.pause-game-grp').removeClass('d-none');
+        $('.resume-game-grp').addClass('d-none');
+    });
+
+    $('.stop-game').click(function() {
+        backend.stopGame();
+        $('.start-game').removeClass('d-none');
+        $('.pause-game-grp').addClass('d-none');
+        $('.resume-game-grp').addClass('d-none');
     });
     
     $('.edit-teams-name').click(function() {

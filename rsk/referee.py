@@ -33,14 +33,17 @@ class Referee:
         self.stop_capture = True
         self.running = False
 
-    def startMatch(self):
-        pass
+    def startGame(self):
+        print("|Game Started")
 
-    def pauseMatch(self):
-        pass
+    def pauseGame(self):
+        print("||Game Paused")
 
-    def stopMatch(self):
-        pass
+    def resumeGame(self):
+        print("||Game Resumed")
+
+    def stopGame(self):
+        print("|Game Stopped")
 
     def updateScore(self, team, increment):
         if team == "green" : 
