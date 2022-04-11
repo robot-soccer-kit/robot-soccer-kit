@@ -68,7 +68,7 @@
         </div>
       </nav>
       
-      <div class="p-3">
+      <div class="p-3 pt-2">
       <div class="page page-vision">
         <div class="vision-hide-running">
 
@@ -369,69 +369,74 @@
               <div class="col-12">
                 <div class="card text-center">
                   <div class="card-header">
-                    <b>Game State</b>
+                    <h5 class="mb-0">Game is ready to begin</h5>
                   </div>
                   <div class="p-2 card-body">
                     <div class="row align-items-center">
-                      <div class="col-4">
+                      <div class="col-3">
                         <div class="card bg-body-green m-1">
                           <div class="card-body p-2" >
-                            <h1 id="GreenScore"></h1>
+                            <h1 class="mb-1" id="GreenScore"></h1>
                           </div>
                         </div>
                       </div>
                       <div class="col-1 p-0">
                         <div class="row">
                           <div class="col-12">
-                            <span class="btn rounded-circle btn-success btn-sm green-up-score">
+                            <span class="btn rounded-circle btn-success btn-sm green-up-score bg-head-green">
                               <i class="bi bi-caret-up-fill"></i>
                             </span>
                           </div>
                         </div>
                         <div class="row">
                           <div class="col-12">
-                            <span class="btn rounded-circle btn-success btn-sm green-down-score">
+                            <span class="btn rounded-circle btn-success btn-sm green-down-score bg-head-green">
                               <i class="bi bi-caret-down-fill"></i>
                             </span>
                           </div>
                         </div>
                       </div>
-                      <div class="col-2 p-0">
-                        <span class="btn btn-danger reset-score">
+                      <div class="col-4 p-0">
+                        <div class="card bg-body-grey m-1 mx-4">
+                          <div class="card-body p-2" >
+                            <h2 class="TimerMinutes mb-1"></h2>
+                          </div>
+                        </div>
+                        <!-- <span class="btn btn-danger reset-score">
                           Reset
-                        </span>
+                        </span> -->
                       </div>
                       <div class="col-1 p-0">
                         <div class="row">
                           <div class="col-12">
-                            <span class="btn rounded-circle btn-primary btn-sm blue-up-score">
+                            <span class="btn rounded-circle btn-primary btn-sm blue-up-score bg-head-blue">
                               <i class="bi bi-caret-up-fill"></i>
                             </span>
                           </div>
                         </div>
                         <div class="row">
                           <div class="col-12">
-                            <span class="btn rounded-circle btn-primary btn-sm blue-down-score">
+                            <span class="btn rounded-circle btn-primary btn-sm blue-down-score bg-head-blue">
                               <i class="bi bi-caret-down-fill"></i>
                             </span>
                           </div>
                         </div>
                       </div>
-                      <div class="col-4">
+                      <div class="col-3">
                         <div class="card bg-body-blue m-1">
                           <div class="card-body p-2">
-                            <h1 id="BlueScore"></h1>
+                            <h1 class="mb-1" id="BlueScore"></h1>
                           </div>
                         </div>
                       </div>
                     </div>
                     <div  class="row">
-                      <div class="col-4">
+                      <div class="col-5 pe-5">
                         <input id="GreenTeamNameInput" class="form-control team-name form_green_border" type="text" placeholder="Green Team Name">
-                        <h5 id="GreenTeamNameDisplay" class="d-none">
+                        <h5 id="GreenTeamNameDisplay" class="m-1 mb-0 d-none">
                         </h5>
                       </div>
-                      <div class="col-4">
+                      <div class="col-2">
                         <span class="btn btn-outline-secondary edit-teams-name d-none">
                           <i class="bi bi-pencil-fill"></i>
                         </span>
@@ -439,10 +444,27 @@
                           <i class="bi bi-check-lg"></i>
                         </span>
                       </div>
-                      <div class="col-4">
+                      <div class="col-5 ps-5">
                         <input id="BlueTeamNameInput" class="form-control team-name text-end" type="text" placeholder="Blue Team Name">
-                        <h5 id="BlueTeamNameDisplay" class="d-none">
+                        <h5 id="BlueTeamNameDisplay" class="m-1 mb-0 d-none">
                         </h5>
+                      </div>
+                    </div>
+                    
+                    <div class="row">
+                      <h6 class ="mt-3 mb-0 text-center"> 
+                        Set Robots Configuration
+                      </h6>
+                      <div class="mt-2 btn-group btn-group-sm d-flex"  role="group">
+                        <span class="btn btn-success w-100 bg-head-green">
+                          Advantage Green
+                        </span>
+                        <span class="btn btn-secondary w-100">
+                          Standard
+                        </span>
+                        <span class="btn btn-primary w-100 bg-head-blue">
+                          Advantage Blue
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -453,7 +475,7 @@
               <div class="col-12">
                 <div class="card text-center">
                   <div class="card-header">
-                    <b>Referee History</b>
+                    <h5 class="mb-0">Referee History</h5>
                   </div>
                   <div id="tchat" class="p-2 card-body overflow-auto tchat-dim">
                     <!-- Position it: -->

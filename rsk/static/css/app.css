@@ -19,7 +19,7 @@ body {
 }
 
 .tchat-dim {
-    height: calc(100vh - 428px)
+    height: calc(100vh - 486px)
 }
 
 .emergency-button {
@@ -31,7 +31,7 @@ body {
 .settings-button {
     position:absolute;
     left:18px;
-    top:92px;
+    top:84px;
 }
 
 .brightness, .contrast, .saturation {
@@ -133,6 +133,10 @@ body {
 }
 .border-blue{
     border:1px solid rgb(3, 102, 184);
+}
+
+.bg-body-grey{
+    background-color: rgba(180, 180, 180, 0.205);
 }
 
 .vert-align{

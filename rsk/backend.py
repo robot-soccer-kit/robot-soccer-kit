@@ -159,3 +159,7 @@ class Backend():
     @api.slot()
     def homographyRefresh(self):
         self.detection.homographyRefresh()
+
+    @api.slot(result = list)
+    def getTimer(self):
+        return self.referee.getTimer()

@@ -9,6 +9,14 @@ function referee_initialize(backend)
             $( "#GreenScore" ).html(score);
         });
 
+        backend.getTimer(function(time) {
+            if (time[1]<10){
+                $(".TimerMinutes").html(time[0]+":"+0+time[1]);
+            }
+            else 
+            $(".TimerMinutes").html(time[0]+":"+time[1]);
+        });
+
     }, 200);
 
     $('.toast').toast('show')

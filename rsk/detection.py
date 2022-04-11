@@ -124,6 +124,48 @@ class Detection:
                                                            parameters=self.arucoParams)
         new_markers = {}
 
+
+        if self.field.calibrated()[0] and image_debug is not None:
+            if self.displaySettings['sideline']:
+                [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoordMargin(-0.1)
+                A = self.field.gfx_of_pos(field_UpRight)
+                B = self.field.gfx_of_pos(field_DownRight)
+                C = self.field.gfx_of_pos(field_DownLeft)
+                D = self.field.gfx_of_pos(field_UpLeft)
+                cv2.line(image_debug, A, B, (0, 255, 0), 1)
+                cv2.line(image_debug, B, C, (0, 255, 0), 1)
+                cv2.line(image_debug, C, D, (0, 255, 0), 1)
+                cv2.line(image_debug, D, A, (0, 255, 0), 1)
+
+                [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoordMargin(0.02)
+                A = self.field.gfx_of_pos(field_UpRight)
+                B = self.field.gfx_of_pos(field_DownRight)
+                C = self.field.gfx_of_pos(field_DownLeft)
+                D = self.field.gfx_of_pos(field_UpLeft)
+                cv2.line(image_debug, A, B, (0, 0, 255), 1)
+                cv2.line(image_debug, B, C, (0, 0, 255), 1)
+                cv2.line(image_debug, C, D, (0, 0, 255), 1)
+                cv2.line(image_debug, D, A, (0, 0, 255), 1)
+
+            if self.displaySettings['goals']:
+                for sign, color in [(-1, (255, 0, 0)), (1, (0, 255, 0))]:
+                    C = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), -sign*field_dimensions.goal_width / 2.])
+                    D = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), sign*field_dimensions.goal_width / 2.])
+                    cv2.line(image_debug, C, D, color, 5)
+                    for post in [-1, 1]:
+                        A = self.field.gfx_of_pos([sign*(.05 + field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
+                        B = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
+                        cv2.line(image_debug, A, B, color, 5)
+            if self.displaySettings['landmark']:
+                A = self.field.gfx_of_pos([0, 0])
+                B = self.field.gfx_of_pos([0.2, 0])
+                cv2.line(image_debug, A, B, (0, 0, 255), 1)
+                A = self.field.gfx_of_pos([0, 0])
+                B = self.field.gfx_of_pos([0, 0.2])
+                cv2.line(image_debug, A, B, (0, 255, 0), 1)
+
+
+                
         if len(corners) > 0:
             for (markerCorner, markerID) in zip(corners, ids.flatten()):
                 if markerID not in self.arucoItems:
@@ -170,45 +212,6 @@ class Detection:
                 if self.field.calibrated()[0] and item[0] != 'c':
                     new_markers[item] = self.field.pose_of_tag(corners)
                     self.last_updates[item] = time.time()
-
-        if self.field.calibrated()[0] and image_debug is not None:
-            if self.displaySettings['sideline']:
-                [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoordMargin(-0.1)
-                A = self.field.gfx_of_pos(field_UpRight)
-                B = self.field.gfx_of_pos(field_DownRight)
-                C = self.field.gfx_of_pos(field_DownLeft)
-                D = self.field.gfx_of_pos(field_UpLeft)
-                cv2.line(image_debug, A, B, (0, 255, 0), 1)
-                cv2.line(image_debug, B, C, (0, 255, 0), 1)
-                cv2.line(image_debug, C, D, (0, 255, 0), 1)
-                cv2.line(image_debug, D, A, (0, 255, 0), 1)
-
-                [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoordMargin(0.02)
-                A = self.field.gfx_of_pos(field_UpRight)
-                B = self.field.gfx_of_pos(field_DownRight)
-                C = self.field.gfx_of_pos(field_DownLeft)
-                D = self.field.gfx_of_pos(field_UpLeft)
-                cv2.line(image_debug, A, B, (0, 0, 255), 1)
-                cv2.line(image_debug, B, C, (0, 0, 255), 1)
-                cv2.line(image_debug, C, D, (0, 0, 255), 1)
-                cv2.line(image_debug, D, A, (0, 0, 255), 1)
-
-            if self.displaySettings['goals']:
-                for sign, color in [(-1, (255, 0, 0)), (1, (0, 255, 0))]:
-                    C = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), -sign*field_dimensions.goal_width / 2.])
-                    D = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), sign*field_dimensions.goal_width / 2.])
-                    cv2.line(image_debug, C, D, color, 5)
-                    for post in [-1, 1]:
-                        A = self.field.gfx_of_pos([sign*(.05 + field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
-                        B = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
-                        cv2.line(image_debug, A, B, color, 5)
-            if self.displaySettings['landmark']:
-                A = self.field.gfx_of_pos([0, 0])
-                B = self.field.gfx_of_pos([0.2, 0])
-                cv2.line(image_debug, A, B, (0, 0, 255), 1)
-                A = self.field.gfx_of_pos([0, 0])
-                B = self.field.gfx_of_pos([0, 0.2])
-                cv2.line(image_debug, A, B, (0, 255, 0), 1)
 
         self.field.update_homography(image)
         self.markers = new_markers

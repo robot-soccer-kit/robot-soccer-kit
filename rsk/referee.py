@@ -14,6 +14,11 @@ class Referee:
         self.green_score = 0
         self.blue_score = 0
 
+        self.referee_history = []
+        
+        self.game_is_running = False
+        self.start_timer = 0.
+
         self.running = False
         self.sideline_intersect = (False, np.array([0,0]))
 
@@ -35,6 +40,8 @@ class Referee:
 
     def startGame(self):
         print("|Game Started")
+        self.start_timer = time.time()
+        self.game_is_running = True
 
     def pauseGame(self):
         print("||Game Paused")
@@ -44,6 +51,8 @@ class Referee:
 
     def stopGame(self):
         print("|Game Stopped")
+        self.game_is_running = False
+        self.start_timer = 0.
 
     def updateScore(self, team, increment):
         if team == "green" : 
@@ -73,6 +82,16 @@ class Referee:
 
     def getIntersection(self):
         return self.sideline_intersect
+    
+    def getTimer(self):
+        if self.game_is_running :
+            time_now = time.time() - self.start_timer
+            minutes = int(time_now / 60)
+            seconds = int(time_now % 60)
+        else : 
+            minutes = 0
+            seconds = 0
+        return [minutes, seconds]
 
     def thread(self):
         # Initialisation coordinates goals
