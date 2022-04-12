@@ -112,11 +112,11 @@
                 </div>
                 <div class="p-2 card-body ">
                   <div class="mx-1 row d-flex align-items-center"> 
-                    <div class="col-8">
+                    <div class="col-9 px-0">
                       <span class="calibrated">
                       </span>
                     </div>
-                    <div class="col-4 text-end">
+                    <div class="col-3 px-0 text-end">
                       <span class="btn btn-secondary homography-refresh">
                         Calibrate Field
                       </span>
@@ -369,7 +369,7 @@
               <div class="col-12">
                 <div class="card text-center">
                   <div class="card-header">
-                    <h5 class="mb-0">Game is ready to begin</h5>
+                    <h5 class="mb-0 GameState">...</h5>
                   </div>
                   <div class="p-2 card-body">
                     <div class="row align-items-center">
@@ -456,13 +456,13 @@
                         Set Robots Configuration
                       </h6>
                       <div class="mt-2 btn-group btn-group-sm d-flex"  role="group">
-                        <span class="btn btn-success w-100 bg-head-green">
+                        <span id="Adv-Green-place" class="btn btn-success w-100 bg-head-green">
                           Advantage Green
                         </span>
-                        <span class="btn btn-secondary w-100">
+                        <span id="Strd-place" class="btn btn-secondary w-100">
                           Standard
                         </span>
-                        <span class="btn btn-primary w-100 bg-head-blue">
+                        <span id="Adv-Blue-place" class="btn btn-primary w-100 bg-head-blue">
                           Advantage Blue
                         </span>
                       </div>
@@ -478,56 +478,8 @@
                     <h5 class="mb-0">Referee History</h5>
                   </div>
                   <div id="tchat" class="p-2 card-body overflow-auto tchat-dim">
-                    <!-- Position it: -->
-                    <!-- - `.toast-container` for spacing between toasts -->
-                    <!-- - `.position-absolute`, `top-0` & `end-0` to position the toasts in the upper right corner -->
-                    <!-- - `.p-3` to prevent the toasts from sticking to the edge of the container  -->
-                    <div class="toast-container position-relative top-0 p-3 w-100" >
-                  
-
-                      <div class="toast border-green" role="alert" aria-live="assertive" aria-atomic="true"data-bs-autohide="false">
-                        <div class="toast-header bg-head-green">
-                          <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
-                          <strong class="me-auto text-light">Goal Green Team</strong>
-                          <small class="text-white">just now</small>
-                        </div>
-                        <div class="toast-body bg-body-green">
-                          See? Just like this.
-                        </div>
-                      </div>
-                  
-                      <div class="toast blue-toast-position border-blue" role="alert" aria-live="assertive" aria-atomic="true"data-bs-autohide="false">
-                        <div class="toast-header bg-head-blue">
-                          <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
-                          <strong class="me-auto text-light">Goal Blue Team</strong>
-                          <small class="text-white">just now</small>
-                        </div>
-                        <div class="toast-body bg-body-blue">
-                          See? Just like this.
-                        </div>
-                      </div>
-
-                      <div class="toast border-green" role="alert" aria-live="assertive" aria-atomic="true"data-bs-autohide="false">
-                        <div class="toast-header bg-head-green">
-                          <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
-                          <strong class="me-auto text-light">Goal Green Team</strong>
-                          <small class="text-white">just now</small>
-                        </div>
-                        <div class="toast-body bg-body-green">
-                          See? Just like this.
-                        </div>
-                      </div>
-
-                      <div class="toast blue-toast-position border-blue" role="alert" aria-live="assertive" aria-atomic="true"data-bs-autohide="false">
-                        <div class="toast-header bg-head-blue">
-                          <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
-                          <strong class="me-auto text-light">Goal Blue Team</strong>
-                          <small class="text-white">just now</small>
-                        </div>
-                        <div class="toast-body bg-body-blue">
-                          See? Just like this.
-                        </div>
-                      </div>
+                    <h6 id="NoHistory"class="text-muted">No History</h6>
+                    <div id="RefereeHistory" class="toast-container neutral-position-relative top-0 p-3 w-100">
                     </div>
                   </div>
                 </div>

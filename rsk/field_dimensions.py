@@ -21,19 +21,19 @@ def fieldCoord() -> np.ndarray:
     return field_coord
 
 # Goals coordinates
-def goalsCoord(goals_color: str) -> np.ndarray:
+def goalsCoord(goals_side: str) -> np.ndarray:
     goals_coord = [[],[],[],[]]
     for sign, i in [(-1, 0), (1, 2)]:
         A = [sign*(length / 2.), -sign*goal_width / 2.]
         B = [sign*(length / 2.), sign*goal_width / 2.]
         goals_coord[i] = A
         goals_coord[i+1] = B
-    blue_goals_coord = np.array([goals_coord[0],goals_coord[1]])
-    green_goals_coord =  np.array([goals_coord[2],goals_coord[3]])
-    if goals_color == "green":
-        return green_goals_coord
-    elif goals_color == "blue":
-        return blue_goals_coord
+    positive_goals_coord = np.array([goals_coord[0],goals_coord[1]])
+    negative_goals_coord =  np.array([goals_coord[2],goals_coord[3]])
+    if goals_side == "x_positive":
+        return positive_goals_coord                                                      
+    elif goals_side == "x_negative":
+        return negative_goals_coord
 
 # Field coordinates with margins (For goals and sideline)
 def fieldCoordMargin(margin: float) -> np.ndarray:

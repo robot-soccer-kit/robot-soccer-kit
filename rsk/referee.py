@@ -15,6 +15,7 @@ class Referee:
         self.blue_score = 0
 
         self.referee_history = []
+        self.game_state = ""
         
         self.game_is_running = False
         self.start_timer = 0.
@@ -26,17 +27,16 @@ class Referee:
         self.referee_thread = threading.Thread(target=lambda: self.thread())
         self.referee_thread.start()
 
-
-    
     def startReferee(self):
         print("Starting Referee")
         self.running = True
-        self.stop_capture = True
 
     def stopReferee(self):
-        print("Stoping Referee")
-        self.stop_capture = True
+        print("Stopping Referee")
+        self.stopGame()
         self.running = False
+        self.referee_history = []
+        self.resetScore()
 
     def startGame(self):
         print("|Game Started")
@@ -45,9 +45,14 @@ class Referee:
 
     def pauseGame(self):
         print("||Game Paused")
+        self.running = False
 
     def resumeGame(self):
         print("||Game Resumed")
+        self.running = True 
+
+    def placeGame(self):
+        pass
 
     def stopGame(self):
         print("|Game Stopped")
@@ -71,6 +76,31 @@ class Referee:
         elif team == "blue" : 
             return self.blue_score
 
+    def addRefereeHistory(self, team: str, action: str) -> list:
+        [minutes, seconds] = self.getTimer()
+        i = len(self.referee_history)
+        new_history_line= [i, minutes, seconds, team, action]
+        self.referee_history.append(new_history_line)
+        return self.referee_history
+
+    def getRefereeHistory(self, slice)-> list:
+        last_rows = []
+        if len(self.referee_history)<slice:
+            return self.referee_history
+        else:
+            for i in range(len(self.referee_history)-slice, len(self.referee_history)):
+                last_rows.append(self.referee_history[i])
+        return last_rows
+
+    def setGameState(self, msg_state):
+        self.game_state = msg_state
+
+    def getGameState(self):
+        return self.game_state
+    
+    def getIntersection(self):
+        return self.sideline_intersect
+
     def detection_update(self, info):
         self.detection_info = info
         self.update(True)
@@ -80,8 +110,6 @@ class Referee:
         #     print(self.detection_info)
         pass
 
-    def getIntersection(self):
-        return self.sideline_intersect
     
     def getTimer(self):
         if self.game_is_running :
@@ -95,8 +123,8 @@ class Referee:
 
     def thread(self):
         # Initialisation coordinates goals
-        [green_goals_low,green_goals_high] = field_dimensions.goalsCoord("green")
-        [blue_goals_high,blue_goals_low]  = field_dimensions.goalsCoord("blue")
+        [green_goals_low,green_goals_high] = field_dimensions.goalsCoord("x_positive")
+        [blue_goals_high,blue_goals_low]  = field_dimensions.goalsCoord("x_negative")
 
         # Initialisation coordinates field for sidelines (+2cm)
         [field_UpRight_out, field_DownRight_out, field_DownLeft_out, field_UpLeft_out] = field_dimensions.fieldCoordMargin(0.02)
@@ -105,6 +133,8 @@ class Referee:
         memory = 0
 
         ball_coord_old = np.array([0,0])
+
+        self.setGameState("Game is ready to start")
 
         while True:
             if self.running:
@@ -118,11 +148,29 @@ class Referee:
                             intersect_green_goal = utils.intersect(ball_coord_old,ball_coord,green_goals_low,green_goals_high)
                             if intersect_blue_goal[0] and memory == 0: 
                                 self.updateScore("green", 1)
+                                self.addRefereeHistory("green", "goal")
                                 memory = 1
                             if intersect_green_goal[0] and memory == 0: 
                                 self.updateScore("blue", 1)
+                                self.addRefereeHistory("blue", "goal")
                                 memory = 1
                             
+                            # Sideline (field+2cm margin) and ball trajectory intersection (Sideline fool detection)
+                            intersect_field_Upline_out = utils.intersect(ball_coord_old,ball_coord,field_UpLeft_out,field_UpRight_out)
+                            intersect_field_DownLine_out = utils.intersect(ball_coord_old,ball_coord,field_DownLeft_out, field_DownRight_out)
+                            intersect_field_LeftLine_out = utils.intersect(ball_coord_old,ball_coord,field_UpLeft_out, field_DownLeft_out)
+                            intersect_field_RightLine_out = utils.intersect(ball_coord_old,ball_coord,field_UpRight_out, field_DownRight_out)
+
+                            intersect_field_out = bool(intersect_field_Upline_out[0] or intersect_field_RightLine_out[0] or intersect_field_DownLine_out[0] or intersect_field_LeftLine_out[0])
+
+                            if intersect_field_out and not (intersect_blue_goal[0] or intersect_green_goal[0]) and memory == 0:
+                                for i in (intersect_field_Upline_out, intersect_field_DownLine_out, intersect_field_LeftLine_out, intersect_field_RightLine_out):
+                                    if i[0]:
+                                        self.sideline_intersect = (True, i[1])
+                                    pass
+                                memory = 1
+                                self.addRefereeHistory("neutral", "Sideline crossed")
+
                             # Verification that the ball has been inside a smaller field (field-10cm margin) at least once before a new goal or a sideline foul is detected
                             if memory == 1:
                                 intersect_field_in = bool(
@@ -132,23 +180,6 @@ class Referee:
 
                                 if intersect_field_in:
                                     memory = 0
-                                    print("reset")
-                            
-                            # Sideline (field+2cm margin) and ball trajectory intersection (Sideline fool detection)
-                            intersect_field_Upline_out = utils.intersect(ball_coord_old,ball_coord,field_UpLeft_out,field_UpRight_out)
-                            intersect_field_DownLine_out = utils.intersect(ball_coord_old,ball_coord,field_DownLeft_out, field_DownRight_out)
-                            intersect_field_LeftLine_out = utils.intersect(ball_coord_old,ball_coord,field_UpLeft_out, field_DownLeft_out)
-                            intersect_field_RightLine_out = utils.intersect(ball_coord_old,ball_coord,field_UpRight_out, field_DownRight_out)
-
-                            intersect_field_out = bool(intersect_field_Upline_out[0] or intersect_field_RightLine_out[0] or intersect_field_DownLine_out[0] or intersect_field_LeftLine_out[0])
-                            
-                            if intersect_field_out and not (intersect_blue_goal[0] or intersect_green_goal[0]) and memory == 0:
-                                for i in (intersect_field_Upline_out, intersect_field_DownLine_out, intersect_field_LeftLine_out, intersect_field_RightLine_out):
-                                    if i[0]:
-                                        self.sideline_intersect = (True, i[1])
-                                    pass
-                                memory = 1
-                                print("line crossed")
 
                             ball_coord_old = ball_coord
                 time.sleep(0.1)

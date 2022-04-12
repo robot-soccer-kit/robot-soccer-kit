@@ -17,7 +17,62 @@ function referee_initialize(backend)
             $(".TimerMinutes").html(time[0]+":"+time[1]);
         });
 
+        backend.getGameState(function(game_state) {
+            $(".GameState").html(game_state);
+        });
+
+        backend.getRefereeHistory(3, function(history) {
+            for (let pas = 0; pas < 3; pas++) {
+                if (history[pas] != undefined){
+                    $(" #NoHistory ").html('')
+                    if (history[pas][0] >= displayed_toast_nb) {
+                        [num, minutes, secondes, team, referee_event] = history[pas]
+                        let htmlStr = ''
+
+                        if (secondes<10){
+                            secondes = '0' + secondes
+                        }
+
+                        if (team == 'neutral'){
+                            htmlStr += '<div id="toast' +displayed_toast_nb+ '" class="toast ' +team+ '-toast-position" role="alert" aria-live="assertive" aria-atomic="true"data-bs-autohide="false">'
+                            htmlStr += '  <div class="toast-header">'
+                            htmlStr += '    <i class="bi bi-circle-fill"></i>&nbsp;&nbsp;'
+                            htmlStr += '    <strong class="me-auto">' +referee_event+ '</strong>'
+                            htmlStr += '    <small class="text-muted">' +minutes+ ':' +secondes+ '</small>'
+                            htmlStr += '  </div>'
+                            htmlStr += '  <div class="toast-body">'
+                            htmlStr += referee_event
+                            htmlStr += '  </div>'
+                            htmlStr += '</div>'
+                        }
+                        else{
+                            htmlStr += '<div id="toast' +displayed_toast_nb+ '" class="toast ' +team+ '-toast-position border-' +team+ '" role="alert" aria-live="assertive" aria-atomic="true"data-bs-autohide="false">'
+                            htmlStr += '  <div class="toast-header bg-head-' +team+ '">'
+                            htmlStr += '    <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;'
+                            htmlStr += '    <strong class="me-auto text-light">' +referee_event+ ' ' +team+ ' Team</strong>'
+                            htmlStr += '    <small class="text-white">' +minutes+ ':' +secondes+ '</small>'
+                            htmlStr += '  </div>'
+                            htmlStr += '  <div class="toast-body bg-body-' +team+ '">'
+                            htmlStr += referee_event
+                            htmlStr += '  </div>'
+                            htmlStr += '</div>'
+                        }
+
+                        $("#RefereeHistory").append(htmlStr)
+                        $('#toast'+displayed_toast_nb).toast('show')
+                        $("#tchat").scrollTop($("#tchat")[0].scrollHeight);
+
+                        displayed_toast_nb = displayed_toast_nb+1
+
+                    }
+                }
+
+            }
+        });
+
     }, 200);
+
+    var displayed_toast_nb = 0 
 
     $('.toast').toast('show')
 
@@ -28,23 +83,31 @@ function referee_initialize(backend)
     });
 
     $('.stop-referee').click(function() {
-        backend.stopGame();
         backend.stopReferee();
         $('.PlcmPLayer').removeClass('referee-running');
         $('.start-game').addClass('disabled');
         $('.start-game').removeClass('d-none');
         $('.resume-game-grp').addClass('d-none');
         $('.pause-game-grp').addClass('d-none');
+
+        displayed_toast_nb = 0
+        $(" #RefereeHistory ").html('')
+        $(" #NoHistory ").html('<h6 class="text-muted">No History</h6>')
+
     });
 
     $('.start-game').click(function() {
         backend.startGame();
         $('.start-game').addClass('d-none');
-        $('.pause-game-grp').removeClass('d-none');
+        $('.pause-game-grp').removeClass('d-none');   
     });
 
     $('.pause-game').click(function() {
         backend.pauseGame();
+    });
+
+    $(' #Strd-place ').click(function() {
+        backend.placeGame();
     });
 
     $('.resume-game').click(function() {

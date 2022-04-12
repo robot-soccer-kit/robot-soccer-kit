@@ -35,7 +35,6 @@ function video_initialize(backend)
 
     function getDisplaySettings() {
         backend.getDisplaySettings(function(display_settings_bool) {
-            console.log(display_settings_bool);
             $('#aruco').prop('checked', display_settings_bool[0]);
             $('#goals').prop('checked', display_settings_bool[1]);
             $('#ball').prop('checked', display_settings_bool[2]);
@@ -147,10 +146,10 @@ function video_initialize(backend)
             } 
             else {
                 if (video.detection.calibrated[0] && video.detection.calibrated[1] && !video.detection.see_whole_field) {
-                    $('.calibrated').html('Can\'t see whole field <i class="text-warning bi bi-exclamation-circle"></i>');
+                    $('.calibrated').html('<i class="text-warning bi bi-exclamation-circle"></i> Can\'t see whole field, correct then calibrate <i class="bi bi-arrow-right"></i>');
                 } 
                 else {
-                    $('.calibrated').html('<i class="text-warning bi bi-exclamation-circle"></i> Field detected please calibrate &nbsp; <i class="bi bi-arrow-right"></i>');
+                    $('.calibrated').html('<i class="text-warning bi bi-exclamation-circle"></i> Field detected please calibrate &nbsp;<i class="bi bi-arrow-right"></i>');
                 }
                 $('.calibrated').removeClass('text-success');
                 $('.calibrated').addClass('text-danger');

@@ -1,3 +1,7 @@
+html {
+    scroll-behavior: smooth;
+  }
+  
 body {
     font-size:20px;
 }
@@ -115,15 +119,29 @@ body {
     border:1px solid rgb(10, 148, 0);
 }
 
-.blue-toast-position{
-    margin-left: auto; 
-    margin-right: 0;
-}
+/* .green-toast-position{
+} */
 
 .form_green_border:focus{
     border-color: #28a745;
     box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
 }
+
+
+
+/* .bg-head-neutral{
+}
+.bg-body-neutral{
+}
+.border-neutral{
+} */
+
+.neutral-toast-position{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
 
 .bg-head-blue{
     background-color: rgb(3, 102, 184);
@@ -133,6 +151,11 @@ body {
 }
 .border-blue{
     border:1px solid rgb(3, 102, 184);
+}
+
+.blue-toast-position{
+    margin-left: auto; 
+    margin-right: 0;
 }
 
 .bg-body-grey{

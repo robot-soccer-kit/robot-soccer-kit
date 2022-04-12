@@ -163,3 +163,15 @@ class Backend():
     @api.slot(result = list)
     def getTimer(self):
         return self.referee.getTimer()
+
+    @api.slot(int, result = list)
+    def getRefereeHistory(self, slice):
+        return self.referee.getRefereeHistory(slice)
+
+    @api.slot()
+    def placeGame(self):
+        self.referee.placeGame()
+    
+    @api.slot(result = str)
+    def getGameState(self):
+        return self.referee.getGameState()
