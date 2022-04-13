@@ -19,7 +19,7 @@ body {
 
 .camera-area-referee {
     width: 100%; 
-    height: calc(100vh - 305px);
+    height: calc(100vh - 355px);
 }
 
 .tchat-dim {
@@ -66,21 +66,6 @@ body {
     display:none;
 }
 
-.referee-show-running {
-    display:none;
-}
-
-.referee-running .referee-show-running {
-    display:block;
-}
-
-.referee-running .referee-hide-running {
-    display:none;
-}
-
-.start-referee{
-    display:block;
-}
 
 .nav-item {
     background-color:#333;

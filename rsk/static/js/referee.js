@@ -10,11 +10,26 @@ function referee_initialize(backend)
         });
 
         backend.getTimer(function(time) {
-            if (time[1]<10){
-                $(".TimerMinutes").html(time[0]+":"+0+time[1]);
+            if (time[2] == "neg" && time[0]==0){
+                if (time[1]<10){
+                    $(".TimerMinutes").html("-"+time[0]+":"+0+time[1]);
+                }
+                else 
+                $(".TimerMinutes").html("-"+time[0]+":"+time[1]);
             }
-            else 
-            $(".TimerMinutes").html(time[0]+":"+time[1]);
+            else{
+                if (time[1]<10){
+                    $(".TimerMinutes").html(time[0]+":"+0+time[1]);
+                }
+                else 
+                $(".TimerMinutes").html(time[0]+":"+time[1]);
+            }
+            if (time[2] == "neg"){
+                $(".TimerMinutes").addClass('text-danger')
+            }
+            else{
+                $(".TimerMinutes").removeClass('text-danger')
+            }
         });
 
         backend.getGameState(function(game_state) {
@@ -76,50 +91,25 @@ function referee_initialize(backend)
 
     $('.toast').toast('show')
 
-    $('.start-referee').click(function() {
-        backend.startReferee();
-        $('.PlcmPLayer').addClass('referee-running');
-        $('.start-game').removeClass('disabled')
-    });
-
-    $('.stop-referee').click(function() {
-        backend.stopReferee();
-        $('.PlcmPLayer').removeClass('referee-running');
-        $('.start-game').addClass('disabled');
-        $('.start-game').removeClass('d-none');
-        $('.resume-game-grp').addClass('d-none');
-        $('.pause-game-grp').addClass('d-none');
-
-        displayed_toast_nb = 0
-        $(" #RefereeHistory ").html('')
-        $(" #NoHistory ").html('<h6 class="text-muted">No History</h6>')
-
-    });
-
     $('.start-game').click(function() {
         backend.startGame();
         $('.start-game').addClass('d-none');
         $('.pause-game-grp').removeClass('d-none');   
+
+        displayed_toast_nb = 0
+        $(" #RefereeHistory ").html('')
+        $(" #NoHistory ").html('<h6 class="text-muted">No History</h6>')
     });
+
 
     $('.pause-game').click(function() {
         backend.pauseGame();
-    });
-
-    $(' #Strd-place ').click(function() {
-        backend.placeGame();
-    });
-
-    $('.resume-game').click(function() {
-        backend.resumeGame();
-    });
-    
-    $('.pause-game').click(function() {
         $('.resume-game-grp').removeClass('d-none');
         $('.pause-game-grp').addClass('d-none');
     });
 
     $('.resume-game').click(function() {
+        backend.resumeGame();
         $('.pause-game-grp').removeClass('d-none');
         $('.resume-game-grp').addClass('d-none');
     });
@@ -130,7 +120,60 @@ function referee_initialize(backend)
         $('.pause-game-grp').addClass('d-none');
         $('.resume-game-grp').addClass('d-none');
     });
-    
+
+    $('#MidTimeChange').click(function() {
+        backend.MidTimeChangeColorField()
+        backend.setTeamSides()
+        let XposPenaltyHTML = $('#XposPenalty').html()
+        let XnegPenaltyHTML = $('#XnegPenalty').html()
+        $('#XposPenalty').html(XnegPenaltyHTML)
+        $('#XnegPenalty').html(XposPenaltyHTML)
+        $("#RefereeHistory").append('<h5 class="text-muted m-3">Mid-Time</h5>')
+        backend.startHalfTime()
+    });
+
+    $('#Y_ChangeCover').click(function() {
+        $('.ChangeCover').addClass('d-none');
+        $('.MidTimeIdentify').removeClass('d-none');
+        $('.MidTimeIdentifyBefore').removeClass('d-none');
+    });
+
+    $('#N_ChangeCover').click(function() {
+        $('.ChangeCover').addClass('d-none');
+        $('.SecondHalfTime').removeClass('d-none');
+    });
+
+    $('#BtnMidTimeIdentify').click(function() {
+        $('.MidTimeIdentifyBefore').addClass('d-none');
+        $('.MidTimeIdentifyWait').removeClass('d-none');
+        setTimeout(function() {
+            $('.MidTimeIdentifyWait').addClass('d-none');
+            $('#Next_MidTimeIdentify').removeClass('d-none');
+            $('.MidTimeIdentifyDone').removeClass('d-none');
+            $('.MidTimeIdentifyDone').removeClass('d-none');
+            $('.MidTimeIdentifyWait').addClass('d-none');
+            }, 4000);
+
+
+    });
+
+    $('#Next_MidTimeIdentify').click(function() {
+        $('#Next_MidTimeIdentify').addClass('d-none');
+        $('.MidTimeIdentifyDone').addClass('d-none');
+        $('.MidTimeIdentify').addClass('d-none');
+        $('.MidTimeIdentifyBefore').addClass('d-none');
+        $('.SecondHalfTime').removeClass('d-none');
+    });
+
+    $('#BtnSecondHalfTime').click(function() {
+        setTimeout(function() {
+        $('.ChangeCover').removeClass('d-none');
+        $('.MidTimeIdentify').addClass('d-none');
+        $('.SecondHalfTime').addClass('d-none');
+        }, 500);
+        backend.startSecondHalfTime()
+    });
+
     $('.edit-teams-name').click(function() {
         $('.edit-teams-name').addClass('d-none')
         $('.validate-teams-name').removeClass('d-none')
@@ -174,4 +217,9 @@ function referee_initialize(backend)
     $('.reset-score').click(function() {
         backend.resetScore()
     });
+
+    $(' #Strd-place ').click(function() {
+        backend.placeGame();
+    });
+    
 }

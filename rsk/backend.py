@@ -175,3 +175,19 @@ class Backend():
     @api.slot(result = str)
     def getGameState(self):
         return self.referee.getGameState()
+
+    @api.slot(result = str)
+    def MidTimeChangeColorField(self):
+        self.detection.MidTimeChangeColorField()
+    
+    @api.slot(result = str)
+    def setTeamSides(self):
+        self.referee.setTeamSides()
+    
+    @api.slot()
+    def startHalfTime(self):
+        self.referee.startHalfTime()
+
+    @api.slot()
+    def startSecondHalfTime(self):
+        self.referee.startSecondHalfTime()

@@ -21,6 +21,10 @@ class Detection:
         self.arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
         self.arucoParams = cv2.aruco.DetectorParameters_create()
         # arucoParams.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_APRILTAG
+
+        #Goals Colors
+        self.color_xpos = (0, 255, 0)
+        self.color_xneg = (255, 0, 0)
         
         self.displaySettings = {
             'aruco': True,
@@ -116,6 +120,17 @@ class Detection:
     def homographyRefresh(self):
         self.field.homography = None
         self.field.wait_calibrate = True
+    
+    def MidTimeChangeColorField(self):
+        if self.color_xpos == (0, 255, 0):
+            self.color_xpos = (255, 0, 0)
+            self.color_xneg = (0, 255, 0)
+            return "blue"
+        else:
+            self.color_xpos = (0, 255, 0)
+            self.color_xneg = (255, 0, 0)
+            return "green"
+
 
     def detectAruco(self, image, image_debug = None):
 
@@ -123,6 +138,7 @@ class Detection:
                                                            self.arucoDict,
                                                            parameters=self.arucoParams)
         new_markers = {}
+
 
 
         if self.field.calibrated()[0] and image_debug is not None:
@@ -148,7 +164,7 @@ class Detection:
                 cv2.line(image_debug, D, A, (0, 0, 255), 1)
 
             if self.displaySettings['goals']:
-                for sign, color in [(-1, (255, 0, 0)), (1, (0, 255, 0))]:
+                for sign, color in [(-1, self.color_xneg), (1, self.color_xpos)]:
                     C = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), -sign*field_dimensions.goal_width / 2.])
                     D = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), sign*field_dimensions.goal_width / 2.])
                     cv2.line(image_debug, C, D, color, 5)
