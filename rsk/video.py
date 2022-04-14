@@ -29,7 +29,7 @@ is_windows = os.name == 'nt'
 class Video:
     def __init__(self):
         # Limitting the output period
-        self.min_period = 1/60
+        self.min_period = 1/30
         # Image retrieve and processing duration
         self.period = None
         # Current capture
@@ -100,7 +100,6 @@ class Video:
     def startCapture(self, index, resolution):
         self.capture = cv2.VideoCapture(index)
         w, h = resolutions[resolution]
-        self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, w)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
 
