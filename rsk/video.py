@@ -29,7 +29,7 @@ is_windows = os.name == 'nt'
 class Video:
     def __init__(self):
         # Limitting the output period
-        self.min_period = 1/30
+        self.min_period = 1/60
         # Image retrieve and processing duration
         self.period = None
         # Current capture
