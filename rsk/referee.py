@@ -3,6 +3,7 @@ import threading
 from . import field_dimensions, utils, config
 from .field import Field
 import time
+from playsound import playsound
 
 class Referee:
     def __init__(self, detection):
@@ -45,12 +46,14 @@ class Referee:
 
     def startGame(self):
         print("|Game Started")
+        playsound('rsk/static/sounds/a.wav',False)
         self.start_timer = time.time()
         self.running = True
         self.chrono_is_running = True
         self.game_is_running = True
         self.referee_history = []
         self.resetScore()
+
 
     def pauseGame(self):
         print("||Game Paused")
@@ -65,18 +68,21 @@ class Referee:
 
     def stopGame(self):
         print("|Game Stopped")
+        playsound('rsk/static/sounds/b.wav',False)
         self.running = False
         self.game_is_running = False
         self.chrono_is_running = False
         self.start_timer = 0.
 
     def startHalfTime(self):
+        playsound('rsk/static/sounds/c.wav',False)
         self.start_timer = time.time()
         self.game_is_running = False
         self.halftime_is_running = True
         self.running = False
     
     def startSecondHalfTime(self):
+        playsound('rsk/static/sounds/d.wav',False)
         self.start_timer = time.time()
         self.halftime_is_running = False
         self.running = True
@@ -142,10 +148,8 @@ class Referee:
         sign="pos"
         if self.game_is_running:
             duration = self.game_duration
-            print("game_is_running")
         elif self.halftime_is_running:
             duration = self.halftime_duration
-            print("halftime_is_running")
 
         if self.chrono_is_running :
             time_now =  (self.start_timer + duration) - time.time()
@@ -199,20 +203,24 @@ class Referee:
                                 if intersect_x_neg_goal[0] and memory == 0: 
                                     self.updateScore("green", 1)
                                     self.addRefereeHistory("green", "goal")
+                                    playsound('rsk/static/sounds/e.wav',False)
                                     memory = 1
                                 if intersect_x_pos_goal[0] and memory == 0: 
                                     self.updateScore("blue", 1)
                                     self.addRefereeHistory("blue", "goal")
+                                    playsound('rsk/static/sounds/f.wav',False)
                                     memory = 1
 
                             else:
                                 if intersect_x_neg_goal[0] and memory == 0: 
                                     self.updateScore("blue", 1)
                                     self.addRefereeHistory("blue", "goal")
+                                    playsound('rsk/static/sounds/f.wav',False)
                                     memory = 1
                                 if intersect_x_pos_goal[0] and memory == 0: 
                                     self.updateScore("gren", 1)
                                     self.addRefereeHistory("green", "goal")
+                                    playsound('rsk/static/sounds/e.wav',False)
                                     memory = 1
                             
                             # Sideline (field+2cm margin) and ball trajectory intersection (Sideline fool detection)
@@ -230,6 +238,7 @@ class Referee:
                                     pass
                                 memory = 1
                                 self.addRefereeHistory("neutral", "Sideline crossed")
+                                playsound('rsk/static/sounds/g.wav',False)
 
                             # Verification that the ball has been inside a smaller field (field-10cm margin) at least once before a new goal or a sideline foul is detected
                             if memory == 1:
