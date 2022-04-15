@@ -55,6 +55,18 @@ function video_initialize(backend)
         backend.stopCapture();
     });
 
+    $('#CameraHeight').change(function() {
+        let camera_height = $('#CameraHeight').val()/100
+        console.log(camera_height)
+        backend.setCameraheight(camera_height);
+    });
+    
+    backend.getCameraheight(function(camera_height) {
+        setTimeout(function() {
+        $('#CameraHeight').val(camera_height*100)
+        }, 100);
+    });
+
     // Retrieving the images
     setInterval(function() {
         is_vision = current_tab == 'vision' || 'referee';
