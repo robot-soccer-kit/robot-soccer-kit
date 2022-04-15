@@ -3726,11 +3726,11 @@ design rules under a new name.</description>
 <element name="J6" library="rhoban" package="KICKER" value="KICKER" x="-63.639453125" y="27.664428125" rot="R330">
 <attribute name="FARNELL" value="JF-0530B" x="-63.639453125" y="27.664428125" size="1.778" layer="27" font="vector" rot="R330" display="off"/>
 </element>
-<element name="C19" library="rcl" package="E5-13" value="2200uF" x="-46.560271875" y="45.22785625" rot="R240">
-<attribute name="FARNELL" value="2749341" x="-46.560271875" y="45.22785625" size="1.778" layer="27" rot="R240" display="off"/>
+<element name="C19" library="rcl" package="E5-13" value="3300uF" x="-46.560271875" y="45.22785625" rot="R240">
+<attribute name="MOUSER" value="710-860160278042 " x="-46.560271875" y="45.22785625" size="1.778" layer="27" rot="R240" display="off"/>
 </element>
-<element name="C20" library="rcl" package="E5-13" value="2200uF" x="-63.309496875" y="17.42513125" rot="R60">
-<attribute name="FARNELL" value="2749341" x="-63.309496875" y="17.42513125" size="1.778" layer="27" rot="R60" display="off"/>
+<element name="C20" library="rcl" package="E5-13" value="3300uF" x="-63.309496875" y="17.42513125" rot="R60">
+<attribute name="MOUSER" value="710-860160278042 " x="-63.309496875" y="17.42513125" size="1.778" layer="27" rot="R60" display="off"/>
 </element>
 <element name="C1" library="SparkFun-Capacitors" package="0805" value="0.1µF" x="-19.29488125" y="-38.44696875" rot="R300">
 <attribute name="PROD_ID" value="CAP-08469" x="-19.29488125" y="-38.44696875" size="1.778" layer="27" rot="R300" display="off"/>
