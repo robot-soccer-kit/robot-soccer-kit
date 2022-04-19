@@ -97,8 +97,9 @@ function referee_initialize(backend)
         $('.pause-game-grp').removeClass('d-none');   
 
         displayed_toast_nb = 0
-        $(" #RefereeHistory ").html('')
-        $(" #NoHistory ").html('<h6 class="text-muted">No History</h6>')
+        $("#RefereeHistory").html('')
+        $("#NoHistory").html('<h6 class="text-muted">No History</h6>')
+        $("#MidTimeChange").prop("disabled", false)
     });
 
 
@@ -119,6 +120,7 @@ function referee_initialize(backend)
         $('.start-game').removeClass('d-none');
         $('.pause-game-grp').addClass('d-none');
         $('.resume-game-grp').addClass('d-none');
+        $("#MidTimeChange").prop("disabled", true)
     });
 
     $('#MidTimeChange').click(function() {
@@ -128,7 +130,7 @@ function referee_initialize(backend)
         let XnegPenaltyHTML = $('#XnegPenalty').html()
         $('#XposPenalty').html(XnegPenaltyHTML)
         $('#XnegPenalty').html(XposPenaltyHTML)
-        $("#RefereeHistory").append('<h5 class="text-muted m-3">Mid-Time</h5>')
+        $("#RefereeHistory").append('<h5 class="text-muted m-3">Half Time</h5>')
         backend.startHalfTime()
     });
 
