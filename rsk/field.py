@@ -13,6 +13,10 @@ class Field:
         self.frame_point_list = None
         self.id_gfx_corners = {}
 
+        #Dimensions
+        self.camera_height = 2
+        self.robot_height = 0.076
+
         self.field_shape = [field_dimensions.length, field_dimensions.width] # Field dimension (length, width)
 
         self.corner_field_positions = {}
@@ -114,7 +118,11 @@ class Field:
     def pose_of_tag(self, corners):
         if self.calibrated():
             center = self.pos_of_gfx(self.tag_position(corners))
+            center[0] -= (center[0] * (self.robot_height)) / self.camera_height
+            center[1] -= (center[1] * (self.robot_height)) / self.camera_height
             front = self.pos_of_gfx(self.tag_position(corners, front=True))
+            front[0] -= (front[0] * (self.robot_height)) / self.camera_height
+            front[1] -= (front[1] * (self.robot_height)) / self.camera_height
 
             return {
                 'position': center,

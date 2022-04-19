@@ -3,7 +3,7 @@ import cv2
 import zmq
 import time
 from .field import Field
-from . import field_dimensions
+from . import field_dimensions, config
 import os 
 
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
@@ -52,12 +52,20 @@ class Detection:
         self.lower_orange = np.array([0, 150, 150])
         self.upper_orange = np.array([25, 255, 255])
 
+
+
         # Detection output
         self.markers = {}
         self.last_updates = {}
         self.ball = None
         self.no_ball = 0
         self.field = Field()
+
+        #Dimensions
+        self.ball_height = 0.042
+        if 'camera_height' in config.config:
+            if 'camera_height' in config.config['camera_height']:
+                self.field.camera_height = config.config['camera_height']['camera_height']
 
     def detectAruco(self, image, image_debug = None):
 
@@ -167,6 +175,8 @@ class Detection:
                 if best is None or dist < bestDist:
                     bestDist = dist
                     best = pos
+                    best[0] -= (pos[0] * (self.ball_height/2)) / self.field.camera_height
+                    best[1] -= (pos[1] * (self.ball_height/2)) / self.field.camera_height
                     bestPx = point
 
             if image_debug is not None and best:
@@ -190,3 +200,13 @@ class Detection:
 
     def publish(self):
         self.socket.send_json(self.getDetection(), flags=zmq.NOBLOCK)
+
+    def setCameraheight(self, camera_height):
+        self.field.camera_height = camera_height
+        config.config['camera_height'] = {
+            'camera_height': self.field.camera_height
+        }
+        config.save()
+
+    def getCameraheight(self):
+        return self.field.camera_height
