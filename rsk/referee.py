@@ -129,12 +129,6 @@ class Referee:
 
     def detection_update(self, info):
         self.detection_info = info
-        self.update(True)
-
-    def update(self, new_detection = True):
-        # if new_detection:
-        #     print(self.detection_info)
-        pass
 
     def setGameDuration(self, duration):
         self.game_duration = duration

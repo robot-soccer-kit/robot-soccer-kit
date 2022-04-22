@@ -1,5 +1,5 @@
 from . import api
-from . import video, robots, control, referee
+from . import video, robots, control, field, referee
 
 
 class Backend():
@@ -98,7 +98,7 @@ class Backend():
 
     @api.slot(str, str)
     def setKey(self, team, key):
-        self.robots.control.setKey(team, key)
+        self.robots.control.setKey(team, key) 
 
     @api.slot()
     def identify(self):
@@ -207,3 +207,11 @@ class Backend():
     @api.slot(result = dict)
     def getPenalty(self):
         return self.referee.getPenalty()
+
+    @api.slot(float)
+    def setCameraheight(self, camera_height):
+        self.detection.setCameraheight(camera_height)
+
+    @api.slot(result = int)
+    def getCameraheight(self):
+        return self.detection.getCameraheight()

@@ -69,6 +69,8 @@ class Detection:
         self.lower_orange = np.array([0, 150, 150])
         self.upper_orange = np.array([25, 255, 255])
 
+
+
         # Detection output
         self.markers = {}
         self.last_updates = {}
@@ -77,6 +79,11 @@ class Detection:
         self.field = Field()
 
         self.on_update = None
+
+        self.ball_height = 0.042
+        if 'camera_height' in config.config:
+            if 'camera_height' in config.config['camera_height']:
+                self.field.camera_height = config.config['camera_height']['camera_height']
 
     def setDisplaySettings(self, display_settings: list) -> list: 
         display_settings_bool = []
@@ -268,6 +275,8 @@ class Detection:
                 if best is None or dist < bestDist:
                     bestDist = dist
                     best = pos
+                    best[0] -= (pos[0] * (self.ball_height/2)) / self.field.camera_height
+                    best[1] -= (pos[1] * (self.ball_height/2)) / self.field.camera_height
                     bestPx = point
 
             if self.displaySettings['ball']:
@@ -296,3 +305,13 @@ class Detection:
         self.socket.send_json(info, flags=zmq.NOBLOCK)
         if self.on_update is not None:
             self.on_update(info)
+
+    def setCameraheight(self, camera_height):
+        self.field.camera_height = camera_height
+        config.config['camera_height'] = {
+            'camera_height': self.field.camera_height
+        }
+        config.save()
+
+    def getCameraheight(self):
+        return self.field.camera_height

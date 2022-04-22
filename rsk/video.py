@@ -100,7 +100,6 @@ class Video:
     def startCapture(self, index, resolution):
         self.capture = cv2.VideoCapture(index)
         w, h = resolutions[resolution]
-        self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, w)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
 
