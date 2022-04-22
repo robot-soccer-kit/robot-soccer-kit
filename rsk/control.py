@@ -38,13 +38,15 @@ class Control:
             for color in utils.robot_teams()
         }
 
-        self.set_target_configuration('side')
-
     def preempt_robot(self, team:str, number:int, reason:str):
         self.teams[team]["preemption_reasons"][number].add(reason)
 
+    def is_preempted(self, team:str, number:int, reason:str):
+        return reason in self.teams[team]["preemption_reasons"][number]
+
     def unpreempt_robot(self, team:str, number:int, reason:str):
-        self.teams[team]["preemption_reasons"][number].remove(reason)
+        if self.is_preempted(team, number, reason):
+            self.teams[team]["preemption_reasons"][number].remove(reason)
 
     def preempt_all_robots(self, reason:str):
         for team, number in utils.all_robots():
@@ -185,8 +187,19 @@ class Control:
         self.client = client.Client(key=self.master_key)
 
         while self.running:
+            # Keeping robots on sight
+            # for team, number in utils.all_robots():
+            #     robot = self.client.robots[team][number]
+            #     if robot.age() is not None and robot.age() > 1. and robot.age() < 10:
+            #         self.preempt_robot(team, number, 'out-of-game')
+            #         self.targets[(team, number)] = (0., 0., 0.)
+            #     else:
+            #         if self.is_preempted(team, number, 'out-of-game'):
+            #             self.targets[(team, number)] = 'stop'
+            #             self.unpreempt_robot(team, number, 'out-of-game')
+
             # Handling robot's goto, since client interaction access network, we can't afford to
-            # lock a mutex during client calls, we store order in the temporary "commands" list
+            # lock a mutex during client calls, we store order in the temporary buffer list
             self.lock.acquire()
             self.targets = {**self.targets, **self.targets_buffer}
             self.targets_buffer = {}
@@ -197,7 +210,7 @@ class Control:
                 team, number = robot
                 target = self.targets[robot]
                 if target is not None:
-                    if target == 'stop' or self.client.robots[team][number].goto(target, wait=False):
+                    if target == 'stop' or self.client.robots[team][number].goto(target, wait=False, skip_old=False):
                         self.client.robots[team][number].control(0, 0, 0)
                         self.targets[robot] = None
                     else:

@@ -71,8 +71,8 @@ function video_initialize(backend)
         });
     });
 
-    $('.homography-refresh').click(function() {
-        backend.homographyRefresh()
+    $('.calibrate-camera').click(function() {
+        backend.calibrateCamera()
         settings_changed = false
     });
 

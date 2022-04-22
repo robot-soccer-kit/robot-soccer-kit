@@ -2,17 +2,18 @@ import numpy as np
 import cv2
 from . import field_dimensions
 import os 
+from . import utils
 
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 class Field:
     def __init__(self):
-        self.corner_tag_size = 0.08
-        self.corner_tag_border = 0.01
+        self.corner_tag_size = 0.16
+        self.corner_tag_border = 0.025
         self.robot_tag_size = 0.08
         self.frame_point_list = None
         self.id_gfx_corners = {}
-        self.wait_calibrate = False
+        self.should_calibrate = False
 
         #Dimensions
         self.camera_height = 2
@@ -38,12 +39,21 @@ class Field:
 
         self.corner_gfx_positions = {}
 
-        self.homography = None
-        self.homography_inv = None
         self.see_whole_field = False
+        
+        # Calibration matrices
+        self.is_calibrated = False
+
+        self.extrinsic = None
+        self.extrinsic_inv = None
+        self.intrinsic = None
+        self.intrinsic_inv = None
+
+        self.object_points = []
+        self.graphic_points = []
 
     def calibrated(self):
-        return (self.homography is not None, self.wait_calibrate)
+        return self.is_calibrated
 
     def tag_position(self, corners, front = False):
         if front:
@@ -58,72 +68,101 @@ class Field:
     def set_corner_position(self, corner, corners):
         self.corner_gfx_positions[corner] = corners
 
+    def field_to_camera(self, point):
+        return (self.extrinsic @ np.array([*point, 1.]))[:3]
+
+    def camera_to_field(self, point):
+        return (self.extrinsic_inv @ np.array([*point, 1.]))[:3]
+
     def update_homography(self, image):
-        if len(self.corner_gfx_positions) >= 3 and self.homography is None: # We allow to compute homography with only 3 corners
+        if len(self.corner_gfx_positions) >= 4 and self.should_calibrate:
+            # Computing point-to-point correspondance
+            object_points = []
             graphics_positions = []
-            field_positions = []
             for key in self.corner_gfx_positions:
                 k = 0
                 for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
                     graphics_positions.append(gfx)
-                    field_positions.append(real)
+                    object_points.append([*real, 0.])
 
+            object_points = np.array(object_points, dtype=np.float32)
+            graphics_positions = np.array(graphics_positions, dtype=np.float32)
 
-            graphics_positions = np.array(graphics_positions)
-            field_positions = np.array(field_positions)
-            H, mask = cv2.findHomography(graphics_positions, field_positions)
-            self.homography = H
-            self.homography_inv = np.linalg.inv(H)
+            self.object_points.append(object_points)
+            self.graphic_points.append(graphics_positions)
             
-            H_i = np.linalg.inv(H)
-            image_height, image_width, _ = image.shape
-            image_points = []
-            self.see_whole_field = True
-            for sx, sy in [(-1, 1), (1, 1), (1, -1), (-1, -1)]:
-                x = sx * ((field_dimensions.length / 2) + field_dimensions.border_size)
-                y = sy * ((field_dimensions.width / 2) + field_dimensions.border_size)
-                img = (H_i @ np.array([x, y, 1]))
-                img[0] /= img[2]
-                img[1] /= img[2]
-                image_points.append((int(img[0]), int(img[1])))
+            if len(self.object_points) >= 4:
+                self.should_calibrate = False
 
-                if img[0] < 0 or img[0] > image_width or \
-                    img[1] < 0 or img[1] > image_height:
-                    self.see_whole_field = False
+                # Calibrating camera
+                ret, self.intrinsic, _, rvecs, tvecs = \
+                    cv2.calibrateCamera(self.object_points, self.graphic_points, image.shape[:2][::-1], None, None,
+                    flags=cv2.CALIB_FIX_ASPECT_RATIO+cv2.CALIB_ZERO_TANGENT_DIST)
+                
+                self.intrinsic_inv = np.linalg.inv(self.intrinsic)
+
+                # Computing extrinsic matrices
+                transformation = np.eye(4)
+                transformation[:3, :3], _ = cv2.Rodrigues(np.mean(rvecs, axis=0))
+                transformation[:3, 3] = np.mean(tvecs, axis=0).T
+                self.extrinsic = transformation
+                self.extrinsic_inv = np.linalg.inv(self.extrinsic)
+                self.is_calibrated = True  
+                self.object_points = []
+                self.graphic_points = []
+
+                image_height, image_width, _ = image.shape
+                image_points = []
+                self.see_whole_field = True
+                for sx, sy in [(-1, 1), (1, 1), (1, -1), (-1, -1)]:
+                    x = sx * ((field_dimensions.length / 2) + field_dimensions.border_size)
+                    y = sy * ((field_dimensions.width / 2) + field_dimensions.border_size)
+
+                    img = self.position_to_pixel([x, y, 0.])
+                    image_points.append((int(img[0]), int(img[1])))
+
+                    if img[0] < 0 or img[0] > image_width or \
+                        img[1] < 0 or img[1] > image_height:
+                        self.see_whole_field = False
 
         # We check that homography is consistent, note that this can happen (and should happen)
         # with only one or two corners!
-        if self.homography is not None:
-            bad_homography = False
-            for key in self.corner_gfx_positions:
-                for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
-                    projected = self.pos_of_gfx(gfx)
-                    dist = np.linalg.norm(np.array(real) - np.array(projected))
-                    if dist > 0.03:
-                        bad_homography = True
-            if bad_homography:
-                self.homography = None
+        # if self.homography is not None:
+        #     bad_homography = False
+        #     for key in self.corner_gfx_positions:
+        #         for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
+        #             projected = self.pos_of_gfx(gfx)
+        #             dist = np.linalg.norm(np.array(real) - np.array(projected))
+        #             if dist > 0.03:
+        #                 bad_homography = True
+        #     if bad_homography:
+        #         self.homography = None
 
         self.corner_gfx_positions = {}
         
-    def pos_of_gfx(self, pos):
-        M = np.ndarray(shape = (3,1), buffer = np.array([[pos[0]], [pos[1]], [1.0]]))
-        result = self.homography @ M
-        return [float(result[0]/result[2]), float(result[1]/result[2])]
+    def pixel_to_position(self, pos, z=0, debug=False):
+        point_position_field = self.camera_to_field(self.intrinsic_inv @ np.array([*pos, 1.]))
+        
+        camera_center_field = self.camera_to_field(np.array([0., 0., 0.]))
+        delta = point_position_field - camera_center_field
+        l = (z - camera_center_field[2])/delta[2]
+        
+        return list(camera_center_field + l*delta)[:2]
 
-    def gfx_of_pos(self, pos):
-        M = np.ndarray(shape = (3,1), buffer = np.array([[pos[0]], [pos[1]], [1.0]]))
-        result = self.homography_inv @ M
-        return [int(result[0]/result[2]), int(result[1]/result[2])]
+    def position_to_pixel(self, pos):
+        if len(pos) == 2:
+            # If no z is provided, assume it is a ground position
+            pos = [*pos, 0.]
+
+        point_position_camera = self.field_to_camera(pos)
+        position = self.intrinsic @ point_position_camera
+
+        return [int(position[0]/position[2]), int(position[1]/position[2])]
 
     def pose_of_tag(self, corners):
         if self.calibrated():
-            center = self.pos_of_gfx(self.tag_position(corners))
-            center[0] -= (center[0] * (self.robot_height)) / self.camera_height
-            center[1] -= (center[1] * (self.robot_height)) / self.camera_height
-            front = self.pos_of_gfx(self.tag_position(corners, front=True))
-            front[0] -= (front[0] * (self.robot_height)) / self.camera_height
-            front[1] -= (front[1] * (self.robot_height)) / self.camera_height
+            center = self.pixel_to_position(self.tag_position(corners), self.robot_height)
+            front = self.pixel_to_position(self.tag_position(corners, front=True), self.robot_height)
 
             return {
                 'position': center,

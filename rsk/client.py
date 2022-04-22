@@ -58,8 +58,12 @@ class ClientRobot(ClientTracked):
     def ball(self):
         return self.client.ball
 
-    def has_position(self):
-        return (self.position is not None) and (self.orientation is not None) and self.age() < 1
+    def has_position(self, skip_old):
+        seen = (self.position is not None) and (self.orientation is not None)
+        if skip_old:
+            seen = seen and self.age() < 1
+            
+        return seen
 
     def age(self):
         if self.last_update is None:
@@ -75,14 +79,14 @@ class ClientRobot(ClientTracked):
 
         return self.client.command(self.color, self.number, 'control', [dx, dy, dturn])
 
-    def goto(self, target, wait=True):
+    def goto(self, target, wait=True, skip_old=True):
         if wait:
             while not self.goto(target, wait=False):
                 time.sleep(0.05)
             self.control(0, 0, 0)
             return True
 
-        if self.has_position():
+        if self.has_position(skip_old):
             if callable(target):
                 target = target()
 

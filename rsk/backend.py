@@ -157,8 +157,8 @@ class Backend():
         self.referee.stopGame()
 
     @api.slot()
-    def homographyRefresh(self):
-        self.detection.homographyRefresh()
+    def calibrateCamera(self):
+        self.detection.calibrateCamera()
 
     @api.slot(result = list)
     def getTimer(self):

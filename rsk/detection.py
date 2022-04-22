@@ -10,7 +10,6 @@ os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 class Detection:
     def __init__(self):
-
         # Publishing server
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
@@ -124,9 +123,8 @@ class Detection:
         }
         config.save()
 
-    def homographyRefresh(self):
-        self.field.homography = None
-        self.field.wait_calibrate = True
+    def calibrateCamera(self):
+        self.field.should_calibrate = True
     
     def MidTimeChangeColorField(self):
         if self.color_xpos == (0, 255, 0):
@@ -148,23 +146,23 @@ class Detection:
 
 
 
-        if self.field.calibrated()[0] and image_debug is not None:
+        if self.field.calibrated() and image_debug is not None:
             if self.displaySettings['sideline']:
                 [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoordMargin(-0.1)
-                A = self.field.gfx_of_pos(field_UpRight)
-                B = self.field.gfx_of_pos(field_DownRight)
-                C = self.field.gfx_of_pos(field_DownLeft)
-                D = self.field.gfx_of_pos(field_UpLeft)
+                A = self.field.position_to_pixel(field_UpRight)
+                B = self.field.position_to_pixel(field_DownRight)
+                C = self.field.position_to_pixel(field_DownLeft)
+                D = self.field.position_to_pixel(field_UpLeft)
                 cv2.line(image_debug, A, B, (0, 255, 0), 1)
                 cv2.line(image_debug, B, C, (0, 255, 0), 1)
                 cv2.line(image_debug, C, D, (0, 255, 0), 1)
                 cv2.line(image_debug, D, A, (0, 255, 0), 1)
 
                 [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoordMargin(0.02)
-                A = self.field.gfx_of_pos(field_UpRight)
-                B = self.field.gfx_of_pos(field_DownRight)
-                C = self.field.gfx_of_pos(field_DownLeft)
-                D = self.field.gfx_of_pos(field_UpLeft)
+                A = self.field.position_to_pixel(field_UpRight)
+                B = self.field.position_to_pixel(field_DownRight)
+                C = self.field.position_to_pixel(field_DownLeft)
+                D = self.field.position_to_pixel(field_UpLeft)
                 cv2.line(image_debug, A, B, (0, 0, 255), 1)
                 cv2.line(image_debug, B, C, (0, 0, 255), 1)
                 cv2.line(image_debug, C, D, (0, 0, 255), 1)
@@ -172,19 +170,19 @@ class Detection:
 
             if self.displaySettings['goals']:
                 for sign, color in [(-1, self.color_xneg), (1, self.color_xpos)]:
-                    C = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), -sign*field_dimensions.goal_width / 2.])
-                    D = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), sign*field_dimensions.goal_width / 2.])
+                    C = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), -sign*field_dimensions.goal_width / 2.])
+                    D = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), sign*field_dimensions.goal_width / 2.])
                     cv2.line(image_debug, C, D, color, 5)
                     for post in [-1, 1]:
-                        A = self.field.gfx_of_pos([sign*(.05 + field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
-                        B = self.field.gfx_of_pos([sign*(field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
+                        A = self.field.position_to_pixel([sign*(.05 + field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
+                        B = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
                         cv2.line(image_debug, A, B, color, 5)
             if self.displaySettings['landmark']:
-                A = self.field.gfx_of_pos([0, 0])
-                B = self.field.gfx_of_pos([0.2, 0])
+                A = self.field.position_to_pixel([0, 0])
+                B = self.field.position_to_pixel([0.2, 0])
                 cv2.line(image_debug, A, B, (0, 0, 255), 1)
-                A = self.field.gfx_of_pos([0, 0])
-                B = self.field.gfx_of_pos([0, 0.2])
+                A = self.field.position_to_pixel([0, 0])
+                B = self.field.position_to_pixel([0, 0.2])
                 cv2.line(image_debug, A, B, (0, 255, 0), 1)
 
 
@@ -232,7 +230,7 @@ class Detection:
                         cv2.putText(image_debug, text, (cX-4, cY+4),
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, itemColor, 2)
 
-                if self.field.calibrated()[0] and item[0] != 'c':
+                if self.field.calibrated() and item[0] != 'c':
                     new_markers[item] = self.field.pose_of_tag(corners)
                     self.last_updates[item] = time.time()
 
@@ -262,8 +260,8 @@ class Detection:
             self.no_ball = 0
 
             for point in candidates:
-                if self.field.calibrated()[0]:
-                    pos = self.field.pos_of_gfx(point)
+                if self.field.calibrated():
+                    pos = self.field.pixel_to_position(point, self.ball_height)
                 else:
                     pos = point
 
@@ -275,8 +273,6 @@ class Detection:
                 if best is None or dist < bestDist:
                     bestDist = dist
                     best = pos
-                    best[0] -= (pos[0] * (self.ball_height/2)) / self.field.camera_height
-                    best[1] -= (pos[1] * (self.ball_height/2)) / self.field.camera_height
                     bestPx = point
 
             if self.displaySettings['ball']:
@@ -284,7 +280,7 @@ class Detection:
                     cv2.circle(image_debug, (int(bestPx[0]), int(
                         bestPx[1])), 3, (255, 255, 0), 3)
 
-            if self.field.calibrated()[0]:
+            if self.field.calibrated():
                 self.ball = best
         else:
             self.no_ball += 1

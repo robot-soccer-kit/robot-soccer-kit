@@ -222,7 +222,6 @@ class Referee:
 
         while True:
             if self.running:
-                self.update(False)
                 if self.detection_info is not None:
                     if self.detection_info['ball'] is not None:
                         ball_coord = np.array(self.detection_info['ball'])
