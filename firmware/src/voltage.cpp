@@ -8,6 +8,14 @@ SHELL_PARAMETER_FLOAT(voltage, "Voltage", 0.0);
 static bool voltage_error = false;
 #define DIVIDER_RATIO (VOLTAGE_R2 / ((float)(VOLTAGE_R1 + VOLTAGE_R2)))
 
+// Voltage sampling frequency
+#define SAMPLE_FREQUENCY 100
+
+// Smoothing of voltage variation (V/s)
+static float max_variation = 0.25;
+
+#define MAX_VARIATION_STEP (max_variation / (float)SAMPLE_FREQUENCY)
+
 static void voltage_sample(bool first = false) {
   last_measurement = millis();
   float sampled_voltage = (analogRead(VOLTAGE) * 3.3 / 4096) / DIVIDER_RATIO;
@@ -15,7 +23,8 @@ static void voltage_sample(bool first = false) {
   if (first) {
     voltage = sampled_voltage;
   } else {
-    voltage = 0.95 * voltage + 0.05 * sampled_voltage;
+    voltage = max(voltage - MAX_VARIATION_STEP,
+                  min(voltage + MAX_VARIATION_STEP, sampled_voltage));
   }
 }
 
@@ -29,7 +38,7 @@ void voltage_init() {
 
 // Update the voltage measurement
 void voltage_tick() {
-  if (millis() - last_measurement > 10) {
+  if (millis() - last_measurement > 1000 / SAMPLE_FREQUENCY) {
     voltage_sample();
 
     if (voltage_error) {
