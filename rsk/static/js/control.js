@@ -6,7 +6,7 @@ function control_initialize(backend) {
             $('.teams').append(team_template.replace(/{team}/g, team));
 
             $('.allow-'+team).change(function() {
-                backend.allowControl(team, $(this).is(':checked'));
+                backend.allowTeamControl(team, $(this).is(':checked'));
             });
 
             $('.key-'+team).change(function() {

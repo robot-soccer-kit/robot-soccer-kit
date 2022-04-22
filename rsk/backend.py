@@ -89,8 +89,8 @@ class Backend():
         return self.robots.control.status()
 
     @api.slot(str, bool)
-    def allowControl(self, team, allow):
-        self.robots.control.allowControl(team, allow)
+    def allowTeamControl(self, team, allow):
+        self.robots.control.allowTeamControl(team, allow)
 
     @api.slot()
     def emergency(self):
@@ -175,6 +175,10 @@ class Backend():
     @api.slot(result = str)
     def getGameState(self):
         return self.referee.getGameState()
+    
+    @api.slot(str, str)
+    def setTeamNames(self,team,name):
+        self.referee.setTeamNames(team,name)
 
     @api.slot(result = str)
     def MidTimeChangeColorField(self):
@@ -191,3 +195,15 @@ class Backend():
     @api.slot()
     def startSecondHalfTime(self):
         self.referee.startSecondHalfTime()
+
+    @api.slot(int, str)
+    def addPenalty(self, duration, robot):
+        self.referee.addPenalty(duration, robot)
+    
+    @api.slot(str)
+    def cancelPenalty(self, robot):
+        self.referee.cancelPenalty(robot)
+
+    @api.slot(result = dict)
+    def getPenalty(self):
+        return self.referee.getPenalty()

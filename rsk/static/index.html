@@ -220,14 +220,14 @@
                 </button>
               </div>
             </div>
-            <div class="row">
+            <div class="row d-flex robot-penalize-tab">
               <div id="XnegPenalty" class="col-6">
                 <div class="card text-center border-blue">
                   <div class="card-header bg-head-blue text-light">
                     <b>Blue</b>
                   </div>
                   <div class="p-2 card-body bg-body-blue">
-                    <div class="row vert-align my-1">
+                    <div class="row vert-align my-1 robot-penalty" rel="blue1">
                       <div class="col-2">
                         <img
                         src="static/imgs/robotblue1.svg"
@@ -235,22 +235,22 @@
                         height="50px"/>
                       </div>
                       <div class="col-7">
-                        <div class="progress ">
-                          <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress progress-large">
+                          <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 100%"></div>
                         </div>
                       </div>
                       <div class="col-1 p-0 m-0">
-                        <span class="btn btn-primary btn-sm">
+                        <button class="btn btn-primary btn-sm penalize" disabled>
                           5s
-                        </span>
+                        </button>
                       </div>
                       <div class="col-1 p-2 m-0">
-                        <span class="btn btn-danger btn-sm">
+                        <button class="btn btn-danger btn-sm unpenalize" disabled>
                           <i class="bi bi-x-circle"></i>
-                        </span>
+                        </button>
                       </div>
                     </div>
-                    <div class="row vert-align my-1">
+                    <div class="row vert-align my-1 robot-penalty" rel="blue2">
                       <div class="col-2">
                         <img
                         src="static/imgs/robotblue2.svg"
@@ -258,19 +258,19 @@
                         height="50px"/>
                       </div>
                       <div class="col-7">
-                        <div class="progress">
-                          <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress progress-large">
+                          <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 100%"></div>
                         </div>
                       </div>
                       <div class="col-1 p-0 m-0">
-                        <span class="btn btn-primary btn-sm">
+                        <button class="btn btn-primary btn-sm penalize" disabled>
                           5s
-                        </span>
+                        </button>
                       </div>
                       <div class="col-1 p-2 m-0">
-                        <span class="btn btn-danger btn-sm">
+                        <button class="btn btn-danger btn-sm unpenalize" disabled>
                           <i class="bi bi-x-circle"></i>
-                        </span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -282,7 +282,7 @@
                     <b>Green</b>
                   </div>
                   <div id ="green-referee-body" class="p-2 card-body bg-body-green">
-                    <div class="row vert-align my-1">
+                    <div class="row vert-align my-1 robot-penalty" rel="green1">
                       <div class="col-2">
                         <img
                         src="static/imgs/robotgreen1.svg"
@@ -290,22 +290,22 @@
                         height="50"/>
                       </div>
                       <div class="col-7">
-                        <div class="progress">
-                          <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress progress-large">
+                          <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 10%"></div>
                         </div>
                       </div>
                       <div class="col-1 p-0 m-0">
-                        <span class="btn btn-success btn-sm">
+                        <button class="btn btn-success btn-sm penalize" disabled>
                           5s
-                        </span>
+                        </button>
                       </div>
                       <div class="col-1 p-2 m-0">
-                        <span class="btn btn-danger btn-sm">
+                        <button class="btn btn-danger btn-sm unpenalize" disabled>
                           <i class="bi bi-x-circle"></i>
-                        </span>
+                        </button>
                       </div>
                     </div>
-                    <div class="row vert-align my-1">
+                    <div class="row vert-align my-1 robot-penalty" rel="green2">
                       <div class="col-2">
                         <img
                         src="static/imgs/robotgreen2.svg"
@@ -313,19 +313,19 @@
                         height="50px"/>
                       </div>
                       <div class="col-7">
-                        <div class="progress">
-                          <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress progress-large">
+                          <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 80%"></div>
                         </div>
                       </div>
                       <div class="col-1 p-0 m-0">
-                        <span class="btn btn-success btn-sm">
+                        <button class="btn btn-success btn-sm penalize" disabled>
                           5s
-                        </span>
+                        </button>
                       </div>
                       <div class="col-1 p-2 m-0">
-                        <span class="btn btn-danger btn-sm">
+                        <button class="btn btn-danger btn-sm unpenalize" disabled>
                           <i class="bi bi-x-circle"></i>
-                        </span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -377,17 +377,17 @@
                           </div>
                         </div>
                       </div>
-                      <div class="col-1 p-0">
+                      <div class="col-1 p-0 score-zone" rel="green">
                         <div class="row">
                           <div class="col-12">
-                            <span class="btn rounded-circle btn-success btn-sm green-up-score bg-head-green">
+                            <span class="btn rounded-circle btn-success btn-sm up-score bg-head-green">
                               <i class="bi bi-caret-up-fill"></i>
                             </span>
                           </div>
                         </div>
                         <div class="row">
                           <div class="col-12">
-                            <span class="btn rounded-circle btn-success btn-sm green-down-score bg-head-green">
+                            <span class="btn rounded-circle btn-success btn-sm down-score bg-head-green">
                               <i class="bi bi-caret-down-fill"></i>
                             </span>
                           </div>
@@ -403,17 +403,17 @@
                           Reset
                         </span> -->
                       </div>
-                      <div class="col-1 p-0">
+                      <div class="col-1 p-0 score-zone" rel="blue">
                         <div class="row">
                           <div class="col-12">
-                            <span class="btn rounded-circle btn-primary btn-sm blue-up-score bg-head-blue">
+                            <span class="btn rounded-circle btn-primary btn-sm up-score bg-head-blue">
                               <i class="bi bi-caret-up-fill"></i>
                             </span>
                           </div>
                         </div>
                         <div class="row">
                           <div class="col-12">
-                            <span class="btn rounded-circle btn-primary btn-sm blue-down-score bg-head-blue">
+                            <span class="btn rounded-circle btn-primary btn-sm down-score bg-head-blue">
                               <i class="bi bi-caret-down-fill"></i>
                             </span>
                           </div>
@@ -429,22 +429,12 @@
                     </div>
                     <div  class="row">
                       <div class="col-5 pe-5">
-                        <input id="GreenTeamNameInput" class="form-control team-name form_green_border" type="text" placeholder="Green Team Name">
-                        <h5 id="GreenTeamNameDisplay" class="m-1 mb-0 d-none">
-                        </h5>
+                        <input class="form-control team-name form_green_border" rel="green" type="text" placeholder="Green Team Name">
                       </div>
                       <div class="col-2">
-                        <span class="btn btn-outline-secondary edit-teams-name d-none">
-                          <i class="bi bi-pencil-fill"></i>
-                        </span>
-                        <span class="btn btn-success validate-teams-name ">
-                          <i class="bi bi-check-lg"></i>
-                        </span>
                       </div>
                       <div class="col-5 ps-5">
-                        <input id="BlueTeamNameInput" class="form-control team-name text-end" type="text" placeholder="Blue Team Name">
-                        <h5 id="BlueTeamNameDisplay" class="m-1 mb-0 d-none">
-                        </h5>
+                        <input class="form-control team-name text-end" rel="blue" type="text" placeholder="Blue Team Name">
                       </div>
                     </div>
                     

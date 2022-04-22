@@ -110,22 +110,17 @@ class Client:
         self.running = True
         self.key = key
         self.lock = threading.Lock()
+        self.robots = {}
 
-        self.green1 = ClientRobot('green', 1, self)
-        self.green2 = ClientRobot('green', 2, self)
-        self.blue1 = ClientRobot('blue', 1, self)
-        self.blue2 = ClientRobot('blue', 2, self)
+        # Creating self.green1, self.green2 etc.
+        for color, number in utils.all_robots():
+            robot_id = utils.robot_id(color, number)
+            robot = ClientRobot(color, number, self)
+            self.__dict__[robot_id] = robot
 
-        self.robots = {
-            'green': {
-                1: self.green1,
-                2: self.green2,
-            },
-            'blue': {
-                1: self.blue1,
-                2: self.blue2,
-            }
-        }
+            if color not in self.robots:
+                self.robots[color] = {}
+            self.robots[color][number] = robot
 
         # Custom objects to track
         self.objs = {n: ClientTracked() for n in range(1, 9)}
@@ -225,13 +220,17 @@ class Client:
         self.running = False
 
     def command(self, color, number, name, parameters):
-        sigint_handler = signal.getsignal(signal.SIGINT)
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        if threading.current_thread() is threading.main_thread():
+            sigint_handler = signal.getsignal(signal.SIGINT)
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            
         self.lock.acquire()
         self.req.send_json([self.key, color, number, [name, *parameters]])
         success, message = self.req.recv_json()
         self.lock.release()
-        signal.signal(signal.SIGINT, sigint_handler)
+
+        if threading.current_thread() is threading.main_thread():
+            signal.signal(signal.SIGINT, sigint_handler)
 
         time.sleep(0.01)
 
