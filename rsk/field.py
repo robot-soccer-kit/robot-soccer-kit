@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import cv2
 from . import field_dimensions
@@ -119,16 +120,14 @@ class Field:
 
         # We check that homography is consistent, note that this can happen (and should happen)
         # with only one or two corners!
-        # if self.homography is not None:
-        #     bad_homography = False
-        #     for key in self.corner_gfx_positions:
-        #         for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
-        #             projected = self.pos_of_gfx(gfx)
-        #             dist = np.linalg.norm(np.array(real) - np.array(projected))
-        #             if dist > 0.03:
-        #                 bad_homography = True
-        #     if bad_homography:
-        #         self.homography = None
+        if self.is_calibrated:
+            for key in self.corner_gfx_positions:
+                for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
+                    projected_position = self.pixel_to_position(gfx)
+                    reprojection_distance = np.linalg.norm(np.array(real) - np.array(projected_position))
+                    if reprojection_distance > 0.025:
+                        print('Calibration seems wrong, re-calibrating')
+                        self.should_calibrate = True
 
         self.corner_gfx_positions = {}
         
