@@ -52,6 +52,7 @@ class Field:
         # Camera intrinsic and distortion
         self.intrinsic = None
         self.distortion = None
+        self.errors = 0
 
     def calibrated(self):
         return self.is_calibrated
@@ -104,6 +105,7 @@ class Field:
             # We are now calibrated
             self.is_calibrated = True
             self.should_calibrate = False
+            self.errors = 0
 
             # Checking if we can see the whole fields
             image_height, image_width, _ = image.shape
@@ -120,14 +122,23 @@ class Field:
                     img[1] < 0 or img[1] > image_height:
                     self.see_whole_field = False
 
-        # We check that homography is consistent, note that this can happen (and should happen)
-        # with only one or two corners!
-        if self.is_calibrated:
-            for key in self.corner_gfx_positions:
-                for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
-                    projected_position = self.pixel_to_position(gfx)
-                    reprojection_distance = np.linalg.norm(np.array(real) - np.array(projected_position))
-                    if reprojection_distance > 0.025:
+        # We check that calibration is consistent, this can happen be done with only a few corners
+        # The goal is to avoid recalibrating everytime for performance reasons
+        if len(self.corner_gfx_positions) >= 3:
+            if self.is_calibrated:
+                has_error = False
+                for key in self.corner_gfx_positions:
+                    for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
+                        projected_position = self.pixel_to_position(gfx)
+                        reprojection_distance = np.linalg.norm(np.array(real) - np.array(projected_position))
+                        if reprojection_distance > 0.025:
+                            has_error = True
+
+                if not has_error:
+                    self.errors = 0
+                else:
+                    self.errors += 1
+                    if self.errors > 8:
                         print('Calibration seems wrong, re-calibrating')
                         self.should_calibrate = True
 
