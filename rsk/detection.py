@@ -68,8 +68,6 @@ class Detection:
         self.lower_orange = np.array([0, 150, 150])
         self.upper_orange = np.array([25, 255, 255])
 
-
-
         # Detection output
         self.markers = {}
         self.last_updates = {}
@@ -234,7 +232,7 @@ class Detection:
                     new_markers[item] = self.field.pose_of_tag(corners)
                     self.last_updates[item] = time.time()
 
-        self.field.update_homography(image)
+        self.field.update_calibration(image)
         self.markers = new_markers
 
     def detectBall(self, image, image_debug):

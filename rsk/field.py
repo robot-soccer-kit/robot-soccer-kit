@@ -44,13 +44,13 @@ class Field:
         # Calibration matrices
         self.is_calibrated = False
 
+        # Extrinsic (4x4) transformations
         self.extrinsic = None
         self.extrinsic_inv = None
-        self.intrinsic = None
-        self.intrinsic_inv = None
 
-        self.object_points = []
-        self.graphic_points = []
+        # Camera intrinsic and distortion
+        self.intrinsic = None
+        self.distortion = None
 
     def calibrated(self):
         return self.is_calibrated
@@ -74,8 +74,8 @@ class Field:
     def camera_to_field(self, point):
         return (self.extrinsic_inv @ np.array([*point, 1.]))[:3]
 
-    def update_homography(self, image):
-        if len(self.corner_gfx_positions) >= 4 and self.should_calibrate:
+    def update_calibration(self, image):
+        if len(self.corner_gfx_positions) >= 3 and self.should_calibrate:
             # Computing point-to-point correspondance
             object_points = []
             graphics_positions = []
@@ -87,43 +87,35 @@ class Field:
 
             object_points = np.array(object_points, dtype=np.float32)
             graphics_positions = np.array(graphics_positions, dtype=np.float32)
-
-            self.object_points.append(object_points)
-            self.graphic_points.append(graphics_positions)
             
-            if len(self.object_points) >= 4:
-                self.should_calibrate = False
+            self.should_calibrate = False
 
-                # Calibrating camera
-                ret, self.intrinsic, _, rvecs, tvecs = \
-                    cv2.calibrateCamera(self.object_points, self.graphic_points, image.shape[:2][::-1], None, None,
-                    flags=cv2.CALIB_FIX_ASPECT_RATIO+cv2.CALIB_ZERO_TANGENT_DIST)
-                
-                self.intrinsic_inv = np.linalg.inv(self.intrinsic)
+            # Calibrating camera
+            ret, self.intrinsic, self.distortion, rvecs, tvecs = \
+                cv2.calibrateCamera([object_points], [graphics_positions], image.shape[:2][::-1], None, None,
+                flags=0)
+        
+            # Computing extrinsic matrices
+            transformation = np.eye(4)
+            transformation[:3, :3], _ = cv2.Rodrigues(rvecs[0])
+            transformation[:3, 3] = tvecs[0].T
+            self.extrinsic = transformation
+            self.extrinsic_inv = np.linalg.inv(self.extrinsic)
+            self.is_calibrated = True  
 
-                # Computing extrinsic matrices
-                transformation = np.eye(4)
-                transformation[:3, :3], _ = cv2.Rodrigues(np.mean(rvecs, axis=0))
-                transformation[:3, 3] = np.mean(tvecs, axis=0).T
-                self.extrinsic = transformation
-                self.extrinsic_inv = np.linalg.inv(self.extrinsic)
-                self.is_calibrated = True  
-                self.object_points = []
-                self.graphic_points = []
+            image_height, image_width, _ = image.shape
+            image_points = []
+            self.see_whole_field = True
+            for sx, sy in [(-1, 1), (1, 1), (1, -1), (-1, -1)]:
+                x = sx * ((field_dimensions.length / 2) + field_dimensions.border_size)
+                y = sy * ((field_dimensions.width / 2) + field_dimensions.border_size)
 
-                image_height, image_width, _ = image.shape
-                image_points = []
-                self.see_whole_field = True
-                for sx, sy in [(-1, 1), (1, 1), (1, -1), (-1, -1)]:
-                    x = sx * ((field_dimensions.length / 2) + field_dimensions.border_size)
-                    y = sy * ((field_dimensions.width / 2) + field_dimensions.border_size)
+                img = self.position_to_pixel([x, y, 0.])
+                image_points.append((int(img[0]), int(img[1])))
 
-                    img = self.position_to_pixel([x, y, 0.])
-                    image_points.append((int(img[0]), int(img[1])))
-
-                    if img[0] < 0 or img[0] > image_width or \
-                        img[1] < 0 or img[1] > image_height:
-                        self.see_whole_field = False
+                if img[0] < 0 or img[0] > image_width or \
+                    img[1] < 0 or img[1] > image_height:
+                    self.see_whole_field = False
 
         # We check that homography is consistent, note that this can happen (and should happen)
         # with only one or two corners!
@@ -141,8 +133,11 @@ class Field:
         self.corner_gfx_positions = {}
         
     def pixel_to_position(self, pos, z=0, debug=False):
-        point_position_field = self.camera_to_field(self.intrinsic_inv @ np.array([*pos, 1.]))
-        
+        # Computing the point position in camera frame
+        point_position_camera = cv2.undistortPoints(pos, self.intrinsic, self.distortion)[0][0]
+
+        # Computing the point position in the field frame and solving for given z
+        point_position_field = self.camera_to_field([*point_position_camera, 1.])
         camera_center_field = self.camera_to_field(np.array([0., 0., 0.]))
         delta = point_position_field - camera_center_field
         l = (z - camera_center_field[2])/delta[2]
@@ -153,11 +148,12 @@ class Field:
         if len(pos) == 2:
             # If no z is provided, assume it is a ground position
             pos = [*pos, 0.]
-
+        
         point_position_camera = self.field_to_camera(pos)
-        position = self.intrinsic @ point_position_camera
-
-        return [int(position[0]/position[2]), int(position[1]/position[2])]
+        position, J = cv2.projectPoints(point_position_camera, np.zeros(3), np.zeros(3), self.intrinsic, self.distortion)
+        position = position[0][0]
+        
+        return [int(position[0]), int(position[1])]
 
     def pose_of_tag(self, corners):
         if self.calibrated():
