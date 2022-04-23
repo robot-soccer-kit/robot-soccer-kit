@@ -14,7 +14,7 @@ class Field:
         self.robot_tag_size = 0.08
         self.frame_point_list = None
         self.id_gfx_corners = {}
-        self.should_calibrate = False
+        self.should_calibrate = True
 
         #Dimensions
         self.camera_height = 2
