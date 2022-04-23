@@ -75,7 +75,7 @@ class Field:
         return (self.extrinsic_inv @ np.array([*point, 1.]))[:3]
 
     def update_calibration(self, image):
-        if len(self.corner_gfx_positions) >= 4 and self.should_calibrate:
+        if len(self.corner_gfx_positions) >= 3 and self.should_calibrate:
             # Computing point-to-point correspondance
             object_points = []
             graphics_positions = []
@@ -134,7 +134,7 @@ class Field:
         
     def pixel_to_position(self, pos, z=0, debug=False):
         # Computing the point position in camera frame
-        point_position_camera = cv2.undistortPoints(pos, self.intrinsic, self.distortion)[0][0]
+        point_position_camera = cv2.undistortPoints(np.array(pos), self.intrinsic, self.distortion)[0][0]
 
         # Computing the point position in the field frame and solving for given z
         point_position_field = self.camera_to_field([*point_position_camera, 1.])
