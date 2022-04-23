@@ -11,199 +11,148 @@ class Backend():
         self.robots = robots.Robots(self.detection)
         self.referee = referee.Referee(self.detection)
 
-    def exit(self):
-        self.video.stop()
-        self.robots.stop()
-
-    @api.slot()
     def cameras(self):
         return self.video.cameras()
 
-    @api.slot()
     def resolutions(self):
         return self.video.resolutions()
 
-    @api.slot()
     def getCameraSettings(self):
         return self.video.settings
 
-    @api.slot(int, int, result=bool)
-    def startCapture(self, index, res):
+    def startCapture(self, index: int, res: int) -> bool:
         return self.video.startCapture(index, res)
 
-    @api.slot()
     def stopCapture(self):
         self.video.stopCapture()
 
-    @api.slot(result=str)
-    def getImage(self):
+    def getImage(self) -> str:
         image = self.video.getImage()
         print(image)
         return image
 
-    @api.slot(bool)
-    def getVideo(self, with_image):
+    def getVideo(self, with_image) -> bool:
         return self.video.getVideo(with_image)
 
-    @api.slot(bool)
-    def enableVideoDebug(self, enable=True):
+    def enableVideoDebug(self, enable=True) -> bool:
         self.video.debug = enable
 
-    @api.slot()
     def cameraSettings(self, settings):
         self.video.setCameraSettings(settings)
         return True
 
-    @api.slot()
     def ports(self):
         return self.robots.ports()
 
-    @api.slot(str)
-    def addRobot(self, port):
+    def addRobot(self, port: str):
         self.robots.addRobot(port)
 
-    @api.slot()
     def getRobots(self):
         return self.robots.getRobots()
 
-    @api.slot(str, str)
-    def setMarker(self, port, marker):
+    def setMarker(self, port: str, marker: str):
         self.robots.setMarker(port, marker)
 
-    @api.slot(str)
-    def removeRobot(self, port):
+    def removeRobot(self, port: str):
         self.robots.remove(port)
 
-    @api.slot(str)
-    def blink(self, port):
+    def blink(self, port: str):
         if port in self.robots.robots:
             self.robots.robots[port].blink()
 
-    @api.slot(str)
-    def kick(self, port):
+    def kick(self, port: str):
         if port in self.robots.robots:
             self.robots.robots[port].kick()
 
-    @api.slot()
     def getGame(self):
         return self.robots.control.status()
 
-    @api.slot(str, bool)
-    def allowTeamControl(self, team, allow):
+    def allowTeamControl(self, team: str, allow: bool):
         self.robots.control.allowTeamControl(team, allow)
 
-    @api.slot()
     def emergency(self):
         self.robots.control.emergency()
 
-    @api.slot(str, str)
-    def setKey(self, team, key):
-        self.robots.control.setKey(team, key) 
+    def setKey(self, team: str, key: str):
+        self.robots.control.setKey(team, key)
 
-    @api.slot()
     def identify(self):
         self.robots.identify()
 
-    @api.slot()
     def startReferee(self):
         self.referee.startReferee()
 
-    @api.slot()
     def stopReferee(self):
         self.referee.stopReferee()
-    
-    @api.slot(str, int)
-    def updateScore(self, team, increment):
+
+    def updateScore(self, team: str, increment: int):
         self.referee.updateScore(team, increment)
-    
-    @api.slot()
+
     def resetScore(self):
         self.referee.resetScore()
-    
-    @api.slot(str, result=int)
-    def getScore(self, team):
+
+    def getScore(self, team: str) -> int:
         return self.referee.getScore(team)
-    
-    @api.slot(list)
-    def setDisplaySettings(self, display_settings):
+
+    def setDisplaySettings(self, display_settings: list):
         self.detection.setDisplaySettings(display_settings)
-    
-    @api.slot()
+
     def saveDisplaySettings(self):
         self.detection.saveDisplaySettings()
-    
-    @api.slot(result=list)
-    def getDisplaySettings(self):
+
+    def getDisplaySettings(self) -> list:
         return self.detection.getDisplaySettings()
 
-    @api.slot(result=list)
-    def getDefaultDisplaySettings(self):
+    def getDefaultDisplaySettings(self) -> list:
         return self.detection.getDefaultDisplaySettings()
 
-    @api.slot()
     def startGame(self):
         self.referee.startGame()
-    
-    @api.slot()
+
     def pauseGame(self):
         self.referee.pauseGame()
 
-    @api.slot()
     def resumeGame(self):
         self.referee.resumeGame()
-    
-    @api.slot()
+
     def stopGame(self):
         self.referee.stopGame()
 
-    @api.slot()
     def calibrateCamera(self):
         self.detection.calibrateCamera()
 
-    @api.slot(result = list)
-    def getTimer(self):
+    def getTimer(self) -> list:
         return self.referee.getTimer()
 
-    @api.slot(int, result = list)
-    def getRefereeHistory(self, slice):
+    def getRefereeHistory(self, slice) -> list:
         return self.referee.getRefereeHistory(slice)
 
-    @api.slot()
     def placeGame(self):
         self.referee.placeGame()
-    
-    @api.slot(result = str)
-    def getGameState(self):
-        return self.referee.getGameState()
-    
-    @api.slot(str, str)
-    def setTeamNames(self,team,name):
-        self.referee.setTeamNames(team,name)
 
-    @api.slot(result = str)
-    def MidTimeChangeColorField(self):
+    def getGameState(self) -> str:
+        return self.referee.getGameState()
+
+    def setTeamNames(self, team: str, name: str):
+        self.referee.setTeamNames(team, name)
+
+    def MidTimeChangeColorField(self) -> str:
         self.detection.MidTimeChangeColorField()
-    
-    @api.slot(result = str)
-    def setTeamSides(self):
+
+    def setTeamSides(self) -> str:
         self.referee.setTeamSides()
-    
-    @api.slot()
+
     def startHalfTime(self):
         self.referee.startHalfTime()
 
-    @api.slot()
     def startSecondHalfTime(self):
         self.referee.startSecondHalfTime()
 
-    @api.slot(int, str)
-    def addPenalty(self, duration, robot):
+    def addPenalty(self, duration: int, robot: str):
         self.referee.addPenalty(duration, robot)
-    
-    @api.slot(str)
-    def cancelPenalty(self, robot):
+
+    def cancelPenalty(self, robot) -> str:
         self.referee.cancelPenalty(robot)
 
-    @api.slot(result = dict)
-    def getPenalty(self):
+    def getPenalty(self) -> dict:
         return self.referee.getPenalty()

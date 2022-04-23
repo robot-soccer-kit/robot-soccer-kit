@@ -13,6 +13,7 @@ from . import api
 
 has_client = False
 backend = Backend()
+api.register(backend)
 
 static = os.path.dirname(__file__)+'/static/'
 app = Flask('Game controller', static_folder=static)
@@ -31,8 +32,9 @@ def handle_api():
             try:
                 method = api.methods[command]
                 for k in range(len(method['args'])):
-                    args[k] = method['args'][k](args[k])
-                result = method['func'](backend, *args)
+                    if method['args'][k] is not None:
+                        args[k] = method['args'][k](args[k])
+                result = method['func'](*args)
                 return jsonify([1, result])
             except ValueError:
                 return jsonify([0, 'Bad argument type for command %s' % command])    

@@ -1,3 +1,5 @@
+import typing
+import inspect
 import os
 
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
@@ -5,15 +7,18 @@ os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 methods = {}
 
 
-def slot(*args, result=None):
+def register(obj):
     global methods
 
-    def decorate(func):
-        methods[func.__name__] = {
-            'func': func,
-            'args': args,
-            'result': result
-        }
-        return func
+    for name, func in inspect.getmembers(obj):
+        if not name.startswith('_') and callable(func):
+            hints = typing.get_type_hints(func)
+            args = inspect.signature(func).parameters.keys()
+            args = list(map(lambda name: hints.get(name, None), args))
+            result = hints.get('return', None)
 
-    return decorate
+            methods[func.__name__] = {
+                'func': func,
+                'args': args,
+                'result': result
+            }
