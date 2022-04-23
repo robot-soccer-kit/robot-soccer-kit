@@ -161,7 +161,7 @@ function video_initialize(backend)
                 $('.calibrated').addClass('text-danger');
             }
 
-            if (video.running && video.detection.calibrated[0] && video.detection.calibrated[1] && video.detection.see_whole_field) {
+            if (video.running && video.detection.calibrated && video.detection.see_whole_field) {
                 $('body').addClass('vision-no-error');
             } else {
                 $('body').removeClass('vision-no-error');
