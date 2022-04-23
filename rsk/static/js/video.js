@@ -73,7 +73,6 @@ function video_initialize(backend)
 
     $('.calibrate-camera').click(function() {
         backend.calibrateCamera()
-        settings_changed = false
     });
 
     // Camera settings
@@ -91,10 +90,8 @@ function video_initialize(backend)
         });
     });
 
-    var settings_changed = false
-
     $('.camera-settings').change(function() {
-        settings_changed = true
+        backend.calibrateCamera()
     });
 
     // Starting the video capture
@@ -149,20 +146,22 @@ function video_initialize(backend)
             }
             $('.detection').html(detection);
 
-            if (video.detection.calibrated && video.detection.see_whole_field && !settings_changed) {
+            if (video.detection.calibrated && video.detection.see_whole_field) {
                 $('.calibrated').text('Field calibrated');
                 $('.calibrated').addClass('text-success');
                 $('.calibrated').removeClass('text-danger');
                 $('.calibrated').html('<i class="bi bi-check2-circle text-success"></i> Field detected and calibrated');
-                // settings_changed = false;
-            } 
-            else {
-                $('.calibrated').html('<i class="text-warning bi bi-exclamation-circle"></i> Can\'t see whole field, all the green area should be visible</i>');
+            } else {
+                if (video.detection.calibrated) {
+                    $('.calibrated').html('<i class="text-warning bi bi-exclamation-circle"></i> Can\'t see whole field, all the green area should be visible</i>');
+                } else {
+                    $('.calibrated').html('<i class="text-warning bi bi-exclamation-circle"></i> Not calibrated (should see the four field markers)</i>');
+                }
                 $('.calibrated').removeClass('text-success');
                 $('.calibrated').addClass('text-danger');
             }
 
-            if (video.running && video.detection.calibrated[0] && video.detection.calibrated[1] && video.detection.see_whole_field && !settings_changed) {
+            if (video.running && video.detection.calibrated[0] && video.detection.calibrated[1] && video.detection.see_whole_field) {
                 $('body').addClass('vision-no-error');
             } else {
                 $('body').removeClass('vision-no-error');

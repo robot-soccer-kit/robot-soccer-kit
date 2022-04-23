@@ -123,6 +123,7 @@ class Detection:
 
     def calibrateCamera(self):
         self.field.should_calibrate = True
+        self.field.is_calibrated = False
     
     def MidTimeChangeColorField(self):
         if self.color_xpos == (0, 255, 0):
