@@ -168,11 +168,16 @@ class Detection:
                 for sign, color in [(-1, self.color_xneg), (1, self.color_xpos)]:
                     C = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), -sign*field_dimensions.goal_width / 2.])
                     D = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), sign*field_dimensions.goal_width / 2.])
-                    cv2.line(image_debug, C, D, color, 5)
+                    E = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), -sign*field_dimensions.goal_width / 2., 0.10])
+                    F = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), sign*field_dimensions.goal_width / 2., 0.10])
+                    cv2.line(image_debug, C, D, color, 3)
+                    cv2.line(image_debug, E, F, color, 2)
+                    cv2.line(image_debug, C, E, color, 2)
+                    cv2.line(image_debug, D, F, color, 2)
                     for post in [-1, 1]:
                         A = self.field.position_to_pixel([sign*(.05 + field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
                         B = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
-                        cv2.line(image_debug, A, B, color, 5)
+                        cv2.line(image_debug, A, B, color, 3)
             if self.displaySettings['landmark']:
                 A = self.field.position_to_pixel([0, 0])
                 B = self.field.position_to_pixel([0.2, 0])
