@@ -88,8 +88,6 @@ class Field:
 
             object_points = np.array(object_points, dtype=np.float32)
             graphics_positions = np.array(graphics_positions, dtype=np.float32)
-            
-            self.should_calibrate = False
 
             # Calibrating camera
             ret, self.intrinsic, self.distortion, rvecs, tvecs = \
@@ -102,8 +100,12 @@ class Field:
             transformation[:3, 3] = tvecs[0].T
             self.extrinsic = transformation
             self.extrinsic_inv = np.linalg.inv(self.extrinsic)
-            self.is_calibrated = True  
 
+            # We are now calibrated
+            self.is_calibrated = True
+            self.should_calibrate = False
+
+            # Checking if we can see the whole fields
             image_height, image_width, _ = image.shape
             image_points = []
             self.see_whole_field = True
