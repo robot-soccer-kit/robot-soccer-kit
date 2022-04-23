@@ -38,8 +38,9 @@ body {
     top:84px;
 }
 
-.brightness, .contrast, .saturation {
-    width:100px;
+.camera-setting label {
+    text-align:right;
+    font-weight:bold;
 }
 
 .vision-show-running {
