@@ -75,7 +75,7 @@ class Field:
         return (self.extrinsic_inv @ np.array([*point, 1.]))[:3]
 
     def update_calibration(self, image):
-        if len(self.corner_gfx_positions) >= 3 and self.should_calibrate:
+        if len(self.corner_gfx_positions) >= 4 and self.should_calibrate:
             # Computing point-to-point correspondance
             object_points = []
             graphics_positions = []
