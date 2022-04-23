@@ -207,11 +207,3 @@ class Backend():
     @api.slot(result = dict)
     def getPenalty(self):
         return self.referee.getPenalty()
-
-    @api.slot(float)
-    def setCameraheight(self, camera_height):
-        self.detection.setCameraheight(camera_height)
-
-    @api.slot(result = int)
-    def getCameraheight(self):
-        return self.detection.getCameraheight()

@@ -78,9 +78,6 @@ class Detection:
         self.on_update = None
 
         self.ball_height = 0.042
-        if 'camera_height' in config.config:
-            if 'camera_height' in config.config['camera_height']:
-                self.field.camera_height = config.config['camera_height']['camera_height']
 
     def setDisplaySettings(self, display_settings: list) -> list: 
         display_settings_bool = []
@@ -300,13 +297,3 @@ class Detection:
         self.socket.send_json(info, flags=zmq.NOBLOCK)
         if self.on_update is not None:
             self.on_update(info)
-
-    def setCameraheight(self, camera_height):
-        self.field.camera_height = camera_height
-        config.config['camera_height'] = {
-            'camera_height': self.field.camera_height
-        }
-        config.save()
-
-    def getCameraheight(self):
-        return self.field.camera_height

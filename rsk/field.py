@@ -16,16 +16,13 @@ class Field:
         self.id_gfx_corners = {}
         self.should_calibrate = True
 
-        #Dimensions
-        self.camera_height = 2
+        # Dimensions
         self.robot_height = 0.076
-
-        self.field_shape = [field_dimensions.length, field_dimensions.width] # Field dimension (length, width)
 
         self.corner_field_positions = {}
         for (c, sx, sy) in (['c1', 1, 1], ['c2', 1, -1], ['c3', -1, 1], ['c4', -1, -1]):
-            cX = sx * (self.field_shape[0]/2 + (self.corner_tag_size/2) + self.corner_tag_border)
-            cY = sy * (self.field_shape[1]/2 + (self.corner_tag_size/2) + self.corner_tag_border)
+            cX = sx * (field_dimensions.length/2 + (self.corner_tag_size/2) + self.corner_tag_border)
+            cY = sy * (field_dimensions.width/2 + (self.corner_tag_size/2) + self.corner_tag_border)
 
             self.corner_field_positions[c] = [
                 # Top left
