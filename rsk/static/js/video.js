@@ -149,7 +149,7 @@ function video_initialize(backend)
             }
             $('.detection').html(detection);
 
-            if (video.detection.calibrated[0] && video.detection.calibrated[1] && video.detection.see_whole_field && !settings_changed) {
+            if (video.detection.calibrated && video.detection.see_whole_field && !settings_changed) {
                 $('.calibrated').text('Field calibrated');
                 $('.calibrated').addClass('text-success');
                 $('.calibrated').removeClass('text-danger');
@@ -157,12 +157,7 @@ function video_initialize(backend)
                 // settings_changed = false;
             } 
             else {
-                if (video.detection.calibrated[0] && video.detection.calibrated[1] && !video.detection.see_whole_field) {
-                    $('.calibrated').html('<i class="text-warning bi bi-exclamation-circle"></i> Can\'t see whole field, correct then calibrate <i class="bi bi-arrow-right"></i>');
-                } 
-                else {
-                    $('.calibrated').html('<i class="text-warning bi bi-exclamation-circle"></i> Field detected please calibrate &nbsp;<i class="bi bi-arrow-right"></i>');
-                }
+                $('.calibrated').html('<i class="text-warning bi bi-exclamation-circle"></i> Can\'t see whole field, all the green area should be visible</i>');
                 $('.calibrated').removeClass('text-success');
                 $('.calibrated').addClass('text-danger');
             }
