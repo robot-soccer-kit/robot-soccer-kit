@@ -118,8 +118,8 @@ class Backend():
     def calibrateCamera(self):
         self.detection.calibrateCamera()
 
-    def placeGame(self):
-        self.referee.placeGame()
+    def placeGame(self, configuration:str):
+        self.referee.placeGame(configuration)
 
     def setTeamNames(self, team: str, name: str):
         self.referee.setTeamNames(team, name)
@@ -144,3 +144,6 @@ class Backend():
     
     def getFullGameState(self) -> dict:
         return self.referee.getFullGameState()
+    
+    def validateGoal(self, yes_no:bool):
+        self.referee.validateGoal(yes_no)

@@ -231,4 +231,8 @@ class Control:
                         moving = True
             self.idle = not moving
 
+            for team, number in utils.all_robots():
+                if self.is_preempted(team, number, 'force place robots') and self.robots_idle():
+                        self.unpreempt_all_robots('force place robots')
+
             time.sleep(0.01)

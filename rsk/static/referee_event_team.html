@@ -1,10 +1,11 @@
 <div id="toast-{id}" class="toast {team}-toast-position border-{team}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
   <div class="toast-header bg-head-{team}">
-    <i class="bi bi-circle-fill text-white"></i>&nbsp;&nbsp;
+    <i class="bi bi-circle-fill text-white icon"></i>&nbsp;&nbsp;
     <strong class="me-auto text-light">{event} {team} Team</strong>
     <small class="text-white">{timestamp}</small>
   </div>
-  <div class="toast-body bg-body-{team}">
-    {event}
+  <div class="toast-body py-2 bg-body-{team}">
+      <button type="button" class="validate-goal btn btn-success btn-sm">Validate</button>
+      <button type="button" class="cancel-goal btn btn-danger btn-sm">Cancel</button>
   </div>
 </div>

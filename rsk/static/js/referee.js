@@ -213,7 +213,6 @@ function referee_initialize(backend)
     
     // Half Time
     $('#MidTimeChange').click(function() {
-        backend.setTeamSides();
 
         $("#RefereeHistory").append('<h5 class="text-muted m-3">Half Time</h5>');
         backend.startHalfTime();
@@ -223,11 +222,18 @@ function referee_initialize(backend)
         $('.ChangeCover').addClass('d-none');
         $('.MidTimeIdentify').removeClass('d-none');
         $('.MidTimeIdentifyBefore').removeClass('d-none');
+        backend.placeGame('swap_covers');
     });
 
     $('#N_ChangeCover').click(function() {
+        backend.placeGame('gently_swap_side');
+        backend.setTeamSides();
         $('.ChangeCover').addClass('d-none');
         $('.SecondHalfTime').removeClass('d-none');
+        setTimeout(function() {
+            backend.placeGame('standard');
+        }, 5000);
+
     });
 
     $('#BtnMidTimeIdentify').click(function() {
@@ -243,11 +249,14 @@ function referee_initialize(backend)
     });
 
     $('#Next_MidTimeIdentify').click(function() {
+        backend.setTeamSides();
+        $('#HalfTimePlaceStd').removeClass('d-none');
         $('#Next_MidTimeIdentify').addClass('d-none');
         $('.MidTimeIdentifyDone').addClass('d-none');
         $('.MidTimeIdentify').addClass('d-none');
         $('.MidTimeIdentifyBefore').addClass('d-none');
         $('.SecondHalfTime').removeClass('d-none');
+        backend.placeGame('standard');
     });
 
     $('#BtnSecondHalfTime').click(function() {
@@ -255,6 +264,7 @@ function referee_initialize(backend)
         $('.ChangeCover').removeClass('d-none');
         $('.MidTimeIdentify').addClass('d-none');
         $('.SecondHalfTime').addClass('d-none');
+        $('#HalfTimePlaceStd').addClass('d-none');
         }, 500);
         backend.startSecondHalfTime();
     });
@@ -277,18 +287,42 @@ function referee_initialize(backend)
         });
     });
 
+    $("#RefereeHistory").on('click','.validate-goal', function() {
+        backend.getFullGameState(function(game_state) {
+        last_referee_item = game_state["referee_history_sliced"].length-1
+        id_last_referee_item = String(game_state["referee_history_sliced"][last_referee_item])
+        nb = String(game_state["referee_history_sliced"].length-1)
+        $("#toast-"+id_last_referee_item).find('.icon').removeClass('bi-circle-fill')
+        $("#toast-"+id_last_referee_item).find('.icon').addClass('bi-check2-circle')
+        $("#toast-"+id_last_referee_item).find('.toast-body').addClass('text-success')
+        $("#toast-"+id_last_referee_item).find('.toast-body').html('<h5 class="m-0">Goal Validated</h5>')
+        console.log(game_state["referee_history_sliced"])
+        console.log(nb)
+        });
+        backend.validateGoal(true)
+    });
+
+    $("#RefereeHistory").on('click','.cancel-goal', function() {
+        backend.getFullGameState(function(game_state) {
+        last_referee_item = game_state["referee_history_sliced"].length-1
+        id_last_referee_item = String(game_state["referee_history_sliced"][last_referee_item])
+        $("#toast-"+id_last_referee_item).find('.icon').removeClass('bi-circle-fill')
+        $("#toast-"+id_last_referee_item).find('.icon').addClass('bi-x-circle')
+        $("#toast-"+id_last_referee_item).find('.toast-body').addClass('text-danger')
+        $("#toast-"+id_last_referee_item).find('.toast-body').html('<h5 class="m-0">Goal Disallowed</h5>')
+        });
+        backend.validateGoal(false)
+    });
 
     $('.reset-score').click(function() {
         backend.resetScore();
     });
 
-
     // Place Robots
-    $('#Strd-place').click(function() {
-        backend.placeGame();
+    $('.strd-place').click(function() {
+        backend.placeGame('standard');
     });
     
-
     // Robots Penalties
     $('.robot-penalty').each(function() {
         let robot_id = $(this).attr('rel');

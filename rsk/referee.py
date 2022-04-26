@@ -113,10 +113,24 @@ class Referee:
         self.game_state["game_is_not_paused"] = True
         self.game_state["game_is_running"] = True
 
-    def placeGame(self):
-        pass
+    def placeGame(self, configuration):
+        self.control.preempt_all_robots('force place robots')
+        if configuration == "standard":
+            if (self.game_state["x_positive_goal"] == utils.robot_teams()[1]):
+                self.control.set_target_configuration('game-blue-positive')
+            else:
+                self.control.set_target_configuration('game-green-positive')
 
-    def updateScore(self, team, increment):
+        elif configuration == "swap_covers":
+            if (self.game_state["x_positive_goal"] == utils.robot_teams()[1]):
+                self.control.set_target_configuration('swap_covers_blue_positive')
+            else:
+                self.control.set_target_configuration('swap_covers_green_positive')
+
+        else: 
+            self.control.set_target_configuration(configuration)
+
+    def updateScore(self, team: str, increment: int):
         if team == utils.robot_teams()[0] : 
             self.game_state["score"][utils.robot_teams()[0]] += increment
         elif team == utils.robot_teams()[1] : 
@@ -142,7 +156,7 @@ class Referee:
     def detection_update(self, info):
         self.detection_info = info
 
-    def setGameDuration(self, duration):
+    def setGameDuration(self, duration:int):
         self.game_duration = duration
 
     def resetPenalty(self):
@@ -213,10 +227,23 @@ class Referee:
     def setTeamSides(self):
         if self.game_state["x_positive_goal"] == utils.robot_teams()[0]:
             self.game_state["x_positive_goal"] = utils.robot_teams()[1]
-            print("change blue", self.game_state["x_positive_goal"])
         elif self.game_state["x_positive_goal"] == utils.robot_teams()[1]:
             self.game_state["x_positive_goal"] = utils.robot_teams()[0]
-            print("change green", self.game_state["x_positive_goal"])
+
+    def validateGoal(self, yes_no: bool):
+        if yes_no:
+            if (self.game_state["x_positive_goal"] == utils.robot_teams()[1]):
+                self.control.set_target_configuration('game-blue-positive')
+            else:
+                self.control.set_target_configuration('game-green-positive')
+
+            self.control.unpreempt_all_robots('goal')
+            self.resumeGame()
+            pass
+        else:
+            self.updateScore(self.game_state["referee_history_sliced"][-1][2],-1)
+            self.control.unpreempt_all_robots('goal')
+            self.resumeGame()
 
     def thread(self):
         # Initialisation coordinates goals
@@ -257,7 +284,7 @@ class Referee:
 
                             if (intersect_x_neg_goal[0] or intersect_x_pos_goal[0]) and memory == 0:
                                 self.updateScore(GoalTeam[0], 1)
-                                self.addRefereeHistory(GoalTeam[0], "goal")
+                                self.addRefereeHistory(GoalTeam[0], "Goal")
                                 # playsound('rsk/static/sounds/'+GoalTeam[1]+'.wav',False)
                                 memory = 1
                                 self.pauseGame()
@@ -293,9 +320,14 @@ class Referee:
                                     memory = 0
 
                             ball_coord_old = ball_coord
-
+                
                 self.tickPenalty()
 
                 time.sleep(0.1)
             else:
                 time.sleep(0.5)
+                
+                if self.game_state["halftime_is_running"]:
+                    self.control.preempt_all_robots('half time')
+                else:
+                    self.control.unpreempt_all_robots('half time')

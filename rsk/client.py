@@ -20,12 +20,48 @@ configurations = {
         ['blue', 2, (-field_dimensions.length/2, 0, 0)],
     ],
 
+    'game-green-positive': [
+        ['green', 1, (field_dimensions.length/4, 0, np.pi)],
+        ['green', 2, (field_dimensions.length/2, 0, np.pi)],
+        ['blue', 1, (-field_dimensions.length/4, 0, 0)],
+        ['blue', 2, (-field_dimensions.length/2, 0, 0)],
+    ],
+
+    'game-blue-positive': [
+        ['green', 1, (-field_dimensions.length/4, 0, 0)],
+        ['green', 2, (-field_dimensions.length/2, 0, 0)],
+        ['blue', 1, (field_dimensions.length/4, 0, np.pi)],
+        ['blue', 2, (field_dimensions.length/2, 0, np.pi)],
+    ],
+
     'side': [
         ['green', 1, (0.2, field_dimensions.width/2, -np.pi/2)],
         ['green', 2, (0.6, field_dimensions.width/2, -np.pi/2)],
         ['blue', 1, (-0.2, field_dimensions.width/2, -np.pi/2)],
         ['blue', 2, (-0.6, field_dimensions.width/2, -np.pi/2)],
-    ]
+    ],
+
+    'swap_covers_green_positive': [
+        ['green', 1, (0.09, -0.2, np.pi)],
+        ['green', 2, (0.09, 0.2, np.pi)],
+        ['blue', 1, (-0.09, -0.2, 0)],
+        ['blue', 2, (-0.09, 0.2, 0)],
+    ],
+
+    'swap_covers_blue_positive': [
+        ['green', 1, (-0.09, -0.2, 0)],
+        ['green', 2, (-0.09, 0.2, 0)],
+        ['blue', 1, (0.09, -0.2, np.pi)],
+        ['blue', 2, (0.09, 0.2, np.pi)],
+    ],
+
+    'gently_swap_side': [
+        ['green', 1, (0, -0.15, 0)],
+        ['green', 2, (0, 0.5, 0)],
+        ['blue', 1, (0, -0.5, np.pi)],
+        ['blue', 2, (0, 0.15, np.pi)],
+    ],
+
 }
 
 
@@ -241,7 +277,7 @@ class Client:
         if not success:
             raise ClientError('Command "'+name+'" failed: '+message)
 
-    def goto_configuration(self, configuration_name='side'):
+    def goto_configuration(self, configuration_name='side', wait=False):
         targets = configurations[configuration_name]
 
         arrived = False
@@ -250,7 +286,7 @@ class Client:
             for color, index, target in targets:
                 robot = self.robots[color][index]
                 try:
-                    arrived = robot.goto(target, wait=False) and arrived
+                    arrived = robot.goto(target, wait=wait) and arrived
                 except ClientError:
                     pass
 
