@@ -4,9 +4,7 @@ import zmq
 import time
 import uuid
 import threading
-from . import robots
-from . import utils
-from . import client
+from . import robots, utils, client, field_dimensions
 
 
 class Control:
@@ -186,17 +184,33 @@ class Control:
     def client_thread(self):
         self.client = client.Client(key=self.master_key)
 
+        [_, field_DownRight_out, _, field_UpLeft_out] = field_dimensions.fieldCoordMargin(0.25)
+
         while self.running:
             # Keeping robots on sight
-            # for team, number in utils.all_robots():
-            #     robot = self.client.robots[team][number]
-            #     if robot.age() is not None and robot.age() > 1. and robot.age() < 10:
-            #         self.preempt_robot(team, number, 'out-of-game')
-            #         self.targets[(team, number)] = (0., 0., 0.)
-            #     else:
-            #         if self.is_preempted(team, number, 'out-of-game'):
-            #             self.targets[(team, number)] = 'stop'
-            #             self.unpreempt_robot(team, number, 'out-of-game')
+            for team, number in utils.all_robots():
+                robot = self.client.robots[team][number]
+                if robot.pose is not None:
+                    intersect_field_in = not bool((field_UpLeft_out[0]<=robot.pose[0]<=field_DownRight_out[0]) 
+                            and 
+                            (field_DownRight_out[1]<=robot.pose[1]<=field_UpLeft_out[1]))
+
+                    if intersect_field_in:
+                        self.preempt_robot(team, number, 'out-of-game')
+                        self.targets[(team, number)] = (0., 0., 0.)
+                        
+                    else: 
+                        if self.is_preempted(team, number, 'out-of-game'):
+                            self.targets[(team, number)] = 'stop'
+                            self.unpreempt_robot(team, number, 'out-of-game')
+
+                # if robot.age() is not None and robot.age() > 1. and robot.age() < 10:
+                #     self.preempt_robot(team, number, 'out-of-game')
+                #     self.targets[(team, number)] = (0., 0., 0.)
+                # else:
+                #     if self.is_preempted(team, number, 'out-of-game'):
+                #         self.targets[(team, number)] = 'stop'
+                #         self.unpreempt_robot(team, number, 'out-of-game')
 
             # Handling robot's goto, since client interaction access network, we can't afford to
             # lock a mutex during client calls, we store order in the temporary buffer list

@@ -1,3 +1,8 @@
+function capitalize_first_letter(string){
+    const strUp = string.charAt(0).toUpperCase() + string.slice(1);
+    return strUp
+}
+
 function referee_initialize(backend)
 {
     let displayed_toast_nb = 0 ;
@@ -12,17 +17,25 @@ function referee_initialize(backend)
     });
 
     setInterval(function() {
-        backend.getScore("blue", function(score) {
-            $( "#BlueScore" ).html(score);
-        });
+        backend.getFullGameState(function(game_state) {
 
-        backend.getScore("green", function(score) {
-            $( "#GreenScore" ).html(score);
-        });
+            let first_team = game_state["team_colors"][0]
+            let second_team = game_state["team_colors"][1]
 
-        backend.getPenalty(function(penalties) {
-            for (let robot in penalties) {
-                let [remaining, max] = penalties[robot];
+            // Team names
+            if (game_state["team_names"][0] === "" || game_state["team_names"][1] === ""){
+                    $(".first-team-name").html(capitalize_first_letter(game_state["team_colors"][0]))
+                    $(".second-team-name").html(capitalize_first_letter(game_state["team_colors"][1]))
+                }
+            else{
+                $(".first-team-name").html(game_state["team_names"][0]);
+                $(".second-team-name").html(game_state["team_names"][1]);
+            }
+
+
+            // Penalties
+            for (let robot in game_state["penalties"]) {
+                let [remaining, max] = game_state["penalties"][robot];
                 let div = $('.robot-penalty[rel='+robot+'] .progress-bar');
                 if (remaining !== null) {
                     let pct = remaining * 100. / max;
@@ -33,24 +46,80 @@ function referee_initialize(backend)
                     div.text('')
                 }
             }
-        });
 
-        backend.getTimer(function(time) {
-            $('.TimerMinutes').html(formatTimer(time))
+
+            // Robots State
+            for (let robot in game_state["robots_state"]) {
+                let robot_state = game_state["robots_state"][robot]["state"];
+                let preemption_reasons = game_state["robots_state"][robot]["preemption_reasons"];
+                let div = $('.robot-penalty[rel='+robot+'] .robot-state');
+
+                if (preemption_reasons.length !== 0) {
+                    let all_premption_reasons_string = ""
+                    
+                    for (let nb_reason = 0; nb_reason <= preemption_reasons.length-1; nb_reason++){
+                        if(nb_reason >= 1){
+                            all_premption_reasons_string += " + " + capitalize_first_letter(String(preemption_reasons[nb_reason]))
+                        }
+                        else{
+                            all_premption_reasons_string += " " + capitalize_first_letter(String(preemption_reasons[nb_reason]))
+                        }
+                    }
+                    
+                    div.html('<h6 class="text-danger">'+ all_premption_reasons_string +'</h6>');
+
+                } 
+                else if (robot_state !== ""){
+                    div.html('<h6>'+robot_state+'</h6>');
+                }
+                else {
+                    div.html('<h6>Robot is ready to play</h6>');
+                }
+            }
+
+
+            // Scores
+            $("#BlueScore").html(game_state["score"][second_team]);
+            $("#GreenScore").html(game_state["score"][first_team]);
+
             
-            if (time < 0) {
+            // Timer
+            $('.TimerMinutes').html(formatTimer(game_state["timer"]))
+            
+            if (game_state["timer"] < 0) {
                 $(".TimerMinutes").addClass('text-danger');
             } else {
                 $(".TimerMinutes").removeClass('text-danger');
             }
-        });
 
-        backend.getGameState(function(game_state) {
-            $(".GameState").html(game_state);
-        });
 
-        backend.getRefereeHistory(3, function(history) {
-            for (let history_entry of history) {
+            // Game State
+            $(".GameState").html(game_state["game_state_msg"]);
+
+            if (!game_state["game_is_running"]){
+                $('.start-game').removeClass('d-none');
+                $('.pause-game-grp').addClass('d-none');
+                $('.resume-game-grp').addClass('d-none');
+            }
+
+            else if (game_state["game_is_running"]){
+                $('.start-game').addClass('d-none');
+                $('.pause-game-grp').removeClass('d-none'); 
+
+                if (!game_state["game_is_not_paused"]){
+                    $('.resume-game-grp').removeClass('d-none');
+                    $('.pause-game-grp').addClass('d-none');
+                }
+
+                else if (game_state["game_is_not_paused"]) {
+                    $('.pause-game-grp').removeClass('d-none');
+                    $('.resume-game-grp').addClass('d-none');
+                }
+            }
+
+
+            // Referee History
+            for (let history_entry of game_state["referee_history_sliced"]) {
                 [num, time, team, referee_event] = history_entry
                     $("#NoHistory").html('')
 
@@ -83,6 +152,16 @@ function referee_initialize(backend)
 
                     }
             }
+
+            //Half Time Changes
+            backend.HalfTimeChangeColorField(game_state["x_positive_goal"]);
+
+            if (game_state["x_positive_goal"] === first_team){
+                $('.robot-penalize-tab').css("flex-direction", "row");
+            }
+            else if (game_state["x_positive_goal"] === second_team){
+                $('.robot-penalize-tab').css("flex-direction", "row-reverse");
+            }
         });
 
     }, 200);
@@ -92,13 +171,15 @@ function referee_initialize(backend)
     // Game Start&Stop
     $('.start-game').click(function() {
         backend.startGame();
-        $('.start-game').addClass('d-none');
-        $('.pause-game-grp').removeClass('d-none');   
-
         displayed_toast_nb = 0;
         $("#RefereeHistory").html('');
         $("#NoHistory").html('<h6 class="text-muted">No History</h6>');
         $("#MidTimeChange").prop("disabled", false);
+
+        $('.score-zone').each(function() {
+            $(this).find('.up-score').prop("disabled", false);
+            $(this).find('.down-score').prop("disabled", false);
+        });
 
         $('.robot-penalty').each(function() {
             $(this).find('.unpenalize').prop("disabled", false);
@@ -108,22 +189,20 @@ function referee_initialize(backend)
 
     $('.pause-game').click(function() {
         backend.pauseGame();
-        $('.resume-game-grp').removeClass('d-none');
-        $('.pause-game-grp').addClass('d-none');
     });
 
     $('.resume-game').click(function() {
         backend.resumeGame();
-        $('.pause-game-grp').removeClass('d-none');
-        $('.resume-game-grp').addClass('d-none');
     });
 
     $('.stop-game').click(function() {
         backend.stopGame();
-        $('.start-game').removeClass('d-none');
-        $('.pause-game-grp').addClass('d-none');
-        $('.resume-game-grp').addClass('d-none');
         $("#MidTimeChange").prop("disabled", true);
+        
+        $('.score-zone').each(function() {
+            $(this).find('.up-score').prop("disabled", true);
+            $(this).find('.down-score').prop("disabled", true);
+        });
 
         $('.robot-penalty').each(function() {
             $(this).find('.unpenalize').prop("disabled", true);
@@ -134,14 +213,7 @@ function referee_initialize(backend)
     
     // Half Time
     $('#MidTimeChange').click(function() {
-        backend.MidTimeChangeColorField();
         backend.setTeamSides();
-        if ($('.robot-penalize-tab').css("flex-direction") === "row-reverse"){
-            $('.robot-penalize-tab').css("flex-direction", "row");
-        }
-        else{
-            $('.robot-penalize-tab').css("flex-direction", "row-reverse");
-        }
 
         $("#RefereeHistory").append('<h5 class="text-muted m-3">Half Time</h5>');
         backend.startHalfTime();
@@ -223,11 +295,9 @@ function referee_initialize(backend)
 
         $(this).find('.penalize').click(function() {
             backend.addPenalty(5, robot_id);
-            console.log(robot_id)
         });
         $(this).find('.unpenalize').click(function() {
             backend.cancelPenalty(robot_id);
-            console.log(robot_id)
         });
     });
 }

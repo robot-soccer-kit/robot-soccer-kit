@@ -9,7 +9,7 @@ class Backend():
         self.video = video.Video()
         self.detection = self.video.detection
         self.robots = robots.Robots(self.detection)
-        self.referee = referee.Referee(self.detection)
+        self.referee = referee.Referee(self.detection, self.robots)
 
     def cameras(self):
         return self.video.cameras()
@@ -91,9 +91,6 @@ class Backend():
     def resetScore(self):
         self.referee.resetScore()
 
-    def getScore(self, team: str) -> int:
-        return self.referee.getScore(team)
-
     def setDisplaySettings(self, display_settings: list):
         self.detection.setDisplaySettings(display_settings)
 
@@ -121,23 +118,14 @@ class Backend():
     def calibrateCamera(self):
         self.detection.calibrateCamera()
 
-    def getTimer(self) -> list:
-        return self.referee.getTimer()
-
-    def getRefereeHistory(self, slice) -> list:
-        return self.referee.getRefereeHistory(slice)
-
     def placeGame(self):
         self.referee.placeGame()
-
-    def getGameState(self) -> str:
-        return self.referee.getGameState()
 
     def setTeamNames(self, team: str, name: str):
         self.referee.setTeamNames(team, name)
 
-    def MidTimeChangeColorField(self) -> str:
-        self.detection.MidTimeChangeColorField()
+    def HalfTimeChangeColorField(self, xpos_goal:str):
+        self.detection.HalfTimeChangeColorField(xpos_goal)
 
     def setTeamSides(self) -> str:
         self.referee.setTeamSides()
@@ -153,6 +141,6 @@ class Backend():
 
     def cancelPenalty(self, robot) -> str:
         self.referee.cancelPenalty(robot)
-
-    def getPenalty(self) -> dict:
-        return self.referee.getPenalty()
+    
+    def getFullGameState(self) -> dict:
+        return self.referee.getFullGameState()

@@ -122,15 +122,13 @@ class Detection:
         self.field.should_calibrate = True
         self.field.is_calibrated = False
     
-    def MidTimeChangeColorField(self):
-        if self.color_xpos == (0, 255, 0):
+    def HalfTimeChangeColorField(self, xpos_goal):
+        if xpos_goal == "blue":
             self.color_xpos = (255, 0, 0)
             self.color_xneg = (0, 255, 0)
-            return "blue"
         else:
             self.color_xpos = (0, 255, 0)
             self.color_xneg = (255, 0, 0)
-            return "green"
 
 
     def detectAruco(self, image, image_debug = None):
@@ -185,6 +183,9 @@ class Detection:
                 A = self.field.position_to_pixel([0, 0])
                 B = self.field.position_to_pixel([0, 0.2])
                 cv2.line(image_debug, A, B, (0, 255, 0), 1)
+                A = self.field.position_to_pixel([0, 0, 0])
+                B = self.field.position_to_pixel([0, 0, 0.2])
+                cv2.line(image_debug, A, B, (255, 0, 0), 1)
 
 
                 

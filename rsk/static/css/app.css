@@ -19,11 +19,11 @@ body {
 
 .camera-area-referee {
     width: 100%; 
-    height: calc(100vh - 355px);
+    height: calc(100vh - 357px);
 }
 
 .tchat-dim {
-    height: calc(100vh - 486px)
+    height: calc(100vh - 477px)
 }
 
 .emergency-button {

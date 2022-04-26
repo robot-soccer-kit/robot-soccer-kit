@@ -224,10 +224,10 @@
               <div id="XnegPenalty" class="col-6">
                 <div class="card text-center border-blue">
                   <div class="card-header bg-head-blue text-light">
-                    <b>Blue</b>
+                    <b class="second-team-name">Team 2 Name</b>
                   </div>
                   <div class="p-2 card-body bg-body-blue">
-                    <div class="row vert-align my-1 robot-penalty" rel="blue1">
+                    <div class="row vert-align mb-3 mt-1 robot-penalty" rel="blue1">
                       <div class="col-2">
                         <img
                         src="static/imgs/robotblue1.svg"
@@ -235,8 +235,17 @@
                         height="50px"/>
                       </div>
                       <div class="col-7">
-                        <div class="progress progress-large">
-                          <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 100%"></div>
+                        <div class="row">
+                          <div class="col-12 robot-state">
+                            <h6>Blue 1 State</h6>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-12">
+                            <div class="progress progress-large">
+                              <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 100%"></div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       <div class="col-1 p-0 m-0">
@@ -250,7 +259,7 @@
                         </button>
                       </div>
                     </div>
-                    <div class="row vert-align my-1 robot-penalty" rel="blue2">
+                    <div class="row vert-align mb-1 robot-penalty" rel="blue2">
                       <div class="col-2">
                         <img
                         src="static/imgs/robotblue2.svg"
@@ -258,8 +267,17 @@
                         height="50px"/>
                       </div>
                       <div class="col-7">
-                        <div class="progress progress-large">
-                          <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 100%"></div>
+                        <div class="row">
+                          <div class="col-12 robot-state">
+                            <h6>Blue 2 State</h6>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-12">
+                            <div class="progress progress-large">
+                              <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 100%"></div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       <div class="col-1 p-0 m-0">
@@ -279,10 +297,10 @@
               <div id="XposPenalty" class="col-6">
                 <div class="card text-center border-green">
                   <div class="card-header bg-head-green text-light">
-                    <b>Green</b>
+                    <b class="first-team-name">Team 1 Name</b>
                   </div>
                   <div id ="green-referee-body" class="p-2 card-body bg-body-green">
-                    <div class="row vert-align my-1 robot-penalty" rel="green1">
+                    <div class="row vert-align mb-3 mt-1 robot-penalty" rel="green1">
                       <div class="col-2">
                         <img
                         src="static/imgs/robotgreen1.svg"
@@ -290,8 +308,17 @@
                         height="50"/>
                       </div>
                       <div class="col-7">
-                        <div class="progress progress-large">
-                          <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 10%"></div>
+                        <div class="row">
+                          <div class="col-12 robot-state">
+                            <h6>Green 1 State</h6>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-12">
+                            <div class="progress progress-large">
+                              <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 100%"></div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       <div class="col-1 p-0 m-0">
@@ -305,7 +332,7 @@
                         </button>
                       </div>
                     </div>
-                    <div class="row vert-align my-1 robot-penalty" rel="green2">
+                    <div class="row vert-align mb-1 robot-penalty" rel="green2">
                       <div class="col-2">
                         <img
                         src="static/imgs/robotgreen2.svg"
@@ -313,8 +340,17 @@
                         height="50px"/>
                       </div>
                       <div class="col-7">
-                        <div class="progress progress-large">
-                          <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 80%"></div>
+                        <div class="row">
+                          <div class="col-12 robot-state">
+                            <h6>Green 2 State</h6>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-12">
+                            <div class="progress progress-large">
+                              <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 100%"></div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       <div class="col-1 p-0 m-0">
@@ -380,16 +416,16 @@
                       <div class="col-1 p-0 score-zone" rel="green">
                         <div class="row">
                           <div class="col-12">
-                            <span class="btn rounded-circle btn-success btn-sm up-score bg-head-green">
+                            <button class="btn rounded-circle btn-success btn-sm up-score bg-head-green" disabled>
                               <i class="bi bi-caret-up-fill"></i>
-                            </span>
+                            </button>
                           </div>
                         </div>
                         <div class="row">
                           <div class="col-12">
-                            <span class="btn rounded-circle btn-success btn-sm down-score bg-head-green">
+                            <button class="btn rounded-circle btn-success btn-sm down-score bg-head-green" disabled>
                               <i class="bi bi-caret-down-fill"></i>
-                            </span>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -406,16 +442,16 @@
                       <div class="col-1 p-0 score-zone" rel="blue">
                         <div class="row">
                           <div class="col-12">
-                            <span class="btn rounded-circle btn-primary btn-sm up-score bg-head-blue">
+                            <button class="btn rounded-circle btn-primary btn-sm up-score bg-head-blue" disabled>
                               <i class="bi bi-caret-up-fill"></i>
-                            </span>
+                            </button>
                           </div>
                         </div>
                         <div class="row">
                           <div class="col-12">
-                            <span class="btn rounded-circle btn-primary btn-sm down-score bg-head-blue">
+                            <button class="btn rounded-circle btn-primary btn-sm down-score bg-head-blue" disabled>
                               <i class="bi bi-caret-down-fill"></i>
-                            </span>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -443,15 +479,15 @@
                         Set Robots Configuration
                       </h6>
                       <div class="mt-2 btn-group btn-group-sm d-flex"  role="group">
-                        <span id="Adv-Green-place" class="btn btn-success w-100 bg-head-green">
+                        <button id="Adv-Green-place" class="btn btn-success w-100 bg-head-green" disabled>
                           Advantage Green
-                        </span>
-                        <span id="Strd-place" class="btn btn-secondary w-100">
+                        </button>
+                        <button id="Strd-place" class="btn btn-secondary w-100">
                           Standard
-                        </span>
-                        <span id="Adv-Blue-place" class="btn btn-primary w-100 bg-head-blue">
+                        </button>
+                        <button id="Adv-Blue-place" class="btn btn-primary w-100 bg-head-blue" disabled>
                           Advantage Blue
-                        </span>
+                        </button>
                       </div>
                     </div>
                   </div>

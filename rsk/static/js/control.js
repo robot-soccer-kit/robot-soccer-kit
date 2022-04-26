@@ -1,9 +1,12 @@
-
+function capitalize_first_letter(string){
+    const strUp = string.charAt(0).toUpperCase() + string.slice(1);
+    return strUp
+}
 function control_initialize(backend) {
     $.get('static/team.html', function(team_template) {
 
         for (let team of ['green', 'blue']) {
-            $('.teams').append(team_template.replace(/{team}/g, team));
+            $('.teams').append(team_template.replace(/{team}/g, capitalize_first_letter(team)));
 
             $('.allow-'+team).change(function() {
                 backend.allowTeamControl(team, $(this).is(':checked'));
@@ -35,6 +38,6 @@ function control_initialize(backend) {
                     }
                 }
             });
-        }, 100);
+        }, 200);
     });
 }
