@@ -1,4 +1,5 @@
 import numpy as np
+import re
 
 def frame(x, y=0, orientation=0):
     if type(x) is tuple:
@@ -83,7 +84,7 @@ def all_robots() -> list:
         for id in robot_numbers()
     ]
 
-def robot_id(color:str, number:int) -> str:
+def robot_list2str(color:str, number:int) -> str:
     """
     Transforms a robot tuple (eg: ['blue', 1]) to a robot string (eg: 'blue1')
 
@@ -93,10 +94,21 @@ def robot_id(color:str, number:int) -> str:
     """    
     return '%s%d' % (color, number)
 
+def robot_str2list(robot:str) -> list:
+    """
+    Transforms a robot string (eg: 'blue1') to a robot list (eg: ['blue', 1])
+
+    :param str robot: string robot name (eg: 'blue1')
+    :return list: robot id (eg: ['blue', 1])
+    """    
+    robot_id = re.findall('[a-zA-Z]+', robot) + re.findall('[0-9]+', robot)
+    robot_id[1] = int(robot_id[1])
+    return robot_id
+
 def all_robots_id() -> list:
     """
     Returns all possible robot id (eg "blue1")
 
     :return list: robot ids
     """    
-    return [robot_id(*robot) for robot in all_robots()]
+    return [robot_list2str(*robot) for robot in all_robots()]

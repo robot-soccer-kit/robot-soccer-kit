@@ -25,6 +25,12 @@ class Detection:
         self.color_xpos = (0, 255, 0)
         self.color_xneg = (255, 0, 0)
         
+        # Dots for crossing sidelines
+        self.sideline_dots = None
+
+        self.goal_validated = None
+        self.canceled_goal_side = None
+
         self.displaySettings = {
             'aruco': True,
             'goals': True,
@@ -129,7 +135,16 @@ class Detection:
         else:
             self.color_xpos = (0, 255, 0)
             self.color_xneg = (255, 0, 0)
-
+    
+    def draw_point2square(self, image, center: list, margin: int, color: tuple, thickness: int):
+        pointA = self.field.position_to_pixel([center[0]-margin,center[1]+margin])
+        pointB = self.field.position_to_pixel([center[0]+margin,center[1]+margin])
+        pointC = self.field.position_to_pixel([center[0]+margin,center[1]-margin])
+        pointD = self.field.position_to_pixel([center[0]-margin,center[1]-margin])
+        cv2.line(image, pointA, pointB, color, thickness)
+        cv2.line(image, pointB, pointC, color, thickness)
+        cv2.line(image, pointC, pointD, color, thickness)
+        cv2.line(image, pointD, pointA, color, thickness)
 
     def detectAruco(self, image, image_debug = None):
 
@@ -187,8 +202,22 @@ class Detection:
                 B = self.field.position_to_pixel([0, 0, 0.2])
                 cv2.line(image_debug, A, B, (255, 0, 0), 1)
 
+            if self.sideline_dots == "dot1": 
+                self.draw_point2square(image_debug, field_dimensions.dots_pos["dot1"], 0.05, (0,165,255), 2)
+            elif self.sideline_dots == "dot2": 
+                self.draw_point2square(image_debug, field_dimensions.dots_pos["dot2"], 0.05, (0,165,255), 2)
+            elif self.sideline_dots == "dot3":                
+                self.draw_point2square(image_debug, field_dimensions.dots_pos["dot3"], 0.05, (0,165,255), 2)
+            elif self.sideline_dots == "dot4":                
+                self.draw_point2square(image_debug, field_dimensions.dots_pos["dot4"], 0.05, (0,165,255), 2)
 
-                
+            if self.canceled_goal_side == "xpos_goal":
+                self.draw_point2square(image_debug, [-0.29,0], 0.05, (0,165,255), 2)
+            if self.canceled_goal_side == "xneg_goal":
+                self.draw_point2square(image_debug, [0.29,0], 0.05, (0,165,255), 2)
+            if self.goal_validated:
+                self.draw_point2square(image_debug, [0,0], 0.05, (0,165,255), 2)
+
         if len(corners) > 0:
             for (markerCorner, markerID) in zip(corners, ids.flatten()):
                 if markerID not in self.arucoItems:

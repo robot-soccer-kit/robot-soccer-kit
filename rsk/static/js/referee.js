@@ -72,6 +72,9 @@ function referee_initialize(backend)
                 else if (robot_state !== ""){
                     div.html('<h6>'+robot_state+'</h6>');
                 }
+                else if (game_state["game_state_msg"] == "Game is running..."){
+                    div.html('<h6>Robot is playing...</h6>');
+                }
                 else {
                     div.html('<h6>Robot is ready to play</h6>');
                 }
@@ -100,11 +103,33 @@ function referee_initialize(backend)
                 $('.start-game').removeClass('d-none');
                 $('.pause-game-grp').addClass('d-none');
                 $('.resume-game-grp').addClass('d-none');
+
+                // Disable buttons when referee is not running
+                $("#MidTimeChange").prop("disabled", true);
+                $('.score-zone').each(function() {
+                    $(this).find('.up-score').prop("disabled", true);
+                    $(this).find('.down-score').prop("disabled", true);
+                });
+                $('.robot-penalty').each(function() {
+                    $(this).find('.unpenalize').prop("disabled", true);
+                    $(this).find('.penalize').prop("disabled", true);
+                });
             }
 
             else if (game_state["game_is_running"]){
                 $('.start-game').addClass('d-none');
                 $('.pause-game-grp').removeClass('d-none'); 
+
+                // Enable buttons when referee is running
+                $("#MidTimeChange").prop("disabled", false);
+                $('.score-zone').each(function() {
+                    $(this).find('.up-score').prop("disabled", false);
+                    $(this).find('.down-score').prop("disabled", false);
+                });
+                $('.robot-penalty').each(function() {
+                    $(this).find('.unpenalize').prop("disabled", false);
+                    $(this).find('.penalize').prop("disabled", false);
+                });
 
                 if (!game_state["game_is_not_paused"]){
                     $('.resume-game-grp').removeClass('d-none');
@@ -116,6 +141,15 @@ function referee_initialize(backend)
                     $('.resume-game-grp').addClass('d-none');
                 }
             }
+ 
+            //Disable Pause Button if a Goal is waiting for Validation
+            if (game_state["game_state_msg"] == "Waiting for Goal Validation"){
+                $('.resume-game').prop("disabled", true);
+            }
+            else{
+                $('.resume-game').prop("disabled", false);
+            }
+                
 
 
             // Referee History
@@ -174,17 +208,6 @@ function referee_initialize(backend)
         displayed_toast_nb = 0;
         $("#RefereeHistory").html('');
         $("#NoHistory").html('<h6 class="text-muted">No History</h6>');
-        $("#MidTimeChange").prop("disabled", false);
-
-        $('.score-zone').each(function() {
-            $(this).find('.up-score').prop("disabled", false);
-            $(this).find('.down-score').prop("disabled", false);
-        });
-
-        $('.robot-penalty').each(function() {
-            $(this).find('.unpenalize').prop("disabled", false);
-            $(this).find('.penalize').prop("disabled", false);
-        });
     });
 
     $('.pause-game').click(function() {
@@ -197,17 +220,6 @@ function referee_initialize(backend)
 
     $('.stop-game').click(function() {
         backend.stopGame();
-        $("#MidTimeChange").prop("disabled", true);
-        
-        $('.score-zone').each(function() {
-            $(this).find('.up-score').prop("disabled", true);
-            $(this).find('.down-score').prop("disabled", true);
-        });
-
-        $('.robot-penalty').each(function() {
-            $(this).find('.unpenalize').prop("disabled", true);
-            $(this).find('.penalize').prop("disabled", true);
-        });
     });
 
     

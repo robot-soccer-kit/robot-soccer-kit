@@ -10,6 +10,14 @@ goal_width = 0.6
 # Side of the (green) border we should be able to see around the field
 border_size = 0.3
 
+# Dots coordinates
+dots_pos = {
+    'dot1': [0.445, 0.29],
+    'dot2': [0.445, -0.29],
+    'dot3': [-0.445, -0.29],
+    'dot4': [-0.445, 0.29],
+}
+
 # Field coordinates 
 def fieldCoord() -> np.ndarray:
     field_coord = [[],[],[],[]]

@@ -154,7 +154,7 @@ class Client:
 
         # Creating self.green1, self.green2 etc.
         for color, number in utils.all_robots():
-            robot_id = utils.robot_id(color, number)
+            robot_id = utils.robot_list2str(color, number)
             robot = ClientRobot(color, number, self)
             self.__dict__[robot_id] = robot
 
