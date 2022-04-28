@@ -1,11 +1,87 @@
 from concurrent.futures import thread
 import copy
+from multiprocessing.dummy.connection import Client
 import zmq
 import time
 import uuid
 import threading
 from . import robots, utils, client, field_dimensions
 
+class ControlTask:
+    def __init__(self, name:str, priority:int=1):
+        self.name:str = name
+        self.priority:int = priority
+
+    def robots(self) -> list:
+        return []
+
+    def tick(self, robot:client.ClientRobot) -> None:
+        raise NotImplemented('Task not implemented')
+
+    def finished(self, client:client.Client) -> bool:
+        return False
+
+class StopTask(ControlTask):
+    def __init__(self, name:str, team:str, number:int, forever=True, **kwargs):
+        super().__init__(name, **kwargs)
+        self.team:str = team
+        self.number:int = number
+        self.forever = forever
+
+    def robots(self):
+        return [(self.team, self.number)]
+
+    def tick(self, robot:client.ClientRobot):
+        client.control(0, 0, 0)
+
+    def finished(self, client:client.Client) -> bool:
+        return not self.forever
+
+class GoToTask(ControlTask):
+    def __init__(self, name:str, team:str, number:int, target, skip_old=True, **kwargs):
+        super().__init__(name, **kwargs)
+        self.team:str = team
+        self.number:int = number
+        self.target = target
+        self.skip_old:bool = skip_old
+
+        for team, number, target in client.configurations:
+            self.targets[(team, number)] = target
+
+    def robots(self):
+        return [(self.team, self.number)]
+    
+    def tick(self, robot:client.ClientRobot):
+        robot.goto(self.target, wait=False, skip_old=self.skip_old)
+
+    def finished(self, client:client.Client) -> bool:
+        robot = client.robots[self.team][self.number]
+        arrived, _ = robot.compute_order(self.target)
+
+        return arrived
+
+class GoToConfigurationTask(ControlTask):
+    def __init__(self, name:str, configuration:str, **kwargs):
+        super().__init__(name, **kwargs)
+        self.targets = {}
+
+        for team, number, target in client.configurations[configuration]:
+            self.targets[(team, number)] = target
+
+    def robots(self):
+        return list(self.targets.keys())
+    
+    def tick(self, robot:client.ClientRobot):
+        robot.goto(self.targets[(robot.team, robot.number)], False)
+
+    def finished(self, client:client.Client) -> bool:
+        for team, number in self.targets:
+            arrived, _ = client.robots[team][number].compute_order(self.targets[(team, number)])
+
+            if not arrived:
+                return False
+
+        return True
 
 class Control:
     def __init__(self, robots):
@@ -26,33 +102,27 @@ class Control:
         self.idle = True
         self.lock = threading.Lock()
 
+        self.tasks = {}
+
         self.teams = {
             color: {
                 "allow_control": True,
-                "preemption_reasons": {number: set() for number in utils.robot_numbers()},
                 "key": "",
                 "packets": 0
             }
             for color in utils.robot_teams()
         }
 
-    def preempt_robot(self, team:str, number:int, reason:str):
-        self.teams[team]["preemption_reasons"][number].add(reason)
+    def add_task(self, task:ControlTask):
+        self.lock.acquire()
+        self.tasks[task.name] = task
+        self.lock.release()
 
-    def is_preempted(self, team:str, number:int, reason:str):
-        return reason in self.teams[team]["preemption_reasons"][number]
-
-    def unpreempt_robot(self, team:str, number:int, reason:str):
-        if self.is_preempted(team, number, reason):
-            self.teams[team]["preemption_reasons"][number].remove(reason)
-
-    def preempt_all_robots(self, reason:str):
-        for team, number in utils.all_robots():
-            self.preempt_robot(team, number, reason)
-
-    def unpreempt_all_robots(self, reason:str):
-        for team, number in utils.all_robots():
-            self.unpreempt_robot(team, number, reason)
+    def has_task(self, task_name:str):
+        return task_name in self.tasks
+    
+    def remove_task(self, name:str):
+        del self.tasks[name]
 
     def thread(self):
         while self.running:
@@ -62,25 +132,26 @@ class Control:
                 response = [False, 'Unknown error']
 
                 if type(json) == list and len(json) == 4:
-                    key, team, robot, command = json
+                    key, team, number, command = json
 
                     if team in self.teams:
                         allow_control = True
 
                         if key != self.master_key:
+                            tasks = self.robot_tasks(team, number)
                             if self.teams[team]['key'] != key:
                                 response[1] = f"Bad key for team {team}"
                                 allow_control = False
                             elif not self.teams[team]['allow_control']:
                                 response[1] = f"You are not allowed to control the robots of team {team}"
                                 allow_control = False
-                            elif self.teams[team]['preemption_reasons'][robot]:
-                                reasons = str(self.teams[team]['preemption_reasons'][robot])
-                                response[1] = f"Robot {robot} of team {team} is preempted: {reasons}"
+                            elif len(tasks):
+                                reasons = str(tasks)
+                                response[1] = f"Robot {number} of team {team} is preempted: {reasons}"
                                 allow_control = False
                         
                         if allow_control:
-                            marker = "%s%d" % (team, robot)
+                            marker = "%s%d" % (team, number)
                             if marker in self.robots.robots_by_marker:
                                 if type(command) == list:
                                     if command[0] == 'kick' and len(command) == 2:
@@ -113,11 +184,22 @@ class Control:
     def stop(self):
         self.running = False
 
+    def robot_tasks(self, robot) -> list:
+        tasks = []
+        for task in self.tasks:
+            for team, number in task.robots():
+                return tasks.append(task)
+
+        return tasks
+
     def status(self):
         state = copy.deepcopy(self.teams)
-        for team in state:
-            for number in state[team]['preemption_reasons']:
-                state[team]['preemption_reasons'][number] = list(state[team]['preemption_reasons'][number])
+        state[team]['preemption_reasons'] = {robot: [] for robot in utils.all_robots()}
+
+        for task in self.tasks:
+            for team, number in task.robots():
+                state[team]['preemption_reasons'][number].append(task.name)
+
         return state
 
     def allowTeamControl(self, team:str, allow:bool):
@@ -174,12 +256,6 @@ class Control:
         Stop all robots (they will stop moving)
         """        
         self._set_target_all('stop')
-
-    def robots_idle(self) -> bool:
-        """
-        Are all the robots idle? (if they reached their target)
-        """        
-        return self.idle
     
     def client_thread(self):
         self.client = client.Client(key=self.master_key)
@@ -194,45 +270,47 @@ class Control:
                     intersect_field_in = not bool((field_UpLeft_out[0]<=robot.pose[0]<=field_DownRight_out[0]) 
                             and 
                             (field_DownRight_out[1]<=robot.pose[1]<=field_UpLeft_out[1]))
+                    
+                    task_name = 'out-of-game-%s' % utils.robot_list2str(team, number)
 
                     if intersect_field_in:
-                        self.preempt_robot(team, number, 'out-of-game')
-                        self.targets[(team, number)] = (0., 0., 0.)
+                        task = GoToTask(task_name, team, number, (0., 0, 0.))
+                        self.add_task(task)
                         
                     else: 
-                        if self.is_preempted(team, number, 'out-of-game'):
-                            self.targets[(team, number)] = 'stop'
-                            self.unpreempt_robot(team, number, 'out-of-game')
-
-                # if robot.age() is not None and robot.age() > 1. and robot.age() < 10:
-                #     self.preempt_robot(team, number, 'out-of-game')
-                #     self.targets[(team, number)] = (0., 0., 0.)
-                # else:
-                #     if self.is_preempted(team, number, 'out-of-game'):
-                #         self.targets[(team, number)] = 'stop'
-                #         self.unpreempt_robot(team, number, 'out-of-game')
+                        if self.has_task(task_name):
+                            task = StopTask(task_name, team, number, forever=False)
+                            self.add_task(task)
 
             # Handling robot's goto, since client interaction access network, we can't afford to
             # lock a mutex during client calls, we store order in the temporary buffer list
             self.lock.acquire()
-            self.targets = {**self.targets, **self.targets_buffer}
-            self.targets_buffer = {}
+            tasks_to_tick = [task for task in self.tasks.values()]
             self.lock.release()
 
+            # Sorting tasks by priority
+            tasks_to_tick = sorted(tasks_to_tick, lambda task: task.priority)
+            robots_ticked = set()
+
+            # Ticking all the tasks
             moving = False
-            for robot in self.targets:
-                team, number = robot
-                target = self.targets[robot]
-                if target is not None:
-                    if target == 'stop' or self.client.robots[team][number].goto(target, wait=False, skip_old=False):
-                        self.client.robots[team][number].control(0, 0, 0)
-                        self.targets[robot] = None
-                    else:
+            for task in tasks_to_tick:
+                for team, number in task.robots():
+                    if (team, number) not in robots_ticked:
+                        # Robot was not ticked yet by an higher-priority task
+                        robots_ticked.add((team, number))
+                        task.tick(self.client.robots[team][number])
                         moving = True
+
+                    if task.finished(self.client):
+                        to_delete = task.name
+
             self.idle = not moving
 
-            for team, number in utils.all_robots():
-                if self.is_preempted(team, number, 'force place robots') and self.robots_idle():
-                        self.unpreempt_all_robots('force place robots')
+            # Removing finished tasks
+            self.lock.acquire()
+            for task_name in to_delete:
+                del self.tasks[task_name]
+            self.lock.relase()
 
             time.sleep(0.01)

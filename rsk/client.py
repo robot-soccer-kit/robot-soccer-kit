@@ -115,6 +115,26 @@ class ClientRobot(ClientTracked):
 
         return self.client.command(self.color, self.number, 'control', [dx, dy, dturn])
 
+    def compute_order(self, target):
+        if callable(target):
+                target = target()
+
+        x, y, orientation = target
+        x = min(self.x_max, max(self.x_min, x))
+        y = min(self.y_max, max(self.y_min, y))
+        Ti = utils.frame_inv(utils.robot_frame(self))
+        target_in_robot = Ti @ np.array([x, y, 1])
+
+        error_x = target_in_robot[0]
+        error_y = target_in_robot[1]
+        error_orientation = utils.angle_wrap(
+            orientation - self.orientation)
+
+        arrived = np.linalg.norm([error_x, error_y, error_orientation]) < 0.05
+        order = 1.5*error_x, 1.5*error_y, 1.5*error_orientation
+
+        return arrived, order
+
     def goto(self, target, wait=True, skip_old=True):
         if wait:
             while not self.goto(target, wait=False):
@@ -123,23 +143,10 @@ class ClientRobot(ClientTracked):
             return True
 
         if self.has_position(skip_old):
-            if callable(target):
-                target = target()
+            arrived, order = self.compute_order(target)
+            self.control(*order)
 
-            x, y, orientation = target
-            x = min(self.x_max, max(self.x_min, x))
-            y = min(self.y_max, max(self.y_min, y))
-            Ti = utils.frame_inv(utils.robot_frame(self))
-            target_in_robot = Ti @ np.array([x, y, 1])
-
-            error_x = target_in_robot[0]
-            error_y = target_in_robot[1]
-            error_orientation = utils.angle_wrap(
-                orientation - self.orientation)
-
-            self.control(1.5*error_x, 1.5*error_y, 1.5*error_orientation)
-
-            return np.linalg.norm([error_x, error_y, error_orientation]) < 0.05
+            return arrived
         else:
             self.control(0, 0, 0)
             return False
