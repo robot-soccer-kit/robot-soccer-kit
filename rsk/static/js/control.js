@@ -6,7 +6,7 @@ function control_initialize(backend) {
     $.get('static/team.html', function(team_template) {
 
         for (let team of ['green', 'blue']) {
-            $('.teams').append(team_template.replace(/{team}/g, capitalize_first_letter(team)));
+            $('.teams').append(team_template.replace(/{team}/g, team));
 
             $('.allow-'+team).change(function() {
                 backend.allowTeamControl(team, $(this).is(':checked'));
