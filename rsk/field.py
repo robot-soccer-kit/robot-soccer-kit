@@ -90,7 +90,7 @@ class Field:
             # Calibrating camera
             ret, self.intrinsic, self.distortion, rvecs, tvecs = \
                 cv2.calibrateCamera([object_points], [graphics_positions], image.shape[:2][::-1], None, None,
-                flags=cv2.CALIB_FIX_ASPECT_RATIO)
+                flags=cv2.CALIB_FIX_ASPECT_RATIO + cv2.CALIB_ZERO_TANGENT_DIST)
         
             # Computing extrinsic matrices
             transformation = np.eye(4)
