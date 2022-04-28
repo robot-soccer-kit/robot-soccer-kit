@@ -47,36 +47,24 @@ function referee_initialize(backend)
                 }
             }
 
-
             // Robots State
-            for (let robot in game_state["robots_state"]) {
-                let robot_state = game_state["robots_state"][robot]["state"];
-                let preemption_reasons = game_state["robots_state"][robot]["preemption_reasons"];
-                let div = $('.robot-penalty[rel='+robot+'] .robot-state');
-
-                if (preemption_reasons.length !== 0) {
-                    let all_premption_reasons_string = ""
+            for (let team in game_state["control"]) {
+                let team_data = game_state["control"][team]
+                for (let number in team_data["preemption_reasons"]) {
+                    let reasons = team_data["preemption_reasons"][number]
+                    let div = $('.robot-penalty[rel='+robot+'] .robot-state');
                     
-                    for (let nb_reason = 0; nb_reason <= preemption_reasons.length-1; nb_reason++){
-                        if(nb_reason >= 1){
-                            all_premption_reasons_string += " + " + capitalize_first_letter(String(preemption_reasons[nb_reason]))
-                        }
-                        else{
-                            all_premption_reasons_string += " " + capitalize_first_letter(String(preemption_reasons[nb_reason]))
-                        }
+                    if (reasons.length > 0) {
+                        let reasons_string = reasons.map(capitalize_first_letter).join(',')
+                        div.html('<h6 class="text-danger">'+ reasons_string +'</h6>');
+
+                    } 
+                    else if (game_state["game_state_msg"] == "Game is running..."){
+                        div.html('<h6>Robot is playing...</h6>');
                     }
-                    
-                    div.html('<h6 class="text-danger">'+ all_premption_reasons_string +'</h6>');
-
-                } 
-                else if (robot_state !== ""){
-                    div.html('<h6>'+robot_state+'</h6>');
-                }
-                else if (game_state["game_state_msg"] == "Game is running..."){
-                    div.html('<h6>Robot is playing...</h6>');
-                }
-                else {
-                    div.html('<h6>Robot is ready to play</h6>');
+                    else {
+                        div.html('<h6>Robot is ready to play</h6>');
+                    }
                 }
             }
 

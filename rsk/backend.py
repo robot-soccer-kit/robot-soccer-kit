@@ -1,15 +1,15 @@
 from . import api
-from . import video, robots, control, field, referee
+from . import video, robots, control, field, referee, detection
 
 
 class Backend():
     def __init__(self):
         super().__init__()
 
-        self.video = video.Video()
-        self.detection = self.video.detection
-        self.robots = robots.Robots(self.detection)
-        self.referee = referee.Referee(self.detection, self.robots)
+        self.video:video.Video = video.Video()
+        self.detection:detection.Detection = self.video.detection
+        self.robots:robots.Robots = robots.Robots(self.detection)
+        self.referee:referee.Referee = referee.Referee(self.detection, self.robots.control)
 
     def cameras(self):
         return self.video.cameras()

@@ -68,7 +68,7 @@ def robot_teams() -> list:
     """
     List of possible robot team (colors)
 
-    :return list: possible robot colors
+    :return list: possible robot team (colors)
     """    
     return ['green', 'blue']
 
@@ -79,20 +79,20 @@ def all_robots() -> list:
     :return list: robots
     """    
     return [
-        (color, id)
-        for color in robot_teams()
-        for id in robot_numbers()
+        (team, number)
+        for team in robot_teams()
+        for number in robot_numbers()
     ]
 
-def robot_list2str(color:str, number:int) -> str:
+def robot_list2str(team:str, number:int) -> str:
     """
     Transforms a robot tuple (eg: ['blue', 1]) to a robot string (eg: 'blue1')
 
-    :param str color: robot color (eg: "blue")
+    :param str team: robot team (eg: "blue")
     :param int number: robot number (eg: 1)
     :return str: robot id (eg: blue1)
     """    
-    return '%s%d' % (color, number)
+    return '%s%d' % (team, number)
 
 def robot_str2list(robot:str) -> list:
     """
@@ -101,9 +101,9 @@ def robot_str2list(robot:str) -> list:
     :param str robot: string robot name (eg: 'blue1')
     :return list: robot id (eg: ['blue', 1])
     """    
-    robot_id = re.findall('[a-zA-Z]+', robot) + re.findall('[0-9]+', robot)
-    robot_id[1] = int(robot_id[1])
-    return robot_id
+    matches = re.match('([^\d]+)([0-9]+)', robot)
+
+    return matches[1], int(matches[2])
 
 def all_robots_id() -> list:
     """

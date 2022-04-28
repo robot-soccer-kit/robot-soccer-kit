@@ -20,14 +20,14 @@ configurations = {
         ['blue', 2, (-field_dimensions.length/2, 0, 0)],
     ],
 
-    'game-green-positive': [
+    'game_green_positive': [
         ['green', 1, (field_dimensions.length/4, 0, np.pi)],
         ['green', 2, (field_dimensions.length/2, 0, np.pi)],
         ['blue', 1, (-field_dimensions.length/4, 0, 0)],
         ['blue', 2, (-field_dimensions.length/2, 0, 0)],
     ],
 
-    'game-blue-positive': [
+    'game_blue_positive': [
         ['green', 1, (-field_dimensions.length/4, 0, 0)],
         ['green', 2, (-field_dimensions.length/2, 0, 0)],
         ['blue', 1, (field_dimensions.length/4, 0, np.pi)],
@@ -115,7 +115,10 @@ class ClientRobot(ClientTracked):
 
         return self.client.command(self.color, self.number, 'control', [dx, dy, dturn])
 
-    def compute_order(self, target):
+    def goto_compute_order(self, target, skip_old=True):
+        if not self.has_position(skip_old):
+            return False, (0., 0., 0.)
+
         if callable(target):
                 target = target()
 
@@ -142,14 +145,11 @@ class ClientRobot(ClientTracked):
             self.control(0, 0, 0)
             return True
 
-        if self.has_position(skip_old):
-            arrived, order = self.compute_order(target)
-            self.control(*order)
+        
+        arrived, order = self.goto_compute_order(target, skip_old)
+        self.control(*order)
 
-            return arrived
-        else:
-            self.control(0, 0, 0)
-            return False
+        return arrived
 
 
 class Client:

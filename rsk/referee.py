@@ -1,15 +1,14 @@
 from turtle import listen
 import numpy as np
 import threading
-from . import field_dimensions, utils, config
+from . import field_dimensions, utils, config, control, tasks
 from .field import Field
 import time
 # from playsound import playsound
 
 class Referee:
-    def __init__(self, detection, robots):
-        self.robots = robots
-        self.control = self.robots.control
+    def __init__(self, detection, ctrl: control.Control):
+        self.control:control.Control = ctrl
         self.detection = detection
 
         self.ball = None
@@ -42,10 +41,7 @@ class Referee:
             "referee_history_sliced": [],
             "game_state_msg": "",
             "penalties": {},
-            "robots_state": {
-                robots: {"state":"", "preemption_reasons":()}
-                for robots in utils.all_robots_id()
-                }
+            "control": None
         }
 
         #Robots Penalties
@@ -59,10 +55,7 @@ class Referee:
     def getFullGameState(self)-> dict:
         nb_history_send_to_JS = 3
 
-        for color in utils.robot_teams():
-            for number in utils.robot_numbers():
-                self.game_state["robots_state"][color+str(number)]["preemption_reasons"] = tuple(self.control.teams[color]["preemption_reasons"][number])
-
+        self.game_state["control"] = self.control.status()
         self.game_state["referee_history_sliced"] = self.referee_history[-nb_history_send_to_JS:]
         self.setTimer()
         self.setPenalty()
@@ -81,29 +74,21 @@ class Referee:
         self.resetScore()
         self.game_state["game_state_msg"] = "Game is running..."
 
-    def pauseGame(self, reason=None):
+    def pauseGame(self, reason:str ='manually-paused'):
         self.pause_timer = time.time()
         print("||Game Paused")
         self.game_state["game_is_not_paused"] = False
 
-        if reason is not None: 
-            self.control.preempt_all_robots(reason)
-        else:
-            self.control.preempt_all_robots("manually paused")
-            self.game_state["game_state_msg"] = "Game has been manually paused"
-
-        self.control.stop_all()
-
+        task = tasks.StopAllTask(reason)
+        self.control.add_task(task)
+        self.game_state["game_state_msg"] = "Game has been manually paused"
 
     def resumeGame(self):
         print("||Game Resumed")
         self.game_state["game_is_not_paused"] = True 
         self.resumePenalty()
-        for color, number in utils.all_robots():
-            if self.control.is_preempted(color, number, "manually paused"):
-                self.control.unpreempt_robot(color, number, "manually paused")
-            if self.control.is_preempted(color, number, "sideline crossed"):
-                self.control.unpreempt_robot(color, number, "sideline crossed")
+        self.control.remove_task('manually-paused')
+        self.control.remove_task('sideline-crossed')
         self.game_state["game_state_msg"] = "Game is running..."
 
 
@@ -115,10 +100,11 @@ class Referee:
         self.chrono_is_running = False
         self.start_timer = 0.
         self.resetPenalty()
-        for reason in ["sideline crossed","goal","manually paused"]:
-            for color, number in utils.all_robots():
-                if self.control.is_preempted(color,number,reason):
-                    self.control.unpreempt_robot(color,number,reason)
+
+        self.control.remove_task('manually-paused')
+        self.control.remove_task('sideline-crossed')
+        self.control.remove_task('goal') 
+
         self.game_state["game_state_msg"] = "Game is ready to start"
 
 
@@ -138,22 +124,21 @@ class Referee:
         self.game_state["game_is_running"] = True
         self.game_state["game_state_msg"] = "Game is running..."
 
-    def placeGame(self, configuration):
-        self.control.preempt_all_robots('force place robots')
+    def placeGame(self, configuration:str):
         if configuration == "standard":
             if (self.game_state["x_positive_goal"] == utils.robot_teams()[1]):
-                self.control.set_target_configuration('game-blue-positive')
+                configuration = 'game_blue_positive'
             else:
-                self.control.set_target_configuration('game-green-positive')
+                configuration = 'game_green_positive'
 
         elif configuration == "swap_covers":
             if (self.game_state["x_positive_goal"] == utils.robot_teams()[1]):
-                self.control.set_target_configuration('swap_covers_blue_positive')
+                configuration = 'swap_covers_blue_positive'
             else:
-                self.control.set_target_configuration('swap_covers_green_positive')
-
-        else: 
-            self.control.set_target_configuration(configuration)
+                configuration = 'swap_covers_green_positive'
+        
+        task = tasks.GoToConfigurationTask('force-place', configuration)
+        self.control.add_task(task)
 
     def updateScore(self, team: str, increment: int):
         if team == utils.robot_teams()[0] : 
@@ -194,9 +179,10 @@ class Referee:
         if self.penalties[robot]['time_end'] is None:
             self.penalties[robot]['time_end'] = time.time() + duration + 1
             self.penalties[robot]['max'] = duration
-            [color, number] = utils.robot_str2list(robot)
-            self.control.preempt_robot(color, number,"penalty")
+            team, number = utils.robot_str2list(robot)
 
+            task = tasks.StopTask('penalty-' + robot, team, number)
+            self.control.add_task(task)
         else:
             self.penalties[robot]['time_end'] += duration
             self.penalties[robot]['max'] += duration
@@ -206,16 +192,14 @@ class Referee:
             'time_end': None,
             'max': 5
         }
-        [color, number] = utils.robot_str2list(robot)
-        if self.control.is_preempted(color, number, "penalty"):
-            self.control.unpreempt_robot(color, number,"penalty")
+
+        self.control.remove_task('penalty-' + robot)
     
     def tickPenalty(self):
         for robot in self.penalties:
             if (self.penalties[robot]['time_end'] is not None) and (self.penalties[robot]['time_end'] < time.time() + 1):
                 self.penalties[robot]['time_end'] = None
-                [color, number] = utils.robot_str2list(robot)
-                self.control.unpreempt_robot(color, number,"penalty")
+                self.control.remove_task('penalty-'+robot)
 
     def setPenalty(self)-> dict:
         if self.game_state["game_is_not_paused"]:
@@ -319,7 +303,6 @@ class Referee:
                                 memory = 1
                                 self.pauseGame("goal")
                                 self.game_state["game_state_msg"] = "Waiting for Goal Validation"
-
                             
                             # Sideline (field+2cm margin) and ball trajectory intersection (Sideline fool detection)
                             intersect_field_Upline_out = utils.intersect(ball_coord_old,ball_coord,field_UpLeft_out,field_UpRight_out)
@@ -337,7 +320,7 @@ class Referee:
                                 memory = 1
                                 self.addRefereeHistory("neutral", "Sideline crossed")
                                 # playsound('rsk/static/sounds/g.wav',False)
-                                self.pauseGame("sideline crossed")
+                                self.pauseGame("sideline-crossed")
 
                             # Verification that the ball has been inside a smaller field (field-10cm margin) at least once before a new goal or a sideline foul is detected
                             if memory == 1:
@@ -359,13 +342,14 @@ class Referee:
                 
                 if self.game_state["halftime_is_running"]:
                     self.game_state["game_state_msg"] = "Half Time"
-                    self.control.preempt_all_robots('half time')
+                    task = tasks.StopAllTask('half-time')
+                    self.control.add_task(task)
                 else:
-                    self.control.unpreempt_all_robots('half time')
+                    self.control.remove_task('half-time')
 
                 [color, number] = utils.all_robots()[0]
 
-                if self.control.is_preempted(color, number,"sideline crossed"):
+                if self.control.has_task('sideline-crossed'):
                     if (self.sideline_intersect[1][0]>=0) and (self.sideline_intersect[1][1]>0):
                         self.game_state["game_state_msg"] = "Place the ball on dot 1"
                         self.detection.sideline_dots = "dot1"
@@ -393,13 +377,13 @@ class Referee:
                                         memory_sideline_timestamp = 1
 
                                     if time.time() - start >= 2:
-                                        self.control.unpreempt_all_robots("sideline crossed")
+                                        self.control.remove_task('sideline-crossed')
                                         self.detection.sideline_dots = None
                                         memory_sideline_timestamp = 0
                                         self.game_state["game_state_msg"] = "Game is running..."
                                         self.resumeGame()
 
-                if self.control.is_preempted(color, number,"goal"):
+                if self.control.has_task('goal'):
                     if self.goal_validated is not None : 
                         if self.goal_validated:
                             pointA = [-0.05,0.05]
@@ -424,7 +408,7 @@ class Referee:
                                         memory_sideline_timestamp = 1
 
                                     if time.time() - start >= 2:
-                                        self.control.unpreempt_all_robots("goal")
+                                        self.control.remove_task('goal')
                                         self.detection.sideline_dots = None
                                         memory_sideline_timestamp = 0
                                         self.game_state["game_state_msg"] = "Game is running..."

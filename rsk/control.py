@@ -5,83 +5,7 @@ import zmq
 import time
 import uuid
 import threading
-from . import robots, utils, client, field_dimensions
-
-class ControlTask:
-    def __init__(self, name:str, priority:int=1):
-        self.name:str = name
-        self.priority:int = priority
-
-    def robots(self) -> list:
-        return []
-
-    def tick(self, robot:client.ClientRobot) -> None:
-        raise NotImplemented('Task not implemented')
-
-    def finished(self, client:client.Client) -> bool:
-        return False
-
-class StopTask(ControlTask):
-    def __init__(self, name:str, team:str, number:int, forever=True, **kwargs):
-        super().__init__(name, **kwargs)
-        self.team:str = team
-        self.number:int = number
-        self.forever = forever
-
-    def robots(self):
-        return [(self.team, self.number)]
-
-    def tick(self, robot:client.ClientRobot):
-        client.control(0, 0, 0)
-
-    def finished(self, client:client.Client) -> bool:
-        return not self.forever
-
-class GoToTask(ControlTask):
-    def __init__(self, name:str, team:str, number:int, target, skip_old=True, **kwargs):
-        super().__init__(name, **kwargs)
-        self.team:str = team
-        self.number:int = number
-        self.target = target
-        self.skip_old:bool = skip_old
-
-        for team, number, target in client.configurations:
-            self.targets[(team, number)] = target
-
-    def robots(self):
-        return [(self.team, self.number)]
-    
-    def tick(self, robot:client.ClientRobot):
-        robot.goto(self.target, wait=False, skip_old=self.skip_old)
-
-    def finished(self, client:client.Client) -> bool:
-        robot = client.robots[self.team][self.number]
-        arrived, _ = robot.compute_order(self.target)
-
-        return arrived
-
-class GoToConfigurationTask(ControlTask):
-    def __init__(self, name:str, configuration:str, **kwargs):
-        super().__init__(name, **kwargs)
-        self.targets = {}
-
-        for team, number, target in client.configurations[configuration]:
-            self.targets[(team, number)] = target
-
-    def robots(self):
-        return list(self.targets.keys())
-    
-    def tick(self, robot:client.ClientRobot):
-        robot.goto(self.targets[(robot.team, robot.number)], False)
-
-    def finished(self, client:client.Client) -> bool:
-        for team, number in self.targets:
-            arrived, _ = client.robots[team][number].compute_order(self.targets[(team, number)])
-
-            if not arrived:
-                return False
-
-        return True
+from . import robots, utils, client, field_dimensions, tasks
 
 class Control:
     def __init__(self, robots):
@@ -99,21 +23,20 @@ class Control:
             for robot in utils.all_robots()
         }
         self.targets_buffer = {}
-        self.idle = True
         self.lock = threading.Lock()
 
         self.tasks = {}
 
         self.teams = {
-            color: {
+            team: {
                 "allow_control": True,
                 "key": "",
                 "packets": 0
             }
-            for color in utils.robot_teams()
+            for team in utils.robot_teams()
         }
 
-    def add_task(self, task:ControlTask):
+    def add_task(self, task:tasks.ControlTask):
         self.lock.acquire()
         self.tasks[task.name] = task
         self.lock.release()
@@ -122,7 +45,10 @@ class Control:
         return task_name in self.tasks
     
     def remove_task(self, name:str):
-        del self.tasks[name]
+        self.lock.acquire()
+        if name in self.tasks:
+            del self.tasks[name]
+        self.lock.release()
 
     def thread(self):
         while self.running:
@@ -184,11 +110,12 @@ class Control:
     def stop(self):
         self.running = False
 
-    def robot_tasks(self, robot) -> list:
+    def robot_tasks(self, team:str, number:int) -> list:
         tasks = []
         for task in self.tasks:
-            for team, number in task.robots():
-                return tasks.append(task)
+            for task_team, task_number in task.robots():
+                if (team, number) == (task_team, task_number):
+                    tasks.append(task)
 
         return tasks
 
@@ -217,46 +144,6 @@ class Control:
     def setKey(self, team, key):
         self.teams[team]['key'] = key
 
-    def set_target(self, team:str, number:int, target):
-        """
-        Sets a target position for a given robot
-        """        
-        self.lock.acquire()
-        self.idle = False
-        self.targets_buffer[(team, number)] = target
-        self.lock.release()
-
-    def stop(self, team:str, number:int):
-        """
-        Stops a robot
-        """        
-        self.set_target(team, number, 'stop')
-
-    def set_target_configuration(self, configuration:str):
-        """
-        Set a target configuration for all robots
-        """        
-        self.lock.acquire()
-        self.idle = False
-        for team, number, target in client.configurations[configuration]:
-            self.targets_buffer[(team, number)] = target
-        self.lock.release()
-
-    def _set_target_all(self, target):
-        """
-        Sets a target for all robots
-        """     
-        self.lock.acquire()
-        for robot in utils.all_robots():
-            self.targets_buffer[robot] = target
-        self.lock.release()
-
-    def stop_all(self):
-        """
-        Stop all robots (they will stop moving)
-        """        
-        self._set_target_all('stop')
-    
     def client_thread(self):
         self.client = client.Client(key=self.master_key)
 
@@ -274,12 +161,12 @@ class Control:
                     task_name = 'out-of-game-%s' % utils.robot_list2str(team, number)
 
                     if intersect_field_in:
-                        task = GoToTask(task_name, team, number, (0., 0, 0.))
+                        task = tasks.GoToTask(task_name, team, number, (0., 0, 0.))
                         self.add_task(task)
                         
                     else: 
                         if self.has_task(task_name):
-                            task = StopTask(task_name, team, number, forever=False)
+                            task = tasks.StopTask(task_name, team, number, forever=False)
                             self.add_task(task)
 
             # Handling robot's goto, since client interaction access network, we can't afford to
@@ -289,23 +176,23 @@ class Control:
             self.lock.release()
 
             # Sorting tasks by priority
-            tasks_to_tick = sorted(tasks_to_tick, lambda task: task.priority)
+            tasks_to_tick = sorted(tasks_to_tick, lambda task: -task.priority)
             robots_ticked = set()
 
             # Ticking all the tasks
-            moving = False
             for task in tasks_to_tick:
                 for team, number in task.robots():
                     if (team, number) not in robots_ticked:
                         # Robot was not ticked yet by an higher-priority task
                         robots_ticked.add((team, number))
-                        task.tick(self.client.robots[team][number])
-                        moving = True
+
+                        try:
+                            task.tick(self.client.robots[team][number])
+                        except client.ClientError:
+                            print("Error in control's client")
 
                     if task.finished(self.client):
                         to_delete = task.name
-
-            self.idle = not moving
 
             # Removing finished tasks
             self.lock.acquire()
