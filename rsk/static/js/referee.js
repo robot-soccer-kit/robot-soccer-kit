@@ -60,7 +60,7 @@ function referee_initialize(backend)
                     if (reasons.length > 0) {
                         let reasons_string = reasons.join(',')
                         if (penalty_reasons[robot]) {
-                            reasons_string += "["+penalty_reasons[robot]+"]"
+                            reasons_string = "["+penalty_reasons[robot]+"]"
                         }
                         div.html('<h6 class="text-danger">'+ reasons_string +'</h6>');
 
