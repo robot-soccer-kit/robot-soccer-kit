@@ -157,7 +157,7 @@ class Control:
     def client_thread(self):
         self.client = client.Client(key=self.master_key)
 
-        [_, field_DownRight_out, _, field_UpLeft_out] = field_dimensions.fieldCoordMargin(0.25)
+        [_, field_DownRight_out, _, field_UpLeft_out] = field_dimensions.fieldCoord(0.25)
 
         while self.running:
             # Keeping robots on sight
@@ -210,7 +210,7 @@ class Control:
                 new_robots_color = {}
                 for robot_id in self.robots.robots_by_marker:
                     robot = utils.robot_str2list(robot_id)
-                    color = 'orange' if robot in robots_ticked else robot[0]
+                    color = 'preempted' if robot in robots_ticked else robot[0]
 
                     if (robot not in self.robots_color) or self.robots_color[robot] != color:
                         self.client.robots[robot[0]][robot[1]].leds(*utils.robot_leds_color(color))

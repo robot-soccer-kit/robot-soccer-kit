@@ -4,7 +4,6 @@ import threading
 from . import field_dimensions, utils, config, control, tasks
 from .field import Field
 import time
-# from playsound import playsound
 
 class Referee:
     def __init__(self, detection, ctrl: control.Control):
@@ -64,7 +63,6 @@ class Referee:
 
     def startGame(self):
         print("|Game Started")
-        # playsound('rsk/static/sounds/a.wav',False)
         self.start_timer = time.time()
         self.game_state["game_is_not_paused"] = True
         self.chrono_is_running = True
@@ -86,15 +84,16 @@ class Referee:
     def resumeGame(self):
         print("||Game Resumed")
         self.game_state["game_is_not_paused"] = True 
-        self.control.remove_task('manually-paused')
-        self.control.remove_task('sideline-crossed')
-        self.control.remove_task('goal')
         self.game_state["game_state_msg"] = "Game is running..."
         self.wait_ball_position = None
 
+        self.control.remove_task('manually-paused')
+        self.control.remove_task('sideline-crossed')
+        self.control.remove_task('goal')
+        self.control.remove_task('half-time')
+
     def stopGame(self):
         print("|Game Stopped")
-        # playsound('rsk/static/sounds/b.wav',False)
         self.game_state["game_is_not_paused"] = False
         self.game_state["game_is_running"] = False
         self.chrono_is_running = False
@@ -105,12 +104,12 @@ class Referee:
         self.control.remove_task('sideline-crossed')
         self.control.remove_task('goal') 
         self.control.remove_task('force-place')
+        self.control.remove_task('half-time')
 
         self.game_state["game_state_msg"] = "Game is ready to start"
 
 
     def startHalfTime(self):
-        # playsound('rsk/static/sounds/c.wav',False)
         self.start_timer = time.time()
         self.game_state["game_is_running"] = False
         self.game_state["halftime_is_running"] = True
@@ -118,12 +117,11 @@ class Referee:
         self.resetPenalties()
     
     def startSecondHalfTime(self):
-        # playsound('rsk/static/sounds/d.wav',False)
         self.start_timer = time.time()
         self.game_state["halftime_is_running"] = False
-        self.game_state["game_is_not_paused"] = True
         self.game_state["game_is_running"] = True
         self.game_state["game_state_msg"] = "Game is running..."
+        self.resumeGame()
 
     def forcePlace(self, configuration:str):
         task = tasks.GoToConfigurationTask('force-place', configuration, priority=50)
@@ -244,17 +242,18 @@ class Referee:
         else:
             self.updateScore(self.game_state["referee_history_sliced"][-1][2],-1)
             self.goal_validated = False
+            self.resumeGame()
 
     def thread(self):
         # Initialisation coordinates goals
-        [x_pos_goals_low,x_pos_goals_high] = field_dimensions.goalsCoord("x_positive")
-        [x_neg_goals_high,x_neg_goals_low]  = field_dimensions.goalsCoord("x_negative")
+        [x_pos_goals_low,x_pos_goals_high] = field_dimensions.goalsCoord(True)
+        [x_neg_goals_high,x_neg_goals_low]  = field_dimensions.goalsCoord(False)
 
         # Initialisation coordinates field for sidelines (+2cm)
-        [field_UpRight_out, field_DownRight_out, field_DownLeft_out, field_UpLeft_out] = field_dimensions.fieldCoordMargin(0.02)
+        [field_UpRight_out, field_DownRight_out, field_DownLeft_out, field_UpLeft_out] = field_dimensions.fieldCoord(margin=0.02)
         # Initialisation coordinates field for reseting sidelines and goals memory (-10cm)
-        [_, field_DownRight_in, _, field_UpLeft_in] = field_dimensions.fieldCoordMargin(-0.08)
-        memory = 0
+        [field_UpRight_in, _, field_DownLeft_in, _] = field_dimensions.fieldCoord(margin=-0.08)
+        ball_out_field = False
         wait_ball_timestamp = None
 
         ball_coord_old = np.array([0,0])
@@ -272,26 +271,19 @@ class Referee:
                         ball_coord = np.array(self.detection_info['ball'])
                         if (ball_coord_old[0] != ball_coord[0] and ball_coord_old[1] != ball_coord[1]):
                             # Goals and ball trajectory intersection (Goal detection)
-                            intersect_x_neg_goal = utils.intersect(ball_coord_old,ball_coord,x_neg_goals_low,x_neg_goals_high)
-                            intersect_x_pos_goal = utils.intersect(ball_coord_old,ball_coord,x_pos_goals_low,x_pos_goals_high)
-                            
-                            
-                            if self.game_state["x_positive_goal"] == utils.robot_teams()[0]:
-                                if intersect_x_neg_goal[0]:
-                                    GoalTeam = (utils.robot_teams()[0],"f")
-                                if intersect_x_pos_goal[0]:
-                                    GoalTeam = (utils.robot_teams()[1],"e")
-                            elif self.game_state["x_positive_goal"] == utils.robot_teams()[1]:
-                                if intersect_x_neg_goal[0]: 
-                                    GoalTeam = (utils.robot_teams()[1],"e")
-                                if intersect_x_pos_goal[0]: 
-                                    GoalTeam = (utils.robot_teams()[0],"f")
+                            intersect_x_neg_goal, _ = utils.intersect(ball_coord_old,ball_coord,x_neg_goals_low,x_neg_goals_high)
+                            intersect_x_pos_goal, _ = utils.intersect(ball_coord_old,ball_coord,x_pos_goals_low,x_pos_goals_high)
+                            intersect_goal = intersect_x_neg_goal or intersect_x_pos_goal
+        
+                            if intersect_goal and not ball_out_field:
+                                all_teams = utils.robot_teams()
+                                positive_team = self.game_state["x_positive_goal"]
+                                negative_team = all_teams[0] if all_teams[0] != self.game_state["x_positive_goal"] else all_teams[1]
+                                goal_team = positive_team if intersect_x_neg_goal else negative_team
 
-                            if (intersect_x_neg_goal[0] or intersect_x_pos_goal[0]) and memory == 0:
-                                self.updateScore(GoalTeam[0], 1)
-                                self.addRefereeHistory(GoalTeam[0], "Goal")
-                                # playsound('rsk/static/sounds/'+GoalTeam[1]+'.wav',False)
-                                memory = 1
+                                self.updateScore(goal_team, 1)
+                                self.addRefereeHistory(goal_team, "Goal")
+                                ball_out_field = True
                                 self.resetPenalties()
                                 self.pauseGame("goal")
                                 self.game_state["game_state_msg"] = "Waiting for Goal Validation"
@@ -304,7 +296,7 @@ class Referee:
 
                             intersect_field_out = bool(intersect_field_Upline_out[0] or intersect_field_RightLine_out[0] or intersect_field_DownLine_out[0] or intersect_field_LeftLine_out[0])
 
-                            if intersect_field_out and not (intersect_x_neg_goal[0] or intersect_x_pos_goal[0]) and memory == 0:
+                            if intersect_field_out and not intersect_goal and not ball_out_field:
                                 for intersection in (intersect_field_Upline_out, intersect_field_DownLine_out, intersect_field_LeftLine_out, intersect_field_RightLine_out):
                                     has_intersection, point = intersection
                                     if has_intersection:
@@ -314,20 +306,13 @@ class Referee:
                                             (1 if point[1] > 0 else -1) * field_dimensions.dots_y
                                         )
                                     pass
-                                memory = 1
+                                ball_out_field = True
                                 self.addRefereeHistory("neutral", "Sideline crossed")
-                                # playsound('rsk/static/sounds/g.wav',False)
                                 self.pauseGame("sideline-crossed")
 
                             # Verification that the ball has been inside a smaller field (field-10cm margin) at least once before a new goal or a sideline foul is detected
-                            if memory == 1:
-                                intersect_field_in = bool(
-                                    (field_UpLeft_in[0]<=ball_coord[0]<=field_DownRight_in[0]) 
-                                    and 
-                                    (field_DownRight_in[1]<=ball_coord[1]<=field_UpLeft_in[1]))
-
-                                if intersect_field_in:
-                                    memory = 0
+                            if ball_out_field and utils.in_rectangle(ball_coord, field_DownLeft_in, field_UpRight_in):
+                                ball_out_field = False
 
                             ball_coord_old = ball_coord
                 
@@ -337,18 +322,13 @@ class Referee:
                     self.game_state["game_state_msg"] = "Half Time"
                     task = tasks.StopAllTask('half-time')
                     self.control.add_task(task)
-                else:
-                    self.control.remove_task('half-time')
 
                 if (self.wait_ball_position is not None) and (self.detection_info is not None) and (self.detection_info['ball'] is not None):
-                    print('Seeing the ball, checking for rectangle...')
                     # Computing target rectangle
                     x, y = self.wait_ball_position
-                    margin = 0.05
-                    rectangle = [x-margin, y-margin, x+margin, y+margin]
+                    margin = 0.05 # XXX: This should not be defined here
 
-                    if utils.in_rectangle(self.detection_info['ball'], rectangle):
-                        print('In the rectangle!')
+                    if utils.in_rectangle(self.detection_info['ball'], [x-margin, y-margin], [x+margin, y+margin]):
                         if wait_ball_timestamp is None:
                             wait_ball_timestamp = time.time()
                         elif time.time() - wait_ball_timestamp >= 1:

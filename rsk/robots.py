@@ -34,7 +34,7 @@ class Robots:
             before = self.detection.getDetection().copy()
             self.setMarker(entry, None)
             self.robots[entry].beep(200, 100)
-            self.robots[entry].control(0, 0, math.radians(30))
+            self.robots[entry].control(0, 0, math.radians(50))
             time.sleep(1)
             self.robots[entry].control(0, 0, 0)
             after = self.detection.getDetection().copy()
@@ -43,7 +43,7 @@ class Robots:
                     a = before['markers'][marker]['orientation']
                     b = after['markers'][marker]['orientation']
                     delta = np.rad2deg(utils.angle_wrap(b-a))
-                    if delta > 10 and delta < 40:
+                    if delta > 25 and delta < 90:
                         self.setMarker(entry, marker)
 
     def ports(self):

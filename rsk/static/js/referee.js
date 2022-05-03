@@ -322,6 +322,14 @@ function referee_initialize(backend)
     $('.strd-place').click(function() {
         backend.placeGame('standard');
     });
+
+    $('.dots-place').click(function() {
+        backend.placeGame('dots');
+    });
+    
+    $('.side-place').click(function() {
+        backend.placeGame('side');
+    });
     
     // Robots Penalties
     $('.robot-penalty').each(function() {

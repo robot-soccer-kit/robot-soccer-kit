@@ -34,7 +34,7 @@ class Detection:
             'aruco': True,
             'goals': True,
             'ball': True,
-            'exclusion_circle': False,
+            'timed_circle': False,
             'sideline': False,
             'landmark': True
         }
@@ -94,7 +94,7 @@ class Detection:
         self.displaySettings['aruco'] = display_settings_bool[0]
         self.displaySettings['goals'] = display_settings_bool[1]
         self.displaySettings['ball'] = display_settings_bool[2]
-        self.displaySettings['exclusion_circle'] = display_settings_bool[3]
+        self.displaySettings['timed_circle'] = display_settings_bool[3]
         self.displaySettings['sideline'] = display_settings_bool[4]
         self.displaySettings['landmark'] = display_settings_bool[5]
 
@@ -103,7 +103,7 @@ class Detection:
         display_settings_bool.append(self.displaySettings['aruco'])
         display_settings_bool.append(self.displaySettings['goals'])
         display_settings_bool.append(self.displaySettings['ball'])
-        display_settings_bool.append(self.displaySettings['exclusion_circle'])
+        display_settings_bool.append(self.displaySettings['timed_circle'])
         display_settings_bool.append(self.displaySettings['sideline'])
         display_settings_bool.append(self.displaySettings['landmark'])
         return(display_settings_bool)
@@ -117,7 +117,7 @@ class Detection:
             'aruco': self.displaySettings['aruco'],
             'goals': self.displaySettings['goals'],
             'ball': self.displaySettings['ball'],
-            'exclusion_circle': self.displaySettings['exclusion_circle'],
+            'timed_circle': self.displaySettings['timed_circle'],
             'sideline':  self.displaySettings['sideline'],
             'landmark': self.displaySettings['landmark']
         }
@@ -156,7 +156,7 @@ class Detection:
 
         if self.field.calibrated() and image_debug is not None:
             if self.displaySettings['sideline']:
-                [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoordMargin(-0.1)
+                [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoord(-0.1)
                 A = self.field.position_to_pixel(field_UpRight)
                 B = self.field.position_to_pixel(field_DownRight)
                 C = self.field.position_to_pixel(field_DownLeft)
@@ -166,7 +166,7 @@ class Detection:
                 cv2.line(image_debug, C, D, (0, 255, 0), 1)
                 cv2.line(image_debug, D, A, (0, 255, 0), 1)
 
-                [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoordMargin(0.02)
+                [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoord(0.02)
                 A = self.field.position_to_pixel(field_UpRight)
                 B = self.field.position_to_pixel(field_DownRight)
                 C = self.field.position_to_pixel(field_DownLeft)
@@ -190,6 +190,7 @@ class Detection:
                         A = self.field.position_to_pixel([sign*(.05 + field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
                         B = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
                         cv2.line(image_debug, A, B, color, 3)
+
             if self.displaySettings['landmark']:
                 A = self.field.position_to_pixel([0, 0])
                 B = self.field.position_to_pixel([0.2, 0])
@@ -200,6 +201,26 @@ class Detection:
                 A = self.field.position_to_pixel([0, 0, 0])
                 B = self.field.position_to_pixel([0, 0, 0.2])
                 cv2.line(image_debug, A, B, (255, 0, 0), 1)
+
+            if self.displaySettings['timed_circle'] and self.ball is not None:
+                first_point = None
+                last_point = None
+                for alpha in np.linspace(0, 2*np.pi, 32):
+                    new_point = [
+                        self.ball[0] + np.cos(alpha) * field_dimensions.timed_circle_radius,
+                        self.ball[1] + np.sin(alpha) * field_dimensions.timed_circle_radius,
+                        0
+                    ]
+                    if last_point:
+                        A = self.field.position_to_pixel(last_point)
+                        B = self.field.position_to_pixel(new_point)
+                        cv2.line(image_debug, A, B, (0, 0, 255), 1)
+                        last_point = None
+                    else:
+                        last_point = new_point
+                    if first_point is None:
+                        first_point = new_point
+                    
 
             if self.wait_ball_position is not None:
                 self.draw_point2square(image_debug, self.wait_ball_position, 0.05, (0,165,255), 2)

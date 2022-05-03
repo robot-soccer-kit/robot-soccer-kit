@@ -79,12 +79,12 @@ def robot_leds_color(name:str) -> list:
     :param str name: color name
     :return list: list of [r, g, b] values for this color
     """    
-    if name == 'orange':
-        return [128, 64, 0]
+    if name == 'preempted':
+        return [128, 0, 128]
     elif name == 'blue':
-        return [0, 0, 64]
+        return [0, 0, 128]
     elif name == 'green':
-        return [0, 64, 0]
+        return [0, 128, 0]
     else:
         raise NotImplemented(f"Unknown color: {name}")
 
@@ -129,16 +129,14 @@ def all_robots_id() -> list:
     """    
     return [robot_list2str(*robot) for robot in all_robots()]
 
-def in_rectangle(point:list, rectangle:list) -> bool:
+def in_rectangle(point:list, bottom_left:list, top_right:list) -> bool:
     """
     Checks if a point is in a rectangle
 
     :param list point: the point (x, y)
-    :param list rectangle: the rectangle (bottom_left_x, bottom_left_y, top_right_x, top_right_ y)
+    :param list bottom_left point
+    :param list top_right point
     :return bool: True if the point is in the rectangle
     """    
-    bottom_left = rectangle[:2]
-    top_right = rectangle[2:]
-
-    return point[0] >= bottom_left[0] and point[1] >= bottom_left[1] and \
-            point[0] <= top_right[0] and point[1] <= top_right[1]
+    return (np.array(point) >= np.array(bottom_left)).all() and \
+        (np.array(point) <= np.array(top_right)).all()
