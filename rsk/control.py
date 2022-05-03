@@ -6,7 +6,7 @@ import time
 import uuid
 import threading
 import logging
-from . import robots, utils, client, field_dimensions, tasks
+from . import robots, utils, client, constants, tasks
 
 
 class Control:
@@ -238,7 +238,7 @@ class Control:
         Ensure that the robots don't leave the field. If they go outside a given area, they will
         be sent back inside the field using goto.
         """
-        [limit_up_right, _, limit_down_left, _] = field_dimensions.fieldCoord(0.25)
+        [limit_up_right, _, limit_down_left, _] = constants.field_corners(0.25)
 
         for team, number in utils.all_robots():
             robot = self.client.robots[team][number]

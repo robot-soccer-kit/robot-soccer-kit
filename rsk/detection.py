@@ -3,10 +3,11 @@ import cv2
 import zmq
 import time
 from .field import Field
-from . import field_dimensions, config
-import os 
+from . import constants, config
+import os
 
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
+
 
 class Detection:
     def __init__(self):
@@ -21,52 +22,49 @@ class Detection:
         self.arucoParams = cv2.aruco.DetectorParameters_create()
         # arucoParams.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_APRILTAG
 
-        #Goals Colors
+        # Goals Colors
         self.color_xpos = (0, 255, 0)
         self.color_xneg = (255, 0, 0)
-        
+
         # Dots for crossing sidelines
         self.wait_ball_position = None
 
         self.canceled_goal_side = None
 
         self.displaySettings = {
-            'aruco': True,
-            'goals': True,
-            'ball': True,
-            'timed_circle': False,
-            'sideline': False,
-            'landmark': True
+            "aruco": True,
+            "goals": True,
+            "ball": True,
+            "timed_circle": False,
+            "sideline": False,
+            "landmark": True,
         }
 
-        if 'display_settings' in config.config:
-            for entry in config.config['display_settings']:
-                self.displaySettings[entry] = config.config['display_settings'][entry]
+        if "display_settings" in config.config:
+            for entry in config.config["display_settings"]:
+                self.displaySettings[entry] = config.config["display_settings"][entry]
 
         self.arucoItems = {
             # Corners
-            0: ['c1', (128, 128, 0)],
-            1: ['c2', (128, 128, 0)],
-            2: ['c3', (128, 128, 0)],
-            3: ['c4', (128, 128, 0)],
-
+            0: ["c1", (128, 128, 0)],
+            1: ["c2", (128, 128, 0)],
+            2: ["c3", (128, 128, 0)],
+            3: ["c4", (128, 128, 0)],
             # Green
-            4: ['green1', (0, 128, 0)],
-            5: ['green2', (0, 128, 0)],
-
+            4: ["green1", (0, 128, 0)],
+            5: ["green2", (0, 128, 0)],
             # Blue
-            6: ['blue1', (128, 0, 0)],
-            7: ['blue2', (128, 0, 0)],
-
+            6: ["blue1", (128, 0, 0)],
+            7: ["blue2", (128, 0, 0)],
             # Generic objects
-            8: ['obj1', (128, 128, 0)],
-            9: ['obj2', (128, 128, 0)],
-            10: ['obj3', (128, 128, 0)],
-            11: ['obj4', (128, 128, 0)],
-            12: ['obj5', (128, 128, 0)],
-            13: ['obj6', (128, 128, 0)],
-            14: ['obj7', (128, 128, 0)],
-            15: ['obj8', (128, 128, 0)],
+            8: ["obj1", (128, 128, 0)],
+            9: ["obj2", (128, 128, 0)],
+            10: ["obj3", (128, 128, 0)],
+            11: ["obj4", (128, 128, 0)],
+            12: ["obj5", (128, 128, 0)],
+            13: ["obj6", (128, 128, 0)],
+            14: ["obj7", (128, 128, 0)],
+            15: ["obj8", (128, 128, 0)],
         }
 
         # Ball detection parameters (HSV thresholds)
@@ -82,51 +80,49 @@ class Detection:
 
         self.on_update = None
 
-        self.ball_height = 0.042
-
-    def setDisplaySettings(self, display_settings: list) -> list: 
+    def setDisplaySettings(self, display_settings: list) -> list:
         display_settings_bool = []
         for i in range(len(display_settings)):
-            if display_settings[i] == 'on':
+            if display_settings[i] == "on":
                 display_settings_bool.append(True)
-            else :
+            else:
                 display_settings_bool.append(False)
-        self.displaySettings['aruco'] = display_settings_bool[0]
-        self.displaySettings['goals'] = display_settings_bool[1]
-        self.displaySettings['ball'] = display_settings_bool[2]
-        self.displaySettings['timed_circle'] = display_settings_bool[3]
-        self.displaySettings['sideline'] = display_settings_bool[4]
-        self.displaySettings['landmark'] = display_settings_bool[5]
+        self.displaySettings["aruco"] = display_settings_bool[0]
+        self.displaySettings["goals"] = display_settings_bool[1]
+        self.displaySettings["ball"] = display_settings_bool[2]
+        self.displaySettings["timed_circle"] = display_settings_bool[3]
+        self.displaySettings["sideline"] = display_settings_bool[4]
+        self.displaySettings["landmark"] = display_settings_bool[5]
 
     def getDisplaySettings(self):
         display_settings_bool = []
-        display_settings_bool.append(self.displaySettings['aruco'])
-        display_settings_bool.append(self.displaySettings['goals'])
-        display_settings_bool.append(self.displaySettings['ball'])
-        display_settings_bool.append(self.displaySettings['timed_circle'])
-        display_settings_bool.append(self.displaySettings['sideline'])
-        display_settings_bool.append(self.displaySettings['landmark'])
-        return(display_settings_bool)
+        display_settings_bool.append(self.displaySettings["aruco"])
+        display_settings_bool.append(self.displaySettings["goals"])
+        display_settings_bool.append(self.displaySettings["ball"])
+        display_settings_bool.append(self.displaySettings["timed_circle"])
+        display_settings_bool.append(self.displaySettings["sideline"])
+        display_settings_bool.append(self.displaySettings["landmark"])
+        return display_settings_bool
 
     def getDefaultDisplaySettings(self):
         display_settings_bool = [True, True, True, False, False, True]
-        return(display_settings_bool)
+        return display_settings_bool
 
     def saveDisplaySettings(self):
-        config.config['display_settings'] = {
-            'aruco': self.displaySettings['aruco'],
-            'goals': self.displaySettings['goals'],
-            'ball': self.displaySettings['ball'],
-            'timed_circle': self.displaySettings['timed_circle'],
-            'sideline':  self.displaySettings['sideline'],
-            'landmark': self.displaySettings['landmark']
+        config.config["display_settings"] = {
+            "aruco": self.displaySettings["aruco"],
+            "goals": self.displaySettings["goals"],
+            "ball": self.displaySettings["ball"],
+            "timed_circle": self.displaySettings["timed_circle"],
+            "sideline": self.displaySettings["sideline"],
+            "landmark": self.displaySettings["landmark"],
         }
         config.save()
 
     def calibrateCamera(self):
         self.field.should_calibrate = True
         self.field.is_calibrated = False
-    
+
     def HalfTimeChangeColorField(self, xpos_goal):
         if xpos_goal == "blue":
             self.color_xpos = (255, 0, 0)
@@ -134,29 +130,66 @@ class Detection:
         else:
             self.color_xpos = (0, 255, 0)
             self.color_xneg = (255, 0, 0)
-    
-    def draw_point2square(self, image, center: list, margin: int, color: tuple, thickness: int):
-        pointA = self.field.position_to_pixel([center[0]-margin,center[1]+margin])
-        pointB = self.field.position_to_pixel([center[0]+margin,center[1]+margin])
-        pointC = self.field.position_to_pixel([center[0]+margin,center[1]-margin])
-        pointD = self.field.position_to_pixel([center[0]-margin,center[1]-margin])
+
+    def draw_point2square(
+        self, image, center: list, margin: int, color: tuple, thickness: int
+    ):
+        """
+        Helper to draw a square on the image
+        """
+        pointA = self.field.position_to_pixel([center[0] - margin, center[1] + margin])
+        pointB = self.field.position_to_pixel([center[0] + margin, center[1] + margin])
+        pointC = self.field.position_to_pixel([center[0] + margin, center[1] - margin])
+        pointD = self.field.position_to_pixel([center[0] - margin, center[1] - margin])
         cv2.line(image, pointA, pointB, color, thickness)
         cv2.line(image, pointB, pointC, color, thickness)
         cv2.line(image, pointC, pointD, color, thickness)
         cv2.line(image, pointD, pointA, color, thickness)
 
-    def detectAruco(self, image, image_debug = None):
+    def draw_circle(
+        self,
+        image,
+        center: list,
+        radius: float,
+        color: tuple,
+        thickness: int,
+        points: int = 32,
+        dashed: bool = False,
+    ):
+        """
+        Helper to draw a circle on the image
+        """
+        first_point = None
+        last_point = None
+        k = 0
+        for alpha in np.linspace(0, 2 * np.pi, points):
+            new_point = [
+                center + np.cos(alpha) * radius,
+                center + np.sin(alpha) * radius,
+                0,
+            ]
+            if last_point:
+                A = self.field.position_to_pixel(last_point)
+                B = self.field.position_to_pixel(new_point)
+                if not dashed or k % 2 == 0:
+                    cv2.line(image, A, B, color, thickness)
+            last_point = new_point
+            if first_point is None:
+                first_point = new_point
 
-        (corners, ids, rejected) = cv2.aruco.detectMarkers(image,
-                                                           self.arucoDict,
-                                                           parameters=self.arucoParams)
-        new_markers = {}
-
-
-
+    def draw_annotations(self, image_debug):
+        """
+        Draw extra annotations (lines, circles etc.) to check visually that the informations are matching
+        the real images
+        """
         if self.field.calibrated() and image_debug is not None:
-            if self.displaySettings['sideline']:
-                [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoord(-0.1)
+            if self.displaySettings["sideline"]:
+                [
+                    field_UpRight,
+                    field_DownRight,
+                    field_DownLeft,
+                    field_UpLeft,
+                ] = constants.field_corners(constants.field_in_margin)
                 A = self.field.position_to_pixel(field_UpRight)
                 B = self.field.position_to_pixel(field_DownRight)
                 C = self.field.position_to_pixel(field_DownLeft)
@@ -166,7 +199,12 @@ class Detection:
                 cv2.line(image_debug, C, D, (0, 255, 0), 1)
                 cv2.line(image_debug, D, A, (0, 255, 0), 1)
 
-                [field_UpRight, field_DownRight, field_DownLeft, field_UpLeft] = field_dimensions.fieldCoord(0.02)
+                [
+                    field_UpRight,
+                    field_DownRight,
+                    field_DownLeft,
+                    field_UpLeft,
+                ] = constants.field_corners(constants.field_out_margin)
                 A = self.field.position_to_pixel(field_UpRight)
                 B = self.field.position_to_pixel(field_DownRight)
                 C = self.field.position_to_pixel(field_DownLeft)
@@ -176,22 +214,54 @@ class Detection:
                 cv2.line(image_debug, C, D, (0, 0, 255), 1)
                 cv2.line(image_debug, D, A, (0, 0, 255), 1)
 
-            if self.displaySettings['goals']:
+            if self.displaySettings["goals"]:
                 for sign, color in [(-1, self.color_xneg), (1, self.color_xpos)]:
-                    C = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), -sign*field_dimensions.goal_width / 2.])
-                    D = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), sign*field_dimensions.goal_width / 2.])
-                    E = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), -sign*field_dimensions.goal_width / 2., 0.10])
-                    F = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), sign*field_dimensions.goal_width / 2., 0.10])
+                    C = self.field.position_to_pixel(
+                        [
+                            sign * (constants.field_length / 2.0),
+                            -sign * constants.goal_width / 2.0,
+                        ]
+                    )
+                    D = self.field.position_to_pixel(
+                        [
+                            sign * (constants.field_length / 2.0),
+                            sign * constants.goal_width / 2.0,
+                        ]
+                    )
+                    E = self.field.position_to_pixel(
+                        [
+                            sign * (constants.field_length / 2.0),
+                            -sign * constants.goal_width / 2.0,
+                            0.10,
+                        ]
+                    )
+                    F = self.field.position_to_pixel(
+                        [
+                            sign * (constants.field_length / 2.0),
+                            sign * constants.goal_width / 2.0,
+                            0.10,
+                        ]
+                    )
                     cv2.line(image_debug, C, D, color, 3)
                     cv2.line(image_debug, E, F, color, 2)
                     cv2.line(image_debug, C, E, color, 2)
                     cv2.line(image_debug, D, F, color, 2)
                     for post in [-1, 1]:
-                        A = self.field.position_to_pixel([sign*(.05 + field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
-                        B = self.field.position_to_pixel([sign*(field_dimensions.length / 2.), post*field_dimensions.goal_width / 2.])
+                        A = self.field.position_to_pixel(
+                            [
+                                sign * (0.05 + constants.field_length / 2.0),
+                                post * constants.goal_width / 2.0,
+                            ]
+                        )
+                        B = self.field.position_to_pixel(
+                            [
+                                sign * (constants.field_length / 2.0),
+                                post * constants.goal_width / 2.0,
+                            ]
+                        )
                         cv2.line(image_debug, A, B, color, 3)
 
-            if self.displaySettings['landmark']:
+            if self.displaySettings["landmark"]:
                 A = self.field.position_to_pixel([0, 0])
                 B = self.field.position_to_pixel([0.2, 0])
                 cv2.line(image_debug, A, B, (0, 0, 255), 1)
@@ -202,29 +272,35 @@ class Detection:
                 B = self.field.position_to_pixel([0, 0, 0.2])
                 cv2.line(image_debug, A, B, (255, 0, 0), 1)
 
-            if self.displaySettings['timed_circle'] and self.ball is not None:
-                first_point = None
-                last_point = None
-                for alpha in np.linspace(0, 2*np.pi, 32):
-                    new_point = [
-                        self.ball[0] + np.cos(alpha) * field_dimensions.timed_circle_radius,
-                        self.ball[1] + np.sin(alpha) * field_dimensions.timed_circle_radius,
-                        0
-                    ]
-                    if last_point:
-                        A = self.field.position_to_pixel(last_point)
-                        B = self.field.position_to_pixel(new_point)
-                        cv2.line(image_debug, A, B, (0, 0, 255), 1)
-                        last_point = None
-                    else:
-                        last_point = new_point
-                    if first_point is None:
-                        first_point = new_point
-                    
+            if self.displaySettings["timed_circle"] and self.ball is not None:
+                self.draw_circle(
+                    image_debug,
+                    self.ball,
+                    constants.timed_circle_radius,
+                    (0, 0, 255),
+                    1,
+                    dased=True,
+                )
 
             if self.wait_ball_position is not None:
-                self.draw_point2square(image_debug, self.wait_ball_position, 0.05, (0,165,255), 2)
-            
+                self.draw_circle(
+                    image_debug,
+                    self.wait_ball_position,
+                    constants.place_ball_margin,
+                    (0, 165, 255),
+                    2,
+                    8,
+                )
+
+    def detect_markers(self, image, image_debug=None):
+        """
+        Detect the fiducial markers on the image, they are passed to the field for calibration
+        """
+        (corners, ids, rejected) = cv2.aruco.detectMarkers(
+            image, self.arucoDict, parameters=self.arucoParams
+        )
+        new_markers = {}
+
         if len(corners) > 0:
             for (markerCorner, markerID) in zip(corners, ids.flatten()):
                 if markerID not in self.arucoItems:
@@ -235,7 +311,7 @@ class Detection:
                 # Draw the bounding box of the ArUCo detection
                 item = self.arucoItems[markerID][0]
 
-                if item[0] == 'c':
+                if item[0] == "c":
                     self.field.set_corner_position(item, corners)
 
                 if image_debug is not None:
@@ -245,7 +321,7 @@ class Detection:
                     bottomLeft = (int(bottomLeft[0]), int(bottomLeft[1]))
                     topLeft = (int(topLeft[0]), int(topLeft[1]))
                     itemColor = self.arucoItems[markerID][1]
-                    if self.displaySettings['aruco']:
+                    if self.displaySettings["aruco"]:
                         cv2.line(image_debug, topLeft, topRight, itemColor, 2)
                         cv2.line(image_debug, topRight, bottomRight, itemColor, 2)
                         cv2.line(image_debug, bottomRight, bottomLeft, itemColor, 2)
@@ -258,32 +334,59 @@ class Detection:
                         cv2.circle(image_debug, (cX, cY), 4, (0, 0, 255), -1)
                         fX = int((topLeft[0] + topRight[0]) / 2.0)
                         fY = int((topLeft[1] + topRight[1]) / 2.0)
-                        cv2.line(image_debug, (cX, cY), (cX+2*(fX-cX), cY+2*(fY-cY)), (0, 0, 255), 2)
+                        cv2.line(
+                            image_debug,
+                            (cX, cY),
+                            (cX + 2 * (fX - cX), cY + 2 * (fY - cY)),
+                            (0, 0, 255),
+                            2,
+                        )
 
                         text = item
-                        if item.startswith('blue') or item.startswith('green'):
+                        if item.startswith("blue") or item.startswith("green"):
                             text = item[-1]
-                        cv2.putText(image_debug, text, (cX-4, cY+4),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 6)
-                        cv2.putText(image_debug, text, (cX-4, cY+4),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, itemColor, 2)
+                        cv2.putText(
+                            image_debug,
+                            text,
+                            (cX - 4, cY + 4),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5,
+                            (255, 255, 255),
+                            6,
+                        )
+                        cv2.putText(
+                            image_debug,
+                            text,
+                            (cX - 4, cY + 4),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5,
+                            itemColor,
+                            2,
+                        )
 
-                if self.field.calibrated() and item[0] != 'c':
+                if self.field.calibrated() and item[0] != "c":
                     new_markers[item] = self.field.pose_of_tag(corners)
                     self.last_updates[item] = time.time()
 
         self.field.update_calibration(image)
         self.markers = new_markers
 
-    def detectBall(self, image, image_debug):
+    def detect_ball(self, image, image_debug):
+        """
+        Detects the ball in the image
+        """
+
+        # Converts the image to HSV and apply a threshold
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, self.lower_orange, self.upper_orange)
-        
+
+        # Detect connected components
         output = cv2.connectedComponentsWithStats(mask, 8, cv2.CV_32S)
         num_labels = output[0]
         stats = output[2]
         centroids = output[3]
 
+        # Walk through candidates
         candidates = []
         for k in range(1, num_labels):
             if stats[k][4] > 3:
@@ -291,6 +394,7 @@ class Detection:
                 if len(candidates) > 16:
                     break
 
+        # For each candidate, we will then check which one is the best (closest to previous estimation)
         if len(candidates):
             best = None
             bestPx = None
@@ -299,7 +403,7 @@ class Detection:
 
             for point in candidates:
                 if self.field.calibrated():
-                    pos = self.field.pixel_to_position(point, self.ball_height)
+                    pos = self.field.pixel_to_position(point, constants.ball_height)
                 else:
                     pos = point
 
@@ -313,10 +417,15 @@ class Detection:
                     best = pos
                     bestPx = point
 
-            if self.displaySettings['ball']:
+            if self.displaySettings["ball"]:
                 if image_debug is not None and best:
-                    cv2.circle(image_debug, (int(bestPx[0]), int(
-                        bestPx[1])), 3, (255, 255, 0), 3)
+                    cv2.circle(
+                        image_debug,
+                        (int(bestPx[0]), int(bestPx[1])),
+                        3,
+                        (255, 255, 0),
+                        3,
+                    )
 
             if self.field.calibrated():
                 self.ball = best
@@ -325,15 +434,23 @@ class Detection:
             if self.no_ball > 10:
                 self.ball = None
 
-    def get_detection(self):
+    def get_detection(self) -> dict:
+        """
+        Returns the detection informations
+
+        :return dict: detection informations (ball, markers, field calibration status)
+        """
         return {
-            'ball': self.ball,
-            'markers': self.markers,
-            'calibrated': self.field.calibrated(),
-            'see_whole_field': self.field.see_whole_field,
+            "ball": self.ball,
+            "markers": self.markers,
+            "calibrated": self.field.calibrated(),
+            "see_whole_field": self.field.see_whole_field,
         }
 
-    def publish(self):
+    def publish(self) -> None:
+        """
+        Publish the detection informations on the network
+        """
         info = self.get_detection()
 
         self.socket.send_json(info, flags=zmq.NOBLOCK)

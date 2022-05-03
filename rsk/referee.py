@@ -1,12 +1,19 @@
 import math
 import numpy as np
 import threading
-from . import field_dimensions, utils, config, control, tasks
+import logging
+from . import constants, utils, config, control, tasks
 from .field import Field
 import time
 
 class Referee:
+    """
+    Handles the referee
+    """    
+
     def __init__(self, detection, ctrl: control.Control):
+        self.logger: logging.Logger = logging.getLogger("referee")
+
         self.control:control.Control = ctrl
         self.detection = detection
 
@@ -23,11 +30,10 @@ class Referee:
         self.game_duration = 301.
         self.halftime_duration = 121.
 
-        self.pause_timer = 0
-        self.invicibility_frame = {}
-
         self.wait_ball_position = None
         self.goal_validated = None
+
+        self.invicibility_frame = {}
         self.timed_circle_timers = {robot: 0 for robot in utils.all_robots()}
 
         self.game_state = {
@@ -64,7 +70,7 @@ class Referee:
         return self.game_state
 
     def startGame(self):
-        print("|Game Started")
+        self.logger.info("Game started")
         self.start_timer = time.time()
         self.game_state["game_paused"] = False
         self.chrono_is_running = True
@@ -75,8 +81,8 @@ class Referee:
         self.game_state["game_state_msg"] = "Game is running..."
 
     def pauseGame(self, reason:str ='manually-paused'):
-        self.pause_timer = time.time()
-        print("||Game Paused")
+        self.logger.info(f"Game paused, reason: {reason}")
+
         self.game_state["game_paused"] = True
 
         task = tasks.StopAllTask(reason)
@@ -84,7 +90,7 @@ class Referee:
         self.game_state["game_state_msg"] = "Game has been manually paused"
 
     def resumeGame(self):
-        print("||Game Resumed")
+        self.logger.info("Game resumed")
         self.game_state["game_paused"] = False
         self.game_state["game_state_msg"] = "Game is running..."
         self.wait_ball_position = None
@@ -95,7 +101,7 @@ class Referee:
         self.control.remove_task('half-time')
 
     def stopGame(self):
-        print("|Game Stopped")
+        self.logger.info("Game stopped")
         self.game_state["game_paused"] = True
         self.game_state["game_is_running"] = False
         self.chrono_is_running = False
@@ -116,6 +122,9 @@ class Referee:
         self.game_state["game_is_running"] = False
         self.game_state["halftime_is_running"] = True
         self.game_state["game_paused"] = True
+        self.game_state["game_state_msg"] = "Half Time"
+        task = tasks.StopAllTask('half-time')
+        self.control.add_task(task)
         self.resetPenalties()
     
     def startSecondHalfTime(self):
@@ -254,19 +263,119 @@ class Referee:
             self.goal_validated = False
             self.resumeGame()
 
-    def thread(self):
-        # Initialisation coordinates goals
-        [x_pos_goals_low,x_pos_goals_high] = field_dimensions.goalsCoord(True)
-        [x_neg_goals_high,x_neg_goals_low]  = field_dimensions.goalsCoord(False)
+    def check_line_crosses(self, ball_coord:np.ndarray, ball_coord_old:np.ndarray):
+        """
+        Checks for line crosses (sideline crosses and goals)
 
+        :param np.ndarray ball_coord: ball position (now)
+        :param np.ndarray ball_coord_old: ball position on previous frame
+        """        
+        [x_pos_goals_low,x_pos_goals_high] = constants.goal_posts(x_positive=True)
+        [x_neg_goals_high,x_neg_goals_low]  = constants.goal_posts(x_positive=False)
+        [field_UpRight_in, _, field_DownLeft_in, _] = constants.field_corners(margin=constants.field_in_margin)
+        [field_UpRight_out, field_DownRight_out, field_DownLeft_out, field_UpLeft_out] = constants.field_corners(margin=constants.field_out_margin)
+    
+        # Goals and ball trajectory intersection (Goal detection)
+        intersect_x_neg_goal, _ = utils.intersect(ball_coord_old,ball_coord,x_neg_goals_low,x_neg_goals_high)
+        intersect_x_pos_goal, _ = utils.intersect(ball_coord_old,ball_coord,x_pos_goals_low,x_pos_goals_high)
+        intersect_goal = intersect_x_neg_goal or intersect_x_pos_goal
+
+        if intersect_goal and not self.ball_out_field:
+            goal_team = self.positive_team if intersect_x_neg_goal else self.negative_team
+            self.logger.info(f"Goal for team {goal_team}")
+
+            self.ball_out_field = True
+            self.updateScore(goal_team, 1)
+            self.addRefereeHistory(goal_team, "Goal")
+            self.resetPenalties()
+            self.pauseGame("goal")
+            self.game_state["game_state_msg"] = "Waiting for Goal Validation"
+        
+        # Sideline (field+2cm margin) and ball trajectory intersection (Sideline fool detection)
+        intersect_field_Upline_out = utils.intersect(ball_coord_old,ball_coord,field_UpLeft_out,field_UpRight_out)
+        intersect_field_DownLine_out = utils.intersect(ball_coord_old,ball_coord,field_DownLeft_out, field_DownRight_out)
+        intersect_field_LeftLine_out = utils.intersect(ball_coord_old,ball_coord,field_UpLeft_out, field_DownLeft_out)
+        intersect_field_RightLine_out = utils.intersect(ball_coord_old,ball_coord,field_UpRight_out, field_DownRight_out)
+
+        intersect_field_out = bool(intersect_field_Upline_out[0] or intersect_field_RightLine_out[0] or intersect_field_DownLine_out[0] or intersect_field_LeftLine_out[0])
+
+        if intersect_field_out and not intersect_goal and not self.ball_out_field:
+            for intersection in (intersect_field_Upline_out, intersect_field_DownLine_out, intersect_field_LeftLine_out, intersect_field_RightLine_out):
+                has_intersection, point = intersection
+                if has_intersection:
+                    self.game_state["game_state_msg"] = "Place the ball on the dot"
+                    self.wait_ball_position = (
+                        (1 if point[0] > 0 else -1) * constants.dots_x,
+                        (1 if point[1] > 0 else -1) * constants.dots_y
+                    )
+                pass
+            self.ball_out_field = True
+            self.addRefereeHistory("neutral", "Sideline crossed")
+            self.pauseGame("sideline-crossed")
+
+        # Verification that the ball has been inside a smaller field (field-10cm margin) at least once before a new goal or a sideline foul is detected
+        if self.ball_out_field and utils.in_rectangle(ball_coord, field_DownLeft_in, field_UpRight_in):
+            self.ball_out_field = False
+
+    def penalize_fools(self, elapsed:float):
+        """
+        Penalize robots that are not respecting some rules
+
+        :param float elapsed: elapsed time (s) since last tick
+        """        
+        # Checking the robot respect timed circle and defense area rules
+        defender = {}
+        for marker in self.detection_info['markers']:
+            team, number = utils.robot_str2list(marker)
+            robot_position = np.array(self.detection_info['markers'][marker]['position'])
+
+            if team in utils.robot_teams():
+                robot = (team, number)
+
+                # Penalizing robots that are staying close to the ball
+                if self.detection_info['ball'] is not None and self.canBePenalized(marker):
+                    ball_position = np.array(self.detection_info['ball'])
+                    distance = np.linalg.norm(ball_position - robot_position)
+
+                    if distance < constants.timed_circle_radius:
+                        if self.timed_circle_timers[(team, number)] is None:
+                            self.timed_circle_timers[robot] = 0
+                        else:
+                            self.timed_circle_timers[robot] += elapsed
+
+                            if self.timed_circle_timers[robot] > constants.timed_circle_time:
+                                self.addPenalty(5., marker)
+                    else:
+                        self.timed_circle_timers[(team, number)] = None
+                else:
+                    self.timed_circle_timers[(team, number)] = None
+    
+                # Penalizing extra robots that are entering the defense area
+                if self.canBePenalized(marker):
+                    my_defense_area = constants.defense_area(self.positive_team == team)
+                    opponent_defense_area = constants.defense_area(self.positive_team != team)
+
+                    if utils.in_rectangle(robot_position, *opponent_defense_area):
+                        self.addPenalty(5., marker)
+
+                    if utils.in_rectangle(robot_position, *my_defense_area):
+                        if team in defender:
+                            other_robot, other_robot_position = defender[team]
+                            robot_to_penalize = marker
+
+                            if abs(other_robot_position[0]) < abs(robot_position[0]):
+                                robot_to_penalize = other_robot
+                            
+                            self.addPenalty(5., robot_to_penalize)
+                        else:
+                            defender[team] = [marker, robot_position]
+
+    def thread(self):
         # Initialisation coordinates field for sidelines (+2cm)
-        [field_UpRight_out, field_DownRight_out, field_DownLeft_out, field_UpLeft_out] = field_dimensions.fieldCoord(margin=0.02)
-        # Initialisation coordinates field for reseting sidelines and goals memory (-10cm)
-        [field_UpRight_in, _, field_DownLeft_in, _] = field_dimensions.fieldCoord(margin=-0.08)
-        ball_out_field = False
+        self.ball_out_field = False
         wait_ball_timestamp = None
 
-        ball_coord_old = np.array([0,0])
+        ball_coord_old = np.array([0, 0])
 
         self.game_state["game_state_msg"] = "Game is ready to start"
         last_tick = time.time()
@@ -275,120 +384,29 @@ class Referee:
             elapsed = time.time() - last_tick
             last_tick = time.time()
 
+            # Updating positive and negative teams
+            all_teams = utils.robot_teams()
+            self.positive_team = self.game_state["x_positive_goal"]
+            self.negative_team = all_teams[0] if all_teams[0] != self.game_state["x_positive_goal"] else all_teams[1]
+
             if not self.game_state["game_paused"]:
-                all_teams = utils.robot_teams()
-                positive_team = self.game_state["x_positive_goal"]
-                negative_team = all_teams[0] if all_teams[0] != self.game_state["x_positive_goal"] else all_teams[1]
 
                 if self.detection_info is not None:
                     if self.detection_info['ball'] is not None:
                         ball_coord = np.array(self.detection_info['ball'])
-
                         if (ball_coord != ball_coord_old).any():
-                            # Goals and ball trajectory intersection (Goal detection)
-                            intersect_x_neg_goal, _ = utils.intersect(ball_coord_old,ball_coord,x_neg_goals_low,x_neg_goals_high)
-                            intersect_x_pos_goal, _ = utils.intersect(ball_coord_old,ball_coord,x_pos_goals_low,x_pos_goals_high)
-                            intersect_goal = intersect_x_neg_goal or intersect_x_pos_goal
-        
-                            if intersect_goal and not ball_out_field:
-                                goal_team = positive_team if intersect_x_neg_goal else negative_team
-
-                                self.updateScore(goal_team, 1)
-                                self.addRefereeHistory(goal_team, "Goal")
-                                ball_out_field = True
-                                self.resetPenalties()
-                                self.pauseGame("goal")
-                                self.game_state["game_state_msg"] = "Waiting for Goal Validation"
-                            
-                            # Sideline (field+2cm margin) and ball trajectory intersection (Sideline fool detection)
-                            intersect_field_Upline_out = utils.intersect(ball_coord_old,ball_coord,field_UpLeft_out,field_UpRight_out)
-                            intersect_field_DownLine_out = utils.intersect(ball_coord_old,ball_coord,field_DownLeft_out, field_DownRight_out)
-                            intersect_field_LeftLine_out = utils.intersect(ball_coord_old,ball_coord,field_UpLeft_out, field_DownLeft_out)
-                            intersect_field_RightLine_out = utils.intersect(ball_coord_old,ball_coord,field_UpRight_out, field_DownRight_out)
-
-                            intersect_field_out = bool(intersect_field_Upline_out[0] or intersect_field_RightLine_out[0] or intersect_field_DownLine_out[0] or intersect_field_LeftLine_out[0])
-
-                            if intersect_field_out and not intersect_goal and not ball_out_field:
-                                for intersection in (intersect_field_Upline_out, intersect_field_DownLine_out, intersect_field_LeftLine_out, intersect_field_RightLine_out):
-                                    has_intersection, point = intersection
-                                    if has_intersection:
-                                        self.game_state["game_state_msg"] = "Place the ball on the dot"
-                                        self.wait_ball_position = (
-                                            (1 if point[0] > 0 else -1) * field_dimensions.dots_x,
-                                            (1 if point[1] > 0 else -1) * field_dimensions.dots_y
-                                        )
-                                    pass
-                                ball_out_field = True
-                                self.addRefereeHistory("neutral", "Sideline crossed")
-                                self.pauseGame("sideline-crossed")
-
-                            # Verification that the ball has been inside a smaller field (field-10cm margin) at least once before a new goal or a sideline foul is detected
-                            if ball_out_field and utils.in_rectangle(ball_coord, field_DownLeft_in, field_UpRight_in):
-                                ball_out_field = False
-
+                            self.check_line_crosses(ball_coord, ball_coord_old)
                             ball_coord_old = ball_coord
 
-                    # Checking the robot respect timed circle and defense area rules
-                    defender = {}
-                    for marker in self.detection_info['markers']:
-                            team, number = utils.robot_str2list(marker)
-                            robot_position = np.array(self.detection_info['markers'][marker]['position'])
-
-                            if team in utils.robot_teams():
-                                robot = (team, number)
-
-                                # Penalizing robots that are staying close to the ball
-                                if self.detection_info['ball'] is not None and self.canBePenalized(marker):
-                                    ball_position = np.array(self.detection_info['ball'])
-                                    distance = np.linalg.norm(ball_position - robot_position)
-
-                                    if distance < field_dimensions.timed_circle_radius:
-                                        if self.timed_circle_timers[(team, number)] is None:
-                                            self.timed_circle_timers[robot] = 0
-                                        else:
-                                            self.timed_circle_timers[robot] += elapsed
-
-                                            if self.timed_circle_timers[robot] > 5:
-                                                self.addPenalty(5., marker)
-                                    else:
-                                        self.timed_circle_timers[(team, number)] = None
-                                else:
-                                    self.timed_circle_timers[(team, number)] = None
-                    
-                                # Penalizing extra robots that are entering the defense area
-                                if self.canBePenalized(marker):
-                                    my_defense_area = field_dimensions.defenseArea(positive_team == team)
-                                    opponent_defense_area = field_dimensions.defenseArea(positive_team != team)
-
-                                    if utils.in_rectangle(robot_position, *opponent_defense_area):
-                                        self.addPenalty(5., marker)
-
-                                    if utils.in_rectangle(robot_position, *my_defense_area):
-                                        if team in defender:
-                                            other_robot, other_robot_position = defender[team]
-                                            robot_to_penalize = marker
-
-                                            if abs(other_robot_position[0]) < abs(robot_position[0]):
-                                                robot_to_penalize = other_robot
-                                            
-                                            self.addPenalty(5., robot_to_penalize)
-                                        else:
-                                            defender[team] = [marker, robot_position]
-
+                    self.penalize_fools(elapsed)
                 
                 self.tickPenalty(elapsed)
             else:                              
-                if self.game_state["halftime_is_running"]:
-                    self.game_state["game_state_msg"] = "Half Time"
-                    task = tasks.StopAllTask('half-time')
-                    self.control.add_task(task)
-
+                # Waiting for the ball to be at a specific position to resume the game
                 if (self.wait_ball_position is not None) and (self.detection_info is not None) and (self.detection_info['ball'] is not None):
-                    # Computing target rectangle
-                    x, y = self.wait_ball_position
-                    margin = 0.05 # XXX: This should not be defined here
+                    distance = np.linalg.norm(self.wait_ball_position - self.detection_info['ball'])
 
-                    if utils.in_rectangle(self.detection_info['ball'], [x-margin, y-margin], [x+margin, y+margin]):
+                    if distance < constants.place_ball_margin:
                         if wait_ball_timestamp is None:
                             wait_ball_timestamp = time.time()
                         elif time.time() - wait_ball_timestamp >= 1:
@@ -397,9 +415,8 @@ class Referee:
                             self.resumeGame()
                     else:
                         wait_ball_timestamp = None
-        
 
-            # Maybe detection should not be responsible for drawing this    
+            # XXX: Maybe detection should not be responsible for drawing this    
             self.detection.wait_ball_position = self.wait_ball_position            
 
             time.sleep(0.1)

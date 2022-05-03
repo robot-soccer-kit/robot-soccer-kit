@@ -3,42 +3,42 @@ import numpy as np
 import zmq
 import threading
 import time
-from . import field_dimensions, utils
+from . import constants, utils
 
 configurations = {
     'dots': [
-        ['green', 1, (field_dimensions.length/4, -field_dimensions.width/4, np.pi)],
-        ['green', 2, (field_dimensions.length/4, field_dimensions.width/4, np.pi)],
-        ['blue', 1, (-field_dimensions.length/4, field_dimensions.width/4, 0)],
-        ['blue', 2, (-field_dimensions.length/4, -field_dimensions.width/4, 0)],
+        ['green', 1, (constants.field_length/4, -constants.field_width/4, np.pi)],
+        ['green', 2, (constants.field_length/4, constants.field_width/4, np.pi)],
+        ['blue', 1, (-constants.field_length/4, constants.field_width/4, 0)],
+        ['blue', 2, (-constants.field_length/4, -constants.field_width/4, 0)],
     ],
 
     'game': [
-        ['green', 1, (field_dimensions.length/4, 0, np.pi)],
-        ['green', 2, (field_dimensions.length/2, 0, np.pi)],
-        ['blue', 1, (-field_dimensions.length/4, 0, 0)],
-        ['blue', 2, (-field_dimensions.length/2, 0, 0)],
+        ['green', 1, (constants.field_length/4, 0, np.pi)],
+        ['green', 2, (constants.field_length/2, 0, np.pi)],
+        ['blue', 1, (-constants.field_length/4, 0, 0)],
+        ['blue', 2, (-constants.field_length/2, 0, 0)],
     ],
 
     'game_green_positive': [
-        ['green', 1, (field_dimensions.length/4, 0, np.pi)],
-        ['green', 2, (field_dimensions.length/2, 0, np.pi)],
-        ['blue', 1, (-field_dimensions.length/4, 0, 0)],
-        ['blue', 2, (-field_dimensions.length/2, 0, 0)],
+        ['green', 1, (constants.field_length/4, 0, np.pi)],
+        ['green', 2, (constants.field_length/2, 0, np.pi)],
+        ['blue', 1, (-constants.field_length/4, 0, 0)],
+        ['blue', 2, (-constants.field_length/2, 0, 0)],
     ],
 
     'game_blue_positive': [
-        ['green', 1, (-field_dimensions.length/4, 0, 0)],
-        ['green', 2, (-field_dimensions.length/2, 0, 0)],
-        ['blue', 1, (field_dimensions.length/4, 0, np.pi)],
-        ['blue', 2, (field_dimensions.length/2, 0, np.pi)],
+        ['green', 1, (-constants.field_length/4, 0, 0)],
+        ['green', 2, (-constants.field_length/2, 0, 0)],
+        ['blue', 1, (constants.field_length/4, 0, np.pi)],
+        ['blue', 2, (constants.field_length/2, 0, np.pi)],
     ],
 
     'side': [
-        ['green', 1, (0.2, field_dimensions.width/2, -np.pi/2)],
-        ['green', 2, (0.6, field_dimensions.width/2, -np.pi/2)],
-        ['blue', 1, (-0.2, field_dimensions.width/2, -np.pi/2)],
-        ['blue', 2, (-0.6, field_dimensions.width/2, -np.pi/2)],
+        ['green', 1, (0.2, constants.field_width/2, -np.pi/2)],
+        ['green', 2, (0.6, constants.field_width/2, -np.pi/2)],
+        ['blue', 1, (-0.2, constants.field_width/2, -np.pi/2)],
+        ['blue', 2, (-0.6, constants.field_width/2, -np.pi/2)],
     ],
 
     'swap_covers_green_positive': [
@@ -86,9 +86,9 @@ class ClientRobot(ClientTracked):
         self.number = number
         self.client = client
 
-        self.x_max = field_dimensions.length/2 + field_dimensions.border_size/2.
+        self.x_max = constants.field_length/2 + constants.border_size/2.
         self.x_min = -self.x_max
-        self.y_max = field_dimensions.width/2 + field_dimensions.border_size/2.
+        self.y_max = constants.field_width/2 + constants.border_size/2.
         self.y_min = -self.y_max
 
     def ball(self):
