@@ -72,6 +72,22 @@ def robot_teams() -> list:
     """    
     return ['green', 'blue']
 
+def robot_leds_color(name:str) -> list:
+    """
+    Returns the LEDs color for a given name
+
+    :param str name: color name
+    :return list: list of [r, g, b] values for this color
+    """    
+    if name == 'orange':
+        return [128, 64, 0]
+    elif name == 'blue':
+        return [0, 0, 64]
+    elif name == 'green':
+        return [0, 64, 0]
+    else:
+        raise NotImplemented(f"Unknown color: {name}")
+
 def all_robots() -> list:
     """
     List of all possible robots (eg: ['blue', 1])

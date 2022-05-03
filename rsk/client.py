@@ -115,6 +115,9 @@ class ClientRobot(ClientTracked):
 
         return self.client.command(self.color, self.number, 'control', [dx, dy, dturn])
 
+    def leds(self, r, g, b):
+        return self.client.command(self.color, self.number, 'leds', [r, g, b])
+
     def goto_compute_order(self, target, skip_old=True):
         if not self.has_position(skip_old):
             return False, (0., 0., 0.)

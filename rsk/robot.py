@@ -99,7 +99,6 @@ class Robot:
         self.marker = None
         self.thread = threading.Thread(target=lambda: self.execute())
         self.thread.start()
-        self.ledsColor = None
         self.pending_packets = {}
         self.lock = threading.Lock()
 
@@ -108,33 +107,15 @@ class Robot:
         packet.appendInt(frequency)
         self.add_packet('monitor', packet)
 
-    def applyLeds(self):
-        if self.ledsColor is None:
-            self.ledsBreath()
-        else:
-            self.leds(*self.ledsColor)
-
     def blink(self):
         for x in range(5):
             self.leds(255, 255, 255)
             time.sleep(0.25)
             self.leds(0, 0, 0)
             time.sleep(0.25)
-        self.applyLeds()
 
-    def setMarker(self, marker):
+    def setMarker(self, marker:str):
         self.marker = marker
-
-        if marker is None:
-            self.ledsColor = None
-        elif marker.startswith('green'):
-            self.ledsColor = [0, 32, 0]
-        elif marker.startswith('blue'):
-            self.ledsColor = [0, 0, 32]
-        else:
-            self.ledsColor = None
-
-        self.applyLeds()
 
     def process(self, packet):
         if packet.type == PACKET_MONITOR_DATA:
@@ -204,12 +185,7 @@ class Robot:
         packet.appendShort(int(np.rad2deg(dturn)))
         self.add_packet('control', packet)
 
-    def ledsBreath(self):
-        packet = Packet(PACKET_HOLO)
-        packet.appendByte(PACKET_HOLO_LEDS_BREATH)
-        self.add_packet('leds', packet)
-
-    def leds(self, r, g, b):
+    def leds(self, r:int, g:int, b:int):
         packet = Packet(PACKET_HOLO)
         packet.appendByte(PACKET_HOLO_LEDS_CUSTOM)
         packet.appendByte(r)
@@ -239,7 +215,6 @@ class Robot:
                     self.monitor(5)
                     self.control(0, 0, 0)
                     self.beep(880, 250)
-                    self.applyLeds()
                     self.last_init = time.time()
                     self.last_sent_message = None
                     state = 0

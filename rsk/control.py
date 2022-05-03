@@ -26,6 +26,7 @@ class Control:
         self.lock = threading.Lock()
 
         self.tasks = {}
+        self.robots_color = {}
 
         self.teams = {
             team: {
@@ -62,8 +63,9 @@ class Control:
 
                     if team in self.teams:
                         allow_control = True
+                        is_master = key == self.master_key
 
-                        if key != self.master_key:
+                        if not is_master:
                             tasks = self.robot_tasks(team, number)
                             if self.teams[team]['key'] != key:
                                 response[1] = f"Bad key for team {team}"
@@ -77,21 +79,27 @@ class Control:
                                 allow_control = False
                         
                         if allow_control:
-                            marker = "%s%d" % (team, number)
+                            marker = utils.robot_list2str(team, number)
                             if marker in self.robots.robots_by_marker:
                                 if type(command) == list:
+                                    robot = self.robots.robots_by_marker[marker]
+
                                     if command[0] == 'kick' and len(command) == 2:
-                                        self.robots.robots_by_marker[marker].kick(
-                                            float(command[1]))
+                                        robot.kick(float(command[1]))
                                         response = [True, 'ok']
                                     elif command[0] == 'control' and len(command) == 4:
-                                        self.robots.robots_by_marker[marker].control(
-                                            float(command[1]), float(command[2]), float(command[3]))
+                                        robot.control(float(command[1]), float(command[2]), float(command[3]))
                                         response = [True, 'ok']
+                                    elif command[0] == 'leds' and len(command) == 4:
+                                        if is_master:
+                                            robot.leds(int(command[1]), int(command[2]), int(command[3]))
+                                            response = [True, 'ok']
+                                        else:
+                                            response[1] = 'Only master can set the LEDs'
                                     else:
                                         response[1] = 'Unknown command'
                             else:
-                                response[1] = 'Unknown robot'
+                                response[1] = f"Unknown robot: {marker}"
 
                         self.teams[team]['packets'] += 1
 
@@ -164,7 +172,7 @@ class Control:
                     task_name = 'out-of-game-%s' % utils.robot_list2str(team, number)
 
                     if out_of_field:
-                        task = tasks.GoToTask(task_name, team, number, (0., 0, 0.), skip_old=False, priority=100)
+                        task = tasks.GoToTask(task_name, team, number, (0., 0., 0.), skip_old=False, priority=100)
                         self.add_task(task)
                     else: 
                         if self.has_task(task_name):
@@ -196,6 +204,22 @@ class Control:
 
                 if task.finished(self.client):
                     to_delete.append(task.name)
+
+            # Ensuring robots colors
+            try:
+                new_robots_color = {}
+                for robot_id in self.robots.robots_by_marker:
+                    robot = utils.robot_str2list(robot_id)
+                    color = 'orange' if robot in robots_ticked else robot[0]
+
+                    if (robot not in self.robots_color) or self.robots_color[robot] != color:
+                        self.client.robots[robot[0]][robot[1]].leds(*utils.robot_leds_color(color))
+                    new_robots_color[robot] = color
+
+                self.robots_color = new_robots_color
+
+            except client.ClientError as e:
+                print(f"Error while setting leds: {e}")
 
             # Removing finished tasks
             self.lock.acquire()
