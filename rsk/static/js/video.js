@@ -33,8 +33,8 @@ function video_initialize(backend)
     updateCameras();
     $('.refresh-cameras').click(updateCameras);
 
-    function getDisplaySettings() {
-        backend.getDisplaySettings(function(display_settings_bool) {
+    function get_display_settings() {
+        backend.get_display_settings(function(display_settings_bool) {
             $('#aruco').prop('checked', display_settings_bool[0]);
             $('#goals').prop('checked', display_settings_bool[1]);
             $('#ball').prop('checked', display_settings_bool[2]);
@@ -52,16 +52,16 @@ function video_initialize(backend)
         let sideline = $('#sideline:checked').val();
         let landmark = $('#landmark:checked').val();
         display_settings = [aruco,goals,ball, timed_circle, sideline, landmark]
-        backend.setDisplaySettings(display_settings)
-        backend.saveDisplaySettings()
+        backend.set_display_settings(display_settings)
+        backend.save_display_settings()
     });
 
     $('.display-python-settings').click(function() {
-        getDisplaySettings()
+        get_display_settings()
     });
 
     $('#default-settings').click(function() {
-        backend.getDefaultDisplaySettings(function(display_settings_bool) {
+        backend.get_default_display_settings(function(display_settings_bool) {
             $('#aruco').prop('checked', display_settings_bool[0]);
             $('#goals').prop('checked', display_settings_bool[1]);
             $('#ball').prop('checked', display_settings_bool[2]);
@@ -72,7 +72,7 @@ function video_initialize(backend)
     });
 
     $('.calibrate-camera').click(function() {
-        backend.calibrateCamera()
+        backend.calibrate_camera()
     });
 
     // Camera settings
@@ -91,7 +91,7 @@ function video_initialize(backend)
     });
 
     $('.camera-settings').change(function() {
-        backend.calibrateCamera()
+        backend.calibrate_camera()
     });
 
     // Starting the video capture

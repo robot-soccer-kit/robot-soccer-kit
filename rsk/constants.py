@@ -9,8 +9,9 @@ the rules.
 field_length:float = 1.83 # [m] (x axis)
 field_width:float = 1.22 # [m] (y axis)
 
-# Width of the goal
+# Goals size
 goal_width:float = 0.6 # [m]
+goal_virtual_heght:float = 0.1 # [m]
 
 # Side of the (green) border we should be able to see around the field
 border_size:float = 0.3 # [m]
@@ -42,6 +43,10 @@ robot_tag_size:float = 0.08 # [m]
 # Heights
 robot_height:float = 0.076 # [m]
 ball_height:float = 0.042 # [m]
+
+# Durations
+game_duration:float = 301. # [s]
+halftime_duration:float = 121. # [s]
 
 # Goals coordinates
 def goal_posts(x_positive:bool = True) -> np.ndarray:

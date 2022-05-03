@@ -80,7 +80,7 @@ class Detection:
 
         self.on_update = None
 
-    def setDisplaySettings(self, display_settings: list) -> list:
+    def set_display_settings(self, display_settings: list) -> list:
         display_settings_bool = []
         for i in range(len(display_settings)):
             if display_settings[i] == "on":
@@ -94,7 +94,7 @@ class Detection:
         self.displaySettings["sideline"] = display_settings_bool[4]
         self.displaySettings["landmark"] = display_settings_bool[5]
 
-    def getDisplaySettings(self):
+    def get_display_settings(self):
         display_settings_bool = []
         display_settings_bool.append(self.displaySettings["aruco"])
         display_settings_bool.append(self.displaySettings["goals"])
@@ -104,11 +104,11 @@ class Detection:
         display_settings_bool.append(self.displaySettings["landmark"])
         return display_settings_bool
 
-    def getDefaultDisplaySettings(self):
+    def get_default_display_settings(self):
         display_settings_bool = [True, True, True, False, False, True]
         return display_settings_bool
 
-    def saveDisplaySettings(self):
+    def save_display_settings(self):
         config.config["display_settings"] = {
             "aruco": self.displaySettings["aruco"],
             "goals": self.displaySettings["goals"],
@@ -119,11 +119,12 @@ class Detection:
         }
         config.save()
 
-    def calibrateCamera(self):
+    def calibrate_camera(self):
         self.field.should_calibrate = True
         self.field.is_calibrated = False
 
     def HalfTimeChangeColorField(self, xpos_goal):
+        # XXX: This should not be done this way
         if xpos_goal == "blue":
             self.color_xpos = (255, 0, 0)
             self.color_xneg = (0, 255, 0)
@@ -232,20 +233,21 @@ class Detection:
                         [
                             sign * (constants.field_length / 2.0),
                             -sign * constants.goal_width / 2.0,
-                            0.10,
+                            constants.goal_virtual_heght,
                         ]
                     )
                     F = self.field.position_to_pixel(
                         [
                             sign * (constants.field_length / 2.0),
                             sign * constants.goal_width / 2.0,
-                            0.10,
+                            constants.goal_virtual_heght,
                         ]
                     )
                     cv2.line(image_debug, C, D, color, 3)
                     cv2.line(image_debug, E, F, color, 2)
                     cv2.line(image_debug, C, E, color, 2)
                     cv2.line(image_debug, D, F, color, 2)
+                    
                     for post in [-1, 1]:
                         A = self.field.position_to_pixel(
                             [

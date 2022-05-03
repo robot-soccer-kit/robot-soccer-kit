@@ -11,24 +11,20 @@ class Referee:
     Handles the referee
     """    
 
-    def __init__(self, detection, ctrl: control.Control):
+    def __init__(self, detection, control: control.Control):
         self.logger: logging.Logger = logging.getLogger("referee")
 
-        self.control:control.Control = ctrl
+        self.control:control.Control = control
         self.detection = detection
 
-        self.ball = None
-        self.field = Field()
         self.detection_info = None
         detection.on_update = self.detection_update
 
         self.referee_history = []
         
-        self.halftime_is_running = False
-        self.chrono_is_running = False
+        self.halftime_is_running:bool = False
+        self.chrono_is_running:bool = False
         self.start_timer = 0.
-        self.game_duration = 301.
-        self.halftime_duration = 121.
 
         self.wait_ball_position = None
         self.goal_validated = None
@@ -51,7 +47,7 @@ class Referee:
             "control": None
         }
 
-        #Robots Penalties
+        # Robots Penalties
         self.penalties = {}
         self.resetPenalties()
 
@@ -174,9 +170,6 @@ class Referee:
     def detection_update(self, info):
         self.detection_info = info
 
-    def setGameDuration(self, duration:int):
-        self.game_duration = duration
-
     def resetPenalties(self):
         for robot_id in utils.all_robots_id():
             self.cancelPenalty(robot_id)
@@ -228,9 +221,9 @@ class Referee:
 
     def setTimer(self):
         if self.game_state["game_is_running"]:
-            duration = self.game_duration
+            duration = constants.game_duration
         elif self.game_state["halftime_is_running"]:
-            duration = self.halftime_duration
+            duration = constants.halftime_duration
 
         if self.chrono_is_running :
             self.game_state["timer"] = int((self.start_timer + duration) - time.time())
@@ -371,7 +364,6 @@ class Referee:
                             defender[team] = [marker, robot_position]
 
     def thread(self):
-        # Initialisation coordinates field for sidelines (+2cm)
         self.ball_out_field = False
         wait_ball_timestamp = None
 

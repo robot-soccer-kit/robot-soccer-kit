@@ -91,17 +91,17 @@ class Backend():
     def resetScore(self):
         self.referee.resetScore()
 
-    def setDisplaySettings(self, display_settings: list):
-        self.detection.setDisplaySettings(display_settings)
+    def set_display_settings(self, display_settings: list):
+        self.detection.set_display_settings(display_settings)
 
-    def saveDisplaySettings(self):
-        self.detection.saveDisplaySettings()
+    def save_display_settings(self):
+        self.detection.save_display_settings()
 
-    def getDisplaySettings(self) -> list:
-        return self.detection.getDisplaySettings()
+    def get_display_settings(self) -> list:
+        return self.detection.get_display_settings()
 
-    def getDefaultDisplaySettings(self) -> list:
-        return self.detection.getDefaultDisplaySettings()
+    def get_default_display_settings(self) -> list:
+        return self.detection.get_default_display_settings()
 
     def startGame(self):
         self.referee.startGame()
@@ -115,8 +115,8 @@ class Backend():
     def stopGame(self):
         self.referee.stopGame()
 
-    def calibrateCamera(self):
-        self.detection.calibrateCamera()
+    def calibrate_camera(self):
+        self.detection.calibrate_camera()
 
     def placeGame(self, configuration:str):
         self.referee.placeGame(configuration)
