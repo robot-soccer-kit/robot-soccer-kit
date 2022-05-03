@@ -160,3 +160,7 @@ div.progress{
 .progress-large{
     height: 20px;
 }
+
+.card-header {
+    text-transform: capitalize;
+}

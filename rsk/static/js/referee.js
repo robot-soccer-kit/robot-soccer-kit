@@ -1,8 +1,3 @@
-function capitalize_first_letter(string){
-    const strUp = string.charAt(0).toUpperCase() + string.slice(1);
-    return strUp
-}
-
 function referee_initialize(backend)
 {
     let displayed_toast_nb = 0 ;
@@ -24,8 +19,8 @@ function referee_initialize(backend)
 
             // Team names
             if (game_state["team_names"][0] === "" || game_state["team_names"][1] === ""){
-                    $(".first-team-name").html(capitalize_first_letter(game_state["team_colors"][0]))
-                    $(".second-team-name").html(capitalize_first_letter(game_state["team_colors"][1]))
+                    $(".first-team-name").html(game_state["team_colors"][0])
+                    $(".second-team-name").html(game_state["team_colors"][1])
                 }
             else{
                 $(".first-team-name").html(game_state["team_names"][0]);

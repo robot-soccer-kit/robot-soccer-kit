@@ -50,7 +50,7 @@ class Backend():
     def get_robots(self):
         return self.robots.get_robots()
 
-    def set_marker(self, port: str, marker: str):
+    def set_marker(self, port: str, marker):
         self.robots.set_marker(port, marker)
 
     def removeRobot(self, port: str):
