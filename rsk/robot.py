@@ -2,7 +2,9 @@ import numpy as np
 import threading
 import time
 import serial
+import logging
 
+# Constants for binary protocol
 PACKET_ACK = 0
 PACKET_MONITOR = 1
 PACKET_HOLO = 80
@@ -13,40 +15,46 @@ PACKET_HOLO_LEDS_BREATH = 8
 PACKET_HOLO_KICK = 12
 PACKET_MONITOR_DATA = 5
 
+logger: logging.Logger = logging.getLogger("robot")
+
 
 class Packet:
-    def __init__(self, type_, payload=bytearray()):
-        self.type = type_
+    """
+    Represents a physical packet that is sent or received (binary protocol)
+    """
+
+    def __init__(self, type_: int, payload=bytearray()):
+        self.type: int = type_
         self.payload = payload.copy()
 
     def available(self):
         return len(self.payload)
 
-    def appendByte(self, char):
+    def append_byte(self, char):
         if type(char) == int:
             self.payload += bytearray((char,))
         else:
             self.payload += bytearray(char)
 
-    def appendShort(self, short):
-        b1 = (short >> 8) & 0xff
-        b2 = short & 0xff
+    def append_short(self, short):
+        b1 = (short >> 8) & 0xFF
+        b2 = short & 0xFF
 
         self.payload += bytearray((b1, b2))
 
-    def appendInt(self, short):
-        b1 = (short >> 24) & 0xff
-        b2 = (short >> 16) & 0xff
-        b3 = (short >> 8) & 0xff
-        b4 = short & 0xff
+    def append_int(self, short):
+        b1 = (short >> 24) & 0xFF
+        b2 = (short >> 16) & 0xFF
+        b3 = (short >> 8) & 0xFF
+        b4 = short & 0xFF
 
         self.payload += bytearray((b1, b2, b3, b4))
 
     def appendFloat(self, f):
-        self.appendInt(f * 1000.)
+        self.append_int(f * 1000.0)
 
     def appendSmallFloat(self, f):
-        self.appendShort(f * 10.)
+        self.append_short(f * 10.0)
 
     def readByte(self):
         byte = self.payload[0]
@@ -54,28 +62,28 @@ class Packet:
 
         return byte
 
-    def readInt(self):
-        n = (self.readByte() << 24)
+    def read_int(self):
+        n = self.readByte() << 24
         n = n | (self.readByte() << 16)
         n = n | (self.readByte() << 8)
         n = n | (self.readByte() << 0)
 
         return int(np.int32(n))
 
-    def readShort(self):
+    def read_short(self):
         n = (self.readByte() << 8) | self.readByte()
 
         return int(np.int16(n))
 
-    def readFloat(self):
-        return self.readInt()/1000.
+    def read_float(self):
+        return self.read_int() / 1000.0
 
-    def readSmallFloat(self):
-        return self.readShort()/10.
+    def read_small_float(self):
+        return self.read_short() / 10.0
 
-    def toRaw(self):
+    def to_raw(self):
         raw = bytearray()
-        raw += bytearray((0xff, 0xaa, self.type, len(self.payload)))
+        raw += bytearray((0xFF, 0xAA, self.type, len(self.payload)))
         raw += self.payload
         raw += bytearray((self.checksum(),))
 
@@ -86,73 +94,119 @@ class Packet:
 
 
 class Robot:
-    def __init__(self, port):
-        self.port = port
+    """
+    Connection with a physical robot
+    """
+
+    def __init__(self, port: str):
+        # Port name
+        self.port: str = port
+        # Instance of serial connection
         self.bt = None
-        self.init = True
-        self.running = True
+        # Is the connection initialized ?
+        self.init: bool = True
+        # Is the thread running ?
+        self.running: bool = True
+        # Last message timestamps
         self.last_message = None
         self.last_sent_message = None
+        # Last initialization tinestamp
         self.last_init = None
+        # State retrieved from the packets
         self.state = {}
-        self.moved = False
+        # Marker on the top of this robot
         self.marker = None
-        self.thread = threading.Thread(target=lambda: self.execute())
+
+        # Starting the threads
+        self.thread = threading.Thread(target=lambda: self.run_thread())
         self.thread.start()
+
+        # Pending packets queued
         self.pending_packets = {}
         self.lock = threading.Lock()
 
-    def monitor(self, frequency):
-        packet = Packet(PACKET_MONITOR)
-        packet.appendInt(frequency)
-        self.add_packet('monitor', packet)
+    def monitor(self, frequency: int) -> None:
+        """
+        Send a monitor command to the robot
 
-    def blink(self):
-        for x in range(5):
+        :param int frequency: monitor frequency (Hz)
+        """
+        packet = Packet(PACKET_MONITOR)
+        packet.append_int(frequency)
+        self.add_packet("monitor", packet)
+
+    def blink(self) -> None:
+        """
+        Gets the robot blinking for a while
+        """
+        for _ in range(5):
             self.leds(255, 255, 255)
             time.sleep(0.25)
             self.leds(0, 0, 0)
             time.sleep(0.25)
 
-    def set_marker(self, marker:str):
+    def set_marker(self, marker: str) -> None:
+        """
+        Sets the robot's marker
+
+        :param str marker: the robot marker
+        """
         self.marker = marker
 
-    def process(self, packet):
+    def process(self, packet: Packet) -> None:
+        """
+        Processes a packet
+
+        :param Packet packet: packet to process
+        """
         if packet.type == PACKET_MONITOR_DATA:
             self.last_message = time.time()
             state = {}
             version = packet.readByte()
-            state['version'] = version
+            state["version"] = version
 
             if version == 11:
-                state['time'] = packet.readFloat()
-                state['distance'] = packet.readSmallFloat()
-                state['optics'] = [packet.readByte() for optic in range(7)]
-                state['wheels'] = [packet.readSmallFloat() for w in range(3)]
-                state['yaw'] = packet.readSmallFloat()
-                state['gyro_yaw'] = packet.readSmallFloat()
-                state['pitch'] = packet.readSmallFloat()
-                state['roll'] = packet.readSmallFloat()
-                state['odometry'] = {
-                    'x': packet.readShort()/1000.,
-                    'y': packet.readShort()/1000.,
-                    'yaw': packet.readSmallFloat()
+                # Version 11, old robots
+                state["time"] = packet.read_float()
+                state["distance"] = packet.read_small_float()
+                state["optics"] = [packet.readByte() for optic in range(7)]
+                state["wheels"] = [packet.read_small_float() for w in range(3)]
+                state["yaw"] = packet.read_small_float()
+                state["gyro_yaw"] = packet.read_small_float()
+                state["pitch"] = packet.read_small_float()
+                state["roll"] = packet.read_small_float()
+                state["odometry"] = {
+                    "x": packet.read_short() / 1000.0,
+                    "y": packet.read_short() / 1000.0,
+                    "yaw": packet.read_small_float(),
                 }
-                state['battery'] = [packet.readByte()/40., packet.readByte()/40.]
+                state["battery"] = [packet.readByte() / 40.0, packet.readByte() / 40.0]
 
             elif version == 2:
-                state['time'] = packet.readFloat()
-                state['battery'] = [packet.readByte()/10.]
+                # Version 2, new robots
+                state["time"] = packet.read_float()
+                state["battery"] = [packet.readByte() / 10.0]
             else:
-                print('Unknown firmware version %d' % version)
+                logger.error(f"Unknown firmware version {version}")
             self.state = state
 
-    def add_packet(self, name, packet):
+    def add_packet(self, name: str, packet: Packet) -> None:
+        """
+        Adds a packet to the pending packets
+
+        :param str name: the name of the packet, if such a name is in used, it will be overwritten
+        :param Packet packet: packet to send
+        """
         self.lock.acquire()
         self.pending_packets[name] = packet
         self.lock.release()
 
     def pop_packet(self):
+        """
+        Gets the next pending packet to be sent if any
+
+        :return Packet|None: a packet, or None
+        """
         packet = None
 
         self.lock.acquire()
@@ -164,46 +218,80 @@ class Robot:
 
         return packet
 
-    def beep(self, frequency, duration):
-        packet = Packet(PACKET_HOLO)
-        packet.appendByte(PACKET_HOLO_BEEP)
-        packet.appendShort(frequency)
-        packet.appendShort(duration)
-        self.add_packet('beep', packet)
+    def beep(self, frequency: int, duration: int):
+        """
+        Gets the robot beeping
 
-    def kick(self, power=1.):
+        :param int frequency: frequency (Hz)
+        :param int duration: duration (ms)
+        """
         packet = Packet(PACKET_HOLO)
-        packet.appendByte(PACKET_HOLO_KICK)
-        packet.appendByte(int(100*power))
-        self.add_packet('kick', packet)
+        packet.append_byte(PACKET_HOLO_BEEP)
+        packet.append_short(frequency)
+        packet.append_short(duration)
+        self.add_packet("beep", packet)
 
-    def control(self, dx, dy, dturn):
-        packet = Packet(PACKET_HOLO)
-        packet.appendByte(PACKET_HOLO_CONTROL)
-        packet.appendShort(int(1000*dx))
-        packet.appendShort(int(1000*dy))
-        packet.appendShort(int(np.rad2deg(dturn)))
-        self.add_packet('control', packet)
+    def kick(self, power: float = 1.0):
+        """
+        Gets the robot kicking
 
-    def leds(self, r:int, g:int, b:int):
+        :param float power: kick intensity (0 to 1), defaults to 1.
+        """
         packet = Packet(PACKET_HOLO)
-        packet.appendByte(PACKET_HOLO_LEDS_CUSTOM)
-        packet.appendByte(r)
-        packet.appendByte(g)
-        packet.appendByte(b)
-        self.add_packet('leds', packet)
+        packet.append_byte(PACKET_HOLO_KICK)
+        packet.append_byte(int(100 * power))
+        self.add_packet("kick", packet)
+
+    def control(self, dx: float, dy: float, dturn: float):
+        """
+        Sends some chassis speed order fo the robot
+
+        :param float dx: x speed (m/s)
+        :param float dy: y speed (m/s)
+        :param float dturn: rotational speed (rad/s)
+        """
+        packet = Packet(PACKET_HOLO)
+        packet.append_byte(PACKET_HOLO_CONTROL)
+        packet.append_short(int(1000 * dx))
+        packet.append_short(int(1000 * dy))
+        packet.append_short(int(np.rad2deg(dturn)))
+        self.add_packet("control", packet)
+
+    def leds(self, r: int, g: int, b: int):
+        """
+        Sets the robot LEDs
+
+        :param int r: R intensity (0-255)
+        :param int g: G intensity (0-255)
+        :param int b: B intensity (0-255)
+        """
+        packet = Packet(PACKET_HOLO)
+        packet.append_byte(PACKET_HOLO_LEDS_CUSTOM)
+        packet.append_byte(r)
+        packet.append_byte(g)
+        packet.append_byte(b)
+        self.add_packet("leds", packet)
 
     def stop(self):
+        """
+        Stops the robot from moving
+        """
         self.control(0, 0, 0)
 
     def close(self):
+        """
+        Stops the robot's thread
+        """
         self.running = False
 
-    def execute(self):
+    def run_thread(self):
+        """
+        Process the main thread
+        """
         while self.running:
             try:
                 if self.init:
-                    print('Opening connection with ' + self.port)
+                    logger.info(f"Opening connection with {self.port}")
                     self.init = False
                     if self.bt is not None:
                         self.bt.close()
@@ -225,12 +313,12 @@ class Robot:
                 if len(byte):
                     byte = ord(byte)
                     if state == 0:  # First header
-                        if byte == 0xff:
+                        if byte == 0xFF:
                             state += 1
                         else:
                             state = 0
                     elif state == 1:  # Second header
-                        if byte == 0xaa:
+                        if byte == 0xAA:
                             state += 1
                         else:
                             state = 0
@@ -251,7 +339,10 @@ class Robot:
                         state = 0
 
                 # Asking periodically for robot monitor status
-                if self.last_sent_message is None or time.time() - self.last_sent_message > 1.0:
+                if (
+                    self.last_sent_message is None
+                    or time.time() - self.last_sent_message > 1.0
+                ):
                     self.monitor(1)
 
                 # Sending pending packets
@@ -260,19 +351,22 @@ class Robot:
                     self.last_sent_message = time.time()
                     self.last_sent_message = time.time()
                     if self.bt is not None and self.bt.is_open:
-                        self.bt.write(packet.toRaw())
+                        self.bt.write(packet.to_raw())
                     packet = self.pop_packet()
 
             except (OSError, serial.serialutil.SerialException) as e:
                 # In case of exception, we re-init the connection
-                print('Error: '+str(e))
-                if 'FileNotFoundError' in str(e):
-                    time.sleep(1.)
+                logger.error(f"Error: {e}")
+
+                if "FileNotFoundError" in str(e):
+                    time.sleep(1.0)
+
                 self.init = True
 
             # If we didn't receive a message for more than 5s, we re-init the connection
-            no_message = ((self.last_message is None) or (
-                time.time() - self.last_message > 5))
+            no_message = (self.last_message is None) or (
+                time.time() - self.last_message > 5
+            )
 
             if self.last_init is None:
                 old_init = False
@@ -286,8 +380,8 @@ class Robot:
             self.bt.close()
 
 
-if __name__ == '__main__':
-    r = Robot('/dev/rfcomm0')
+if __name__ == "__main__":
+    r = Robot("/dev/rfcomm0")
 
     while True:
         print(r.state)
