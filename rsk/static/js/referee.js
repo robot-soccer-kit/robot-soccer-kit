@@ -52,7 +52,7 @@ function referee_initialize(backend)
                 let team_data = game_state["control"][team]
                 for (let number in team_data["preemption_reasons"]) {
                     let reasons = team_data["preemption_reasons"][number]
-                    let div = $('.robot-penalty[rel='+robot+'] .robot-state');
+                    let div = $('.robot-penalty[rel='+team+number+'] .robot-state');
                     
                     if (reasons.length > 0) {
                         let reasons_string = reasons.map(capitalize_first_letter).join(',')

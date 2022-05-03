@@ -80,6 +80,9 @@ class GoToConfigurationTask(ControlTask):
             if not arrived:
                 return False
 
+        for team, number in self.robots():
+            client.robots[team][number].control(0., 0., 0.)
+
         return True
 
 

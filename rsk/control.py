@@ -112,8 +112,8 @@ class Control:
 
     def robot_tasks(self, team:str, number:int) -> list:
         tasks = []
-        for task in self.tasks:
-            for task_team, task_number in task.robots():
+        for task in self.tasks.values():
+            for task_team, task_number in utils.all_robots():
                 if (team, number) == (task_team, task_number):
                     tasks.append(task)
 
@@ -121,9 +121,11 @@ class Control:
 
     def status(self):
         state = copy.deepcopy(self.teams)
-        state[team]['preemption_reasons'] = {robot: [] for robot in utils.all_robots()}
 
-        for task in self.tasks:
+        for team in utils.robot_teams():
+            state[team]['preemption_reasons'] = {number: [] for number in utils.robot_numbers()}
+
+        for task in self.tasks.values():
             for team, number in task.robots():
                 state[team]['preemption_reasons'][number].append(task.name)
 
@@ -133,7 +135,7 @@ class Control:
         self.teams[team]['allow_control'] = allow
 
     def emergency(self):
-        self._set_target_all(None)
+        self.tasks.clear()
 
         for team in utils.robot_teams():
             self.allowTeamControl(team, False)
@@ -154,30 +156,31 @@ class Control:
             for team, number in utils.all_robots():
                 robot = self.client.robots[team][number]
                 if robot.pose is not None:
-                    intersect_field_in = not bool((field_UpLeft_out[0]<=robot.pose[0]<=field_DownRight_out[0]) 
+                    # Field here refers to the green area
+                    out_of_field = not bool((field_UpLeft_out[0]<=robot.pose[0]<=field_DownRight_out[0]) 
                             and 
                             (field_DownRight_out[1]<=robot.pose[1]<=field_UpLeft_out[1]))
                     
                     task_name = 'out-of-game-%s' % utils.robot_list2str(team, number)
 
-                    if intersect_field_in:
-                        task = tasks.GoToTask(task_name, team, number, (0., 0, 0.))
+                    if out_of_field:
+                        task = tasks.GoToTask(task_name, team, number, (0., 0, 0.), skip_old=False, priority=100)
                         self.add_task(task)
-                        
                     else: 
                         if self.has_task(task_name):
-                            task = tasks.StopTask(task_name, team, number, forever=False)
+                            task = tasks.StopTask(task_name, team, number, forever=False, priority=100)
                             self.add_task(task)
 
             # Handling robot's goto, since client interaction access network, we can't afford to
             # lock a mutex during client calls, we store order in the temporary buffer list
             self.lock.acquire()
-            tasks_to_tick = [task for task in self.tasks.values()]
+            tasks_to_tick = list(self.tasks.values()).copy()
             self.lock.release()
 
             # Sorting tasks by priority
-            tasks_to_tick = sorted(tasks_to_tick, lambda task: -task.priority)
+            tasks_to_tick = sorted(tasks_to_tick, key=lambda task: -task.priority)
             robots_ticked = set()
+            to_delete = []
 
             # Ticking all the tasks
             for task in tasks_to_tick:
@@ -191,13 +194,14 @@ class Control:
                         except client.ClientError:
                             print("Error in control's client")
 
-                    if task.finished(self.client):
-                        to_delete = task.name
+                if task.finished(self.client):
+                    to_delete.append(task.name)
 
             # Removing finished tasks
             self.lock.acquire()
             for task_name in to_delete:
-                del self.tasks[task_name]
-            self.lock.relase()
+                if task_name in self.tasks:
+                    del self.tasks[task_name]
+            self.lock.release()
 
             time.sleep(0.01)

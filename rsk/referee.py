@@ -1,4 +1,4 @@
-from turtle import listen
+import math
 import numpy as np
 import threading
 from . import field_dimensions, utils, config, control, tasks
@@ -46,7 +46,7 @@ class Referee:
 
         #Robots Penalties
         self.penalties = {}
-        self.resetPenalty()
+        self.resetPenalties()
 
         # Starting the Referee thread
         self.referee_thread = threading.Thread(target=lambda: self.thread())
@@ -86,7 +86,6 @@ class Referee:
     def resumeGame(self):
         print("||Game Resumed")
         self.game_state["game_is_not_paused"] = True 
-        self.resumePenalty()
         self.control.remove_task('manually-paused')
         self.control.remove_task('sideline-crossed')
         self.game_state["game_state_msg"] = "Game is running..."
@@ -99,11 +98,12 @@ class Referee:
         self.game_state["game_is_running"] = False
         self.chrono_is_running = False
         self.start_timer = 0.
-        self.resetPenalty()
+        self.resetPenalties()
 
         self.control.remove_task('manually-paused')
         self.control.remove_task('sideline-crossed')
         self.control.remove_task('goal') 
+        self.control.remove_task('force-place')
 
         self.game_state["game_state_msg"] = "Game is ready to start"
 
@@ -114,7 +114,7 @@ class Referee:
         self.game_state["game_is_running"] = False
         self.game_state["halftime_is_running"] = True
         self.game_state["game_is_not_paused"] = False
-        self.resetPenalty()
+        self.resetPenalties()
     
     def startSecondHalfTime(self):
         # playsound('rsk/static/sounds/d.wav',False)
@@ -123,6 +123,11 @@ class Referee:
         self.game_state["game_is_not_paused"] = True
         self.game_state["game_is_running"] = True
         self.game_state["game_state_msg"] = "Game is running..."
+
+    def forcePlace(self, configuration:str):
+        task = tasks.GoToConfigurationTask('force-place', configuration, priority=50)
+        self.control.add_task(task)
+
 
     def placeGame(self, configuration:str):
         if configuration == "standard":
@@ -137,8 +142,7 @@ class Referee:
             else:
                 configuration = 'swap_covers_green_positive'
         
-        task = tasks.GoToConfigurationTask('force-place', configuration)
-        self.control.add_task(task)
+        self.forcePlace(configuration)
 
     def updateScore(self, team: str, increment: int):
         if team == utils.robot_teams()[0] : 
@@ -166,60 +170,46 @@ class Referee:
     def setGameDuration(self, duration:int):
         self.game_duration = duration
 
-    def resetPenalty(self):
+    def resetPenalties(self):
         for robot_id in utils.all_robots_id():
             self.cancelPenalty(robot_id)
-    
-    def resumePenalty(self):
-        for robot in self.penalties:
-                if self.penalties[robot]['time_end'] is not None:
-                    self.penalties[robot]['time_end'] += time.time() - self.pause_timer
 
-    def addPenalty(self, duration: int, robot: str):
-        if self.penalties[robot]['time_end'] is None:
-            self.penalties[robot]['time_end'] = time.time() + duration + 1
-            self.penalties[robot]['max'] = duration
+    def addPenalty(self, duration: float, robot: str):
+        if self.penalties[robot]['remaining'] is None:
+            self.penalties[robot]['remaining'] = float(duration)
+            self.penalties[robot]['max'] = float(duration)
             team, number = utils.robot_str2list(robot)
 
             task = tasks.StopTask('penalty-' + robot, team, number)
             self.control.add_task(task)
         else:
-            self.penalties[robot]['time_end'] += duration
-            self.penalties[robot]['max'] += duration
+            self.penalties[robot]['remaining'] += float(duration)
+            self.penalties[robot]['max'] += float(duration)
 
     def cancelPenalty(self, robot: str):
         self.penalties[robot] = {
-            'time_end': None,
-            'max': 5
+            'remaining': None,
+            'max': 5.
         }
 
         self.control.remove_task('penalty-' + robot)
     
-    def tickPenalty(self):
+    def tickPenalty(self, elapsed:float):
         for robot in self.penalties:
-            if (self.penalties[robot]['time_end'] is not None) and (self.penalties[robot]['time_end'] < time.time() + 1):
-                self.penalties[robot]['time_end'] = None
-                self.control.remove_task('penalty-'+robot)
+            if self.penalties[robot]['remaining'] is not None:
+                self.penalties[robot]['remaining'] -= elapsed
+                if self.penalties[robot]['remaining'] < 0:
+                    self.cancelPenalty(robot)
 
     def setPenalty(self)-> dict:
-        if self.game_state["game_is_not_paused"]:
-            self.game_state["penalties"] = {
-                robot: [
-                    int(self.penalties[robot]['time_end'] - time.time())
-                    if self.penalties[robot]['time_end'] is not None else None,
-                    self.penalties[robot]['max']
-                ]
-                for robot in self.penalties
-            }
-        else:
-            self.game_state["penalties"] = {
-                robot: [
-                    int(self.penalties[robot]['time_end'] - self.pause_timer)
-                    if self.penalties[robot]['time_end'] is not None else None,
-                    self.penalties[robot]['max']
-                ]
-                for robot in self.penalties  
-            }
+        self.game_state["penalties"] = {
+            robot: [
+                math.ceil(self.penalties[robot]['remaining']) 
+                if self.penalties[robot]['remaining'] is not None else None,
+                int(self.penalties[robot]['max'])
+            ]
+            for robot in self.penalties
+        }
 
     def setTimer(self):
         if self.game_state["game_is_running"]:
@@ -247,9 +237,9 @@ class Referee:
     def validateGoal(self, yes_no: bool):
         if yes_no:
             if (self.game_state["x_positive_goal"] == utils.robot_teams()[1]):
-                self.control.set_target_configuration('game-blue-positive')
+                self.forcePlace('game_blue_positive')
             else:
-                self.control.set_target_configuration('game-green-positive')
+                self.forcePlace('game_green_positive')
 
             self.goal_validated = True
             self.detection.goal_validated = True
@@ -273,8 +263,12 @@ class Referee:
         ball_coord_old = np.array([0,0])
 
         self.game_state["game_state_msg"] = "Game is ready to start"
+        last_tick = time.time()
 
         while True:
+            elapsed = time.time() - last_tick
+            last_tick = time.time()
+
             if self.game_state["game_is_not_paused"]:
                 if self.detection_info is not None:
                     if self.detection_info['ball'] is not None:
@@ -301,6 +295,7 @@ class Referee:
                                 self.addRefereeHistory(GoalTeam[0], "Goal")
                                 # playsound('rsk/static/sounds/'+GoalTeam[1]+'.wav',False)
                                 memory = 1
+                                self.resetPenalties()
                                 self.pauseGame("goal")
                                 self.game_state["game_state_msg"] = "Waiting for Goal Validation"
                             
@@ -334,7 +329,7 @@ class Referee:
 
                             ball_coord_old = ball_coord
                 
-                self.tickPenalty()
+                self.tickPenalty(elapsed)
 
                 time.sleep(0.1)
             else:
@@ -416,5 +411,4 @@ class Referee:
                                         self.detection.goal_validated = None
                                         self.goal_validated = None
                                         self.resumeGame()
-
                                                 
