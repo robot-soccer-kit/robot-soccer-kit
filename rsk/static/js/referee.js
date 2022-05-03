@@ -34,8 +34,10 @@ function referee_initialize(backend)
 
 
             // Penalties
+            let penalty_reasons = {}
             for (let robot in game_state["penalties"]) {
-                let [remaining, max] = game_state["penalties"][robot];
+                let [remaining, max, reason] = game_state["penalties"][robot]
+                penalty_reasons[robot] = reason
                 let div = $('.robot-penalty[rel='+robot+'] .progress-bar');
                 if (remaining !== null) {
                     let pct = remaining * 100. / max;
@@ -51,11 +53,15 @@ function referee_initialize(backend)
             for (let team in game_state["control"]) {
                 let team_data = game_state["control"][team]
                 for (let number in team_data["preemption_reasons"]) {
+                    let robot = team + number
                     let reasons = team_data["preemption_reasons"][number]
                     let div = $('.robot-penalty[rel='+team+number+'] .robot-state');
                     
                     if (reasons.length > 0) {
-                        let reasons_string = reasons.map(capitalize_first_letter).join(',')
+                        let reasons_string = reasons.join(',')
+                        if (penalty_reasons[robot]) {
+                            reasons_string += "["+penalty_reasons[robot]+"]"
+                        }
                         div.html('<h6 class="text-danger">'+ reasons_string +'</h6>');
 
                     } 
