@@ -128,3 +128,17 @@ def all_robots_id() -> list:
     :return list: robot ids
     """    
     return [robot_list2str(*robot) for robot in all_robots()]
+
+def in_rectangle(point:list, rectangle:list) -> bool:
+    """
+    Checks if a point is in a rectangle
+
+    :param list point: the point (x, y)
+    :param list rectangle: the rectangle (bottom_left_x, bottom_left_y, top_right_x, top_right_ y)
+    :return bool: True if the point is in the rectangle
+    """    
+    bottom_left = rectangle[:2]
+    top_right = rectangle[2:]
+
+    return point[0] >= bottom_left[0] and point[1] >= bottom_left[1] and \
+            point[0] <= top_right[0] and point[1] <= top_right[1]

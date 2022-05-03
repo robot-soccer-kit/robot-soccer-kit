@@ -11,12 +11,8 @@ goal_width = 0.6
 border_size = 0.3
 
 # Dots coordinates
-dots_pos = {
-    'dot1': [0.445, 0.29],
-    'dot2': [0.445, -0.29],
-    'dot3': [-0.445, -0.29],
-    'dot4': [-0.445, 0.29],
-}
+dots_x = 0.445
+dots_y = 0.29
 
 # Field coordinates 
 def fieldCoord() -> np.ndarray:

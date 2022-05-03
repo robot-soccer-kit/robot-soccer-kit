@@ -26,7 +26,7 @@ class Referee:
 
         self.pause_timer = 0
 
-        self.sideline_intersect = (False, np.array([0,0]))
+        self.wait_ball_position = None
         self.goal_validated = None
 
         self.game_state = {
@@ -88,8 +88,9 @@ class Referee:
         self.game_state["game_is_not_paused"] = True 
         self.control.remove_task('manually-paused')
         self.control.remove_task('sideline-crossed')
+        self.control.remove_task('goal')
         self.game_state["game_state_msg"] = "Game is running..."
-
+        self.wait_ball_position = None
 
     def stopGame(self):
         print("|Game Stopped")
@@ -160,9 +161,6 @@ class Referee:
         new_history_line= [i, timestamp, team, action]
         self.referee_history.append(new_history_line)
         return self.referee_history
-    
-    def getIntersection(self):
-        return self.sideline_intersect
 
     def detection_update(self, info):
         self.detection_info = info
@@ -241,12 +239,11 @@ class Referee:
             else:
                 self.forcePlace('game_green_positive')
 
+            self.wait_ball_position = (0., 0.)
             self.goal_validated = True
-            self.detection.goal_validated = True
         else:
             self.updateScore(self.game_state["referee_history_sliced"][-1][2],-1)
             self.goal_validated = False
-            self.detection.goal_validated = False
 
     def thread(self):
         # Initialisation coordinates goals
@@ -258,7 +255,7 @@ class Referee:
         # Initialisation coordinates field for reseting sidelines and goals memory (-10cm)
         [_, field_DownRight_in, _, field_UpLeft_in] = field_dimensions.fieldCoordMargin(-0.08)
         memory = 0
-        memory_sideline_timestamp = 0
+        wait_ball_timestamp = None
 
         ball_coord_old = np.array([0,0])
 
@@ -308,9 +305,14 @@ class Referee:
                             intersect_field_out = bool(intersect_field_Upline_out[0] or intersect_field_RightLine_out[0] or intersect_field_DownLine_out[0] or intersect_field_LeftLine_out[0])
 
                             if intersect_field_out and not (intersect_x_neg_goal[0] or intersect_x_pos_goal[0]) and memory == 0:
-                                for i in (intersect_field_Upline_out, intersect_field_DownLine_out, intersect_field_LeftLine_out, intersect_field_RightLine_out):
-                                    if i[0]:
-                                        self.sideline_intersect = (True, i[1])
+                                for intersection in (intersect_field_Upline_out, intersect_field_DownLine_out, intersect_field_LeftLine_out, intersect_field_RightLine_out):
+                                    has_intersection, point = intersection
+                                    if has_intersection:
+                                        self.game_state["game_state_msg"] = "Place the ball on the dot"
+                                        self.wait_ball_position = (
+                                            (1 if point[0] > 0 else -1) * field_dimensions.dots_x,
+                                            (1 if point[1] > 0 else -1) * field_dimensions.dots_y
+                                        )
                                     pass
                                 memory = 1
                                 self.addRefereeHistory("neutral", "Sideline crossed")
@@ -330,11 +332,7 @@ class Referee:
                             ball_coord_old = ball_coord
                 
                 self.tickPenalty(elapsed)
-
-                time.sleep(0.1)
-            else:
-                time.sleep(0.5)
-                
+            else:                              
                 if self.game_state["halftime_is_running"]:
                     self.game_state["game_state_msg"] = "Half Time"
                     task = tasks.StopAllTask('half-time')
@@ -342,73 +340,26 @@ class Referee:
                 else:
                     self.control.remove_task('half-time')
 
-                [color, number] = utils.all_robots()[0]
+                if (self.wait_ball_position is not None) and (self.detection_info is not None) and (self.detection_info['ball'] is not None):
+                    print('Seeing the ball, checking for rectangle...')
+                    # Computing target rectangle
+                    x, y = self.wait_ball_position
+                    margin = 0.05
+                    rectangle = [x-margin, y-margin, x+margin, y+margin]
 
-                if self.control.has_task('sideline-crossed'):
-                    if (self.sideline_intersect[1][0]>=0) and (self.sideline_intersect[1][1]>0):
-                        self.game_state["game_state_msg"] = "Place the ball on dot 1"
-                        self.detection.sideline_dots = "dot1"
-                    elif (self.sideline_intersect[1][0]>0) and (self.sideline_intersect[1][1]<=0):
-                        self.game_state["game_state_msg"] = "Place the ball on dot 2"
-                        self.detection.sideline_dots = "dot2"
-                    elif (self.sideline_intersect[1][0]<=0) and (self.sideline_intersect[1][1]<0):
-                        self.game_state["game_state_msg"] = "Place the ball on dot 3"
-                        self.detection.sideline_dots = "dot3"
-                    elif(self.sideline_intersect[1][0]<0) and (self.sideline_intersect[1][1]>=0):
-                        self.game_state["game_state_msg"] = "Place the ball on dot 4"
-                        self.detection.sideline_dots = "dot4"
+                    if utils.in_rectangle(self.detection_info['ball'], rectangle):
+                        print('In the rectangle!')
+                        if wait_ball_timestamp is None:
+                            wait_ball_timestamp = time.time()
+                        elif time.time() - wait_ball_timestamp >= 1:
+                            self.game_state["game_state_msg"] = "Game is running..."
+                            self.goal_validated = None
+                            self.resumeGame()
+                    else:
+                        wait_ball_timestamp = None
+        
 
-                    if self.detection.sideline_dots is not None:
-                        pointA = [field_dimensions.dots_pos[self.detection.sideline_dots][0]-0.05,field_dimensions.dots_pos[self.detection.sideline_dots][1]+0.05]
-                        pointB = [field_dimensions.dots_pos[self.detection.sideline_dots][0]+0.05,field_dimensions.dots_pos[self.detection.sideline_dots][1]-0.05]
+            # Maybe detection should not be responsible for drawing this    
+            self.detection.wait_ball_position = self.wait_ball_position            
 
-                        if self.detection_info is not None:
-                            if self.detection_info['ball'] is not None:
-                                ball_coord = np.array(self.detection_info['ball'])
-
-                                if (pointA[0]<=ball_coord[0]<=pointB[0]) and (pointB[1]<=ball_coord[1]<=pointA[1]):
-                                    if memory_sideline_timestamp == 0:
-                                        start = time.time()
-                                        memory_sideline_timestamp = 1
-
-                                    if time.time() - start >= 2:
-                                        self.control.remove_task('sideline-crossed')
-                                        self.detection.sideline_dots = None
-                                        memory_sideline_timestamp = 0
-                                        self.game_state["game_state_msg"] = "Game is running..."
-                                        self.resumeGame()
-
-                if self.control.has_task('goal'):
-                    if self.goal_validated is not None : 
-                        if self.goal_validated:
-                            pointA = [-0.05,0.05]
-                            pointB = [0.05,-0.05]
-                        else: 
-                            if self.game_state["referee_history_sliced"][-1][2] == self.game_state["x_positive_goal"]:
-                                self.detection.canceled_goal_side = "xpos_goal"
-                                pointA = [-0.29-0.05,0.05]
-                                pointB = [-0.29+0.05,-0.05]
-                            else:
-                                self.detection.canceled_goal_side = "xneg_goal"
-                                pointA = [0.29-0.05,0.05]
-                                pointB = [0.29+0.05,-0.05]
-
-                        if self.detection_info is not None:
-                            if self.detection_info['ball'] is not None:
-                                ball_coord = np.array(self.detection_info['ball'])
-                                print(pointA, ball_coord, pointB)
-                                if (pointA[0]<=ball_coord[0]<=pointB[0]) and (pointB[1]<=ball_coord[1]<=pointA[1]):
-                                    if memory_sideline_timestamp == 0:
-                                        start = time.time()
-                                        memory_sideline_timestamp = 1
-
-                                    if time.time() - start >= 2:
-                                        self.control.remove_task('goal')
-                                        self.detection.sideline_dots = None
-                                        memory_sideline_timestamp = 0
-                                        self.game_state["game_state_msg"] = "Game is running..."
-                                        self.detection.canceled_goal_side = None
-                                        self.detection.goal_validated = None
-                                        self.goal_validated = None
-                                        self.resumeGame()
-                                                
+            time.sleep(0.1)

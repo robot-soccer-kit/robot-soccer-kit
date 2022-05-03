@@ -26,9 +26,8 @@ class Detection:
         self.color_xneg = (255, 0, 0)
         
         # Dots for crossing sidelines
-        self.sideline_dots = None
+        self.wait_ball_position = None
 
-        self.goal_validated = None
         self.canceled_goal_side = None
 
         self.displaySettings = {
@@ -202,22 +201,9 @@ class Detection:
                 B = self.field.position_to_pixel([0, 0, 0.2])
                 cv2.line(image_debug, A, B, (255, 0, 0), 1)
 
-            if self.sideline_dots == "dot1": 
-                self.draw_point2square(image_debug, field_dimensions.dots_pos["dot1"], 0.05, (0,165,255), 2)
-            elif self.sideline_dots == "dot2": 
-                self.draw_point2square(image_debug, field_dimensions.dots_pos["dot2"], 0.05, (0,165,255), 2)
-            elif self.sideline_dots == "dot3":                
-                self.draw_point2square(image_debug, field_dimensions.dots_pos["dot3"], 0.05, (0,165,255), 2)
-            elif self.sideline_dots == "dot4":                
-                self.draw_point2square(image_debug, field_dimensions.dots_pos["dot4"], 0.05, (0,165,255), 2)
-
-            if self.canceled_goal_side == "xpos_goal":
-                self.draw_point2square(image_debug, [-0.29,0], 0.05, (0,165,255), 2)
-            if self.canceled_goal_side == "xneg_goal":
-                self.draw_point2square(image_debug, [0.29,0], 0.05, (0,165,255), 2)
-            if self.goal_validated:
-                self.draw_point2square(image_debug, [0,0], 0.05, (0,165,255), 2)
-
+            if self.wait_ball_position is not None:
+                self.draw_point2square(image_debug, self.wait_ball_position, 0.05, (0,165,255), 2)
+            
         if len(corners) > 0:
             for (markerCorner, markerID) in zip(corners, ids.flatten()):
                 if markerID not in self.arucoItems:

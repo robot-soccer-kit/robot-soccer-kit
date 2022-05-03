@@ -66,7 +66,7 @@ class Control:
                         is_master = key == self.master_key
 
                         if not is_master:
-                            tasks = self.robot_tasks(team, number)
+                            tasks = [task.name for task in self.robot_tasks(team, number)]
                             if self.teams[team]['key'] != key:
                                 response[1] = f"Bad key for team {team}"
                                 allow_control = False
@@ -121,7 +121,7 @@ class Control:
     def robot_tasks(self, team:str, number:int) -> list:
         tasks = []
         for task in self.tasks.values():
-            for task_team, task_number in utils.all_robots():
+            for task_team, task_number in task.robots():
                 if (team, number) == (task_team, task_number):
                     tasks.append(task)
 
