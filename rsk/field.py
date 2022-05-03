@@ -88,9 +88,10 @@ class Field:
             graphics_positions = np.array(graphics_positions, dtype=np.float32)
 
             # Calibrating camera
+            flags = cv2.CALIB_FIX_ASPECT_RATIO + cv2.CALIB_ZERO_TANGENT_DIST
             ret, self.intrinsic, self.distortion, rvecs, tvecs = \
                 cv2.calibrateCamera([object_points], [graphics_positions], image.shape[:2][::-1], None, None,
-                flags=cv2.CALIB_FIX_ASPECT_RATIO)
+                flags=flags)
         
             # Computing extrinsic matrices
             transformation = np.eye(4)
