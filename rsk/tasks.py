@@ -18,6 +18,26 @@ class ControlTask:
     def finished(self, client: client.Client) -> bool:
         return False
 
+class SpeedTask:
+    """
+    Gets the robot rotating
+    """    
+    def __init__(self, name:str, team:str, number:int, dx:float=0, dy:float=0, dturn:float=0, **kwargs):
+        super().__init__(name, **kwargs)
+        self.team:str = team
+        self.number:int = number
+        self.dx:float = dx
+        self.dy:float = dy
+        self.dturn:float = dturn
+
+    def robots(self):
+        return [(self.team, self.number)]
+
+    def tick(self, robot:client.ClientRobot):
+        robot.control(self.dx, self.dy, self.dturn)
+
+    def finished(self) -> bool:
+        return False
 
 class StopAllTask(ControlTask):
     """
