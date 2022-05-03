@@ -119,12 +119,10 @@ function referee_initialize(backend)
                     $(this).find('.penalize').prop("disabled", false);
                 });
 
-                if (!game_state["game_is_not_paused"]){
+                if (game_state["game_paused"]){
                     $('.resume-game-grp').removeClass('d-none');
                     $('.pause-game-grp').addClass('d-none');
-                }
-
-                else if (game_state["game_is_not_paused"]) {
+                } else  {
                     $('.pause-game-grp').removeClass('d-none');
                     $('.resume-game-grp').addClass('d-none');
                 }

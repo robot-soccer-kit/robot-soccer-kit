@@ -24,15 +24,17 @@ class Referee:
         self.halftime_duration = 121.
 
         self.pause_timer = 0
+        self.invicibility_frame = {}
 
         self.wait_ball_position = None
         self.goal_validated = None
+        self.timed_circle_timers = {robot: 0 for robot in utils.all_robots()}
 
         self.game_state = {
             "team_colors": utils.robot_teams(),
             "team_names": ["",""],
             "game_is_running": False,
-            "game_is_not_paused": False,
+            "game_paused": True,
             "halftime_is_running": False, 
             "x_positive_goal": utils.robot_teams()[0],
             "timer": 0,
@@ -64,7 +66,7 @@ class Referee:
     def startGame(self):
         print("|Game Started")
         self.start_timer = time.time()
-        self.game_state["game_is_not_paused"] = True
+        self.game_state["game_paused"] = False
         self.chrono_is_running = True
         self.game_state["game_is_running"] = True
         self.referee_history = []
@@ -75,7 +77,7 @@ class Referee:
     def pauseGame(self, reason:str ='manually-paused'):
         self.pause_timer = time.time()
         print("||Game Paused")
-        self.game_state["game_is_not_paused"] = False
+        self.game_state["game_paused"] = True
 
         task = tasks.StopAllTask(reason)
         self.control.add_task(task)
@@ -83,7 +85,7 @@ class Referee:
 
     def resumeGame(self):
         print("||Game Resumed")
-        self.game_state["game_is_not_paused"] = True 
+        self.game_state["game_paused"] = False
         self.game_state["game_state_msg"] = "Game is running..."
         self.wait_ball_position = None
 
@@ -94,7 +96,7 @@ class Referee:
 
     def stopGame(self):
         print("|Game Stopped")
-        self.game_state["game_is_not_paused"] = False
+        self.game_state["game_paused"] = True
         self.game_state["game_is_running"] = False
         self.chrono_is_running = False
         self.start_timer = 0.
@@ -113,7 +115,7 @@ class Referee:
         self.start_timer = time.time()
         self.game_state["game_is_running"] = False
         self.game_state["halftime_is_running"] = True
-        self.game_state["game_is_not_paused"] = False
+        self.game_state["game_paused"] = True
         self.resetPenalties()
     
     def startSecondHalfTime(self):
@@ -185,6 +187,7 @@ class Referee:
     def cancelPenalty(self, robot: str):
         self.penalties[robot] = {
             'remaining': None,
+            'grace': 3.,
             'max': 5.
         }
 
@@ -196,6 +199,13 @@ class Referee:
                 self.penalties[robot]['remaining'] -= elapsed
                 if self.penalties[robot]['remaining'] < 0:
                     self.cancelPenalty(robot)
+            if self.penalties[robot]['grace'] is not None:
+                self.penalties[robot]['grace'] -= elapsed
+                if self.penalties[robot]['grace'] < 0:
+                    self.penalties[robot]['grace'] = None
+
+    def canBePenalized(self, robot):
+        return self.penalties[robot]['remaining'] is None and self.penalties[robot]['grace'] is None
 
     def setPenalty(self)-> dict:
         self.game_state["penalties"] = {
@@ -265,20 +275,22 @@ class Referee:
             elapsed = time.time() - last_tick
             last_tick = time.time()
 
-            if self.game_state["game_is_not_paused"]:
+            if not self.game_state["game_paused"]:
+                all_teams = utils.robot_teams()
+                positive_team = self.game_state["x_positive_goal"]
+                negative_team = all_teams[0] if all_teams[0] != self.game_state["x_positive_goal"] else all_teams[1]
+
                 if self.detection_info is not None:
                     if self.detection_info['ball'] is not None:
                         ball_coord = np.array(self.detection_info['ball'])
-                        if (ball_coord_old[0] != ball_coord[0] and ball_coord_old[1] != ball_coord[1]):
+
+                        if (ball_coord != ball_coord_old).any():
                             # Goals and ball trajectory intersection (Goal detection)
                             intersect_x_neg_goal, _ = utils.intersect(ball_coord_old,ball_coord,x_neg_goals_low,x_neg_goals_high)
                             intersect_x_pos_goal, _ = utils.intersect(ball_coord_old,ball_coord,x_pos_goals_low,x_pos_goals_high)
                             intersect_goal = intersect_x_neg_goal or intersect_x_pos_goal
         
                             if intersect_goal and not ball_out_field:
-                                all_teams = utils.robot_teams()
-                                positive_team = self.game_state["x_positive_goal"]
-                                negative_team = all_teams[0] if all_teams[0] != self.game_state["x_positive_goal"] else all_teams[1]
                                 goal_team = positive_team if intersect_x_neg_goal else negative_team
 
                                 self.updateScore(goal_team, 1)
@@ -315,6 +327,54 @@ class Referee:
                                 ball_out_field = False
 
                             ball_coord_old = ball_coord
+
+                    # Checking the robot respect timed circle and defense area rules
+                    defender = {}
+                    for marker in self.detection_info['markers']:
+                            team, number = utils.robot_str2list(marker)
+                            robot_position = np.array(self.detection_info['markers'][marker]['position'])
+
+                            if team in utils.robot_teams():
+                                robot = (team, number)
+
+                                # Penalizing robots that are staying close to the ball
+                                if self.detection_info['ball'] is not None and self.canBePenalized(marker):
+                                    ball_position = np.array(self.detection_info['ball'])
+                                    distance = np.linalg.norm(ball_position - robot_position)
+
+                                    if distance < field_dimensions.timed_circle_radius:
+                                        if self.timed_circle_timers[(team, number)] is None:
+                                            self.timed_circle_timers[robot] = 0
+                                        else:
+                                            self.timed_circle_timers[robot] += elapsed
+
+                                            if self.timed_circle_timers[robot] > 5:
+                                                self.addPenalty(5., marker)
+                                    else:
+                                        self.timed_circle_timers[(team, number)] = None
+                                else:
+                                    self.timed_circle_timers[(team, number)] = None
+                    
+                                # Penalizing extra robots that are entering the defense area
+                                if self.canBePenalized(marker):
+                                    my_defense_area = field_dimensions.defenseArea(positive_team == team)
+                                    opponent_defense_area = field_dimensions.defenseArea(positive_team != team)
+
+                                    if utils.in_rectangle(robot_position, *opponent_defense_area):
+                                        self.addPenalty(5., marker)
+
+                                    if utils.in_rectangle(robot_position, *my_defense_area):
+                                        if team in defender:
+                                            other_robot, other_robot_position = defender[team]
+                                            robot_to_penalize = marker
+
+                                            if abs(other_robot_position[0]) < abs(robot_position[0]):
+                                                robot_to_penalize = other_robot
+                                            
+                                            self.addPenalty(5., robot_to_penalize)
+                                        else:
+                                            defender[team] = [marker, robot_position]
+
                 
                 self.tickPenalty(elapsed)
             else:                              

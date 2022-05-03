@@ -37,3 +37,15 @@ def fieldCoord(margin: float=0) -> np.ndarray:
         for sign1, sign2 in
         [[1, 1], [1, -1], [-1, -1], [-1, 1]]
     ]
+
+def defenseArea(x_positive:bool = True) -> np.ndarray:
+    if x_positive:
+        return [
+            [length/2 - defense_area_length, -defense_area_width/2],
+            [length/2 + defense_area_length, defense_area_width/2],
+        ]
+    else:
+        return [
+            [-length/2 - defense_area_length, -defense_area_width/2],
+            [-length/2 + defense_area_length, defense_area_width/2],
+        ]
