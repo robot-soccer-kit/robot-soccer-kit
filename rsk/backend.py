@@ -44,14 +44,14 @@ class Backend():
     def ports(self):
         return self.robots.ports()
 
-    def addRobot(self, port: str):
-        self.robots.addRobot(port)
+    def add_robot(self, port: str):
+        self.robots.add_robot(port)
 
-    def getRobots(self):
-        return self.robots.getRobots()
+    def get_robots(self):
+        return self.robots.get_robots()
 
-    def setMarker(self, port: str, marker: str):
-        self.robots.setMarker(port, marker)
+    def set_marker(self, port: str, marker: str):
+        self.robots.set_marker(port, marker)
 
     def removeRobot(self, port: str):
         self.robots.remove(port)
@@ -67,14 +67,14 @@ class Backend():
     def getGame(self):
         return self.robots.control.status()
 
-    def allowTeamControl(self, team: str, allow: bool):
-        self.robots.control.allowTeamControl(team, allow)
+    def allow_team_control(self, team: str, allow: bool):
+        self.robots.control.allow_team_control(team, allow)
 
     def emergency(self):
         self.robots.control.emergency()
 
-    def setKey(self, team: str, key: str):
-        self.robots.control.setKey(team, key)
+    def set_key(self, team: str, key: str):
+        self.robots.control.set_key(team, key)
 
     def identify(self):
         self.robots.identify()

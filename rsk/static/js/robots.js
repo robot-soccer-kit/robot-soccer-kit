@@ -19,12 +19,12 @@ function robots_initialize(backend)
 
     $('.add-robot').click(function(event) {
         event.preventDefault();
-        backend.addRobot($('.ports').val());
+        backend.add_robot($('.ports').val());
     });
     $('.add-all-robots').click(function(event) {
         event.preventDefault();
         $('.ports option').each(function() {
-            backend.addRobot($(this).val());
+            backend.add_robot($(this).val());
         });
     });
     $('.identify').click(function(event) {
@@ -92,7 +92,7 @@ function robots_initialize(backend)
         }
 
         setInterval(function() {
-            backend.getRobots(function(robots) {
+            backend.get_robots(function(robots) {
                 let hasWarning = false;
                 let robotsOk = 0;
                 let robotsCount = 0;
@@ -109,7 +109,7 @@ function robots_initialize(backend)
                             if (marker == 'none') {
                                 marker = null;
                             }
-                            backend.setMarker(port, marker);
+                            backend.set_marker(port, marker);
                         });
 
                         div.find('.remove').click(function(event) {

@@ -212,7 +212,7 @@ class Video:
         data = {
             'running': self.capture is not None,
             'fps': round(1/self.period, 1) if self.period is not None else 0,
-            'detection': self.detection.getDetection(),
+            'detection': self.detection.get_detection(),
         }
 
         if with_image:

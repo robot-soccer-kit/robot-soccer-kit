@@ -114,7 +114,7 @@ class Robot:
             self.leds(0, 0, 0)
             time.sleep(0.25)
 
-    def setMarker(self, marker:str):
+    def set_marker(self, marker:str):
         self.marker = marker
 
     def process(self, packet):

@@ -325,7 +325,7 @@ class Detection:
             if self.no_ball > 10:
                 self.ball = None
 
-    def getDetection(self):
+    def get_detection(self):
         return {
             'ball': self.ball,
             'markers': self.markers,
@@ -334,7 +334,7 @@ class Detection:
         }
 
     def publish(self):
-        info = self.getDetection()
+        info = self.get_detection()
 
         self.socket.send_json(info, flags=zmq.NOBLOCK)
         if self.on_update is not None:

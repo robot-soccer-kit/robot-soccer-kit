@@ -9,11 +9,11 @@ function control_initialize(backend) {
             $('.teams').append(team_template.replace(/{team}/g, capitalize_first_letter(team)));
 
             $('.allow-'+team).change(function() {
-                backend.allowTeamControl(team, $(this).is(':checked'));
+                backend.allow_team_control(team, $(this).is(':checked'));
             });
 
             $('.key-'+team).change(function() {
-                backend.setKey(team, $(this).val());
+                backend.set_key(team, $(this).val());
             });
 
             $('.key-'+team).focus(function() {
