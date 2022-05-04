@@ -28,8 +28,6 @@ class Referee:
 
         self.wait_ball_position = None
         self.goal_validated = None
-
-        self.invicibility_frame = {}
         self.timed_circle_timers = {robot: 0 for robot in utils.all_robots()}
 
         self.game_state = {
