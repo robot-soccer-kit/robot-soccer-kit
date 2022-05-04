@@ -44,7 +44,7 @@ class Video:
         # Debug output
         self.debug = False
         # Ask main thread to stop capture
-        self.stop_capture = False
+        self.should_stop_capture = False
 
         self.detection = detection.Detection()
 
@@ -144,7 +144,7 @@ class Video:
         """
         Stop video capture
         """
-        self.stop_capture = True
+        self.should_stop_capture = True
 
     def stop(self) -> None:
         """
@@ -229,8 +229,8 @@ class Video:
 
                     self.image = image_debug if image_debug is not None else image_captured
 
-                    if self.stop_capture:
-                        self.stop_capture = False
+                    if self.should_stop_capture:
+                        self.should_stop_capture = False
                         self.capture.release()
                         del self.capture
                         self.capture = None
