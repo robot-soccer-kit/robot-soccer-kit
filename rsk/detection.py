@@ -165,13 +165,14 @@ class Detection:
         k = 0
         for alpha in np.linspace(0, 2 * np.pi, points):
             new_point = [
-                center + np.cos(alpha) * radius,
-                center + np.sin(alpha) * radius,
+                center[0] + np.cos(alpha) * radius,
+                center[1] + np.sin(alpha) * radius,
                 0,
             ]
             if last_point:
                 A = self.field.position_to_pixel(last_point)
                 B = self.field.position_to_pixel(new_point)
+                k += 1
                 if not dashed or k % 2 == 0:
                     cv2.line(image, A, B, color, thickness)
             last_point = new_point
@@ -247,7 +248,7 @@ class Detection:
                     cv2.line(image_debug, E, F, color, 2)
                     cv2.line(image_debug, C, E, color, 2)
                     cv2.line(image_debug, D, F, color, 2)
-                    
+
                     for post in [-1, 1]:
                         A = self.field.position_to_pixel(
                             [
@@ -281,7 +282,7 @@ class Detection:
                     constants.timed_circle_radius,
                     (0, 0, 255),
                     1,
-                    dased=True,
+                    dashed=True,
                 )
 
             if self.wait_ball_position is not None:
@@ -291,7 +292,7 @@ class Detection:
                     constants.place_ball_margin,
                     (0, 165, 255),
                     2,
-                    8,
+                    16,
                 )
 
     def detect_markers(self, image, image_debug=None):

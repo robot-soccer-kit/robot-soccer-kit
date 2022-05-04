@@ -242,9 +242,9 @@ class Control:
 
         for team, number in utils.all_robots():
             robot = self.client.robots[team][number]
-            if robot.pose is not None:
+            if robot.position is not None:
                 out_of_field = not utils.in_rectangle(
-                    robot.pose, limit_down_left, limit_up_right
+                    robot.position, limit_down_left, limit_up_right
                 )
                 task_name = "out-of-game-%s" % utils.robot_list2str(team, number)
 

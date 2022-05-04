@@ -386,7 +386,6 @@ class Referee:
             self.negative_team = all_teams[0] if all_teams[0] != self.game_state["x_positive_goal"] else all_teams[1]
 
             if not self.game_state["game_paused"]:
-
                 if self.detection_info is not None:
                     if self.detection_info['ball'] is not None:
                         ball_coord = np.array(self.detection_info['ball'])
@@ -400,7 +399,7 @@ class Referee:
             else:                              
                 # Waiting for the ball to be at a specific position to resume the game
                 if (self.wait_ball_position is not None) and (self.detection_info is not None) and (self.detection_info['ball'] is not None):
-                    distance = np.linalg.norm(self.wait_ball_position - self.detection_info['ball'])
+                    distance = np.linalg.norm(np.array(self.wait_ball_position) - np.array(self.detection_info['ball']))
 
                     if distance < constants.place_ball_margin:
                         if wait_ball_timestamp is None:
