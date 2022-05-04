@@ -38,6 +38,14 @@ class Control:
 
         self.teams = {team: {"allow_control": True, "key": "", "packets": 0} for team in utils.robot_teams()}
 
+    def available_robots(self) -> list:
+        """
+        Returns a list of the available robots
+
+        :return list: list of (str) available robots
+        """        
+        return self.robots.robots_by_marker.keys()
+
     def add_task(self, task: tasks.ControlTask):
         """
         Adds a task to the controller, this will preempt the concerned robots
@@ -264,11 +272,12 @@ class Control:
         tasks_to_tick = sorted(tasks_to_tick, key=lambda task: -task.priority)
         robots_ticked = set()
         to_delete = []
+        available_robots = self.available_robots()
 
         # Ticking all the tasks
         for task in tasks_to_tick:
             for team, number in task.robots():
-                if (team, number) not in robots_ticked:
+                if (team, number) not in robots_ticked and utils.robot_list2str(team, number) in available_robots:
                     # Robot was not ticked yet by an higher-priority task
                     robots_ticked.add((team, number))
 
@@ -277,7 +286,7 @@ class Control:
                     except client.ClientError as e:
                         self.logger.error(f"Error in control's client: {e}")
 
-            if task.finished(self.client):
+            if task.finished(self.client, available_robots):
                 to_delete.append(task.name)
 
         # Removing finished tasks

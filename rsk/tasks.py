@@ -8,6 +8,8 @@ class ControlTask:
     def __init__(self, name: str, priority: int = 0):
         self.name: str = name
         self.priority: int = priority
+        # Available robots (passed by control)
+        self.robots_filter = []
 
     def robots(self) -> list:
         return []
@@ -15,7 +17,7 @@ class ControlTask:
     def tick(self, robot: client.ClientRobot) -> None:
         raise NotImplemented("Task not implemented")
 
-    def finished(self, client: client.Client) -> bool:
+    def finished(self, client: client.Client, available_robots: list) -> bool:
         return False
 
 class SpeedTask:
@@ -36,7 +38,7 @@ class SpeedTask:
     def tick(self, robot:client.ClientRobot):
         robot.control(self.dx, self.dy, self.dturn)
 
-    def finished(self) -> bool:
+    def finished(self, client: client.Client, available_robots: list) -> bool:
         return False
 
 class StopAllTask(ControlTask):
@@ -53,7 +55,7 @@ class StopAllTask(ControlTask):
     def tick(self, robot: client.ClientRobot):
         robot.control(0.0, 0.0, 0.0)
 
-    def finished(self, client: client.Client) -> bool:
+    def finished(self, client: client.Client, available_robots: list) -> bool:
         return not self.forever
 
 
@@ -74,14 +76,15 @@ class GoToConfigurationTask(ControlTask):
     """
     Send all robots to a given configuration
     """    
-    def __init__(self, name: str, configuration=None, skip_old=True, **kwargs):
+    def __init__(self, name: str, configuration=None, skip_old=True, robots_filter=None, **kwargs):
         super().__init__(name, **kwargs)
         self.targets = {}
         self.skip_old: bool = skip_old
 
         if configuration is not None:
             for team, number, target in client.configurations[configuration]:
-                self.targets[(team, number)] = target
+                if robots_filter is None or (team, number) in robots_filter:
+                    self.targets[(team, number)] = target
 
     def robots(self):
         return list(self.targets.keys())
@@ -91,8 +94,9 @@ class GoToConfigurationTask(ControlTask):
             self.targets[(robot.team, robot.number)], False, skip_old=self.skip_old
         )
 
-    def finished(self, client: client.Client) -> bool:
-        for team, number in self.targets:
+    def finished(self, client: client.Client, available_robots: list) -> bool:
+        for robot in available_robots:
+            team, number = utils.robot_str2list(robot)
             arrived, _ = client.robots[team][number].goto_compute_order(
                 self.targets[(team, number)], skip_old=self.skip_old
             )
@@ -100,7 +104,8 @@ class GoToConfigurationTask(ControlTask):
             if not arrived:
                 return False
 
-        for team, number in self.robots():
+        for robot in available_robots:
+            team, number = utils.robot_str2list(robot)
             client.robots[team][number].control(0., 0., 0.)
 
         return True
