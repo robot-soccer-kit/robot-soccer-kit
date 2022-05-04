@@ -107,9 +107,7 @@ class Robots:
         for entry in self.robots:
             last_detection = None
             if self.robots[entry].marker in self.detection.last_updates:
-                last_detection = (
-                    time.time() - self.detection.last_updates[self.robots[entry].marker]
-                )
+                last_detection = time.time() - self.detection.last_updates[self.robots[entry].marker]
 
             data[entry] = {
                 "state": self.robots[entry].state,

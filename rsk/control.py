@@ -36,10 +36,7 @@ class Control:
         self.tasks: dict = {}
         self.robots_color: dict = {}
 
-        self.teams = {
-            team: {"allow_control": True, "key": "", "packets": 0}
-            for team in utils.robot_teams()
-        }
+        self.teams = {team: {"allow_control": True, "key": "", "packets": 0} for team in utils.robot_teams()}
 
     def add_task(self, task: tasks.ControlTask):
         """
@@ -82,9 +79,7 @@ class Control:
                     robot.kick(float(command[1]))
                     response = [True, "ok"]
                 elif command[0] == "control" and len(command) == 4:
-                    robot.control(
-                        float(command[1]), float(command[2]), float(command[3])
-                    )
+                    robot.control(float(command[1]), float(command[2]), float(command[3]))
                     response = [True, "ok"]
                 elif command[0] == "leds" and len(command) == 4:
                     if is_master:
@@ -116,22 +111,16 @@ class Control:
                         is_master = key == self.master_key
 
                         if not is_master:
-                            tasks = [
-                                task.name for task in self.robot_tasks(team, number)
-                            ]
+                            tasks = [task.name for task in self.robot_tasks(team, number)]
                             if self.teams[team]["key"] != key:
                                 response[1] = f"Bad key for team {team}"
                                 allow_control = False
                             elif not self.teams[team]["allow_control"]:
-                                response[
-                                    1
-                                ] = f"You are not allowed to control the robots of team {team}"
+                                response[1] = f"You are not allowed to control the robots of team {team}"
                                 allow_control = False
                             elif len(tasks):
                                 reasons = str(tasks)
-                                response[
-                                    1
-                                ] = f"Robot {number} of team {team} is preempted: {reasons}"
+                                response[1] = f"Robot {number} of team {team} is preempted: {reasons}"
                                 allow_control = False
 
                         if allow_control:
@@ -187,9 +176,7 @@ class Control:
         state = copy.deepcopy(self.teams)
 
         for team in utils.robot_teams():
-            state[team]["preemption_reasons"] = {
-                number: [] for number in utils.robot_numbers()
-            }
+            state[team]["preemption_reasons"] = {number: [] for number in utils.robot_numbers()}
 
         for task in self.tasks.values():
             for team, number in task.robots():
@@ -243,9 +230,7 @@ class Control:
         for team, number in utils.all_robots():
             robot = self.client.robots[team][number]
             if robot.position is not None:
-                out_of_field = not utils.in_rectangle(
-                    robot.position, limit_down_left, limit_up_right
-                )
+                out_of_field = not utils.in_rectangle(robot.position, limit_down_left, limit_up_right)
                 task_name = "out-of-game-%s" % utils.robot_list2str(team, number)
 
                 if out_of_field:
@@ -262,9 +247,7 @@ class Control:
                 else:
                     # If the robot is recovered, creating a one-time task to make it stop moving
                     if self.has_task(task_name):
-                        task = tasks.StopTask(
-                            task_name, team, number, forever=False, priority=100
-                        )
+                        task = tasks.StopTask(task_name, team, number, forever=False, priority=100)
                         self.add_task(task)
 
     def tick_tasks(self) -> set:
@@ -318,12 +301,8 @@ class Control:
                 robot = utils.robot_str2list(robot_id)
                 color = "preempted" if robot in robots_ticked else robot[0]
 
-                if (robot not in self.robots_color) or self.robots_color[
-                    robot
-                ] != color:
-                    self.client.robots[robot[0]][robot[1]].leds(
-                        *utils.robot_leds_color(color)
-                    )
+                if (robot not in self.robots_color) or self.robots_color[robot] != color:
+                    self.client.robots[robot[0]][robot[1]].leds(*utils.robot_leds_color(color))
                 new_robots_color[robot] = color
 
             self.robots_color = new_robots_color

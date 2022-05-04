@@ -132,9 +132,7 @@ class Detection:
             self.color_xpos = (0, 255, 0)
             self.color_xneg = (255, 0, 0)
 
-    def draw_point2square(
-        self, image, center: list, margin: int, color: tuple, thickness: int
-    ):
+    def draw_point2square(self, image, center: list, margin: int, color: tuple, thickness: int):
         """
         Helper to draw a square on the image
         """
@@ -299,9 +297,7 @@ class Detection:
         """
         Detect the fiducial markers on the image, they are passed to the field for calibration
         """
-        (corners, ids, rejected) = cv2.aruco.detectMarkers(
-            image, self.arucoDict, parameters=self.arucoParams
-        )
+        (corners, ids, rejected) = cv2.aruco.detectMarkers(image, self.arucoDict, parameters=self.arucoParams)
         new_markers = {}
 
         if len(corners) > 0:

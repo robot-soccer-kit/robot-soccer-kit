@@ -190,8 +190,8 @@ class Referee:
         self.penalties[robot] = {
             'remaining': None,
             'reason': None,
-            'grace': 3.,
-            'max': 5.
+            'grace': constants.grace_time,
+            'max': constants.default_penalty
         }
 
         self.control.remove_task('penalty-' + robot)
@@ -339,7 +339,7 @@ class Referee:
                             self.timed_circle_timers[robot] += elapsed
 
                             if self.timed_circle_timers[robot] > constants.timed_circle_time:
-                                self.addPenalty(5., marker, 'ball_abuse')
+                                self.addPenalty(constants.default_penalty, marker, 'ball_abuse')
                     else:
                         self.timed_circle_timers[(team, number)] = None
                 else:
@@ -351,7 +351,7 @@ class Referee:
                     opponent_defense_area = constants.defense_area(self.positive_team != team)
 
                     if utils.in_rectangle(robot_position, *opponent_defense_area):
-                        self.addPenalty(5., marker, 'abusive_attack')
+                        self.addPenalty(constants.default_penalty, marker, 'abusive_attack')
 
                     if utils.in_rectangle(robot_position, *my_defense_area):
                         if team in defender:
@@ -361,7 +361,7 @@ class Referee:
                             if abs(other_robot_position[0]) < abs(robot_position[0]):
                                 robot_to_penalize = other_robot
                             
-                            self.addPenalty(5., robot_to_penalize, 'abusive_defense')
+                            self.addPenalty(constants.default_penalty, robot_to_penalize, 'abusive_defense')
                         else:
                             defender[team] = [marker, robot_position]
 
