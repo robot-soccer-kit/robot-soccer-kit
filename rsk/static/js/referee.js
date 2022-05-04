@@ -180,7 +180,7 @@ function referee_initialize(backend)
 
     // Game Start&Stop
     $('.start-game').click(function() {
-        backend.startGame();
+        backend.start_game();
         displayed_toast_nb = 0;
         $("#RefereeHistory").html('');
         $("#NoHistory").html('<h6 class="text-muted">No History</h6>');

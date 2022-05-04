@@ -106,8 +106,8 @@ class Backend:
     def get_default_display_settings(self) -> list:
         return self.detection.get_default_display_settings()
 
-    def startGame(self):
-        self.referee.startGame()
+    def start_game(self):
+        self.referee.start_game()
 
     def pause_game(self):
         self.referee.pause_game()

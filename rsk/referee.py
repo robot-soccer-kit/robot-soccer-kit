@@ -103,11 +103,19 @@ class Referee:
         return game_state
 
     def wait_for_ball_placement(self, target_position=(0.0, 0.0)):
+        """
+        Waits for the ball to be placed somewhere, pauses the game until then
+
+        :param tuple target_position: the target position for the ball, defaults to (0.0, 0.0)
+        """        
         self.wait_ball_position = target_position
         self.game_state["game_paused"] = True
         self.game_state["game_state_msg"] = "Place the ball on the dot"
 
-    def startGame(self):
+    def start_game(self):
+        """
+        Starts the game
+        """        
         self.logger.info("Game started")
 
         self.game_state["game_is_running"] = True
@@ -119,6 +127,11 @@ class Referee:
         self.wait_for_ball_placement()
 
     def pause_game(self, reason: str = "manually-paused"):
+        """
+        Pause the game
+
+        :param str reason: the reason for this pause, defaults to "manually-paused"
+        """        
         self.logger.info(f"Game paused, reason: {reason}")
 
         self.game_state["game_paused"] = True
@@ -127,6 +140,9 @@ class Referee:
         self.game_state["game_state_msg"] = "Game has been manually paused"
 
     def resume_game(self):
+        """
+        Resume the game
+        """        
         self.logger.info("Game resumed")
 
         self.game_state["game_paused"] = False
@@ -145,6 +161,9 @@ class Referee:
         self.control.remove_task("half-time")
 
     def stop_game(self):
+        """
+        Stop the game (end)
+        """        
         self.logger.info("Game stopped")
         self.game_state["game_paused"] = True
         self.game_state["game_is_running"] = False
@@ -162,6 +181,9 @@ class Referee:
         self.game_state["game_state_msg"] = "Game is ready to start"
 
     def start_half_time(self):
+        """
+        Start an half time break
+        """        
         self.game_state["timer"] = constants.halftime_duration
         self.game_state["game_is_running"] = False
         self.game_state["halftime_is_running"] = True
@@ -176,6 +198,9 @@ class Referee:
         self.control.remove_task("goal")
 
     def start_second_half_time(self):
+        """
+        Resume after an half time break
+        """        
         self.game_state["timer"] = constants.game_duration
         self.game_state["halftime_is_running"] = False
         self.game_state["game_is_running"] = True
@@ -183,10 +208,20 @@ class Referee:
         self.wait_for_ball_placement()
 
     def force_place(self, configuration: str):
+        """
+        Force the robots to be placed somewhere
+
+        :param str configuration: the name of the target configuration
+        """        
         task = tasks.GoToConfigurationTask("force-place", configuration, priority=50)
         self.control.add_task(task)
 
     def place_game(self, configuration: str):
+        """
+        Place the robot for the current game setup
+
+        :param str configuration: the target configuration
+        """        
         if configuration == "standard":
             if self.game_state["teams"][utils.robot_teams()[1]]["x_positive"]:
                 configuration = "game_blue_positive"
@@ -202,24 +237,51 @@ class Referee:
         self.force_place(configuration)
 
     def increment_score(self, team: str, increment: int):
+        """
+        Increments a team score
+
+        :param str team: team name
+        :param int increment: how much should be incremented
+        """        
         self.game_state["teams"][team]["score"] += increment
 
     def reset_score(self):
+        """
+        Reset team scores
+        """        
         for team in utils.robot_teams():
             self.game_state["teams"][team]["score"] = 0
 
     def add_referee_history(self, team: str, action: str) -> list:
+        """
+        Adds an entry to the referee history
+
+        :param str team: the team
+        :param str action: action
+        :return list: the referee history entry created
+        """        
         timestamp = math.ceil(self.game_state["timer"])
         i = len(self.referee_history)
         new_history_line = [i, timestamp, team, action]
         self.referee_history.append(new_history_line)
+
         return self.referee_history
 
     def reset_penalties(self):
+        """
+        Resets all robot penalties
+        """        
         for robot_id in utils.all_robots_id():
             self.cancel_penalty(robot_id)
 
     def add_penalty(self, duration: float, robot: str, reason: str = "manually_penalized"):
+        """
+        Adds some penalty to a r obot
+
+        :param float duration: the penalty duration
+        :param str robot: the target robot
+        :param str reason: penalty reason, defaults to "manually_penalized"
+        """        
         self.penalties[robot]["reason"] = reason
 
         if self.penalties[robot]["remaining"] is None:
