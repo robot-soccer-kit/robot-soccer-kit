@@ -45,8 +45,8 @@ robot_height: float = 0.076 # [m]
 ball_height: float = 0.042  # [m]
 
 # Durations
-game_duration: float = 301.0  # [s]
-halftime_duration: float = 121.0  # [s]
+game_duration: float = 300.0  # [s]
+halftime_duration: float = 120.0  # [s]
 default_penalty: float = 5.0  # [s]
 grace_time: float = 3.0  # [s]
 

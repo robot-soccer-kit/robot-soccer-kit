@@ -95,8 +95,8 @@ class Backend():
     def increment_score(self, team: str, increment: int):
         self.referee.increment_score(team, increment)
 
-    def resetScore(self):
-        self.referee.resetScore()
+    def reset_score(self):
+        self.referee.reset_score()
 
     def set_display_settings(self, display_settings: list):
         self.detection.set_display_settings(display_settings)
@@ -113,41 +113,41 @@ class Backend():
     def startGame(self):
         self.referee.startGame()
 
-    def pauseGame(self):
-        self.referee.pauseGame()
+    def pause_game(self):
+        self.referee.pause_game()
 
-    def resumeGame(self):
-        self.referee.resumeGame()
+    def resume_game(self):
+        self.referee.resume_game()
 
-    def stopGame(self):
-        self.referee.stopGame()
+    def stop_game(self):
+        self.referee.stop_game()
 
     def calibrate_camera(self):
         self.detection.calibrate_camera()
 
-    def placeGame(self, configuration:str):
-        self.referee.placeGame(configuration)
+    def place_game(self, configuration:str):
+        self.referee.place_game(configuration)
 
-    def set_team_team(self, team: str, name: str):
-        self.referee.set_team_team(team, name)
+    def set_team_name(self, team: str, name: str):
+        self.referee.set_team_name(team, name)
 
     def swap_team_sides(self) -> str:
         self.referee.swap_team_sides()
 
-    def startHalfTime(self):
-        self.referee.startHalfTime()
+    def start_half_time(self):
+        self.referee.start_half_time()
 
-    def startSecondHalfTime(self):
-        self.referee.startSecondHalfTime()
+    def start_second_half_time(self):
+        self.referee.start_second_half_time()
 
-    def addPenalty(self, duration: int, robot: str):
-        self.referee.addPenalty(duration, robot)
+    def add_penalty(self, duration: int, robot: str):
+        self.referee.add_penalty(duration, robot)
 
-    def cancelPenalty(self, robot) -> str:
-        self.referee.cancelPenalty(robot)
+    def cancel_penalty(self, robot) -> str:
+        self.referee.cancel_penalty(robot)
     
     def get_game_state(self) -> dict:
         return self.referee.get_game_state()
     
-    def validateGoal(self, yes_no:bool):
-        self.referee.validateGoal(yes_no)
+    def validate_goal(self, yes_no:bool):
+        self.referee.validate_goal(yes_no)

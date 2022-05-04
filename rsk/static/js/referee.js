@@ -19,8 +19,8 @@ function referee_initialize(backend)
                 let second_team = constants["team_colors"][1]
 
                 // Team names
-                $(".first-team-name").html(game_state["teams"][first_team]["name"] || constants["team_colors"][0]);
-                $(".second-team-name").html(game_state["teams"][second_team]["name"] || constants["team_colors"][1]);
+                $(".first-team-name").text(game_state["teams"][first_team]["name"] || constants["team_colors"][0]);
+                $(".second-team-name").text(game_state["teams"][second_team]["name"] || constants["team_colors"][1]);
 
                 // Robots State
                 for (let team in game_state["teams"]) {
@@ -187,15 +187,15 @@ function referee_initialize(backend)
     });
 
     $('.pause-game').click(function() {
-        backend.pauseGame();
+        backend.pause_game();
     });
 
     $('.resume-game').click(function() {
-        backend.resumeGame();
+        backend.resume_game();
     });
 
     $('.stop-game').click(function() {
-        backend.stopGame();
+        backend.stop_game();
     });
 
     
@@ -203,23 +203,23 @@ function referee_initialize(backend)
     $('#MidTimeChange').click(function() {
 
         $("#RefereeHistory").append('<h5 class="text-muted m-3">Half Time</h5>');
-        backend.startHalfTime();
+        backend.start_half_time();
     });
 
     $('#Y_ChangeCover').click(function() {
         $('.ChangeCover').addClass('d-none');
         $('.MidTimeIdentify').removeClass('d-none');
         $('.MidTimeIdentifyBefore').removeClass('d-none');
-        backend.placeGame('swap_covers');
+        backend.place_game('swap_covers');
     });
 
     $('#N_ChangeCover').click(function() {
-        backend.placeGame('gently_swap_side');
+        backend.place_game('gently_swap_side');
         backend.swap_team_sides();
         $('.ChangeCover').addClass('d-none');
         $('.SecondHalfTime').removeClass('d-none');
         setTimeout(function() {
-            backend.placeGame('standard');
+            backend.place_game('standard');
         }, 5000);
 
     });
@@ -244,7 +244,7 @@ function referee_initialize(backend)
         $('.MidTimeIdentify').addClass('d-none');
         $('.MidTimeIdentifyBefore').addClass('d-none');
         $('.SecondHalfTime').removeClass('d-none');
-        backend.placeGame('standard');
+        backend.place_game('standard');
     });
 
     $('#BtnSecondHalfTime').click(function() {
@@ -254,12 +254,12 @@ function referee_initialize(backend)
         $('.SecondHalfTime').addClass('d-none');
         $('#HalfTimePlaceStd').addClass('d-none');
         }, 500);
-        backend.startSecondHalfTime();
+        backend.start_second_half_time();
     });
 
     // Teams Names
     $( ".team-name" ).change(function() {
-        backend.set_team_team($(this).attr('rel'), $(this).val())
+        backend.set_team_name($(this).attr('rel'), $(this).val())
     });
 
     // Scores 
@@ -285,7 +285,7 @@ function referee_initialize(backend)
             $("#toast-"+id_last_referee_item).find('.toast-body').addClass('text-success')
             $("#toast-"+id_last_referee_item).find('.toast-body').html('<h5 class="m-0">Goal Validated</h5>')
         });
-        backend.validateGoal(true)
+        backend.validate_goal(true)
     });
 
     $("#RefereeHistory").on('click','.cancel-goal', function() {
@@ -297,24 +297,24 @@ function referee_initialize(backend)
             $("#toast-"+id_last_referee_item).find('.toast-body').addClass('text-danger')
             $("#toast-"+id_last_referee_item).find('.toast-body').html('<h5 class="m-0">Goal Disallowed</h5>')
         });
-        backend.validateGoal(false)
+        backend.validate_goal(false)
     });
 
     $('.reset-score').click(function() {
-        backend.resetScore();
+        backend.reset_score();
     });
 
     // Place Robots
     $('.strd-place').click(function() {
-        backend.placeGame('standard');
+        backend.place_game('standard');
     });
 
     $('.dots-place').click(function() {
-        backend.placeGame('dots');
+        backend.place_game('dots');
     });
     
     $('.side-place').click(function() {
-        backend.placeGame('side');
+        backend.place_game('side');
     });
     
     // Robots Penalties
@@ -322,10 +322,10 @@ function referee_initialize(backend)
         let robot_id = $(this).attr('rel');
 
         $(this).find('.penalize').click(function() {
-            backend.addPenalty(5, robot_id);
+            backend.add_penalty(5, robot_id);
         });
         $(this).find('.unpenalize').click(function() {
-            backend.cancelPenalty(robot_id);
+            backend.cancel_penalty(robot_id);
         });
     });
 }

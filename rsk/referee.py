@@ -18,18 +18,26 @@ class Referee:
 
         self.control: control.Control = control
 
+        # Info from detection
         self.detection_info = None
 
+        # Last actions
         self.referee_history = []
 
-        self.halftime_is_running: bool = False
+        # Timestamp when the timer started
         self.chrono_is_running: bool = False
         self.start_timer = 0.0
 
-        self.wait_ball_position = None
+        # Set when a goal validation is pending
         self.goal_validated = None
+
+        # Position where we wait for the ball to be before we
+        self.wait_ball_position = None
+
+        # Timers to penalize robots staying in te
         self.timed_circle_timers = {robot: 0 for robot in utils.all_robots()}
 
+        # Game state structure
         self.game_state = {
             "game_is_running": False,
             "game_paused": True,
@@ -41,16 +49,6 @@ class Referee:
                     "name": "",
                     "score": 0,
                     "x_positive": team == utils.robot_teams()[0],
-                    "robots": {
-                        number: {
-                            "penalized": False,
-                            "penalized_remaining": None,
-                            "penalized_reason": None,
-                            "preempted": False,
-                            "preemption_reasons": [],
-                        }
-                        for number in utils.robot_numbers()
-                    },
                 }
                 for team in utils.robot_teams()
             },
@@ -58,22 +56,11 @@ class Referee:
 
         # Robots Penalties
         self.penalties = {}
-        self.resetPenalties()
+        self.reset_penalties()
 
         # Starting the Referee thread
         self.referee_thread = threading.Thread(target=lambda: self.thread())
         self.referee_thread.start()
-
-    def get_timer(self) -> int:
-        if self.game_state["game_is_running"]:
-            duration = constants.game_duration
-        elif self.game_state["halftime_is_running"]:
-            duration = constants.halftime_duration
-
-        if self.chrono_is_running:
-            return int((self.start_timer + duration) - time.time())
-        else:
-            return 0
 
     def get_game_state(self, full: bool = True) -> dict:
         game_state = copy.deepcopy(self.game_state)
@@ -81,7 +68,14 @@ class Referee:
         # Updating robot statuses
         control_status = self.control.status()
         for team, number in utils.all_robots():
-            robot_state = game_state["teams"][team]["robots"][number]
+            robot_state = {
+                "penalized": False,
+                "penalized_remaining": None,
+                "penalized_reason": None,
+                "preempted": False,
+                "preemption_reasons": [],
+            }
+
             robot_id = utils.robot_list2str(team, number)
             robot_state["penalized"] = self.penalties[robot_id]["remaining"] is not None
             if robot_state["penalized"]:
@@ -94,17 +88,21 @@ class Referee:
             robot_state["preempted"] = len(preempted_reasons) > 0
             robot_state["preemption_reasons"] = preempted_reasons
 
+            if "robots" not in game_state["teams"][team]:
+                game_state["teams"][team]["robots"] = {}
+            game_state["teams"][team]["robots"][number] = robot_state
+
         if full:
             game_state["referee_history_sliced"] = self.referee_history[-constants.referee_history_size :]
         else:
             del game_state["game_state_msg"]
 
         # Updating timer
-        game_state["timer"] = self.get_timer()
+        game_state["timer"] = math.ceil(game_state["timer"])
 
         return game_state
 
-    def wait_for_ball_placement(self, target_position=(0., 0.)):
+    def wait_for_ball_placement(self, target_position=(0.0, 0.0)):
         self.wait_ball_position = target_position
         self.game_state["game_paused"] = True
         self.game_state["game_state_msg"] = "Place the ball on the dot"
@@ -114,13 +112,13 @@ class Referee:
 
         self.game_state["game_is_running"] = True
         self.referee_history = []
-        self.resetScore()
-        self.pauseGame("game-start")
+        self.reset_score()
+        self.pause_game("game-start")
         self.start_timer = 0
         self.chrono_is_running = False
         self.wait_for_ball_placement()
 
-    def pauseGame(self, reason: str = "manually-paused"):
+    def pause_game(self, reason: str = "manually-paused"):
         self.logger.info(f"Game paused, reason: {reason}")
 
         self.game_state["game_paused"] = True
@@ -128,15 +126,15 @@ class Referee:
         self.control.add_task(task)
         self.game_state["game_state_msg"] = "Game has been manually paused"
 
-    def resumeGame(self):
+    def resume_game(self):
         self.logger.info("Game resumed")
-        
+
         self.game_state["game_paused"] = False
         self.game_state["game_state_msg"] = "Game is running..."
         self.wait_ball_position = None
 
         if self.control.has_task("game-start"):
-            self.start_timer = time.time()
+            self.game_state["timer"] = constants.game_duration
             self.chrono_is_running = True
 
         self.control.remove_task("manually-paused")
@@ -146,14 +144,14 @@ class Referee:
         self.control.remove_task("game-start")
         self.control.remove_task("half-time")
 
-    def stopGame(self):
+    def stop_game(self):
         self.logger.info("Game stopped")
         self.game_state["game_paused"] = True
         self.game_state["game_is_running"] = False
         self.chrono_is_running = False
         self.start_timer = 0.0
 
-        self.resetPenalties()
+        self.reset_penalties()
         self.control.remove_task("manually-paused")
         self.control.remove_task("sideline-crossed")
         self.control.remove_task("goal")
@@ -163,28 +161,32 @@ class Referee:
 
         self.game_state["game_state_msg"] = "Game is ready to start"
 
-    def startHalfTime(self):
-        self.start_timer = time.time()
+    def start_half_time(self):
+        self.game_state["timer"] = constants.halftime_duration
         self.game_state["game_is_running"] = False
         self.game_state["halftime_is_running"] = True
         self.game_state["game_paused"] = True
         self.game_state["game_state_msg"] = "Half Time"
+
         task = tasks.StopAllTask("half-time")
         self.control.add_task(task)
-        self.resetPenalties()
+        self.reset_penalties()
 
-    def startSecondHalfTime(self):
-        self.start_timer = time.time()
+        self.control.remove_task("sideline-crossed")
+        self.control.remove_task("goal")
+
+    def start_second_half_time(self):
+        self.game_state["timer"] = constants.game_duration
         self.game_state["halftime_is_running"] = False
         self.game_state["game_is_running"] = True
         self.game_state["game_state_msg"] = "Game is running..."
         self.wait_for_ball_placement()
 
-    def forcePlace(self, configuration: str):
+    def force_place(self, configuration: str):
         task = tasks.GoToConfigurationTask("force-place", configuration, priority=50)
         self.control.add_task(task)
 
-    def placeGame(self, configuration: str):
+    def place_game(self, configuration: str):
         if configuration == "standard":
             if self.game_state["teams"][utils.robot_teams()[1]]["x_positive"]:
                 configuration = "game_blue_positive"
@@ -197,27 +199,27 @@ class Referee:
             else:
                 configuration = "swap_covers_green_positive"
 
-        self.forcePlace(configuration)
+        self.force_place(configuration)
 
     def increment_score(self, team: str, increment: int):
         self.game_state["teams"][team]["score"] += increment
 
-    def resetScore(self):
+    def reset_score(self):
         for team in utils.robot_teams():
             self.game_state["teams"][team]["score"] = 0
 
-    def addRefereeHistory(self, team: str, action: str) -> list:
-        timestamp = self.get_timer()
+    def add_referee_history(self, team: str, action: str) -> list:
+        timestamp = math.ceil(self.game_state["timer"])
         i = len(self.referee_history)
         new_history_line = [i, timestamp, team, action]
         self.referee_history.append(new_history_line)
         return self.referee_history
 
-    def resetPenalties(self):
+    def reset_penalties(self):
         for robot_id in utils.all_robots_id():
-            self.cancelPenalty(robot_id)
+            self.cancel_penalty(robot_id)
 
-    def addPenalty(self, duration: float, robot: str, reason: str = "manually_penalized"):
+    def add_penalty(self, duration: float, robot: str, reason: str = "manually_penalized"):
         self.penalties[robot]["reason"] = reason
 
         if self.penalties[robot]["remaining"] is None:
@@ -229,45 +231,76 @@ class Referee:
         else:
             self.penalties[robot]["remaining"] += float(duration)
 
-    def cancelPenalty(self, robot: str):
+    def cancel_penalty(self, robot: str):
+        """
+        Cancels a robot's penalty
+
+        :param str robot: the robot
+        """
         self.penalties[robot] = {"remaining": None, "reason": None, "grace": constants.grace_time}
 
         self.control.remove_task("penalty-" + robot)
 
-    def tickPenalty(self, elapsed: float):
+    def tick_penalties(self, elapsed: float):
+        """
+        Update robot penalties and grace time
+
+        :param float elapsed: time elapsed since last tick
+        """
         for robot in self.penalties:
             if self.penalties[robot]["remaining"] is not None:
                 self.penalties[robot]["remaining"] -= elapsed
                 if self.penalties[robot]["remaining"] < 0:
-                    self.cancelPenalty(robot)
+                    self.cancel_penalty(robot)
             if self.penalties[robot]["grace"] is not None:
                 self.penalties[robot]["grace"] -= elapsed
                 if self.penalties[robot]["grace"] < 0:
                     self.penalties[robot]["grace"] = None
 
-    def canBePenalized(self, robot):
-        return self.penalties[robot]["remaining"] is None and self.penalties[robot]["grace"] is None
+    def can_be_penalized(self, robot: str) -> bool:
+        """
+        Can a given robot be penalized?
+        It can be penalized if:
+        * It is not already penalized
+        * Its grace time is not expired
+        * It has no other tasks to do (it is not preempted)
 
-    def set_team_team(self, team: str, name: str):
+        :param str robot: robot
+        :return bool: True if the robot can be penalized
+        """
+        tasks = self.control.robot_tasks(*utils.robot_str2list(robot))
+
+        return len(tasks) == 0 and (self.penalties[robot]["remaining"] is None) and (self.penalties[robot]["grace"] is None)
+
+    def set_team_name(self, team: str, name: str):
         self.game_state["teams"][team]["name"] = name
 
     def swap_team_sides(self):
+        """
+        Swap team sides (x positive referring to the team defending goals on the
+        positive x axis of field)
+        """
         for team in self.game_state["teams"]:
             self.game_state["teams"][team]["x_positive"] = not self.game_state["teams"][team]["x_positive"]
 
-    def validateGoal(self, yes_no: bool):
+    def validate_goal(self, yes_no: bool):
+        """
+        Handles goal validation by user
+
+        :param bool yes_no: whether the goal is validated or canceller
+        """
         if yes_no:
             if self.game_state["teams"]["blue"]["x_positive"]:
-                self.forcePlace("game_blue_positive")
+                self.force_place("game_blue_positive")
             else:
-                self.forcePlace("game_green_positive")
+                self.force_place("game_green_positive")
 
             self.wait_for_ball_placement()
             self.goal_validated = True
         else:
             self.increment_score(self.referee_history[-1][2], -1)
             self.goal_validated = False
-            self.resumeGame()
+            self.resume_game()
 
     def check_line_crosses(self, ball_coord: np.ndarray, ball_coord_old: np.ndarray):
         """
@@ -294,12 +327,12 @@ class Referee:
 
             self.ball_out_field = True
             self.increment_score(goal_team, 1)
-            self.addRefereeHistory(goal_team, "Goal")
-            self.resetPenalties()
-            self.pauseGame("goal")
+            self.add_referee_history(goal_team, "Goal")
+            self.reset_penalties()
+            self.pause_game("goal")
             self.game_state["game_state_msg"] = "Waiting for Goal Validation"
 
-        # Sideline (field+2cm margin) and ball trajectory intersection (Sideline fool detection)
+        # Sideline (field+margin) and ball trajectory intersection (Sideline fool detection)
         intersect_field_Upline_out = utils.intersect(ball_coord_old, ball_coord, field_UpLeft_out, field_UpRight_out)
         intersect_field_DownLine_out = utils.intersect(ball_coord_old, ball_coord, field_DownLeft_out, field_DownRight_out)
         intersect_field_LeftLine_out = utils.intersect(ball_coord_old, ball_coord, field_UpLeft_out, field_DownLeft_out)
@@ -327,8 +360,8 @@ class Referee:
                     )
                     self.wait_for_ball_placement(target)
             self.ball_out_field = True
-            self.addRefereeHistory("neutral", "Sideline crossed")
-            self.pauseGame("sideline-crossed")
+            self.add_referee_history("neutral", "Sideline crossed")
+            self.pause_game("sideline-crossed")
 
         # Verification that the ball has been inside a smaller field (field-10cm margin) at least once before a new goal or a sideline foul is detected
         if self.ball_out_field and utils.in_rectangle(ball_coord, field_DownLeft_in, field_UpRight_in):
@@ -350,7 +383,7 @@ class Referee:
                 robot = (team, number)
 
                 # Penalizing robots that are staying close to the ball
-                if self.detection_info["ball"] is not None and self.canBePenalized(marker):
+                if self.detection_info["ball"] is not None and self.can_be_penalized(marker):
                     ball_position = np.array(self.detection_info["ball"])
                     distance = np.linalg.norm(ball_position - robot_position)
 
@@ -361,19 +394,19 @@ class Referee:
                             self.timed_circle_timers[robot] += elapsed
 
                             if self.timed_circle_timers[robot] > constants.timed_circle_time:
-                                self.addPenalty(constants.default_penalty, marker, "ball_abuse")
+                                self.add_penalty(constants.default_penalty, marker, "ball_abuse")
                     else:
                         self.timed_circle_timers[(team, number)] = None
                 else:
                     self.timed_circle_timers[(team, number)] = None
 
                 # Penalizing extra robots that are entering the defense area
-                if self.canBePenalized(marker):
+                if self.can_be_penalized(marker):
                     my_defense_area = constants.defense_area(self.positive_team == team)
                     opponent_defense_area = constants.defense_area(self.positive_team != team)
 
                     if utils.in_rectangle(robot_position, *opponent_defense_area):
-                        self.addPenalty(constants.default_penalty, marker, "abusive_attack")
+                        self.add_penalty(constants.default_penalty, marker, "abusive_attack")
 
                     if utils.in_rectangle(robot_position, *my_defense_area):
                         if team in defender:
@@ -383,11 +416,14 @@ class Referee:
                             if abs(other_robot_position[0]) < abs(robot_position[0]):
                                 robot_to_penalize = other_robot
 
-                            self.addPenalty(constants.default_penalty, robot_to_penalize, "abusive_defense")
+                            self.add_penalty(constants.default_penalty, robot_to_penalize, "abusive_defense")
                         else:
                             defender[team] = [marker, robot_position]
 
     def thread(self):
+        """
+        Referee thread
+        """
         self.ball_out_field = False
         wait_ball_timestamp = None
 
@@ -398,6 +434,9 @@ class Referee:
 
         while True:
             elapsed = time.time() - last_tick
+            if self.chrono_is_running:
+                self.game_state["timer"] -= elapsed
+
             last_tick = time.time()
 
             # Updating positive and negative teams
@@ -418,7 +457,7 @@ class Referee:
 
                     self.penalize_fools(elapsed)
 
-                self.tickPenalty(elapsed)
+                self.tick_penalties(elapsed)
             else:
                 # Waiting for the ball to be at a specific position to resume the game
                 if (
@@ -434,7 +473,7 @@ class Referee:
                         elif time.time() - wait_ball_timestamp >= 1:
                             self.game_state["game_state_msg"] = "Game is running..."
                             self.goal_validated = None
-                            self.resumeGame()
+                            self.resume_game()
                     else:
                         wait_ball_timestamp = None
 
