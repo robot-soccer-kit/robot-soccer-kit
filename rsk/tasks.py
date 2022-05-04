@@ -97,16 +97,19 @@ class GoToConfigurationTask(ControlTask):
     def finished(self, client: client.Client, available_robots: list) -> bool:
         for robot in available_robots:
             team, number = utils.robot_str2list(robot)
-            arrived, _ = client.robots[team][number].goto_compute_order(
-                self.targets[(team, number)], skip_old=self.skip_old
-            )
+            
+            if (team, number) in self.targets:
+                arrived, _ = client.robots[team][number].goto_compute_order(
+                    self.targets[(team, number)], skip_old=self.skip_old
+                )
 
-            if not arrived:
-                return False
+                if not arrived:
+                    return False
 
         for robot in available_robots:
-            team, number = utils.robot_str2list(robot)
-            client.robots[team][number].control(0., 0., 0.)
+            if (team, number) in self.targets:
+                team, number = utils.robot_str2list(robot)
+                client.robots[team][number].control(0., 0., 0.)
 
         return True
 
