@@ -6,19 +6,19 @@ the rules.
 """
 
 # Field dimension
-field_length: float = 1.83  # [m] (x axis)
-field_width: float = 1.22  # [m] (y axis)
+field_length: float = 1.84  # [m] (x axis)
+field_width: float = 1.23  # [m] (y axis)
 
 # Goals size
 goal_width: float = 0.6  # [m]
-goal_virtual_heght: float = 0.1  # [m]
+goal_virtual_height: float = 0.1  # [m]
 
 # Side of the (green) border we should be able to see around the field
 border_size: float = 0.3  # [m]
 
 # Dots coordinates (x, y)
-dots_x: float = 0.445  # [m]
-dots_y: float = 0.29  # [m]
+dots_x: float = 0.45  # [m]
+dots_y: float = 0.305  # [m]
 
 # Defense area
 defense_area_width = 0.9  # [m]
@@ -41,7 +41,7 @@ corner_tag_border: float = 0.025  # [m]
 robot_tag_size: float = 0.08  # [m]
 
 # Heights
-robot_height: float = 0.076  # [m]
+robot_height: float = 0.076 # [m]
 ball_height: float = 0.042  # [m]
 
 # Durations
@@ -49,6 +49,9 @@ game_duration: float = 301.0  # [s]
 halftime_duration: float = 121.0  # [s]
 default_penalty: float = 5.0  # [s]
 grace_time: float = 3.0  # [s]
+
+# Parameters
+referee_history_size: int = 3
 
 # Goals coordinates
 def goal_posts(x_positive: bool = True) -> np.ndarray:

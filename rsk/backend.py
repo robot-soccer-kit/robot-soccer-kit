@@ -1,5 +1,5 @@
 from . import api
-from . import video, robots, control, field, referee, detection
+from . import video, robots, control, field, referee, detection, utils, constants
 
 
 class Backend():
@@ -14,6 +14,12 @@ class Backend():
 
     def cameras(self):
         return self.video.cameras()
+
+    def constants(self) -> dict:
+        return {
+            "team_colors": utils.robot_teams(),
+            "default_penalty" : constants.default_penalty
+        }
 
     def resolutions(self):
         return self.video.resolutions()
@@ -86,8 +92,8 @@ class Backend():
     def stopReferee(self):
         self.referee.stopReferee()
 
-    def updateScore(self, team: str, increment: int):
-        self.referee.updateScore(team, increment)
+    def increment_score(self, team: str, increment: int):
+        self.referee.increment_score(team, increment)
 
     def resetScore(self):
         self.referee.resetScore()
@@ -122,11 +128,11 @@ class Backend():
     def placeGame(self, configuration:str):
         self.referee.placeGame(configuration)
 
-    def setTeamNames(self, team: str, name: str):
-        self.referee.setTeamNames(team, name)
+    def set_team_team(self, team: str, name: str):
+        self.referee.set_team_team(team, name)
 
-    def setTeamSides(self) -> str:
-        self.referee.setTeamSides()
+    def swap_team_sides(self) -> str:
+        self.referee.swap_team_sides()
 
     def startHalfTime(self):
         self.referee.startHalfTime()
@@ -140,8 +146,8 @@ class Backend():
     def cancelPenalty(self, robot) -> str:
         self.referee.cancelPenalty(robot)
     
-    def getFullGameState(self) -> dict:
-        return self.referee.getFullGameState()
+    def get_game_state(self) -> dict:
+        return self.referee.get_game_state()
     
     def validateGoal(self, yes_no:bool):
         self.referee.validateGoal(yes_no)

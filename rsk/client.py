@@ -190,6 +190,9 @@ class Client:
         self.sub_thread = threading.Thread(target=lambda: self.sub_process())
         self.sub_thread.start()
 
+        # Informations from referee
+        self.referee = None
+
         # Creating request connection
         self.req = self.context.socket(zmq.REQ)
         self.req.connect('tcp://'+host+':7558')
@@ -244,6 +247,9 @@ class Client:
                         else:
                             self.update_position(
                                 self.robots[team][number], json['markers'][entry])
+
+                if 'referee' in json:
+                    self.referee = json['referee']
 
                 if self.on_update is not None:
                     self.on_update(self, dt)

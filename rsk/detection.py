@@ -222,14 +222,14 @@ class Detection:
                         [
                             sign * (constants.field_length / 2.0),
                             -sign * constants.goal_width / 2.0,
-                            constants.goal_virtual_heght,
+                            constants.goal_virtual_height,
                         ]
                     )
                     F = self.field.position_to_pixel(
                         [
                             sign * (constants.field_length / 2.0),
                             sign * constants.goal_width / 2.0,
-                            constants.goal_virtual_heght,
+                            constants.goal_virtual_height,
                         ]
                     )
                     cv2.line(image_debug, C, D, color, 3)
@@ -434,6 +434,7 @@ class Detection:
             "markers": self.markers,
             "calibrated": self.field.calibrated(),
             "see_whole_field": self.field.see_whole_field,
+            "referee": self.referee.get_game_state(full=False),
         }
 
     def publish(self) -> None:
