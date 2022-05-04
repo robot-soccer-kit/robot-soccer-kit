@@ -104,30 +104,33 @@ class Referee:
 
         return game_state
 
+    def wait_for_ball_placement(self, target_position=(0., 0.)):
+        self.wait_ball_position = target_position
+        self.game_state["game_paused"] = True
+        self.game_state["game_state_msg"] = "Place the ball on the dot"
+
     def startGame(self):
         self.logger.info("Game started")
-        self.game_state["game_paused"] = True
-        self.wait_ball_position = (0.0, 0.0)
+
         self.game_state["game_is_running"] = True
         self.referee_history = []
-        self.game_state["referee_history_sliced"] = []
         self.resetScore()
         self.pauseGame("game-start")
-        self.game_state["game_state_msg"] = "Place the ball on the dot"
         self.start_timer = 0
         self.chrono_is_running = False
+        self.wait_for_ball_placement()
 
     def pauseGame(self, reason: str = "manually-paused"):
         self.logger.info(f"Game paused, reason: {reason}")
 
         self.game_state["game_paused"] = True
-
         task = tasks.StopAllTask(reason)
         self.control.add_task(task)
         self.game_state["game_state_msg"] = "Game has been manually paused"
 
     def resumeGame(self):
         self.logger.info("Game resumed")
+        
         self.game_state["game_paused"] = False
         self.game_state["game_state_msg"] = "Game is running..."
         self.wait_ball_position = None
@@ -175,7 +178,7 @@ class Referee:
         self.game_state["halftime_is_running"] = False
         self.game_state["game_is_running"] = True
         self.game_state["game_state_msg"] = "Game is running..."
-        self.resumeGame()
+        self.wait_for_ball_placement()
 
     def forcePlace(self, configuration: str):
         task = tasks.GoToConfigurationTask("force-place", configuration, priority=50)
@@ -259,8 +262,7 @@ class Referee:
             else:
                 self.forcePlace("game_green_positive")
 
-            self.game_state["game_state_msg"] = "Place the ball on the dot"
-            self.wait_ball_position = (0.0, 0.0)
+            self.wait_for_ball_placement()
             self.goal_validated = True
         else:
             self.increment_score(self.referee_history[-1][2], -1)
@@ -319,12 +321,11 @@ class Referee:
             ):
                 has_intersection, point = intersection
                 if has_intersection:
-                    self.game_state["game_state_msg"] = "Place the ball on the dot"
-                    self.wait_ball_position = (
+                    target = (
                         (1 if point[0] > 0 else -1) * constants.dots_x,
                         (1 if point[1] > 0 else -1) * constants.dots_y,
                     )
-                pass
+                    self.wait_for_ball_placement(target)
             self.ball_out_field = True
             self.addRefereeHistory("neutral", "Sideline crossed")
             self.pauseGame("sideline-crossed")
