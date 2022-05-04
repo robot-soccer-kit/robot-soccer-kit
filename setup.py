@@ -31,6 +31,7 @@ setuptools.setup(
     install_requires=[
         "numpy",
         "pyzmq",
+        "yaml"
     ],
     extras_require={
         'gc': [ # Game controller extra requirements
