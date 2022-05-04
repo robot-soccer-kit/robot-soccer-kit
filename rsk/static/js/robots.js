@@ -154,7 +154,7 @@ function robots_initialize(backend)
                     $('body').removeClass('robots-warning');
                 }
             });
-        }, 100);
+        }, 200);
 
     });
 }

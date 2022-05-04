@@ -25,7 +25,7 @@ function control_initialize(backend) {
         });
 
         setInterval(function() {
-            backend.getGame(function(game) {
+            backend.control_status(function(game) {
                 for (let team of ['green', 'blue']) {
                     $('.allow-'+team).prop('checked', game[team]['allow_control']);
                     $('.packets-'+team).text(game[team]['packets']+' packets');

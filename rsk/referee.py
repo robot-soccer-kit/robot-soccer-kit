@@ -11,14 +11,12 @@ class Referee:
     Handles the referee
     """    
 
-    def __init__(self, detection, control: control.Control):
+    def __init__(self, control: control.Control):
         self.logger: logging.Logger = logging.getLogger("referee")
 
         self.control:control.Control = control
-        self.detection = detection
 
         self.detection_info = None
-        detection.on_update = self.detection_update
 
         self.referee_history = []
         
@@ -164,9 +162,6 @@ class Referee:
         new_history_line= [i, timestamp, team, action]
         self.referee_history.append(new_history_line)
         return self.referee_history
-
-    def detection_update(self, info):
-        self.detection_info = info
 
     def resetPenalties(self):
         for robot_id in utils.all_robots_id():
@@ -408,8 +403,5 @@ class Referee:
                             self.resumeGame()
                     else:
                         wait_ball_timestamp = None
-
-            # XXX: Maybe detection should not be responsible for drawing this    
-            self.detection.wait_ball_position = self.wait_ball_position            
 
             time.sleep(0.1)

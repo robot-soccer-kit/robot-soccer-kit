@@ -9,7 +9,8 @@ class Backend():
         self.video:video.Video = video.Video()
         self.detection:detection.Detection = self.video.detection
         self.robots:robots.Robots = robots.Robots(self.detection)
-        self.referee:referee.Referee = referee.Referee(self.detection, self.robots.control)
+        self.referee:referee.Referee = referee.Referee(self.robots.control)
+        self.detection.referee = self.referee
 
     def cameras(self):
         return self.video.cameras()
@@ -64,7 +65,7 @@ class Backend():
         if port in self.robots.robots:
             self.robots.robots[port].kick()
 
-    def getGame(self):
+    def control_status(self):
         return self.robots.control.status()
 
     def allow_team_control(self, team: str, allow: bool):
@@ -123,9 +124,6 @@ class Backend():
 
     def setTeamNames(self, team: str, name: str):
         self.referee.setTeamNames(team, name)
-
-    def HalfTimeChangeColorField(self, xpos_goal:str):
-        self.detection.HalfTimeChangeColorField(xpos_goal)
 
     def setTeamSides(self) -> str:
         self.referee.setTeamSides()

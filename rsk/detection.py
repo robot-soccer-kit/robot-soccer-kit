@@ -11,6 +11,8 @@ os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 class Detection:
     def __init__(self):
+        self.referee = None
+
         # Publishing server
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
@@ -23,11 +25,7 @@ class Detection:
         # arucoParams.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_APRILTAG
 
         # Goals Colors
-        self.color_xpos = (0, 255, 0)
-        self.color_xneg = (255, 0, 0)
-
-        # Dots for crossing sidelines
-        self.wait_ball_position = None
+        self.team_colors = {"green": (0, 255, 0), "blue": (255, 0, 0)}
 
         self.canceled_goal_side = None
 
@@ -78,8 +76,6 @@ class Detection:
         self.no_ball = 0
         self.field = Field()
 
-        self.on_update = None
-
     def set_display_settings(self, display_settings: list) -> list:
         display_settings_bool = []
         for i in range(len(display_settings)):
@@ -122,15 +118,6 @@ class Detection:
     def calibrate_camera(self):
         self.field.should_calibrate = True
         self.field.is_calibrated = False
-
-    def HalfTimeChangeColorField(self, xpos_goal):
-        # XXX: This should not be done this way
-        if xpos_goal == "blue":
-            self.color_xpos = (255, 0, 0)
-            self.color_xneg = (0, 255, 0)
-        else:
-            self.color_xpos = (0, 255, 0)
-            self.color_xneg = (255, 0, 0)
 
     def draw_point2square(self, image, center: list, margin: int, color: tuple, thickness: int):
         """
@@ -182,7 +169,7 @@ class Detection:
         Draw extra annotations (lines, circles etc.) to check visually that the informations are matching
         the real images
         """
-        if self.field.calibrated() and image_debug is not None:
+        if self.field.calibrated() and (image_debug is not None) and (self.referee is not None):
             if self.displaySettings["sideline"]:
                 [
                     field_UpRight,
@@ -215,7 +202,10 @@ class Detection:
                 cv2.line(image_debug, D, A, (0, 0, 255), 1)
 
             if self.displaySettings["goals"]:
-                for sign, color in [(-1, self.color_xneg), (1, self.color_xpos)]:
+                for sign, color in [
+                    (-1, self.team_colors[self.referee.negative_team]),
+                    (1, self.team_colors[self.referee.positive_team]),
+                ]:
                     C = self.field.position_to_pixel(
                         [
                             sign * (constants.field_length / 2.0),
@@ -283,10 +273,10 @@ class Detection:
                     dashed=True,
                 )
 
-            if self.wait_ball_position is not None:
+            if self.referee.wait_ball_position is not None:
                 self.draw_circle(
                     image_debug,
-                    self.wait_ball_position,
+                    self.referee.wait_ball_position,
                     constants.place_ball_margin,
                     (0, 165, 255),
                     2,
@@ -453,5 +443,6 @@ class Detection:
         info = self.get_detection()
 
         self.socket.send_json(info, flags=zmq.NOBLOCK)
-        if self.on_update is not None:
-            self.on_update(info)
+
+        if self.referee is not None:
+            self.referee.detection_info = info

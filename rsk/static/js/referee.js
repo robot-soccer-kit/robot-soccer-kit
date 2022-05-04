@@ -174,9 +174,6 @@ function referee_initialize(backend)
                     }
             }
 
-            //Half Time Changes
-            backend.HalfTimeChangeColorField(game_state["x_positive_goal"]);
-
             if (game_state["x_positive_goal"] === first_team){
                 $('.robot-penalize-tab').css("flex-direction", "row");
             }
