@@ -116,6 +116,8 @@ class Robot:
         self.state = {}
         # Marker on the top of this robot
         self.marker = None
+        # Should leds be re-set
+        self.leds_dirty:bool = False
 
         # Starting the threads
         self.thread = threading.Thread(target=lambda: self.run_thread())
@@ -144,6 +146,7 @@ class Robot:
             time.sleep(0.25)
             self.leds(0, 0, 0)
             time.sleep(0.25)
+        self.leds_dirty = True
 
     def set_marker(self, marker: str) -> None:
         """
