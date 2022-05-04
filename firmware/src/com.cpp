@@ -94,9 +94,12 @@ void com_init() {
   shell_init();
 }
 
+static unsigned long last_byte_timestamp = 0;
+
 void com_bin_tick() {
   while (shell_stream()->available()) {
     uint8_t c = shell_stream()->read();
+    last_byte_timestamp = millis();
     // Checking for binary mode exit sequence
     if (bin_exit[bin_exit_pos] == c) {
       bin_exit_pos++;
@@ -109,6 +112,12 @@ void com_bin_tick() {
 
     // Ticking binary
     bin_stream_recv(c);
+
+  }
+  // Stopping motors if we had no news for 3s
+  if (last_byte_timestamp != 0 && (millis() - last_byte_timestamp) > 3000) {
+    last_byte_timestamp = 0;
+    motors_set_ik(0., 0., 0.);
   }
 
   bin_stream_tick();
