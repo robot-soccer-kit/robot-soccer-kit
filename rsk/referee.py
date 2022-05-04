@@ -64,6 +64,17 @@ class Referee:
         self.referee_thread = threading.Thread(target=lambda: self.thread())
         self.referee_thread.start()
 
+    def get_timer(self) -> int:
+        if self.game_state["game_is_running"]:
+            duration = constants.game_duration
+        elif self.game_state["halftime_is_running"]:
+            duration = constants.halftime_duration
+
+        if self.chrono_is_running:
+            return int((self.start_timer + duration) - time.time())
+        else:
+            return 0
+
     def get_game_state(self, full: bool = True) -> dict:
         game_state = copy.deepcopy(self.game_state)
 
@@ -89,15 +100,7 @@ class Referee:
             del game_state["game_state_msg"]
 
         # Updating timer
-        if game_state["game_is_running"]:
-            duration = constants.game_duration
-        elif game_state["halftime_is_running"]:
-            duration = constants.halftime_duration
-
-        if self.chrono_is_running:
-            game_state["timer"] = int((self.start_timer + duration) - time.time())
-        else:
-            game_state["timer"] = 0
+        game_state["timer"] = self.get_timer()
 
         return game_state
 
@@ -201,7 +204,7 @@ class Referee:
             self.game_state["teams"][team]["score"] = 0
 
     def addRefereeHistory(self, team: str, action: str) -> list:
-        timestamp = self.game_state["timer"]
+        timestamp = self.get_timer()
         i = len(self.referee_history)
         new_history_line = [i, timestamp, team, action]
         self.referee_history.append(new_history_line)
