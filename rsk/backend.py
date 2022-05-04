@@ -24,25 +24,24 @@ class Backend:
     def getCameraSettings(self):
         return self.video.settings
 
-    def startCapture(self, index: int, res: int) -> bool:
-        return self.video.startCapture(index, res)
+    def start_capture(self, index: int, res: int) -> bool:
+        return self.video.start_capture(index, res)
 
-    def stopCapture(self):
-        self.video.stopCapture()
+    def stop_capture(self):
+        self.video.stop_capture()
 
-    def getImage(self) -> str:
-        image = self.video.getImage()
-        print(image)
+    def get_image(self) -> str:
+        image = self.video.get_image()
         return image
 
-    def getVideo(self, with_image) -> bool:
-        return self.video.getVideo(with_image)
+    def get_video(self, with_image) -> bool:
+        return self.video.get_video(with_image)
 
     def enableVideoDebug(self, enable=True) -> bool:
         self.video.debug = enable
 
     def cameraSettings(self, settings):
-        self.video.setCameraSettings(settings)
+        self.video.set_camera_settings(settings)
         return True
 
     def ports(self):

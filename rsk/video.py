@@ -28,6 +28,10 @@ is_windows = os.name == "nt"
 
 
 class Video:
+    """
+    Handles video capture from the camera
+    """
+
     def __init__(self):
         # Limitting the output period
         self.min_period = 1 / 60
@@ -70,7 +74,12 @@ class Video:
         self.video_thread = threading.Thread(target=lambda: self.thread())
         self.video_thread.start()
 
-    def cameras(self):
+    def cameras(self) -> list:
+        """
+        Build a list of available cameras
+
+        :return list: a list containing possible indexes and favourite one (None if no favourite)
+        """
         if self.capture is None:
             indexes = []
             for index in range(10):
@@ -85,12 +94,20 @@ class Video:
         else:
             return [[], None]
 
-    def resolutions(self):
+    def resolutions(self) -> list:
+        """
+        Returns all possible resolutions
+
+        :return list: a list of possible resolutions
+        """
         res = ["%d x %d" % res for res in resolutions]
 
         return [self.resolution, res]
 
-    def saveConfig(self):
+    def save_config(self):
+        """
+        Save the configuration
+        """
         config.config["camera"] = {
             "favourite_index": self.favourite_index,
             "resolution": self.resolution,
@@ -98,7 +115,15 @@ class Video:
         }
         config.save()
 
-    def startCapture(self, index, resolution):
+    def start_capture(self, index: int, resolution: int) -> bool:
+        """
+        Starts video capture
+
+        :param int index: the camera index to use
+        :param int resolution: the resolution index to use
+        :return bool: whether the capture started
+        """
+
         self.capture = cv2.VideoCapture(index)
         w, h = resolutions[resolution]
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, w)
@@ -106,23 +131,32 @@ class Video:
 
         self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
 
-        self.applyCameraSettings()
+        self.apply_camera_settings()
 
         self.favourite_index = index
         self.resolution = resolution
-        self.saveConfig()
+        self.save_config()
 
         time.sleep(0.1)
         return self.image is not None
 
-    def stopCapture(self):
+    def stop_capture(self) -> None:
+        """
+        Stop video capture
+        """
         self.stop_capture = True
 
-    def stop(self):
+    def stop(self) -> None:
+        """
+        Stop execution of threads
+        """
         self.running = False
-        self.stopCapture()
+        self.stop_capture()
 
-    def applyCameraSettings(self):
+    def apply_camera_settings(self) -> None:
+        """
+        Use camera settings to set OpenCV properties on capture stream
+        """
         if self.capture is not None:
             self.capture.set(cv2.CAP_PROP_BRIGHTNESS, self.settings["brightness"])
             self.capture.set(cv2.CAP_PROP_CONTRAST, self.settings["contrast"])
@@ -133,15 +167,22 @@ class Video:
             self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)
             self.capture.set(cv2.CAP_PROP_EXPOSURE, self.settings["exposure"])
 
-    def setCameraSettings(self, settings):
-        self.settings = settings
-        self.saveConfig()
+    def set_camera_settings(self, settings: dict):
+        """
+        Set camera settings, save and apply them
 
-        self.applyCameraSettings()
+        :param dict settings: settings
+        """
+        self.settings = settings
+        self.save_config()
+        self.apply_camera_settings()
 
     def thread(self):
+        """
+        Main video capture thread
+        """
         if self.favourite_index is not None and self.resolution is not None:
-            self.startCapture(self.favourite_index, self.resolution)
+            self.start_capture(self.favourite_index, self.resolution)
 
         while self.running:
             if self.capture is not None:
@@ -200,14 +241,25 @@ class Video:
             else:
                 time.sleep(0.1)
 
-    def getImage(self):
+    def get_image(self) -> str:
+        """
+        Get the current image
+
+        :return str: the image contents (base64 encoded)
+        """
         if self.image is not None:
             data = cv2.imencode(".jpg", self.image)
             return base64.b64encode(data[1]).decode("utf-8")
         else:
             return ""
 
-    def getVideo(self, with_image):
+    def get_video(self, with_image: bool) -> dict:
+        """
+        Get the video status
+
+        :param bool with_image: whether to include the image
+        :return dict: a dictionnary containing current status of video service
+        """
         data = {
             "running": self.capture is not None,
             "fps": round(1 / self.period, 1) if self.period is not None else 0,
@@ -215,6 +267,6 @@ class Video:
         }
 
         if with_image:
-            data["image"] = self.getImage()
+            data["image"] = self.get_image()
 
         return data

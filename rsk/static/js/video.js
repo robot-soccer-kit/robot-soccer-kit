@@ -96,11 +96,11 @@ function video_initialize(backend)
 
     // Starting the video capture
     $('.start-capture').click(function() {
-        backend.startCapture($('.cameras').val(), $('.resolutions').val());
+        backend.start_capture($('.cameras').val(), $('.resolutions').val());
     });
 
     $('.stop-capture').click(function() {
-        backend.stopCapture();
+        backend.stop_capture();
     });
 
     // Retrieving the images
@@ -108,7 +108,7 @@ function video_initialize(backend)
         is_vision = current_tab == 'vision' || 'referee';
         backend.enableVideoDebug(is_vision);
 
-        backend.getVideo(is_vision, function(video) {
+        backend.get_video(is_vision, function(video) {
             if (video.image) {
                 $('.camera-image').attr('src', 'data:image/jpeg;base64,'+video.image);
             }
