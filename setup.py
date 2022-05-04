@@ -14,7 +14,7 @@ def package_files(directory):
 
 setuptools.setup(
     name="robot-soccer-kit",
-    version="1.0.0",
+    version="1.0.1",
     author="Rhoban team",
     author_email="team@rhoban.com",
     description="Robot Soccer Kit",
@@ -31,7 +31,7 @@ setuptools.setup(
     install_requires=[
         "numpy",
         "pyzmq",
-        "yaml"
+        "pyyaml"
     ],
     extras_require={
         'gc': [ # Game controller extra requirements
