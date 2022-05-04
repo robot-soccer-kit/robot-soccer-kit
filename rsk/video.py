@@ -6,30 +6,31 @@ import base64
 import threading
 from . import detection, config
 
-resolutions =[
-    (320,240),
-    (352,288),
-    (640,360),
-    (640,480),
-    (800,600),
-    (800,448),
-    (864,480),
-    (848,480),
-    (960,544),
-    (960,720),
-    (1024,576),
-    (1024,768),
-    (1280,720),
-    (1600,896),
-    (1920,1080),
+resolutions = [
+    (320, 240),
+    (352, 288),
+    (640, 360),
+    (640, 480),
+    (800, 600),
+    (800, 448),
+    (864, 480),
+    (848, 480),
+    (960, 544),
+    (960, 720),
+    (1024, 576),
+    (1024, 768),
+    (1280, 720),
+    (1600, 896),
+    (1920, 1080),
 ]
 
-is_windows = os.name == 'nt'
+is_windows = os.name == "nt"
+
 
 class Video:
     def __init__(self):
         # Limitting the output period
-        self.min_period = 1/60
+        self.min_period = 1 / 60
         # Image retrieve and processing duration
         self.period = None
         # Current capture
@@ -44,25 +45,25 @@ class Video:
         self.detection = detection.Detection()
 
         self.settings = {
-            'brightness': 0,
-            'contrast': 0,
-            'saturation': 100,
-            'gain': 0,
-            'crop_x': 100,
-            'crop_y': 100,
-            'rescale': 100,
-            'exposure': -7 if is_windows else 100
+            "brightness": 0,
+            "contrast": 0,
+            "saturation": 100,
+            "gain": 0,
+            "crop_x": 100,
+            "crop_y": 100,
+            "rescale": 100,
+            "exposure": -7 if is_windows else 100,
         }
         self.favourite_index = None
-        self.resolution = len(resolutions)-1
+        self.resolution = len(resolutions) - 1
 
-        if 'camera' in config.config:
-            if 'favourite_index' in config.config['camera']:
-                self.favourite_index = config.config['camera']['favourite_index']
-            if 'resolution' in config.config['camera']:
-                self.resolution = config.config['camera']['resolution']
-            for entry in config.config['camera']['settings']:
-                self.settings[entry] = config.config['camera']['settings'][entry]
+        if "camera" in config.config:
+            if "favourite_index" in config.config["camera"]:
+                self.favourite_index = config.config["camera"]["favourite_index"]
+            if "resolution" in config.config["camera"]:
+                self.resolution = config.config["camera"]["resolution"]
+            for entry in config.config["camera"]["settings"]:
+                self.settings[entry] = config.config["camera"]["settings"][entry]
 
         # Starting the video processing thread
         self.running = True
@@ -73,7 +74,7 @@ class Video:
         if self.capture is None:
             indexes = []
             for index in range(10):
-                cap = cv2.VideoCapture(index,cv2.CAP_DSHOW if is_windows else None)
+                cap = cv2.VideoCapture(index, cv2.CAP_DSHOW if is_windows else None)
                 if cap.read()[0]:
                     if self.favourite_index is None:
                         self.favourite_index = index
@@ -85,15 +86,15 @@ class Video:
             return [[], None]
 
     def resolutions(self):
-        res = ['%d x %d' % res for res in resolutions]
+        res = ["%d x %d" % res for res in resolutions]
 
         return [self.resolution, res]
 
     def saveConfig(self):
-        config.config['camera'] = {
-            'favourite_index': self.favourite_index,
-            'resolution': self.resolution,
-            'settings': self.settings
+        config.config["camera"] = {
+            "favourite_index": self.favourite_index,
+            "resolution": self.resolution,
+            "settings": self.settings,
         }
         config.save()
 
@@ -103,8 +104,7 @@ class Video:
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, w)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
 
-        self.capture.set(cv2.CAP_PROP_FOURCC,
-                         cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+        self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
 
         self.applyCameraSettings()
 
@@ -124,16 +124,14 @@ class Video:
 
     def applyCameraSettings(self):
         if self.capture is not None:
-            self.capture.set(cv2.CAP_PROP_BRIGHTNESS,
-                             self.settings['brightness'])
-            self.capture.set(cv2.CAP_PROP_CONTRAST, self.settings['contrast'])
-            self.capture.set(cv2.CAP_PROP_SATURATION,
-                             self.settings['saturation'])
-            self.capture.set(cv2.CAP_PROP_GAIN, self.settings['gain'])
+            self.capture.set(cv2.CAP_PROP_BRIGHTNESS, self.settings["brightness"])
+            self.capture.set(cv2.CAP_PROP_CONTRAST, self.settings["contrast"])
+            self.capture.set(cv2.CAP_PROP_SATURATION, self.settings["saturation"])
+            self.capture.set(cv2.CAP_PROP_GAIN, self.settings["gain"])
             self.capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
             self.capture.set(cv2.CAP_PROP_FOCUS, 0)
             self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)
-            self.capture.set(cv2.CAP_PROP_EXPOSURE, self.settings['exposure'])
+            self.capture.set(cv2.CAP_PROP_EXPOSURE, self.settings["exposure"])
 
     def setCameraSettings(self, settings):
         self.settings = settings
@@ -155,19 +153,19 @@ class Video:
                     if image_captured is not None:
                         height, width, channels = image_captured.shape
                         frame_size = np.array([width, height])
-                        if 'crop_x' in self.settings and 'crop_y' in self.settings:
-                            if self.settings['crop_x'] < 100 or self.settings['crop_y'] < 100:
-                                frame_size[0] = round(frame_size[0] * self.settings['crop_x'] / 100.)
-                                frame_size[1] = round(frame_size[1] * self.settings['crop_y'] / 100.)
-                                x_offset = round((width - frame_size[0])/2.)
-                                y_offset = round((height - frame_size[1])/2.)
-                                image_captured = image_captured[y_offset:y_offset+frame_size[1], x_offset:x_offset+frame_size[0]]
+                        if "crop_x" in self.settings and "crop_y" in self.settings:
+                            if self.settings["crop_x"] < 100 or self.settings["crop_y"] < 100:
+                                frame_size[0] = round(frame_size[0] * self.settings["crop_x"] / 100.0)
+                                frame_size[1] = round(frame_size[1] * self.settings["crop_y"] / 100.0)
+                                x_offset = round((width - frame_size[0]) / 2.0)
+                                y_offset = round((height - frame_size[1]) / 2.0)
+                                image_captured = image_captured[
+                                    y_offset : y_offset + frame_size[1], x_offset : x_offset + frame_size[0]
+                                ]
 
-
-                        if 'rescale' in self.settings and self.settings['rescale'] < 100 and self.settings['rescale'] > 0:
-                            new_size = frame_size * self.settings['rescale']/100.
-                            image_captured = cv2.resize(image_captured, (int(
-                                new_size[0]), int(new_size[1])), cv2.INTER_LINEAR)
+                        if "rescale" in self.settings and self.settings["rescale"] < 100 and self.settings["rescale"] > 0:
+                            new_size = frame_size * self.settings["rescale"] / 100.0
+                            image_captured = cv2.resize(image_captured, (int(new_size[0]), int(new_size[1])), cv2.INTER_LINEAR)
 
                         # Process the image
                         if self.debug:
@@ -186,7 +184,7 @@ class Video:
                     if self.period is None:
                         self.period = current_period
                     else:
-                        self.period = self.period*0.9 + current_period*0.1
+                        self.period = self.period * 0.9 + current_period * 0.1
 
                     self.image = image_debug if image_debug is not None else image_captured
 
@@ -197,26 +195,26 @@ class Video:
                         self.capture = None
                         self.image = None
                 except cv2.error as e:
-                    print('OpenCV error')
+                    print("OpenCV error")
                     print(e)
             else:
                 time.sleep(0.1)
 
     def getImage(self):
         if self.image is not None:
-            data = cv2.imencode('.jpg', self.image)
-            return base64.b64encode(data[1]).decode('utf-8')
+            data = cv2.imencode(".jpg", self.image)
+            return base64.b64encode(data[1]).decode("utf-8")
         else:
-            return ''
+            return ""
 
     def getVideo(self, with_image):
         data = {
-            'running': self.capture is not None,
-            'fps': round(1/self.period, 1) if self.period is not None else 0,
-            'detection': self.detection.get_detection(),
+            "running": self.capture is not None,
+            "fps": round(1 / self.period, 1) if self.period is not None else 0,
+            "detection": self.detection.get_detection(),
         }
 
         if with_image:
-            data['image'] = self.getImage()
+            data["image"] = self.getImage()
 
         return data

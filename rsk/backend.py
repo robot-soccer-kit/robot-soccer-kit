@@ -2,24 +2,21 @@ from . import api
 from . import video, robots, control, field, referee, detection, utils, constants
 
 
-class Backend():
+class Backend:
     def __init__(self):
         super().__init__()
 
-        self.video:video.Video = video.Video()
-        self.detection:detection.Detection = self.video.detection
-        self.robots:robots.Robots = robots.Robots(self.detection)
-        self.referee:referee.Referee = referee.Referee(self.robots.control)
+        self.video: video.Video = video.Video()
+        self.detection: detection.Detection = self.video.detection
+        self.robots: robots.Robots = robots.Robots(self.detection)
+        self.referee: referee.Referee = referee.Referee(self.robots.control)
         self.detection.referee = self.referee
 
     def cameras(self):
         return self.video.cameras()
 
     def constants(self) -> dict:
-        return {
-            "team_colors": utils.robot_teams(),
-            "default_penalty" : constants.default_penalty
-        }
+        return {"team_colors": utils.robot_teams(), "default_penalty": constants.default_penalty}
 
     def resolutions(self):
         return self.video.resolutions()
@@ -125,7 +122,7 @@ class Backend():
     def calibrate_camera(self):
         self.detection.calibrate_camera()
 
-    def place_game(self, configuration:str):
+    def place_game(self, configuration: str):
         self.referee.place_game(configuration)
 
     def set_team_name(self, team: str, name: str):
@@ -145,9 +142,9 @@ class Backend():
 
     def cancel_penalty(self, robot) -> str:
         self.referee.cancel_penalty(robot)
-    
+
     def get_game_state(self) -> dict:
         return self.referee.get_game_state()
-    
-    def validate_goal(self, yes_no:bool):
+
+    def validate_goal(self, yes_no: bool):
         self.referee.validate_goal(yes_no)

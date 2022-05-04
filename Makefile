@@ -1,4 +1,7 @@
 
+format:
+	black -l 127 rsk/
+
 all:
 	@rm -rf dist/*
 	python3 setup.py sdist bdist_wheel

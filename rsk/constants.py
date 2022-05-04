@@ -41,7 +41,7 @@ corner_tag_border: float = 0.025  # [m]
 robot_tag_size: float = 0.08  # [m]
 
 # Heights
-robot_height: float = 0.076 # [m]
+robot_height: float = 0.076  # [m]
 ball_height: float = 0.042  # [m]
 
 # Durations

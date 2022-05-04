@@ -43,7 +43,7 @@ class Control:
         Returns a list of the available robots
 
         :return list: list of (str) available robots
-        """        
+        """
         return self.robots.robots_by_marker.keys()
 
     def add_task(self, task: tasks.ControlTask):

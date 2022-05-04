@@ -117,7 +117,7 @@ class Robot:
         # Marker on the top of this robot
         self.marker = None
         # Should leds be re-set
-        self.leds_dirty:bool = False
+        self.leds_dirty: bool = False
 
         # Starting the threads
         self.thread = threading.Thread(target=lambda: self.run_thread())

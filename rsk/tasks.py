@@ -4,7 +4,8 @@ from . import control, client, utils
 class ControlTask:
     """
     A task to be managed by the control
-    """    
+    """
+
     def __init__(self, name: str, priority: int = 0):
         self.name: str = name
         self.priority: int = priority
@@ -20,31 +21,35 @@ class ControlTask:
     def finished(self, client: client.Client, available_robots: list) -> bool:
         return False
 
+
 class SpeedTask:
     """
     Gets the robot rotating
-    """    
-    def __init__(self, name:str, team:str, number:int, dx:float=0, dy:float=0, dturn:float=0, **kwargs):
+    """
+
+    def __init__(self, name: str, team: str, number: int, dx: float = 0, dy: float = 0, dturn: float = 0, **kwargs):
         super().__init__(name, **kwargs)
-        self.team:str = team
-        self.number:int = number
-        self.dx:float = dx
-        self.dy:float = dy
-        self.dturn:float = dturn
+        self.team: str = team
+        self.number: int = number
+        self.dx: float = dx
+        self.dy: float = dy
+        self.dturn: float = dturn
 
     def robots(self):
         return [(self.team, self.number)]
 
-    def tick(self, robot:client.ClientRobot):
+    def tick(self, robot: client.ClientRobot):
         robot.control(self.dx, self.dy, self.dturn)
 
     def finished(self, client: client.Client, available_robots: list) -> bool:
         return False
 
+
 class StopAllTask(ControlTask):
     """
     Stops all robots from moving, can be done once or forever
-    """    
+    """
+
     def __init__(self, name: str, forever=True, **kwargs):
         super().__init__(name, **kwargs)
         self.forever = forever
@@ -62,7 +67,8 @@ class StopAllTask(ControlTask):
 class StopTask(StopAllTask):
     """
     Stops one robot from moving
-    """    
+    """
+
     def __init__(self, name: str, team: str, number: int, **kwargs):
         super().__init__(name, **kwargs)
         self.team: str = team
@@ -75,7 +81,8 @@ class StopTask(StopAllTask):
 class GoToConfigurationTask(ControlTask):
     """
     Send all robots to a given configuration
-    """    
+    """
+
     def __init__(self, name: str, configuration=None, skip_old=True, robots_filter=None, **kwargs):
         super().__init__(name, **kwargs)
         self.targets = {}
@@ -90,14 +97,12 @@ class GoToConfigurationTask(ControlTask):
         return list(self.targets.keys())
 
     def tick(self, robot: client.ClientRobot):
-        robot.goto(
-            self.targets[(robot.team, robot.number)], False, skip_old=self.skip_old
-        )
+        robot.goto(self.targets[(robot.team, robot.number)], False, skip_old=self.skip_old)
 
     def finished(self, client: client.Client, available_robots: list) -> bool:
         for robot in available_robots:
             team, number = utils.robot_str2list(robot)
-            
+
             if (team, number) in self.targets:
                 arrived, _ = client.robots[team][number].goto_compute_order(
                     self.targets[(team, number)], skip_old=self.skip_old
@@ -109,7 +114,7 @@ class GoToConfigurationTask(ControlTask):
         for robot in available_robots:
             if (team, number) in self.targets:
                 team, number = utils.robot_str2list(robot)
-                client.robots[team][number].control(0., 0., 0.)
+                client.robots[team][number].control(0.0, 0.0, 0.0)
 
         return True
 
@@ -117,9 +122,8 @@ class GoToConfigurationTask(ControlTask):
 class GoToTask(GoToConfigurationTask):
     """
     Send one robot to a position
-    """    
-    def __init__(
-        self, name: str, team: str, number: int, target, skip_old=True, **kwargs
-    ):
+    """
+
+    def __init__(self, name: str, team: str, number: int, target, skip_old=True, **kwargs):
         super().__init__(name, **kwargs)
         self.targets[(team, number)] = target
