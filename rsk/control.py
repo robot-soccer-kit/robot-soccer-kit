@@ -313,10 +313,9 @@ class Control:
                 if (
                     (robot not in self.robots_color)
                     or self.robots_color[robot] != color
-                    or self.robots.robots_by_marker[robot_id].leds_dirty
+                    or self.robots.should_restore_leds(robot_id)
                 ):
                     self.client.robots[robot[0]][robot[1]].leds(*utils.robot_leds_color(color))
-                    self.robots.robots_by_marker[robot_id].leds_dirty = False
                 new_robots_color[robot] = color
 
             self.robots_color = new_robots_color
