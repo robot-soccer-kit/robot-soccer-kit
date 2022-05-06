@@ -44,6 +44,19 @@ class Robots:
                 new_robots_by_marker[self.robots[port].marker] = self.robots[port]
         self.robots_by_marker = new_robots_by_marker
 
+    def should_restore_leds(self, robot: str) -> bool:
+        """
+        Checking if a robot should have its LEDs resetted
+
+        :param str robot: robot name
+        :return bool: True if the LEDs should be restored
+        """        
+        if robot in self.robots_by_marker and self.robots_by_marker[robot].leds_dirty:
+            self.robots_by_marker[robot].leds_dirty = False
+            return True
+
+        return False
+
     def identify(self):
         """
         Starts the identification procedure, to detect markers on the top of each robots
