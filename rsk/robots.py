@@ -151,10 +151,11 @@ class Robots:
 
         :param str port: the port name
         """
-        self.robots[port].close()
-        del self.robots[port]
-        self.save_config()
-        self.update()
+        if port in self.robots:
+            self.robots[port].close()
+            del self.robots[port]
+            self.save_config()
+            self.update()
 
     def stop(self):
         """
