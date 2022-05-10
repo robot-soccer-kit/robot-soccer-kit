@@ -16613,6 +16613,22 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <attribute name="VALUE" value="0.33µF"/>
 </part>
 <part name="U$1" library="rhoban" deviceset="L102011ML04Q" device=""/>
+<part name="GND2" library="supply1" deviceset="GND" device=""/>
+<part name="GND3" library="supply1" deviceset="GND" device=""/>
+<part name="GND4" library="supply1" deviceset="GND" device=""/>
+<part name="C18" library="SparkFun-Capacitors" deviceset="0.33UF/330NF" device="-0805-50V-10%" value="1µF">
+<attribute name="FARNELL" value="2688486RL"/>
+</part>
+<part name="C21" library="SparkFun-Capacitors" deviceset="0.33UF/330NF" device="-0805-50V-10%" value="1µF">
+<attribute name="FARNELL" value="2688486RL"/>
+<attribute name="PROD_ID" value="CAP-08469"/>
+<attribute name="VALUE" value="0.33µF"/>
+</part>
+<part name="C22" library="SparkFun-Capacitors" deviceset="0.33UF/330NF" device="-0805-50V-10%" value="1µF">
+<attribute name="FARNELL" value="2688486RL"/>
+<attribute name="PROD_ID" value="CAP-08469"/>
+<attribute name="VALUE" value="0.33µF"/>
+</part>
 </parts>
 <sheets>
 <sheet>
@@ -17564,7 +17580,7 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <sheet>
 <plain>
 <text x="-22.86" y="40.64" size="7.62" layer="97">H BRIDGES</text>
-<frame x1="-38.1" y1="-53.34" x2="63.5" y2="58.42" columns="8" rows="5" layer="95"/>
+<frame x1="-43.18" y1="-76.2" x2="63.5" y2="63.5" columns="8" rows="5" layer="95"/>
 </plain>
 <instances>
 <instance part="U4" gate="G$1" x="2.54" y="17.78">
@@ -17596,6 +17612,18 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </instance>
 <instance part="C3" gate="G$1" x="17.78" y="-30.48">
 <attribute name="FARNELL" x="17.78" y="-30.48" size="1.778" layer="96" display="off"/>
+</instance>
+<instance part="GND2" gate="1" x="-25.4" y="-60.96"/>
+<instance part="GND3" gate="1" x="-2.54" y="-60.96"/>
+<instance part="GND4" gate="1" x="17.78" y="-60.96"/>
+<instance part="C18" gate="G$1" x="-25.4" y="-53.34">
+<attribute name="FARNELL" x="-25.4" y="-53.34" size="1.778" layer="96" display="off"/>
+</instance>
+<instance part="C21" gate="G$1" x="-2.54" y="-53.34">
+<attribute name="FARNELL" x="-2.54" y="-53.34" size="1.778" layer="96" display="off"/>
+</instance>
+<instance part="C22" gate="G$1" x="17.78" y="-53.34">
+<attribute name="FARNELL" x="17.78" y="-53.34" size="1.778" layer="96" display="off"/>
 </instance>
 </instances>
 <busses>
@@ -17646,6 +17674,21 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <pinref part="J5" gate="G$1" pin="5"/>
 <wire x1="45.72" y1="-20.32" x2="43.18" y2="-20.32" width="0.1524" layer="91"/>
 <label x="43.18" y="-20.32" size="1.27" layer="95" rot="R180" xref="yes"/>
+</segment>
+<segment>
+<pinref part="GND2" gate="1" pin="GND"/>
+<wire x1="-25.4" y1="-58.42" x2="-25.4" y2="-55.88" width="0.1524" layer="91"/>
+<pinref part="C18" gate="G$1" pin="2"/>
+</segment>
+<segment>
+<pinref part="GND3" gate="1" pin="GND"/>
+<wire x1="-2.54" y1="-58.42" x2="-2.54" y2="-55.88" width="0.1524" layer="91"/>
+<pinref part="C21" gate="G$1" pin="2"/>
+</segment>
+<segment>
+<pinref part="GND4" gate="1" pin="GND"/>
+<wire x1="17.78" y1="-58.42" x2="17.78" y2="-55.88" width="0.1524" layer="91"/>
+<pinref part="C22" gate="G$1" pin="2"/>
 </segment>
 </net>
 <net name="M1A" class="0">
@@ -17834,6 +17877,21 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <wire x1="17.78" y1="-25.4" x2="17.78" y2="-20.32" width="0.1524" layer="91"/>
 <label x="17.78" y="-20.32" size="1.27" layer="95" xref="yes"/>
 <pinref part="C3" gate="G$1" pin="1"/>
+</segment>
+<segment>
+<wire x1="-25.4" y1="-48.26" x2="-25.4" y2="-43.18" width="0.1524" layer="91"/>
+<label x="-25.4" y="-43.18" size="1.27" layer="95" xref="yes"/>
+<pinref part="C18" gate="G$1" pin="1"/>
+</segment>
+<segment>
+<wire x1="-2.54" y1="-48.26" x2="-2.54" y2="-43.18" width="0.1524" layer="91"/>
+<label x="-2.54" y="-43.18" size="1.27" layer="95" xref="yes"/>
+<pinref part="C21" gate="G$1" pin="1"/>
+</segment>
+<segment>
+<wire x1="17.78" y1="-48.26" x2="17.78" y2="-43.18" width="0.1524" layer="91"/>
+<label x="17.78" y="-43.18" size="1.27" layer="95" xref="yes"/>
+<pinref part="C22" gate="G$1" pin="1"/>
 </segment>
 </net>
 <net name="3.3V" class="0">
