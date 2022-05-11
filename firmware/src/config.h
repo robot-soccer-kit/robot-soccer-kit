@@ -25,7 +25,7 @@
 #define MODEL_WHEEL_RADIUS    0.035
 
 // Distance from robot center to wheel [m]
-#define MODEL_ROBOT_RADIUS    0.0514
+#define MODEL_ROBOT_RADIUS    0.0595
 
 // Maximum wheels speed [rad/s]
 #define MAX_WHEEL_SPEEDS 8
