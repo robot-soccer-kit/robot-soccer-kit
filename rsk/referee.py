@@ -437,16 +437,17 @@ class Referee:
         """
         # Checking the robot respect timed circle and defense area rules
         defender = {}
-        for marker in self.detection_info["markers"]:
+        detection_info = copy.deepcopy(self.detection_info)
+        for marker in detection_info["markers"]:
             team, number = utils.robot_str2list(marker)
-            robot_position = np.array(self.detection_info["markers"][marker]["position"])
+            robot_position = np.array(detection_info["markers"][marker]["position"])
 
             if team in utils.robot_teams():
                 robot = (team, number)
 
                 # Penalizing robots that are staying close to the ball
-                if self.detection_info["ball"] is not None and self.can_be_penalized(marker):
-                    ball_position = np.array(self.detection_info["ball"])
+                if detection_info["ball"] is not None and self.can_be_penalized(marker):
+                    ball_position = np.array(detection_info["ball"])
                     distance = np.linalg.norm(ball_position - robot_position)
 
                     if distance < constants.timed_circle_radius:
