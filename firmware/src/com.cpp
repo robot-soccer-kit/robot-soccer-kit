@@ -6,6 +6,7 @@
 #include "motors.h"
 #include "shell.h"
 #include "voltage.h"
+#include "config.h"
 #include <BluetoothSerial.h>
 
 #define BIN_STREAM_ROBOT 80
@@ -88,9 +89,7 @@ void bin_stream_send(uint8_t c) {
 
 void com_init() {
   // The robot name will be RSK
-  String name = "RSK_";
-  name += String((uint32_t)ESP.getEfuseMac(), HEX);
-  bt.begin(name);
+  bt.begin(ROBOT_NAME);
   shell_init();
 }
 

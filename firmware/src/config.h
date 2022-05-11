@@ -1,5 +1,8 @@
 #pragma once
 
+// Robot's BT name
+#define ROBOT_NAME "RSK_01"
+
 #define KICK_PIN 33
 
 // Wheels gear reduction ratio
