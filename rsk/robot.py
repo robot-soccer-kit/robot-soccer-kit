@@ -31,6 +31,7 @@ class Packet:
         return len(self.payload)
 
     def append_byte(self, char):
+        char = char & 0xff
         if type(char) == int:
             self.payload += bytearray((char,))
         else:
