@@ -446,4 +446,4 @@ class Detection:
         self.socket.send_json(info, flags=zmq.NOBLOCK)
 
         if self.referee is not None:
-            self.referee.detection_info = info
+            self.referee.set_detection_info(info)

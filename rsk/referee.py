@@ -19,7 +19,7 @@ class Referee:
         self.control: control.Control = control
 
         # Info from detection
-        self.detection_info = None
+        self._detection_info = None
 
         # Last actions
         self.referee_history = []
@@ -59,8 +59,19 @@ class Referee:
         self.reset_penalties()
 
         # Starting the Referee thread
+        self.lock = threading.Lock()
         self.referee_thread = threading.Thread(target=lambda: self.thread())
         self.referee_thread.start()
+
+    def set_detection_info(self, info: dict) -> None:
+        """
+        Sets internal detection info
+
+        :param dict info: detection infos
+        """
+        self.lock.acquire()
+        self._detection_info = info
+        self.lock.release()
 
     def get_game_state(self, full: bool = True) -> dict:
         game_state = copy.deepcopy(self.game_state)
@@ -437,17 +448,16 @@ class Referee:
         """
         # Checking the robot respect timed circle and defense area rules
         defender = {}
-        detection_info = copy.deepcopy(self.detection_info)
-        for marker in detection_info["markers"]:
+        for marker in self.detection_info["markers"]:
             team, number = utils.robot_str2list(marker)
-            robot_position = np.array(detection_info["markers"][marker]["position"])
+            robot_position = np.array(self.detection_info["markers"][marker]["position"])
 
             if team in utils.robot_teams():
                 robot = (team, number)
 
                 # Penalizing robots that are staying close to the ball
-                if detection_info["ball"] is not None and self.can_be_penalized(marker):
-                    ball_position = np.array(detection_info["ball"])
+                if self.detection_info["ball"] is not None and self.can_be_penalized(marker):
+                    ball_position = np.array(self.detection_info["ball"])
                     distance = np.linalg.norm(ball_position - robot_position)
 
                     if distance < constants.timed_circle_radius:
@@ -496,6 +506,10 @@ class Referee:
         last_tick = time.time()
 
         while True:
+            self.lock.acquire()
+            self.detection_info = self._detection_info
+            self.lock.release()
+
             elapsed = time.time() - last_tick
             if self.chrono_is_running:
                 self.game_state["timer"] -= elapsed
