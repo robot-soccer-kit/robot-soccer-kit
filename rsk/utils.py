@@ -84,11 +84,11 @@ def robot_leds_color(name: str) -> list:
     :return list: list of [r, g, b] values for this color
     """
     if name == "preempted":
-        return [64, 0, 64]
+        return [50, 0, 50]
     elif name == "blue":
-        return [0, 0, 128]
+        return [0, 0, 50]
     elif name == "green":
-        return [0, 128, 0]
+        return [0, 50, 0]
     else:
         raise NotImplemented(f"Unknown color: {name}")
 
