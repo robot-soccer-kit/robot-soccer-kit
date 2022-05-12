@@ -1,6 +1,7 @@
 import numpy as np
 from serial.tools import list_ports
 import time
+import copy
 import math
 import logging
 from . import config, control, robot, utils, detection
@@ -62,26 +63,32 @@ class Robots:
         Starts the identification procedure, to detect markers on the top of each robots
         """
         for port in self.robots:
+            print(f"Identifying {port}...")
             # Detection before the robot moves
-            before = self.detection.get_detection().copy()
+            before = copy.deepcopy(self.detection.get_detection())['markers']
+            after = copy.deepcopy(before)
 
             # Makes the robot rotating at 50°/s for 1s
             self.set_marker(port, None)
             self.robots[port].beep(200, 100)
             self.robots[port].control(0, 0, math.radians(50))
-            time.sleep(1)
+            for _ in range(100):
+                markers = copy.deepcopy(self.detection.get_detection())['markers']
+                before = {**markers, **before}
+                after = {**after, **markers}
+                time.sleep(.01)
             self.robots[port].control(0, 0, 0)
-            after = self.detection.get_detection().copy()
 
             # We assign the marker to the robot that moved
-            for marker in before["markers"]:
-                if marker in after["markers"]:
-                    a = before["markers"][marker]["orientation"]
-                    b = after["markers"][marker]["orientation"]
-                    delta = np.rad2deg(utils.angle_wrap(b - a))
-                    if delta > 25 and delta < 90:
-                        logging.info(f"Identified port {port} to be {marker}")
-                        self.set_marker(port, marker)
+            for marker in before:
+                a = before[marker]["orientation"]
+                b = after[marker]["orientation"]
+                delta = np.rad2deg(utils.angle_wrap(b - a))
+
+                print(f"marker={marker}, port={port}, delta={delta}")
+                if delta > 25 and delta < 90:
+                    logging.info(f"Identified port {port} to be {marker}")
+                    self.set_marker(port, marker)
 
     def ports(self) -> list:
         """
