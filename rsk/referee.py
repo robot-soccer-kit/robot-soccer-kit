@@ -491,6 +491,7 @@ class Referee:
                     my_defense_area = constants.defense_area(self.positive_team == team)
                     opponent_defense_area = constants.defense_area(self.positive_team != team)
 
+                    # This is penalizing robots for abusive attack (suspended)
                     # if utils.in_rectangle(robot_position, *opponent_defense_area):
                     #     self.add_penalty(constants.default_penalty, marker, "abusive_attack")
 
