@@ -298,8 +298,18 @@ class Referee:
         if self.penalties[robot]["remaining"] is None:
             self.penalties[robot]["remaining"] = float(duration)
             team, number = utils.robot_str2list(robot)
+            task_name = "penalty-" + robot
 
-            task = tasks.StopTask("penalty-" + robot, team, number)
+            if robot in self.detection_info["markers"]:
+                x, y = self.detection_info["markers"][robot]["position"]
+                target = (
+                    x, np.sign(y) * constants.field_width / 2,
+                    self.detection_info["markers"][robot]["orientation"]
+                )
+                task = tasks.GoToTask(task_name, team, number, target, forever=True)
+            else:
+                task = tasks.StopTask(task_name, team, number)
+
             self.control.add_task(task)
         else:
             self.penalties[robot]["remaining"] += float(duration)
@@ -312,7 +322,10 @@ class Referee:
         """
         self.penalties[robot] = {"remaining": None, "reason": None, "grace": constants.grace_time}
 
-        self.control.remove_task("penalty-" + robot)
+        # Replacing the control task with a one-time stop to ensure the robot is not moving
+        team, number = utils.robot_str2list(robot)
+        task = tasks.StopTask("penalty-" + robot, team, number, forever=False)
+        self.control.add_task(task)
 
     def tick_penalties(self, elapsed: float):
         """
@@ -478,8 +491,8 @@ class Referee:
                     my_defense_area = constants.defense_area(self.positive_team == team)
                     opponent_defense_area = constants.defense_area(self.positive_team != team)
 
-                    if utils.in_rectangle(robot_position, *opponent_defense_area):
-                        self.add_penalty(constants.default_penalty, marker, "abusive_attack")
+                    # if utils.in_rectangle(robot_position, *opponent_defense_area):
+                    #     self.add_penalty(constants.default_penalty, marker, "abusive_attack")
 
                     if utils.in_rectangle(robot_position, *my_defense_area):
                         if team in defender:
