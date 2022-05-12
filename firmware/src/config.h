@@ -33,7 +33,7 @@
 // Maximum wheels speed [rad/s]
 #define MAX_WHEEL_SPEEDS 8
 
-// Motors wiring (PWM for the two directions and A/B encoders)
+// Motors wiring pins (PWM for the two directions and A/B encoders)
 #define MOTOR1_PWM1    13
 #define MOTOR1_PWM2    14
 #define MOTOR1_ENC1    4
@@ -49,13 +49,13 @@
 #define MOTOR3_ENC1    25
 #define MOTOR3_ENC2    26
 
-// LEDs (6 RGB addressable WS2812 LEDs)
+// LEDs pin (6 RGB addressable WS2812 LEDs)
 #define LEDS  27
 
-// Buzzer
+// Buzzer pin
 #define BUZZER 32
 
-// Input voltage sampling
+// Input voltage sampling pin
 #define VOLTAGE 34
 
 // Voltage divider resistors (Kohms)
