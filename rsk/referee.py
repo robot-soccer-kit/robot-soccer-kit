@@ -171,6 +171,9 @@ class Referee:
         self.control.remove_task("game-start")
         self.control.remove_task("half-time")
 
+        # Ensuring all robots are stopped
+        self.control.add_task(tasks.StopAllTask("stop-all", forever=False))
+
     def stop_game(self):
         """
         Stop the game (end)
