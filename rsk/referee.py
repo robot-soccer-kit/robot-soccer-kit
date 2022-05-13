@@ -302,6 +302,7 @@ class Referee:
             self.penalties[robot]["remaining"] = float(duration)
             team, number = utils.robot_str2list(robot)
             task_name = "penalty-" + robot
+            self.logger.info(f"Adding penalty for robot {robot}, reason: {reason}")
 
             if robot in self.detection_info["markers"]:
                 x, y = self.detection_info["markers"][robot]["position"]
