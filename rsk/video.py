@@ -170,7 +170,7 @@ class Video:
 
             if self.resolution is not None:
                 w, h = resolutions[self.resolution]
-                self.detection.field.focale = self.settings["focale"] * (w / 1920) * (self.settings["rescale"] / 100.0)
+                self.detection.field.focale = self.settings["focale"] * (h / 1080) * (self.settings["rescale"] / 100.0)
 
     def set_camera_settings(self, settings: dict):
         """
