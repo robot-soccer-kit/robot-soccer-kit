@@ -63,7 +63,7 @@ class Robots:
         Starts the identification procedure, to detect markers on the top of each robots
         """
         for port in self.robots:
-            print(f"Identifying {port}...")
+            self.logger.info(f"Identifying {port}...")
             # Detection before the robot moves
             before = copy.deepcopy(self.detection.get_detection())['markers']
             after = copy.deepcopy(before)
@@ -85,7 +85,7 @@ class Robots:
                 b = after[marker]["orientation"]
                 delta = np.rad2deg(utils.angle_wrap(b - a))
 
-                print(f"marker={marker}, port={port}, delta={delta}")
+                self.logger.info(f"marker={marker}, port={port}, delta={delta}")
                 if delta > 25 and delta < 90:
                     logging.info(f"Identified port {port} to be {marker}")
                     self.set_marker(port, marker)
