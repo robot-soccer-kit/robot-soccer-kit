@@ -16,7 +16,7 @@ class Field:
 
     def __init__(self):
         self.logger: logging.Logger = logging.getLogger("field")
-        self.focale = None
+        self.focal = None
 
         # Should we (re-)calibrate the field ?
         self.should_calibrate: bool = True
@@ -109,7 +109,7 @@ class Field:
 
         :param image: the (OpenCV) image used for calibration
         """
-        if len(self.corner_gfx_positions) >= 4 and self.should_calibrate and self.focale is not None:
+        if len(self.corner_gfx_positions) >= 4 and self.should_calibrate and self.focal is not None:
             # Computing point-to-point correspondance
             object_points = []
             graphics_positions = []
@@ -124,8 +124,8 @@ class Field:
 
             # Intrinsic parameters are fixed
             intrinsic = [
-                [self.focale, 0, image.shape[1]/2],
-                [0, self.focale, image.shape[0]/2],
+                [self.focal, 0, image.shape[1]/2],
+                [0, self.focal, image.shape[0]/2],
                 [0, 0, 1],
             ]
 

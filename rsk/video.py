@@ -57,7 +57,7 @@ class Video:
             "crop_y": 100,
             "rescale": 100,
             "exposure": -7 if is_windows else 100,
-            "focale": 885,
+            "focal": 885,
         }
         self.favourite_index = None
         self.resolution = len(resolutions) - 1
@@ -170,7 +170,7 @@ class Video:
 
             if self.resolution is not None:
                 w, h = resolutions[self.resolution]
-                self.detection.field.focale = self.settings["focale"] * (h / 1080) * (self.settings["rescale"] / 100.0)
+                self.detection.field.focal = self.settings["focal"] * (h / 1080) * (self.settings["rescale"] / 100.0)
 
     def set_camera_settings(self, settings: dict):
         """
