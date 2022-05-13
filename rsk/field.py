@@ -16,6 +16,7 @@ class Field:
 
     def __init__(self):
         self.logger: logging.Logger = logging.getLogger("field")
+        self.focale = None
 
         # Should we (re-)calibrate the field ?
         self.should_calibrate: bool = True
@@ -108,7 +109,7 @@ class Field:
 
         :param image: the (OpenCV) image used for calibration
         """
-        if len(self.corner_gfx_positions) >= 4 and self.should_calibrate:
+        if len(self.corner_gfx_positions) >= 4 and self.should_calibrate and self.focale is not None:
             # Computing point-to-point correspondance
             object_points = []
             graphics_positions = []
@@ -121,13 +122,25 @@ class Field:
             object_points = np.array(object_points, dtype=np.float32)
             graphics_positions = np.array(graphics_positions, dtype=np.float32)
 
+            # Intrinsic parameters are fixed
+            intrinsic = [
+                [self.focale, 0, image.shape[1]/2],
+                [0, self.focale, image.shape[0]/2],
+                [0, 0, 1],
+            ]
+
             # Calibrating camera
-            flags = cv2.CALIB_FIX_ASPECT_RATIO + cv2.CALIB_ZERO_TANGENT_DIST
+            flags = cv2.CALIB_USE_INTRINSIC_GUESS + cv2.CALIB_FIX_FOCAL_LENGTH + cv2.CALIB_FIX_PRINCIPAL_POINT
+            
+            # No distortion
+            flags += cv2.CALIB_FIX_TANGENT_DIST
+            flags += cv2.CALIB_FIX_K1 + cv2.CALIB_FIX_K2 + cv2.CALIB_FIX_K3 + cv2.CALIB_FIX_K4 + cv2.CALIB_FIX_K5
+
             ret, self.intrinsic, self.distortion, rvecs, tvecs = cv2.calibrateCamera(
                 [object_points],
                 [graphics_positions],
                 image.shape[:2][::-1],
-                None,
+                np.array(intrinsic, dtype=np.float32),
                 None,
                 flags=flags,
             )
@@ -136,6 +149,7 @@ class Field:
             transformation = np.eye(4)
             transformation[:3, :3], _ = cv2.Rodrigues(rvecs[0])
             transformation[:3, 3] = tvecs[0].T
+            # transformation[:3, 3] = [0, 0, 2]
             self.extrinsic = transformation
             self.extrinsic_inv = np.linalg.inv(self.extrinsic)
 

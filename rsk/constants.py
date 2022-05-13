@@ -42,7 +42,7 @@ robot_tag_size: float = 0.08  # [m]
 
 # Heights
 robot_height: float = 0.076  # [m]
-ball_height: float = 0.042  # [m]
+ball_height: float = 0.021  # [m]
 
 # Durations
 game_duration: float = 300.0  # [s]

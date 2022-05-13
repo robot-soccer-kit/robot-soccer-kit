@@ -57,6 +57,7 @@ class Video:
             "crop_y": 100,
             "rescale": 100,
             "exposure": -7 if is_windows else 100,
+            "focale": 885,
         }
         self.favourite_index = None
         self.resolution = len(resolutions) - 1
@@ -131,10 +132,10 @@ class Video:
 
         self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
 
-        self.apply_camera_settings()
-
         self.favourite_index = index
         self.resolution = resolution
+
+        self.apply_camera_settings()
         self.save_config()
 
         time.sleep(0.1)
@@ -166,6 +167,10 @@ class Video:
             self.capture.set(cv2.CAP_PROP_FOCUS, 0)
             self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)
             self.capture.set(cv2.CAP_PROP_EXPOSURE, self.settings["exposure"])
+
+            if self.resolution is not None:
+                w, h = resolutions[self.resolution]
+                self.detection.field.focale = self.settings["focale"] * (w / 1920) * (self.settings["rescale"] / 100.0)
 
     def set_camera_settings(self, settings: dict):
         """
