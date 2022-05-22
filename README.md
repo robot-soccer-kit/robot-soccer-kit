@@ -1,6 +1,6 @@
 # Robot Soccer Kit
 
-![Robots](/docs/imgs/cover.jpg)
+![Robots](/docs/imgs/cover-2022.jpg)
 
 ## Presentation
 
