@@ -16574,7 +16574,7 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <part name="Q7" library="rhoban" deviceset="IRLMS2002TRPBF" device="">
 <attribute name="FARNELL" value="2577180RL"/>
 </part>
-<part name="R18" library="SparkFun-Resistors" deviceset="0.3OHM" device="-0805-1/8W-1%" value="56K">
+<part name="R18" library="SparkFun-Resistors" deviceset="0.3OHM" device="-0805-1/8W-1%" value="68K">
 <attribute name="FARNELL" value="2074486"/>
 <attribute name="PROD_ID" value="RES-11622"/>
 <attribute name="VALUE" value="0.3"/>
