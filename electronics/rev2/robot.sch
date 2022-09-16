@@ -17562,7 +17562,7 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </sheet>
 <sheet>
 <plain>
-<text x="-22.86" y="40.64" size="7.62" layer="97">H BRIDGES</text>
+<text x="-33.02" y="43.18" size="7.62" layer="97">H BRIDGES</text>
 <frame x1="-96.52" y1="-55.88" x2="71.12" y2="63.5" columns="8" rows="5" layer="95"/>
 </plain>
 <instances>
@@ -17960,6 +17960,7 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <sheet>
 <plain>
 <frame x1="-86.36" y1="-50.8" x2="129.54" y2="43.18" columns="8" rows="5" layer="95"/>
+<text x="-27.94" y="25.4" size="7.62" layer="97">BOOSTER (KICKER)</text>
 </plain>
 <instances>
 <instance part="U7" gate="G$1" x="-27.94" y="-7.62">
