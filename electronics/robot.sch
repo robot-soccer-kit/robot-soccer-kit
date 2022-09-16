@@ -16607,6 +16607,11 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <attribute name="PROD_ID" value="CAP-08469"/>
 <attribute name="VALUE" value="0.33µF"/>
 </part>
+<part name="R22" library="SparkFun-Resistors" deviceset="0.3OHM" device="-0805-1/8W-1%" value="5K">
+<attribute name="FARNELL" value="2446926"/>
+<attribute name="PROD_ID" value="RES-11622"/>
+<attribute name="VALUE" value="0.3"/>
+</part>
 </parts>
 <sheets>
 <sheet>
@@ -17600,6 +17605,9 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <instance part="C22" gate="G$1" x="-76.2" y="-27.94">
 <attribute name="FARNELL" x="-76.2" y="-27.94" size="1.778" layer="96" display="off"/>
 </instance>
+<instance part="R22" gate="G$1" x="-63.5" y="48.26">
+<attribute name="FARNELL" x="-63.5" y="48.26" size="1.778" layer="96" display="off"/>
+</instance>
 </instances>
 <busses>
 </busses>
@@ -17687,12 +17695,22 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <wire x1="-33.02" y1="22.86" x2="-38.1" y2="22.86" width="0.1524" layer="91"/>
 <label x="-38.1" y="22.86" size="1.27" layer="95" rot="R180" xref="yes"/>
 </segment>
+<segment>
+<pinref part="R22" gate="G$1" pin="1"/>
+<wire x1="-68.58" y1="48.26" x2="-73.66" y2="48.26" width="0.1524" layer="91"/>
+<label x="-73.66" y="48.26" size="1.27" layer="95" rot="R180" xref="yes"/>
+</segment>
 </net>
 <net name="M1B" class="0">
 <segment>
 <pinref part="U$7" gate="G$1" pin="IN2"/>
 <wire x1="-33.02" y1="27.94" x2="-38.1" y2="27.94" width="0.1524" layer="91"/>
 <label x="-38.1" y="27.94" size="1.27" layer="95" rot="R180" xref="yes"/>
+</segment>
+<segment>
+<pinref part="R22" gate="G$1" pin="2"/>
+<wire x1="-58.42" y1="48.26" x2="-53.34" y2="48.26" width="0.1524" layer="91"/>
+<label x="-53.34" y="48.26" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
 <net name="M2P2" class="1">
