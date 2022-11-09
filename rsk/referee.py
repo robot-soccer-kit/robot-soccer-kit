@@ -56,6 +56,13 @@ class Referee:
 
         # Robots Penalties
         self.penalties = {}
+        self.penalties_poses = {
+            i: [None, 
+                 (  
+                    np.sign(int(i/2)-1)*(constants.field_length/2), 
+                    np.sign(i%2-0.5)*(constants.field_width/2),
+                    )]
+            for i in range(6)}
         self.reset_penalties()
 
         # Starting the Referee thread
@@ -307,10 +314,12 @@ class Referee:
 
             if robot in self.detection_info["markers"]:
                 x, y = self.detection_info["markers"][robot]["position"]
-                target = (
-                    x, np.sign(y) * constants.field_width / 2,
-                    self.detection_info["markers"][robot]["orientation"]
-                )
+
+                dist = [math.dist((x, y),self.penalties_poses[key][1]) if self.penalties_poses[key][0] == None else math.inf for key in self.penalties_poses ]
+                penaltlies_place = dist.index(min(dist))
+                target = [*self.penalties_poses[penaltlies_place][1],self.detection_info["markers"][robot]["orientation"]]
+                self.penalties_poses[penaltlies_place][0] = robot
+
                 task = tasks.GoToTask(task_name, team, number, target, forever=True)
             else:
                 task = tasks.StopTask(task_name, team, number)
@@ -326,6 +335,9 @@ class Referee:
         :param str robot: the robot
         """
         self.penalties[robot] = {"remaining": None, "reason": None, "grace": constants.grace_time}
+        key = [key for key in self.penalties_poses if self.penalties_poses[key][0] == robot]
+        if key != []:
+            self.penalties_poses[key[0]][0] = None
 
         # Replacing the control task with a one-time stop to ensure the robot is not moving
         team, number = utils.robot_str2list(robot)
