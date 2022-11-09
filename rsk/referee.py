@@ -241,6 +241,7 @@ class Referee:
                 configuration = "game_blue_positive"
             else:
                 configuration = "game_green_positive"
+            self.reset_penalties()
 
         elif configuration == "swap_covers":
             if self.game_state["teams"][utils.robot_teams()[1]]["x_positive"]:
