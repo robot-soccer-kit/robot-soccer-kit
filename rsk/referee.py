@@ -56,7 +56,7 @@ class Referee:
 
         # Robots Penalties
         self.penalties = {}
-        self.penalties_poses = {
+        self.penalty_spot = {
             i: [None, 
                  (  
                     np.sign(int(i/2)-1)*(constants.field_length/2), 
@@ -315,10 +315,15 @@ class Referee:
             if robot in self.detection_info["markers"]:
                 x, y = self.detection_info["markers"][robot]["position"]
 
-                dist = [math.dist((x, y),self.penalties_poses[key][1]) if self.penalties_poses[key][0] == None else math.inf for key in self.penalties_poses ]
-                penaltlies_place = dist.index(min(dist))
-                target = [*self.penalties_poses[penaltlies_place][1],self.detection_info["markers"][robot]["orientation"]]
-                self.penalties_poses[penaltlies_place][0] = robot
+                # Find the nearest free penalty spot
+                euclidean_distance = [math.dist((x, y),self.penalty_spot[key][1]) 
+                                        if self.penalty_spot[key][0] == None or time.time()-self.penalty_spot[key][0] > 1 
+                                        else math.inf 
+                                     for key in self.penalty_spot]
+                free_penaltly_spot = euclidean_distance.index(min(euclidean_distance))
+
+                target = [*self.penalty_spot[free_penaltly_spot][1], self.detection_info["markers"][robot]["orientation"]]
+                self.penalty_spot[free_penaltly_spot][0] = robot
 
                 task = tasks.GoToTask(task_name, team, number, target, forever=True)
             else:
@@ -335,9 +340,10 @@ class Referee:
         :param str robot: the robot
         """
         self.penalties[robot] = {"remaining": None, "reason": None, "grace": constants.grace_time}
-        key = [key for key in self.penalties_poses if self.penalties_poses[key][0] == robot]
+
+        key = [key for key in self.penalty_spot if self.penalty_spot[key][0] == robot]
         if key != []:
-            self.penalties_poses[key[0]][0] = None
+            self.penalty_spot[key[0]][0] = time.time()
 
         # Replacing the control task with a one-time stop to ensure the robot is not moving
         team, number = utils.robot_str2list(robot)
