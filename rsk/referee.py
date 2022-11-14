@@ -307,10 +307,7 @@ class Referee:
 
             if robot in self.detection_info["markers"]:
                 x, y = self.detection_info["markers"][robot]["position"]
-                target = (
-                    x, np.sign(y) * constants.field_width / 2,
-                    self.detection_info["markers"][robot]["orientation"]
-                )
+                target = (x, np.sign(y) * constants.field_width / 2, self.detection_info["markers"][robot]["orientation"])
                 task = tasks.GoToTask(task_name, team, number, target, forever=True)
             else:
                 task = tasks.StopTask(task_name, team, number)

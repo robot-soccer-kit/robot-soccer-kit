@@ -124,14 +124,14 @@ class Field:
 
             # Intrinsic parameters are fixed
             intrinsic = [
-                [self.focal, 0, image.shape[1]/2],
-                [0, self.focal, image.shape[0]/2],
+                [self.focal, 0, image.shape[1] / 2],
+                [0, self.focal, image.shape[0] / 2],
                 [0, 0, 1],
             ]
 
             # Calibrating camera
             flags = cv2.CALIB_USE_INTRINSIC_GUESS + cv2.CALIB_FIX_FOCAL_LENGTH + cv2.CALIB_FIX_PRINCIPAL_POINT
-            
+
             # No distortion
             flags += cv2.CALIB_FIX_TANGENT_DIST
             flags += cv2.CALIB_FIX_K1 + cv2.CALIB_FIX_K2 + cv2.CALIB_FIX_K3 + cv2.CALIB_FIX_K4 + cv2.CALIB_FIX_K5
