@@ -1,6 +1,5 @@
 function video_initialize(backend)
 {
-    
     function updateCameras() {
         backend.cameras(function(data) {
             indexes = data[0]
@@ -34,40 +33,39 @@ function video_initialize(backend)
     $('.refresh-cameras').click(updateCameras);
 
     function get_display_settings() {
-        backend.get_display_settings(function(display_settings_bool) {
-            $('#aruco').prop('checked', display_settings_bool[0]);
-            $('#goals').prop('checked', display_settings_bool[1]);
-            $('#ball').prop('checked', display_settings_bool[2]);
-            $('#timed_circle').prop('checked', display_settings_bool[3]);
-            $('#sideline').prop('checked', display_settings_bool[4]);
-            $('#landmark').prop('checked', display_settings_bool[5]);
+        backend.get_display_settings(false, function(display_settings) {
+            console.log(display_settings)
+
+            let html = ''
+            for (setting_name in display_settings) {
+                let setting = display_settings[setting_name]
+                let checked = setting["value"] ? 'checked="checked"' : ''
+
+                html += '<div class="form-check form-switch">'
+                html += '    <input class="form-check-input display-setting" type="checkbox" '
+                html += 'role="switch" rel="'+setting_name+'" '+checked+'>'
+                html += '    <label class="form-check-label" for="flexSwitchCheckDefault">'
+                html += '    '+setting['label']
+                html += '    </label>'
+                html += '</div>'
+            }
+            $('.display-settings').html(html)
+
+            $('.display-setting').click(function() {
+                backend.set_display_setting($(this).attr('rel'), $(this).is(':checked'));
+            });
         });
     }
-
-    $('#apply-settings').click(function() {
-        let aruco = $('#aruco:checked').val();
-        let goals = $('#goals:checked').val();
-        let ball = $('#ball:checked').val();
-        let timed_circle = $('#timed_circle:checked').val();
-        let sideline = $('#sideline:checked').val();
-        let landmark = $('#landmark:checked').val();
-        display_settings = [aruco,goals,ball, timed_circle, sideline, landmark]
-        backend.set_display_settings(display_settings)
-        backend.save_display_settings()
-    });
 
     $('.display-python-settings').click(function() {
         get_display_settings()
     });
 
     $('#default-settings').click(function() {
-        backend.get_default_display_settings(function(display_settings_bool) {
-            $('#aruco').prop('checked', display_settings_bool[0]);
-            $('#goals').prop('checked', display_settings_bool[1]);
-            $('#ball').prop('checked', display_settings_bool[2]);
-            $('#timed_circle').prop('checked', display_settings_bool[3]);
-            $('#sideline').prop('checked', display_settings_bool[4]);
-            $('#landmark').prop('checked', display_settings_bool[5]);
+        backend.get_display_settings(true, function(display_settings) {
+            for (setting_name in display_settings) {
+                $('.display-setting[rel="'+setting_name+'"]').prop('checked', display_settings[setting_name]["default"])
+            }
         });
     });
 

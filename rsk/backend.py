@@ -34,7 +34,7 @@ class Backend:
         image = self.video.get_image()
         return image
 
-    def get_video(self, with_image) -> bool:
+    def get_video(self, with_image: bool) -> dict:
         return self.video.get_video(with_image)
 
     def enableVideoDebug(self, enable=True) -> bool:
@@ -94,17 +94,11 @@ class Backend:
     def reset_score(self):
         self.referee.reset_score()
 
-    def set_display_settings(self, display_settings: list):
-        self.detection.set_display_settings(display_settings)
+    def set_display_setting(self, entry: str, value: bool):
+        self.detection.set_display_setting(entry, value)
 
-    def save_display_settings(self):
-        self.detection.save_display_settings()
-
-    def get_display_settings(self) -> list:
-        return self.detection.get_display_settings()
-
-    def get_default_display_settings(self) -> list:
-        return self.detection.get_default_display_settings()
+    def get_display_settings(self, reset: bool = False) -> list:
+        return self.detection.get_display_settings(reset)
 
     def start_game(self):
         self.referee.start_game()
