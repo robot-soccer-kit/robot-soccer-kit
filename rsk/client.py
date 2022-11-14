@@ -147,6 +147,7 @@ class ClientRobot(ClientTracked):
 
 class Client:
     def __init__(self, host="127.0.0.1", key="", wait_ready=True):
+        self.raise_exceptions = False
         self.running = True
         self.key = key
         self.lock = threading.Lock()
@@ -278,7 +279,10 @@ class Client:
         time.sleep(0.01)
 
         if not success:
-            raise ClientError('Command "' + name + '" failed: ' + message)
+            if "Bad key" in message or self.raise_exceptions:
+                raise ClientError('Command "' + name + '" failed: ' + message)
+            else:
+                print(f"Command " " + {name} + " " failed: ' + {message}")
 
     def goto_configuration(self, configuration_name="side", wait=False):
         targets = configurations[configuration_name]
