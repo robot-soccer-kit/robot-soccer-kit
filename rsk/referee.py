@@ -57,12 +57,17 @@ class Referee:
         # Robots Penalties
         self.penalties = {}
         self.penalty_spot = {
-            i: [None, 
-                 (  
-                    np.sign(int(i/2)-1)*(constants.field_length/2), 
-                    np.sign(i%2-0.5)*(constants.field_width/2),
-                    )]
-            for i in range(6)}
+            i: [None, (x, side * constants.field_width / 2, side * np.pi / 2)]
+            for (i, (x, side)) in enumerate(
+                [
+                    (x, side)
+                    for x in np.linspace(
+                        -constants.field_width / 2, constants.field_width / 2, constants.penalty_spots // 2 + 2
+                    )[1:-1]
+                    for side in (-1, 1)
+                ],
+            )
+        }
         self.reset_penalties()
 
         # Starting the Referee thread
@@ -316,14 +321,19 @@ class Referee:
                 x, y = self.detection_info["markers"][robot]["position"]
 
                 # Find the nearest free penalty spot
-                euclidean_distance = [math.dist((x, y),self.penalty_spot[key][1]) 
-                                        if self.penalty_spot[key][0] == None or time.time()-self.penalty_spot[key][0] > 1 
-                                        else math.inf 
-                                     for key in self.penalty_spot]
+                euclidean_distance = [
+                    math.dist((x, y), self.penalty_spot[key][1][:2])
+                    if type(self.penalty_spot[key][0]) != type(robot)
+                    and (self.penalty_spot[key][0] == None or time.time() - self.penalty_spot[key][0] > 3)
+                    else math.inf
+                    for key in self.penalty_spot
+                ]
                 free_penaltly_spot = euclidean_distance.index(min(euclidean_distance))
 
-                target = [*self.penalty_spot[free_penaltly_spot][1], self.detection_info["markers"][robot]["orientation"]]
+                target = self.penalty_spot[free_penaltly_spot][1]
                 self.penalty_spot[free_penaltly_spot][0] = robot
+
+                self.logger.info(f"----  Penalty Spot : {free_penaltly_spot}")
 
                 task = tasks.GoToTask(task_name, team, number, target, forever=True)
             else:

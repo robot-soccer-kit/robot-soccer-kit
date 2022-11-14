@@ -50,6 +50,9 @@ halftime_duration: float = 120.0  # [s]
 default_penalty: float = 5.0  # [s]
 grace_time: float = 3.0  # [s]
 
+# Number of penalty spots
+penalty_spots: int = 10
+
 # Parameters
 referee_history_size: int = 3
 
