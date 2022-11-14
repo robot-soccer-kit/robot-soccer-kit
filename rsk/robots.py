@@ -51,7 +51,7 @@ class Robots:
 
         :param str robot: robot name
         :return bool: True if the LEDs should be restored
-        """        
+        """
         if robot in self.robots_by_marker and self.robots_by_marker[robot].leds_dirty:
             self.robots_by_marker[robot].leds_dirty = False
             return True
@@ -65,7 +65,7 @@ class Robots:
         for port in self.robots:
             self.logger.info(f"Identifying {port}...")
             # Detection before the robot moves
-            before = copy.deepcopy(self.detection.get_detection())['markers']
+            before = copy.deepcopy(self.detection.get_detection())["markers"]
             after = copy.deepcopy(before)
 
             # Makes the robot rotating at 50°/s for 1s
@@ -73,10 +73,10 @@ class Robots:
             self.robots[port].beep(200, 100)
             self.robots[port].control(0, 0, math.radians(50))
             for _ in range(100):
-                markers = copy.deepcopy(self.detection.get_detection())['markers']
+                markers = copy.deepcopy(self.detection.get_detection())["markers"]
                 before = {**markers, **before}
                 after = {**after, **markers}
-                time.sleep(.01)
+                time.sleep(0.01)
             self.robots[port].control(0, 0, 0)
 
             # We assign the marker to the robot that moved

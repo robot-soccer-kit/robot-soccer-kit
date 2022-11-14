@@ -30,17 +30,19 @@ class Detection:
         self.canceled_goal_side = None
 
         self.displaySettings = {
-            "aruco": True,
-            "goals": True,
-            "ball": True,
-            "timed_circle": False,
-            "sideline": False,
-            "landmark": True,
+            "aruco": {"label": "ArUco Markers", "default": True},
+            "ball": {"label": "Ball", "default": True},
+            "goals": {"label": "Goals", "default": True},
+            "landmark": {"label": "Center Landmark", "default": True},
+            "sideline": {"label": "Sideline Delimitations", "default": False},
+            "timed_circle": {"label": "Timed Circle", "default": False},
         }
+
+        self.reset_display_settings()
 
         if "display_settings" in config.config:
             for entry in config.config["display_settings"]:
-                self.displaySettings[entry] = config.config["display_settings"][entry]
+                self.displaySettings[entry]["value"] = config.config["display_settings"][entry]
 
         self.arucoItems = {
             # Corners
@@ -76,43 +78,25 @@ class Detection:
         self.no_ball = 0
         self.field = Field()
 
-    def set_display_settings(self, display_settings: list) -> list:
-        display_settings_bool = []
-        for i in range(len(display_settings)):
-            if display_settings[i] == "on":
-                display_settings_bool.append(True)
-            else:
-                display_settings_bool.append(False)
-        self.displaySettings["aruco"] = display_settings_bool[0]
-        self.displaySettings["goals"] = display_settings_bool[1]
-        self.displaySettings["ball"] = display_settings_bool[2]
-        self.displaySettings["timed_circle"] = display_settings_bool[3]
-        self.displaySettings["sideline"] = display_settings_bool[4]
-        self.displaySettings["landmark"] = display_settings_bool[5]
+    def should_display(self, entry: list) -> bool:
+        return self.displaySettings[entry]["value"]
 
-    def get_display_settings(self):
-        display_settings_bool = []
-        display_settings_bool.append(self.displaySettings["aruco"])
-        display_settings_bool.append(self.displaySettings["goals"])
-        display_settings_bool.append(self.displaySettings["ball"])
-        display_settings_bool.append(self.displaySettings["timed_circle"])
-        display_settings_bool.append(self.displaySettings["sideline"])
-        display_settings_bool.append(self.displaySettings["landmark"])
-        return display_settings_bool
+    def set_display_setting(self, entry: str, value: bool):
+        self.displaySettings[entry]["value"] = value
+        self.save_display_settings()
 
-    def get_default_display_settings(self):
-        display_settings_bool = [True, True, True, False, False, True]
-        return display_settings_bool
+    def reset_display_settings(self):
+        for entry in self.displaySettings:
+            self.displaySettings[entry]["value"] = self.displaySettings[entry]["default"]
+
+    def get_display_settings(self, reset=False):
+        if reset:
+            self.reset_display_settings()
+            self.save_display_settings()
+        return self.displaySettings
 
     def save_display_settings(self):
-        config.config["display_settings"] = {
-            "aruco": self.displaySettings["aruco"],
-            "goals": self.displaySettings["goals"],
-            "ball": self.displaySettings["ball"],
-            "timed_circle": self.displaySettings["timed_circle"],
-            "sideline": self.displaySettings["sideline"],
-            "landmark": self.displaySettings["landmark"],
-        }
+        config.config["display_settings"] = {key: self.displaySettings[key]["value"] for key in self.displaySettings}
         config.save()
 
     def calibrate_camera(self):
@@ -170,7 +154,7 @@ class Detection:
         the real images
         """
         if self.field.calibrated() and (image_debug is not None) and (self.referee is not None):
-            if self.displaySettings["sideline"]:
+            if self.should_display("sideline"):
                 [
                     field_UpRight,
                     field_DownRight,
@@ -201,7 +185,7 @@ class Detection:
                 cv2.line(image_debug, C, D, (0, 0, 255), 1)
                 cv2.line(image_debug, D, A, (0, 0, 255), 1)
 
-            if self.displaySettings["goals"]:
+            if self.should_display("goals"):
                 for sign, color in [
                     (-1, self.team_colors[self.referee.negative_team]),
                     (1, self.team_colors[self.referee.positive_team]),
@@ -252,7 +236,7 @@ class Detection:
                         )
                         cv2.line(image_debug, A, B, color, 3)
 
-            if self.displaySettings["landmark"]:
+            if self.should_display("landmark"):
                 A = self.field.position_to_pixel([0, 0])
                 B = self.field.position_to_pixel([0.2, 0])
                 cv2.line(image_debug, A, B, (0, 0, 255), 1)
@@ -263,7 +247,7 @@ class Detection:
                 B = self.field.position_to_pixel([0, 0, 0.2])
                 cv2.line(image_debug, A, B, (255, 0, 0), 1)
 
-            if self.displaySettings["timed_circle"] and self.ball is not None:
+            if self.should_display("timed_circle") and self.ball is not None:
                 self.draw_circle(
                     image_debug,
                     self.ball,
@@ -310,7 +294,7 @@ class Detection:
                     bottomLeft = (int(bottomLeft[0]), int(bottomLeft[1]))
                     topLeft = (int(topLeft[0]), int(topLeft[1]))
                     itemColor = self.arucoItems[markerID][1]
-                    if self.displaySettings["aruco"]:
+                    if self.should_display("aruco"):
                         cv2.line(image_debug, topLeft, topRight, itemColor, 2)
                         cv2.line(image_debug, topRight, bottomRight, itemColor, 2)
                         cv2.line(image_debug, bottomRight, bottomLeft, itemColor, 2)
@@ -406,7 +390,7 @@ class Detection:
                     best = pos
                     bestPx = point
 
-            if self.displaySettings["ball"]:
+            if self.should_display("ball"):
                 if image_debug is not None and best:
                     cv2.circle(
                         image_debug,
