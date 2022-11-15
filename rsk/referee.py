@@ -128,7 +128,7 @@ class Referee:
         Starts the game
         """
         self.logger.info("Game started")
-
+        self.game_state["timer"] = constants.game_duration
         self.game_state["game_is_running"] = True
         self.referee_history = []
         self.reset_score()
@@ -161,7 +161,6 @@ class Referee:
         self.wait_ball_position = None
 
         if self.control.has_task("game-start"):
-            self.game_state["timer"] = constants.game_duration
             self.chrono_is_running = True
 
         self.control.remove_task("manually-paused")
