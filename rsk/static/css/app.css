@@ -93,6 +93,14 @@ body {
     display:inline;
 }
 
+.control-show-warning {
+    display:none;
+}
+
+.control-warning .control-show-warning {
+    display:inline;
+}
+
 .detection-wrapper {
     min-height:150px;
 }
