@@ -71,8 +71,12 @@ function referee_initialize(backend)
                 
                 if (game_state["timer"] < 0) {
                     $(".TimerMinutes").addClass('text-danger');
+                    $(".bg-body-grey").css("background-color", "rgba(180, 180, 180, 0.205)");
+                } else if (game_state["timer"] < 290 && game_state["timer"]%2==0){
+                    $(".bg-body-grey").css('background-color','rgba(255, 0, 0, 0.805)');
                 } else {
                     $(".TimerMinutes").removeClass('text-danger');
+                    $(".bg-body-grey").css("background-color", "rgba(180, 180, 180, 0.205)");
                 }
 
 
