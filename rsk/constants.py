@@ -52,7 +52,7 @@ grace_time: float = 3.0  # [s]
 
 # Number of penalty spots
 penalty_spots: int = 10
-
+penalty_spot_lock_time: int = 1
 # Parameters
 referee_history_size: int = 3
 

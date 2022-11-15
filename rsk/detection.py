@@ -34,6 +34,7 @@ class Detection:
             "ball": {"label": "Ball", "default": True},
             "goals": {"label": "Goals", "default": True},
             "landmark": {"label": "Center Landmark", "default": True},
+            "penalty_spot": {"label": "Penalty Spot", "default": False},
             "sideline": {"label": "Sideline Delimitations", "default": False},
             "timed_circle": {"label": "Timed Circle", "default": False},
         }
@@ -256,6 +257,21 @@ class Detection:
                     1,
                     dashed=True,
                 )
+
+            if self.should_display("penalty_spot"):
+                for stat, pos in self.referee.penalty_spot.values():
+                    color = (0, 255, 0)
+                    if type(stat) == type("robot"):
+                        color = (255, 0, 0)
+                    elif stat - time.time() < constants.penalty_spot_lock_time:
+                        color = (255, 128, 0)
+                    self.draw_circle(
+                        image_debug,
+                        pos[:-1],
+                        10,
+                        color,
+                        5,
+                    )
 
             if self.referee.wait_ball_position is not None:
                 self.draw_circle(

@@ -57,7 +57,7 @@ class Referee:
         # Robots Penalties
         self.penalties = {}
         self.penalty_spot = {
-            i: [None, (x, side * constants.field_width / 2, side * np.pi / 2)]
+            i: [0, (x, side * constants.field_width / 2, side * np.pi / 2)]
             for (i, (x, side)) in enumerate(
                 [
                     (x, side)
@@ -324,7 +324,7 @@ class Referee:
                 euclidean_distance = [
                     math.dist((x, y), self.penalty_spot[key][1][:2])
                     if type(self.penalty_spot[key][0]) != type(robot)
-                    and (self.penalty_spot[key][0] == None or time.time() - self.penalty_spot[key][0] > 3)
+                    and time.time() - self.penalty_spot[key][0] > constants.penalty_spot_lock_time
                     else math.inf
                     for key in self.penalty_spot
                 ]
