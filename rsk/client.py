@@ -2,6 +2,7 @@ import signal
 import numpy as np
 import zmq
 import threading
+import logging
 import time
 from . import constants, utils
 
@@ -147,7 +148,11 @@ class ClientRobot(ClientTracked):
 
 class Client:
     def __init__(self, host="127.0.0.1", key="", wait_ready=True):
-        self.raise_exceptions = False
+
+        logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
+        self.logger: logging.Logger = logging.getLogger("client")
+        
+        self.error_management = "print"  # "ignore", "print", "raise"
         self.running = True
         self.key = key
         self.lock = threading.Lock()
@@ -198,8 +203,10 @@ class Client:
             time.sleep(dt)
             if t > 3 and not warning_showed:
                 warning_showed = True
-                print("WARNING: Still no message from vision after 3s")
-                print("if you want to operate without vision, pass wait_ready=False to the client")
+                self.logger.warning("Still no message from vision after 3s")
+                self.logger.warning("if you want to operate without vision, pass wait_ready=False to the client")
+
+
 
     def __enter__(self):
         return self
@@ -278,11 +285,11 @@ class Client:
 
         time.sleep(0.01)
 
-        if not success:
-            if "Bad key" in message or self.raise_exceptions:
+        if success != 1:
+            if self.error_management == "raise" or not success:
                 raise ClientError('Command "' + name + '" failed: ' + message)
-            else:
-                print(f"Command " " + {name} + " " failed: ' + {message}")
+            elif self.error_management == "print":
+                self.logger.warning('Command "' + name + '" failed: ' + message)
 
     def goto_configuration(self, configuration_name="side", wait=False):
         targets = configurations[configuration_name]
