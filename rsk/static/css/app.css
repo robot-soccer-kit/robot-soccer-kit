@@ -8,8 +8,10 @@ body {
 
 .style_fps {
     background-color:#333;
-    margin-left: 0px; 
+    margin-left: 0px;
     font-size:28px;
+    text-align:center;
+    min-width: 5em;
   }
 
 .card {

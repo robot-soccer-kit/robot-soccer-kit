@@ -34,6 +34,7 @@ function robots_initialize(backend)
 
     $.get('static/robot.html', function(robot_template) {
         let warning = '<i class="bi text-warning bi-exclamation-circle"></i>';
+        let success = '<i class="bi text-success bi-check"></i>';
 
         function updateInfos(div, infos) {
             let hasWarning = false;
@@ -85,7 +86,7 @@ function robots_initialize(backend)
                 hasWarning = true;
                 div.find('.not-detected').html('Not detected ' + warning);
             } else {
-                div.find('.not-detected').html('');
+                div.find('.not-detected').html('Detected' + success);
             }
 
             return hasWarning;
