@@ -6,3 +6,4 @@ build
 **.pch
 .pio
 old
+.vscode
