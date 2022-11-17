@@ -262,13 +262,13 @@ class Detection:
                 for stat, pos in self.referee.penalty_spot.values():
                     color = (0, 255, 0)
                     if type(stat) == type("robot"):
-                        color = (255, 0, 0)
-                    elif stat - time.time() < constants.penalty_spot_lock_time:
-                        color = (255, 128, 0)
-                    self.draw_circle(
+                        color = (0, 0, 255)
+                    elif time.time() - stat < constants.penalty_spot_lock_time:
+                        color = (0, 128, 255)
+                    self.draw_point2square(
                         image_debug,
                         pos[:-1],
-                        10,
+                        0.1,
                         color,
                         5,
                     )
