@@ -34,7 +34,7 @@ function robots_initialize(backend)
 
     $.get('static/robot.html', function(robot_template) {
         let warning = '<i class="bi text-warning bi-exclamation-circle"></i>';
-        let success = '<i class="bi text-success bi-check"></i>';
+        let success = '<i class="bi text-success bi-check-circle"></i>';
 
         function updateInfos(div, infos) {
             let hasWarning = false;
@@ -85,8 +85,10 @@ function robots_initialize(backend)
             if (infos.marker && (!infos.last_detection || infos.last_detection > 0.15)) {
                 hasWarning = true;
                 div.find('.not-detected').html('Not detected ' + warning);
-            } else {
+            } else if(infos.marker && (infos.last_detection || infos.last_detection < 0.15)){
                 div.find('.not-detected').html('Detected' + success);
+            } else {
+                div.find('.not-detected').html('');
             }
 
             return hasWarning;

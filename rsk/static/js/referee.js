@@ -69,10 +69,10 @@ function referee_initialize(backend)
                 // Timer
                 $('.TimerMinutes').html(formatTimer(game_state["timer"]))
                 
-                if (game_state["timer"] < 0) {
+                if (game_state["timer"] < 0 && game_state["game_state_msg"] == "Game is running...") {
                     $(".TimerMinutes").addClass('text-danger');
                     $(".bg-body-grey").css("background-color", "rgba(180, 180, 180, 0.205)");
-                } else if (game_state["timer"] < 290 && game_state["timer"]%2==0){
+                } else if (game_state["timer"] < 10 && game_state["timer"]%2==0 && game_state["game_state_msg"] == "Game is running..."){
                     $(".bg-body-grey").css('background-color','rgba(255, 0, 0, 0.805)');
                 } else {
                     $(".TimerMinutes").removeClass('text-danger');
