@@ -94,8 +94,10 @@ class Control:
                         robot.leds(int(command[1]), int(command[2]), int(command[3]))
                         response = [True, "ok"]
                     else:
+                        response[0] = 2
                         response[1] = "Only master can set the LEDs"
                 else:
+                    response[0] = 2
                     response[1] = "Unknown command"
         else:
             response[1] = f"Unknown robot: {marker}"
@@ -124,10 +126,12 @@ class Control:
                                 response[1] = f"Bad key for team {team}"
                                 allow_control = False
                             elif not self.teams[team]["allow_control"]:
+                                response[0] = 2
                                 response[1] = f"You are not allowed to control the robots of team {team}"
                                 allow_control = False
                             elif len(tasks):
                                 reasons = str(tasks)
+                                response[0] = 2
                                 response[1] = f"Robot {number} of team {team} is preempted: {reasons}"
                                 allow_control = False
 
