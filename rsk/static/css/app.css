@@ -44,6 +44,9 @@ body {
     text-align:right;
     font-weight:bold;
 }
+.invisible {
+    opacity:0;
+}
 
 .vision-show-running {
     display:none;
@@ -156,6 +159,9 @@ body {
 
 .bg-body-grey{
     background-color: rgba(180, 180, 180, 0.205);
+}
+.bg-body-red{
+    background-color: rgba(250, 53, 69, 1);
 }
 
 .vert-align{

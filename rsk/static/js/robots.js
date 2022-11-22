@@ -82,15 +82,14 @@ function robots_initialize(backend)
                 div.find('.marker-select').val('none');
             }
 
-            if (infos.marker && (!infos.last_detection || infos.last_detection > 0.15)) {
-                hasWarning = true;
-                div.find('.not-detected').html('Not detected ' + warning);
-            } else if(infos.marker && (infos.last_detection || infos.last_detection < 0.15)){
-                div.find('.not-detected').html('Detected' + success);
-            } else {
-                div.find('.not-detected').html('');
-            }
 
+        if(infos.marker && (!infos.last_detection || infos.last_detection > 0.15)){
+            hasWarning = true;
+            div.find('.not-detected').html('Not detected ' + warning);
+            div.find('.not-detected').removeClass('invisible');
+        }else{
+            div.find('.not-detected').addClass('invisible');
+        }
             return hasWarning;
         }
 
