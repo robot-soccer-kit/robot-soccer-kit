@@ -41,8 +41,8 @@ struct Motor {
   bool enabled;
 };
 
-SHELL_PARAMETER_FLOAT(kp, "Kp", 1500);
-SHELL_PARAMETER_FLOAT(ki, "Ki", 750);
+SHELL_PARAMETER_FLOAT(kp, "Kp", 1000);
+SHELL_PARAMETER_FLOAT(ki, "Ki", 500);
 
 #define DEG2RAD(x) (x * M_PI / 180.0)
 
@@ -140,11 +140,22 @@ void motors_set_pwm(int index, int16_t pwm) {
         pwm = 1024;
 
       if (pwm > 0) {
+#ifdef MOTORS_BRAKE
+        ledcWrite(motors[index].pwm_chan1, 1024);
+        ledcWrite(motors[index].pwm_chan2, 1024 - pwm);
+#else
         ledcWrite(motors[index].pwm_chan1, pwm);
         ledcWrite(motors[index].pwm_chan2, 0);
+#endif
       } else {
+        pwm = -pwm;
+#ifdef MOTORS_BRAKE
+        ledcWrite(motors[index].pwm_chan1, 1024 - pwm);
+        ledcWrite(motors[index].pwm_chan2, 1024);
+#else
         ledcWrite(motors[index].pwm_chan1, 0);
-        ledcWrite(motors[index].pwm_chan2, -pwm);
+        ledcWrite(motors[index].pwm_chan2, pwm);
+#endif
       }
     }
   } else {
@@ -171,13 +182,13 @@ void motors_set_speeds(float w1, float w2, float w3) {
 }
 
 void motors_set_ik(float dx, float dy, float dt) {
-  float w1 = (motors[0].drive_x * dx + motors[0].drive_y * dy +
+  float w1 = MOTORS_ROTATION_SIGN * (motors[0].drive_x * dx + motors[0].drive_y * dy +
               MODEL_ROBOT_RADIUS * dt) /
              (MODEL_WHEEL_RADIUS);
-  float w2 = (motors[1].drive_x * dx + motors[1].drive_y * dy +
+  float w2 = MOTORS_ROTATION_SIGN * (motors[1].drive_x * dx + motors[1].drive_y * dy +
               MODEL_ROBOT_RADIUS * dt) /
              (MODEL_WHEEL_RADIUS);
-  float w3 = (motors[2].drive_x * dx + motors[2].drive_y * dy +
+  float w3 = MOTORS_ROTATION_SIGN * (motors[2].drive_x * dx + motors[2].drive_y * dy +
               MODEL_ROBOT_RADIUS * dt) /
              (MODEL_WHEEL_RADIUS);
 

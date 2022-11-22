@@ -88,7 +88,8 @@ void bin_stream_send(uint8_t c) {
 }
 
 void com_init() {
-  // The robot name will be RSK
+  bt.enableSSP();
+  bt.setPin("1234");
   bt.begin(ROBOT_NAME);
   shell_init();
 }

@@ -103,7 +103,7 @@ class GoToConfigurationTask(ControlTask):
     def finished(self, client: client.Client, available_robots: list) -> bool:
         if self.forever:
             return False
-            
+
         for robot in available_robots:
             team, number = utils.robot_str2list(robot)
 
