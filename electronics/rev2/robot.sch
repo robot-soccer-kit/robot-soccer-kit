@@ -16612,58 +16612,91 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <attribute name="PROD_ID" value="RES-11622"/>
 <attribute name="VALUE" value="0.3"/>
 </part>
+<part name="D2" library="SparkFun-DiscreteSemi" deviceset="DIODE" device="SOD">
+<attribute name="FARNELL" value="8737843RL"/>
+</part>
 </parts>
 <sheets>
 <sheet>
 <plain>
-<text x="-48.26" y="27.94" size="7.62" layer="104">USB &amp; ESP32</text>
 <frame x1="-134.62" y1="-81.28" x2="93.98" y2="48.26" columns="8" rows="5" layer="95"/>
+<text x="-58.42" y="27.94" size="7.62" layer="97">USB &amp; ESP32</text>
 </plain>
 <instances>
-<instance part="C10" gate="G$1" x="-88.9" y="-5.08" rot="R180">
+<instance part="C10" gate="G$1" x="-88.9" y="-5.08" smashed="yes" rot="R180">
 <attribute name="FARNELL" x="-88.9" y="-5.08" size="1.778" layer="96" rot="R180" display="off"/>
+<attribute name="NAME" x="-90.424" y="-8.001" size="1.778" layer="95" rot="R180"/>
+<attribute name="VALUE" x="-90.424" y="-2.921" size="1.778" layer="96" rot="R180"/>
 </instance>
-<instance part="C11" gate="G$1" x="-81.28" y="-5.08" rot="R180">
+<instance part="C11" gate="G$1" x="-81.28" y="-5.08" smashed="yes" rot="R180">
 <attribute name="FARNELL" x="-81.28" y="-5.08" size="1.778" layer="96" rot="R180" display="off"/>
+<attribute name="NAME" x="-82.804" y="-8.001" size="1.778" layer="95" rot="R180"/>
+<attribute name="VALUE" x="-82.804" y="-2.921" size="1.778" layer="96" rot="R180"/>
 </instance>
-<instance part="J1" gate="G$1" x="-119.38" y="7.62" rot="R180">
+<instance part="J1" gate="G$1" x="-119.38" y="7.62" smashed="yes" rot="R180">
 <attribute name="FARNELL" x="-119.38" y="7.62" size="1.778" layer="96" rot="R180" display="off"/>
+<attribute name="NAME" x="-119.38" y="-1.905" size="1.778" layer="95" rot="R180"/>
+<attribute name="VALUE" x="-119.38" y="11.43" size="1.778" layer="96" rot="R180"/>
 </instance>
-<instance part="U2" gate="G$1" x="40.64" y="-20.32">
+<instance part="U2" gate="G$1" x="40.64" y="-20.32" smashed="yes">
 <attribute name="FARNELL" x="40.64" y="-20.32" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="25.6041" y="13.8145" size="1.778" layer="95"/>
+<attribute name="VALUE" x="25.3533" y="-53.4481" size="1.778" layer="96"/>
 </instance>
-<instance part="U1" gate="1" x="-33.02" y="-15.24">
+<instance part="U1" gate="1" x="-33.02" y="-15.24" smashed="yes">
 <attribute name="FARNELL" x="-33.02" y="-15.24" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-43.18" y="11.43" size="1.778" layer="95"/>
+<attribute name="VALUE" x="-43.18" y="-45.72" size="1.778" layer="96"/>
 </instance>
-<instance part="R12" gate="G$1" x="-96.52" y="2.54">
+<instance part="R12" gate="G$1" x="-96.52" y="2.54" smashed="yes">
 <attribute name="FARNELL" x="-96.52" y="2.54" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-96.52" y="4.064" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-96.52" y="1.016" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="R13" gate="G$1" x="-96.52" y="0">
+<instance part="R13" gate="G$1" x="-96.52" y="0" smashed="yes">
 <attribute name="FARNELL" x="-96.52" y="0" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-96.52" y="1.524" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-96.52" y="-1.524" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="C9" gate="G$1" x="-55.88" y="-20.32" rot="R270">
+<instance part="C9" gate="G$1" x="-55.88" y="-20.32" smashed="yes" rot="R270">
 <attribute name="FARNELL" x="-55.88" y="-20.32" size="1.778" layer="96" rot="R270" display="off"/>
+<attribute name="NAME" x="-52.959" y="-21.844" size="1.778" layer="95" font="vector" rot="R270"/>
+<attribute name="VALUE" x="-58.039" y="-21.844" size="1.778" layer="96" font="vector" rot="R270"/>
 </instance>
-<instance part="R1" gate="G$1" x="12.7" y="5.08">
+<instance part="R1" gate="G$1" x="12.7" y="5.08" smashed="yes">
 <attribute name="FARNELL" x="12.7" y="5.08" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="12.7" y="6.604" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="12.7" y="3.556" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="C12" gate="G$1" x="17.78" y="10.16" rot="R180">
+<instance part="C12" gate="G$1" x="17.78" y="10.16" smashed="yes" rot="R180">
 <attribute name="FARNELL" x="17.78" y="10.16" size="1.778" layer="96" rot="R180" display="off"/>
+<attribute name="NAME" x="16.256" y="7.239" size="1.778" layer="95" rot="R180"/>
+<attribute name="VALUE" x="16.256" y="12.319" size="1.778" layer="96" rot="R180"/>
 </instance>
-<instance part="R15" gate="G$1" x="71.12" y="5.08">
+<instance part="R15" gate="G$1" x="71.12" y="5.08" smashed="yes">
 <attribute name="FARNELL" x="71.12" y="5.08" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="71.12" y="6.604" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="71.12" y="3.556" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="Q5" gate="G$1" x="-91.44" y="-38.1">
+<instance part="Q5" gate="G$1" x="-91.44" y="-38.1" smashed="yes">
 <attribute name="FARNELL" x="-91.44" y="-38.1" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-101.6" y="-30.48" size="1.778" layer="95"/>
+<attribute name="VALUE" x="-101.6" y="-33.02" size="1.778" layer="96"/>
 </instance>
-<instance part="Q6" gate="G$1" x="-91.44" y="-55.88">
+<instance part="Q6" gate="G$1" x="-91.44" y="-55.88" smashed="yes">
 <attribute name="FARNELL" x="-88.9" y="-58.42" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-101.6" y="-48.26" size="1.778" layer="95"/>
+<attribute name="VALUE" x="-101.6" y="-50.8" size="1.778" layer="96"/>
 </instance>
-<instance part="R16" gate="G$1" x="-104.14" y="-38.1">
+<instance part="R16" gate="G$1" x="-104.14" y="-38.1" smashed="yes">
 <attribute name="FARNELL" x="-104.14" y="-38.1" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-104.14" y="-36.576" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-104.14" y="-39.624" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="R17" gate="G$1" x="-104.14" y="-55.88">
+<instance part="R17" gate="G$1" x="-104.14" y="-55.88" smashed="yes">
 <attribute name="FARNELL" x="-104.14" y="-55.88" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-104.14" y="-54.356" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-104.14" y="-57.404" size="1.778" layer="96" font="vector"/>
 </instance>
 </instances>
 <busses>
@@ -17020,17 +17053,21 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </sheet>
 <sheet>
 <plain>
-<text x="-10.16" y="66.04" size="7.62" layer="104">POWER</text>
 <text x="25.4" y="55.88" size="2.54" layer="98">RDSon is ~30 mohm. So "Rsense" is 60mohm</text>
 <text x="35.56" y="50.8" size="2.54" layer="98">BMS cut at 0.2V, so ~3.3A</text>
 <frame x1="-99.06" y1="-55.88" x2="109.22" y2="83.82" columns="8" rows="5" layer="95"/>
+<text x="-20.32" y="66.04" size="7.62" layer="97">POWER</text>
 </plain>
 <instances>
-<instance part="R3" gate="G$1" x="-68.58" y="-15.24" rot="R90">
+<instance part="R3" gate="G$1" x="-68.58" y="-15.24" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="-68.58" y="-15.24" size="1.778" layer="96" rot="R90" display="off"/>
+<attribute name="NAME" x="-70.104" y="-15.24" size="1.778" layer="95" font="vector" rot="R90"/>
+<attribute name="VALUE" x="-67.056" y="-15.24" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
-<instance part="R5" gate="G$1" x="-68.58" y="-27.94" rot="R90">
+<instance part="R5" gate="G$1" x="-68.58" y="-27.94" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="-68.58" y="-27.94" size="1.778" layer="96" rot="R90" display="off"/>
+<attribute name="NAME" x="-70.104" y="-27.94" size="1.778" layer="95" font="vector" rot="R90"/>
+<attribute name="VALUE" x="-67.056" y="-27.94" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
 <instance part="REG1" gate="G$1" x="7.62" y="-33.02" smashed="yes">
 <attribute name="FARNELL" x="7.62" y="-33.02" size="1.778" layer="96" display="off"/>
@@ -17038,58 +17075,96 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <instance part="J2" gate="G$1" x="-83.82" y="33.02" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="-83.82" y="33.02" size="1.778" layer="96" rot="R90" display="off"/>
 </instance>
-<instance part="U3" gate="G$1" x="7.62" y="20.32">
+<instance part="U3" gate="G$1" x="7.62" y="20.32" smashed="yes">
 <attribute name="FARNELL" x="7.62" y="20.32" size="1.778" layer="96" display="off"/>
 <attribute name="REF" x="7.62" y="20.32" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="Q2" gate="G$1" x="53.34" y="25.4">
+<instance part="Q2" gate="G$1" x="53.34" y="25.4" smashed="yes">
 <attribute name="FARNELL" x="53.34" y="25.4" size="1.778" layer="96" display="off"/>
+<attribute name="VALUE" x="41.91" y="25.4" size="1.778" layer="96"/>
+<attribute name="NAME" x="41.91" y="27.94" size="1.778" layer="95"/>
 </instance>
-<instance part="Q1" gate="G$1" x="53.34" y="43.18">
+<instance part="Q1" gate="G$1" x="53.34" y="43.18" smashed="yes">
 <attribute name="FARNELL" x="53.34" y="43.18" size="1.778" layer="96" display="off"/>
+<attribute name="VALUE" x="41.91" y="43.18" size="1.778" layer="96"/>
+<attribute name="NAME" x="41.91" y="45.72" size="1.778" layer="95"/>
 </instance>
-<instance part="R7" gate="G$1" x="-10.16" y="35.56" rot="R180">
+<instance part="R7" gate="G$1" x="-10.16" y="35.56" smashed="yes" rot="R180">
 <attribute name="FARNELL" x="-10.16" y="35.56" size="1.778" layer="96" rot="R180" display="off"/>
+<attribute name="NAME" x="-10.16" y="34.036" size="1.778" layer="95" font="vector" rot="R180"/>
+<attribute name="VALUE" x="-10.16" y="37.084" size="1.778" layer="96" font="vector" rot="R180"/>
 </instance>
-<instance part="R9" gate="G$1" x="-20.32" y="30.48" rot="R270">
+<instance part="R9" gate="G$1" x="-20.32" y="30.48" smashed="yes" rot="R270">
 <attribute name="FARNELL" x="-20.32" y="30.48" size="1.778" layer="96" rot="R270" display="off"/>
+<attribute name="NAME" x="-18.796" y="30.48" size="1.778" layer="95" font="vector" rot="R270"/>
+<attribute name="VALUE" x="-21.844" y="30.48" size="1.778" layer="96" font="vector" rot="R270"/>
 </instance>
-<instance part="R10" gate="G$1" x="-20.32" y="15.24" rot="R270">
+<instance part="R10" gate="G$1" x="-20.32" y="15.24" smashed="yes" rot="R270">
 <attribute name="FARNELL" x="-20.32" y="15.24" size="1.778" layer="96" rot="R270" display="off"/>
+<attribute name="NAME" x="-18.796" y="15.24" size="1.778" layer="95" font="vector" rot="R270"/>
+<attribute name="VALUE" x="-21.844" y="15.24" size="1.778" layer="96" font="vector" rot="R270"/>
 </instance>
-<instance part="R11" gate="G$1" x="53.34" y="15.24">
+<instance part="R11" gate="G$1" x="53.34" y="15.24" smashed="yes">
 <attribute name="FARNELL" x="53.34" y="15.24" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="53.34" y="16.764" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="53.34" y="13.716" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="C7" gate="G$1" x="-12.7" y="17.78">
+<instance part="C7" gate="G$1" x="-12.7" y="17.78" smashed="yes">
 <attribute name="FARNELL" x="-12.7" y="17.78" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-11.176" y="20.701" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-11.176" y="15.621" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="C8" gate="G$1" x="-2.54" y="38.1">
+<instance part="C8" gate="G$1" x="-2.54" y="38.1" smashed="yes">
 <attribute name="FARNELL" x="-2.54" y="38.1" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-1.016" y="41.021" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-1.016" y="35.941" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="U8" gate="G$1" x="71.12" y="-25.4">
+<instance part="U8" gate="G$1" x="71.12" y="-25.4" smashed="yes">
 <attribute name="FARNELL" x="71.12" y="-25.4" size="1.778" layer="96" display="off"/>
+<attribute name="VALUE" x="71.12" y="-21.59" size="1.27" layer="96"/>
 </instance>
-<instance part="GND17" gate="1" x="76.2" y="-10.16"/>
-<instance part="D3" gate="G$1" x="71.12" y="-45.72">
+<instance part="GND17" gate="1" x="76.2" y="-10.16" smashed="yes">
+<attribute name="VALUE" x="73.66" y="-12.7" size="1.778" layer="96"/>
+</instance>
+<instance part="D3" gate="G$1" x="71.12" y="-45.72" smashed="yes">
 <attribute name="FARNELL" x="71.12" y="-45.72" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="73.66" y="-45.2374" size="1.778" layer="95"/>
+<attribute name="VALUE" x="73.66" y="-48.0314" size="1.778" layer="96"/>
 </instance>
-<instance part="C13" gate="G$1" x="76.2" y="-2.54">
+<instance part="C13" gate="G$1" x="76.2" y="-2.54" smashed="yes">
 <attribute name="FARNELL" x="76.2" y="-2.54" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="77.724" y="0.381" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="77.724" y="-4.699" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="GND1" gate="1" x="66.04" y="-10.16"/>
-<instance part="C14" gate="G$1" x="66.04" y="-2.54">
+<instance part="GND1" gate="1" x="66.04" y="-10.16" smashed="yes">
+<attribute name="VALUE" x="63.5" y="-12.7" size="1.778" layer="96"/>
+</instance>
+<instance part="C14" gate="G$1" x="66.04" y="-2.54" smashed="yes">
 <attribute name="FARNELL" x="66.04" y="-2.54" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="67.564" y="0.381" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="67.564" y="-4.699" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="Q7" gate="G$1" x="27.94" y="5.08">
-<attribute name="FARNELL" x="27.94" y="5.08" size="1.778" layer="96" display="off"/>
+<instance part="Q7" gate="G$1" x="27.94" y="-2.54" smashed="yes">
+<attribute name="FARNELL" x="27.94" y="-2.54" size="1.778" layer="96" display="off"/>
+<attribute name="VALUE" x="16.51" y="-2.54" size="1.778" layer="96"/>
+<attribute name="NAME" x="16.51" y="0" size="1.778" layer="95"/>
 </instance>
-<instance part="R18" gate="G$1" x="7.62" y="-2.54" rot="R90">
-<attribute name="FARNELL" x="7.62" y="-2.54" size="1.778" layer="96" rot="R90" display="off"/>
+<instance part="R18" gate="G$1" x="7.62" y="-10.16" smashed="yes" rot="R90">
+<attribute name="FARNELL" x="7.62" y="-10.16" size="1.778" layer="96" rot="R90" display="off"/>
+<attribute name="NAME" x="6.096" y="-10.16" size="1.778" layer="95" font="vector" rot="R90"/>
+<attribute name="VALUE" x="9.144" y="-10.16" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
-<instance part="C17" gate="G$1" x="7.62" y="7.62">
-<attribute name="FARNELL" x="7.62" y="7.62" size="1.778" layer="96" display="off"/>
+<instance part="C17" gate="G$1" x="7.62" y="0" smashed="yes">
+<attribute name="FARNELL" x="7.62" y="0" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="9.144" y="2.921" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="9.144" y="-2.159" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="SW1" gate="G$1" x="-50.8" y="38.1"/>
+<instance part="SW1" gate="G$1" x="-50.8" y="38.1" smashed="yes"/>
+<instance part="D2" gate="G$1" x="33.02" y="10.16" smashed="yes" rot="R270">
+<attribute name="FARNELL" x="33.02" y="10.16" size="1.778" layer="96" rot="R270" display="off"/>
+<attribute name="NAME" x="33.5026" y="7.62" size="1.778" layer="95" rot="R270"/>
+<attribute name="VALUE" x="30.7086" y="7.62" size="1.778" layer="96" rot="R270"/>
+</instance>
 </instances>
 <busses>
 </busses>
@@ -17154,8 +17229,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </segment>
 <segment>
 <pinref part="C17" gate="G$1" pin="1"/>
-<wire x1="7.62" y1="12.7" x2="7.62" y2="15.24" width="0.1524" layer="91"/>
-<label x="7.62" y="15.24" size="1.27" layer="95" xref="yes"/>
+<wire x1="7.62" y1="5.08" x2="7.62" y2="7.62" width="0.1524" layer="91"/>
+<label x="7.62" y="7.62" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
 <net name="VCC" class="1">
@@ -17217,13 +17292,13 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </segment>
 <segment>
 <pinref part="Q7" gate="G$1" pin="S"/>
-<wire x1="33.02" y1="2.54" x2="33.02" y2="-2.54" width="0.1524" layer="91"/>
-<label x="33.02" y="-2.54" size="1.27" layer="95" xref="yes"/>
+<wire x1="33.02" y1="-5.08" x2="33.02" y2="-10.16" width="0.1524" layer="91"/>
+<label x="33.02" y="-10.16" size="1.27" layer="95" xref="yes"/>
 </segment>
 <segment>
 <pinref part="R18" gate="G$1" pin="1"/>
-<wire x1="7.62" y1="-7.62" x2="7.62" y2="-10.16" width="0.1524" layer="91"/>
-<label x="7.62" y="-10.16" size="1.27" layer="95" xref="yes"/>
+<wire x1="7.62" y1="-15.24" x2="7.62" y2="-17.78" width="0.1524" layer="91"/>
+<label x="7.62" y="-17.78" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
 <net name="N$7" class="1">
@@ -17291,8 +17366,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <wire x1="33.02" y1="15.24" x2="33.02" y2="25.4" width="0.1524" layer="91"/>
 <pinref part="U3" gate="G$1" pin="VM"/>
 <wire x1="33.02" y1="25.4" x2="27.94" y2="25.4" width="0.1524" layer="91"/>
-<pinref part="Q7" gate="G$1" pin="D"/>
-<wire x1="33.02" y1="7.62" x2="33.02" y2="15.24" width="0.1524" layer="91"/>
+<pinref part="D2" gate="G$1" pin="A"/>
+<wire x1="33.02" y1="15.24" x2="33.02" y2="12.7" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="VUSB" class="0">
@@ -17322,27 +17397,38 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <net name="N$19" class="0">
 <segment>
 <pinref part="Q7" gate="G$1" pin="G"/>
-<wire x1="22.86" y1="2.54" x2="7.62" y2="2.54" width="0.1524" layer="91"/>
+<wire x1="22.86" y1="-5.08" x2="7.62" y2="-5.08" width="0.1524" layer="91"/>
 <pinref part="R18" gate="G$1" pin="2"/>
 <pinref part="C17" gate="G$1" pin="2"/>
-<wire x1="7.62" y1="5.08" x2="7.62" y2="2.54" width="0.1524" layer="91"/>
+<wire x1="7.62" y1="-2.54" x2="7.62" y2="-5.08" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$22" class="0">
+<segment>
+<pinref part="D2" gate="G$1" pin="C"/>
+<pinref part="Q7" gate="G$1" pin="D"/>
+<wire x1="33.02" y1="7.62" x2="33.02" y2="0" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
 </sheet>
 <sheet>
 <plain>
-<text x="-22.86" y="15.24" size="7.62" layer="104">BUZZER</text>
 <frame x1="-33.02" y1="-43.18" x2="33.02" y2="33.02" columns="8" rows="5" layer="95"/>
+<text x="-20.32" y="17.78" size="7.62" layer="97">BUZZER</text>
 </plain>
 <instances>
-<instance part="Q3" gate="G$1" x="2.54" y="-20.32">
+<instance part="Q3" gate="G$1" x="2.54" y="-20.32" smashed="yes">
 <attribute name="FARNELL" x="2.54" y="-20.32" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-7.62" y="-12.7" size="1.778" layer="95"/>
+<attribute name="VALUE" x="-7.62" y="-15.24" size="1.778" layer="96"/>
 </instance>
-<instance part="R8" gate="G$1" x="-5.08" y="-20.32" rot="R180">
+<instance part="R8" gate="G$1" x="-5.08" y="-20.32" smashed="yes" rot="R180">
 <attribute name="FARNELL" x="-5.08" y="-20.32" size="1.778" layer="96" rot="R180" display="off"/>
+<attribute name="NAME" x="-5.08" y="-21.844" size="1.778" layer="95" font="vector" rot="R180"/>
+<attribute name="VALUE" x="-5.08" y="-18.796" size="1.778" layer="96" font="vector" rot="R180"/>
 </instance>
-<instance part="B1" gate="G$1" x="5.08" y="-2.54" rot="R90">
+<instance part="B1" gate="G$1" x="5.08" y="-2.54" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="5.08" y="-2.54" size="1.778" layer="96" rot="R90" display="off"/>
 </instance>
 </instances>
@@ -17387,36 +17473,42 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </sheet>
 <sheet>
 <plain>
-<text x="-106.68" y="22.86" size="7.62" layer="104">LEDS</text>
 <frame x1="-114.3" y1="-35.56" x2="127" y2="40.64" columns="8" rows="5" layer="95"/>
+<text x="-104.14" y="25.4" size="7.62" layer="97">LEDS</text>
 </plain>
 <instances>
-<instance part="LED1" gate="G$1" x="-76.2" y="-2.54">
+<instance part="LED1" gate="G$1" x="-76.2" y="-2.54" smashed="yes">
 <attribute name="FARNELL" x="-76.2" y="-2.54" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="LED2" gate="G$1" x="-43.18" y="-2.54">
+<instance part="LED2" gate="G$1" x="-43.18" y="-2.54" smashed="yes">
 <attribute name="FARNELL" x="-43.18" y="-2.54" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="LED3" gate="G$1" x="-12.7" y="-2.54">
+<instance part="LED3" gate="G$1" x="-12.7" y="-2.54" smashed="yes">
 <attribute name="FARNELL" x="-12.7" y="-2.54" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="LED4" gate="G$1" x="20.32" y="-2.54">
+<instance part="LED4" gate="G$1" x="20.32" y="-2.54" smashed="yes">
 <attribute name="FARNELL" x="20.32" y="-2.54" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="LED5" gate="G$1" x="53.34" y="-2.54">
+<instance part="LED5" gate="G$1" x="53.34" y="-2.54" smashed="yes">
 <attribute name="FARNELL" x="53.34" y="-2.54" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="LED6" gate="G$1" x="83.82" y="-2.54">
+<instance part="LED6" gate="G$1" x="83.82" y="-2.54" smashed="yes">
 <attribute name="FARNELL" x="83.82" y="-2.54" size="1.778" layer="96" display="off"/>
 </instance>
-<instance part="C4" gate="G$1" x="-55.88" y="22.86">
+<instance part="C4" gate="G$1" x="-55.88" y="22.86" smashed="yes">
 <attribute name="FARNELL" x="-55.88" y="22.86" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-54.356" y="25.781" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-54.356" y="20.701" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="C5" gate="G$1" x="10.16" y="22.86">
+<instance part="C5" gate="G$1" x="10.16" y="22.86" smashed="yes">
 <attribute name="FARNELL" x="10.16" y="22.86" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="11.684" y="25.781" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="11.684" y="20.701" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="C6" gate="G$1" x="73.66" y="22.86">
+<instance part="C6" gate="G$1" x="73.66" y="22.86" smashed="yes">
 <attribute name="FARNELL" x="73.66" y="22.86" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="75.184" y="25.781" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="75.184" y="20.701" size="1.778" layer="96" font="vector"/>
 </instance>
 </instances>
 <busses>
@@ -17566,47 +17658,88 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <frame x1="-96.52" y1="-55.88" x2="71.12" y2="63.5" columns="8" rows="5" layer="95"/>
 </plain>
 <instances>
-<instance part="GND18" gate="1" x="-60.96" y="17.78"/>
-<instance part="GND19" gate="1" x="-60.96" y="-10.16"/>
-<instance part="GND20" gate="1" x="-60.96" y="-35.56"/>
-<instance part="J3" gate="G$1" x="50.8" y="35.56">
+<instance part="GND18" gate="1" x="-60.96" y="17.78" smashed="yes">
+<attribute name="VALUE" x="-63.5" y="15.24" size="1.778" layer="96"/>
+</instance>
+<instance part="GND19" gate="1" x="-60.96" y="-10.16" smashed="yes">
+<attribute name="VALUE" x="-63.5" y="-12.7" size="1.778" layer="96"/>
+</instance>
+<instance part="GND20" gate="1" x="-60.96" y="-35.56" smashed="yes">
+<attribute name="VALUE" x="-63.5" y="-38.1" size="1.778" layer="96"/>
+</instance>
+<instance part="J3" gate="G$1" x="50.8" y="35.56" smashed="yes">
 <attribute name="FARNELL" x="50.8" y="35.56" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="50.8" y="38.862" size="1.27" layer="95"/>
+<attribute name="VALUE" x="50.8" y="18.542" size="1.27" layer="96"/>
 </instance>
-<instance part="J4" gate="G$1" x="50.8" y="12.7">
+<instance part="J4" gate="G$1" x="50.8" y="12.7" smashed="yes">
 <attribute name="FARNELL" x="50.8" y="12.7" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="50.8" y="16.002" size="1.27" layer="95"/>
+<attribute name="VALUE" x="50.8" y="-4.318" size="1.27" layer="96"/>
 </instance>
-<instance part="J5" gate="G$1" x="50.8" y="-10.16">
+<instance part="J5" gate="G$1" x="50.8" y="-10.16" smashed="yes">
 <attribute name="FARNELL" x="50.8" y="-10.16" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="50.8" y="-6.858" size="1.27" layer="95"/>
+<attribute name="VALUE" x="50.8" y="-27.178" size="1.27" layer="96"/>
 </instance>
-<instance part="C1" gate="G$1" x="-60.96" y="25.4">
+<instance part="C1" gate="G$1" x="-60.96" y="25.4" smashed="yes">
 <attribute name="FARNELL" x="-60.96" y="25.4" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-59.436" y="28.321" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-59.436" y="23.241" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="C2" gate="G$1" x="-60.96" y="-2.54">
+<instance part="C2" gate="G$1" x="-60.96" y="-2.54" smashed="yes">
 <attribute name="FARNELL" x="-60.96" y="-2.54" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-59.436" y="0.381" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-59.436" y="-4.699" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="C3" gate="G$1" x="-60.96" y="-27.94">
+<instance part="C3" gate="G$1" x="-60.96" y="-27.94" smashed="yes">
 <attribute name="FARNELL" x="-60.96" y="-27.94" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-59.436" y="-25.019" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-59.436" y="-30.099" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="U10" gate="G$1" x="-15.24" y="25.4"/>
-<instance part="R19" gate="G$1" x="7.62" y="27.94"/>
-<instance part="U11" gate="G$1" x="-15.24" y="-2.54"/>
-<instance part="R20" gate="G$1" x="7.62" y="0"/>
-<instance part="U12" gate="G$1" x="-15.24" y="-30.48"/>
-<instance part="R21" gate="G$1" x="7.62" y="-27.94"/>
-<instance part="GND2" gate="1" x="-76.2" y="17.78"/>
-<instance part="GND3" gate="1" x="-76.2" y="-10.16"/>
-<instance part="GND4" gate="1" x="-76.2" y="-35.56"/>
-<instance part="C18" gate="G$1" x="-76.2" y="25.4">
+<instance part="U10" gate="G$1" x="-15.24" y="25.4" smashed="yes"/>
+<instance part="R19" gate="G$1" x="7.62" y="27.94" smashed="yes">
+<attribute name="NAME" x="3.81" y="29.4386" size="1.778" layer="95"/>
+<attribute name="VALUE" x="3.81" y="24.638" size="1.778" layer="96"/>
+</instance>
+<instance part="U11" gate="G$1" x="-15.24" y="-2.54" smashed="yes"/>
+<instance part="R20" gate="G$1" x="7.62" y="0" smashed="yes">
+<attribute name="NAME" x="3.81" y="1.4986" size="1.778" layer="95"/>
+<attribute name="VALUE" x="3.81" y="-3.302" size="1.778" layer="96"/>
+</instance>
+<instance part="U12" gate="G$1" x="-15.24" y="-30.48" smashed="yes"/>
+<instance part="R21" gate="G$1" x="7.62" y="-27.94" smashed="yes">
+<attribute name="NAME" x="3.81" y="-26.4414" size="1.778" layer="95"/>
+<attribute name="VALUE" x="3.81" y="-31.242" size="1.778" layer="96"/>
+</instance>
+<instance part="GND2" gate="1" x="-76.2" y="17.78" smashed="yes">
+<attribute name="VALUE" x="-78.74" y="15.24" size="1.778" layer="96"/>
+</instance>
+<instance part="GND3" gate="1" x="-76.2" y="-10.16" smashed="yes">
+<attribute name="VALUE" x="-78.74" y="-12.7" size="1.778" layer="96"/>
+</instance>
+<instance part="GND4" gate="1" x="-76.2" y="-35.56" smashed="yes">
+<attribute name="VALUE" x="-78.74" y="-38.1" size="1.778" layer="96"/>
+</instance>
+<instance part="C18" gate="G$1" x="-76.2" y="25.4" smashed="yes">
 <attribute name="FARNELL" x="-76.2" y="25.4" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-74.676" y="28.321" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-74.676" y="23.241" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="C21" gate="G$1" x="-76.2" y="-2.54">
+<instance part="C21" gate="G$1" x="-76.2" y="-2.54" smashed="yes">
 <attribute name="FARNELL" x="-76.2" y="-2.54" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-74.676" y="0.381" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-74.676" y="-4.699" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="C22" gate="G$1" x="-76.2" y="-27.94">
+<instance part="C22" gate="G$1" x="-76.2" y="-27.94" smashed="yes">
 <attribute name="FARNELL" x="-76.2" y="-27.94" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-74.676" y="-25.019" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-74.676" y="-30.099" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="R22" gate="G$1" x="-63.5" y="48.26">
+<instance part="R22" gate="G$1" x="-63.5" y="48.26" smashed="yes">
 <attribute name="FARNELL" x="-63.5" y="48.26" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-63.5" y="49.784" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-63.5" y="46.736" size="1.778" layer="96" font="vector"/>
 </instance>
 </instances>
 <busses>
@@ -17963,44 +18096,69 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <text x="-27.94" y="25.4" size="7.62" layer="97">BOOSTER (KICKER)</text>
 </plain>
 <instances>
-<instance part="U7" gate="G$1" x="-27.94" y="-7.62">
+<instance part="U7" gate="G$1" x="-27.94" y="-7.62" smashed="yes">
 <attribute name="FARNELL" x="-27.94" y="-7.62" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="-38.1" y="2.54" size="1.778" layer="95"/>
+<attribute name="VALUE" x="-38.1" y="-20.32" size="1.778" layer="96"/>
 </instance>
-<instance part="L1" gate="A" x="-33.02" y="12.7">
+<instance part="L1" gate="A" x="-33.02" y="12.7" smashed="yes">
 <attribute name="FARNELL" x="-33.02" y="12.7" size="1.27" layer="96" display="off"/>
+<attribute name="VALUE" x="-35.0012" y="8.4328" size="3.4798" layer="96" ratio="10" rot="SR0"/>
+<attribute name="NAME" x="-33.9344" y="16.0528" size="3.4798" layer="95" ratio="10" rot="SR0"/>
 </instance>
-<instance part="Q4" gate="G$1" x="86.36" y="-20.32">
+<instance part="Q4" gate="G$1" x="86.36" y="-20.32" smashed="yes">
 <attribute name="FARNELL" x="86.36" y="-20.32" size="1.778" layer="96" display="off"/>
+<attribute name="VALUE" x="74.93" y="-20.32" size="1.778" layer="96"/>
+<attribute name="NAME" x="74.93" y="-17.78" size="1.778" layer="95"/>
 </instance>
-<instance part="R4" gate="G$1" x="15.24" y="0" rot="R90">
+<instance part="R4" gate="G$1" x="15.24" y="0" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="15.24" y="0" size="1.27" layer="96" rot="R90" display="off"/>
+<attribute name="NAME" x="13.716" y="0" size="1.778" layer="95" font="vector" rot="R90"/>
+<attribute name="VALUE" x="16.764" y="0" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
-<instance part="C15" gate="G$1" x="-50.8" y="-12.7">
+<instance part="C15" gate="G$1" x="-50.8" y="-12.7" smashed="yes">
 <attribute name="FARNELL" x="-50.8" y="-12.7" size="1.27" layer="96" display="off"/>
+<attribute name="NAME" x="-49.276" y="-12.319" size="1.778" layer="95"/>
+<attribute name="VALUE" x="-49.276" y="-17.399" size="1.778" layer="96"/>
 </instance>
-<instance part="C16" gate="G$1" x="27.94" y="-5.08">
+<instance part="C16" gate="G$1" x="27.94" y="-5.08" smashed="yes">
 <attribute name="FARNELL" x="27.94" y="-5.08" size="1.27" layer="96" display="off"/>
+<attribute name="NAME" x="29.464" y="-4.699" size="1.778" layer="95"/>
+<attribute name="VALUE" x="29.464" y="-9.779" size="1.778" layer="96"/>
 </instance>
-<instance part="R2" gate="G$1" x="15.24" y="-12.7" rot="R90">
+<instance part="R2" gate="G$1" x="15.24" y="-12.7" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="15.24" y="-12.7" size="1.778" layer="96" rot="R90" display="off"/>
+<attribute name="NAME" x="13.716" y="-12.7" size="1.778" layer="95" font="vector" rot="R90"/>
+<attribute name="VALUE" x="16.764" y="-12.7" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
-<instance part="D1" gate="G$1" x="2.54" y="12.7">
+<instance part="D1" gate="G$1" x="2.54" y="12.7" smashed="yes">
 <attribute name="FARNELL" x="2.54" y="12.7" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="0.254" y="14.605" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="0.254" y="9.271" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="J6" gate="A" x="104.14" y="-10.16">
+<instance part="J6" gate="A" x="104.14" y="-10.16" smashed="yes">
 <attribute name="FARNELL" x="104.14" y="-10.16" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="102.87" y="-4.445" size="1.778" layer="95"/>
 </instance>
-<instance part="C19" gate="G$1" x="40.64" y="-17.78">
+<instance part="C19" gate="G$1" x="40.64" y="-17.78" smashed="yes">
 <attribute name="MOUSER" x="40.64" y="-17.78" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="41.783" y="-17.2974" size="1.778" layer="95"/>
+<attribute name="VALUE" x="41.783" y="-22.3774" size="1.778" layer="96"/>
 </instance>
-<instance part="C20" gate="G$1" x="48.26" y="-17.78">
+<instance part="C20" gate="G$1" x="48.26" y="-17.78" smashed="yes">
 <attribute name="MOUSER" x="48.26" y="-17.78" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="49.403" y="-17.2974" size="1.778" layer="95"/>
+<attribute name="VALUE" x="49.403" y="-22.3774" size="1.778" layer="96"/>
 </instance>
-<instance part="R6" gate="G$1" x="76.2" y="-27.94" rot="R90">
+<instance part="R6" gate="G$1" x="76.2" y="-27.94" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="76.2" y="-27.94" size="1.27" layer="96" rot="R90" display="off"/>
+<attribute name="NAME" x="74.676" y="-27.94" size="1.778" layer="95" font="vector" rot="R90"/>
+<attribute name="VALUE" x="77.724" y="-27.94" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
-<instance part="R14" gate="G$1" x="40.64" y="-5.08" rot="R90">
+<instance part="R14" gate="G$1" x="40.64" y="-5.08" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="40.64" y="-5.08" size="1.27" layer="96" rot="R90" display="off"/>
+<attribute name="NAME" x="39.1414" y="-8.89" size="1.778" layer="95" rot="R90"/>
+<attribute name="VALUE" x="43.942" y="-8.89" size="1.778" layer="96" rot="R90"/>
 </instance>
 </instances>
 <busses>
