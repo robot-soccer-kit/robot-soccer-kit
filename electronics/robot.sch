@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="9.6.2">
+<eagle version="6.1">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
-<setting keepoldvectorfont="yes"/>
 <setting verticaltext="up"/>
 </settings>
 <grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
@@ -16613,6 +16612,9 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <attribute name="PROD_ID" value="RES-11622"/>
 <attribute name="VALUE" value="0.3"/>
 </part>
+<part name="D2" library="SparkFun-DiscreteSemi" deviceset="DIODE" device="SOD">
+<attribute name="FARNELL" value="8737843RL"/>
+</part>
 </parts>
 <sheets>
 <sheet>
@@ -16648,13 +16650,13 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </instance>
 <instance part="R12" gate="G$1" x="-96.52" y="2.54" smashed="yes">
 <attribute name="FARNELL" x="-96.52" y="2.54" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="-96.52" y="4.064" size="1.778" layer="95" font="vector" align="bottom-center"/>
-<attribute name="VALUE" x="-96.52" y="1.016" size="1.778" layer="96" font="vector" align="top-center"/>
+<attribute name="NAME" x="-96.52" y="4.064" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-96.52" y="1.016" size="1.778" layer="96" font="vector"/>
 </instance>
 <instance part="R13" gate="G$1" x="-96.52" y="0" smashed="yes">
 <attribute name="FARNELL" x="-96.52" y="0" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="-96.52" y="1.524" size="1.778" layer="95" font="vector" align="bottom-center"/>
-<attribute name="VALUE" x="-96.52" y="-1.524" size="1.778" layer="96" font="vector" align="top-center"/>
+<attribute name="NAME" x="-96.52" y="1.524" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-96.52" y="-1.524" size="1.778" layer="96" font="vector"/>
 </instance>
 <instance part="C9" gate="G$1" x="-55.88" y="-20.32" smashed="yes" rot="R270">
 <attribute name="FARNELL" x="-55.88" y="-20.32" size="1.778" layer="96" rot="R270" display="off"/>
@@ -16663,8 +16665,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </instance>
 <instance part="R1" gate="G$1" x="12.7" y="5.08" smashed="yes">
 <attribute name="FARNELL" x="12.7" y="5.08" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="12.7" y="6.604" size="1.778" layer="95" font="vector" align="bottom-center"/>
-<attribute name="VALUE" x="12.7" y="3.556" size="1.778" layer="96" font="vector" align="top-center"/>
+<attribute name="NAME" x="12.7" y="6.604" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="12.7" y="3.556" size="1.778" layer="96" font="vector"/>
 </instance>
 <instance part="C12" gate="G$1" x="17.78" y="10.16" smashed="yes" rot="R180">
 <attribute name="FARNELL" x="17.78" y="10.16" size="1.778" layer="96" rot="R180" display="off"/>
@@ -16673,8 +16675,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </instance>
 <instance part="R15" gate="G$1" x="71.12" y="5.08" smashed="yes">
 <attribute name="FARNELL" x="71.12" y="5.08" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="71.12" y="6.604" size="1.778" layer="95" font="vector" align="bottom-center"/>
-<attribute name="VALUE" x="71.12" y="3.556" size="1.778" layer="96" font="vector" align="top-center"/>
+<attribute name="NAME" x="71.12" y="6.604" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="71.12" y="3.556" size="1.778" layer="96" font="vector"/>
 </instance>
 <instance part="Q5" gate="G$1" x="-91.44" y="-38.1" smashed="yes">
 <attribute name="FARNELL" x="-91.44" y="-38.1" size="1.778" layer="96" display="off"/>
@@ -16688,13 +16690,13 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </instance>
 <instance part="R16" gate="G$1" x="-104.14" y="-38.1" smashed="yes">
 <attribute name="FARNELL" x="-104.14" y="-38.1" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="-104.14" y="-36.576" size="1.778" layer="95" font="vector" align="bottom-center"/>
-<attribute name="VALUE" x="-104.14" y="-39.624" size="1.778" layer="96" font="vector" align="top-center"/>
+<attribute name="NAME" x="-104.14" y="-36.576" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-104.14" y="-39.624" size="1.778" layer="96" font="vector"/>
 </instance>
 <instance part="R17" gate="G$1" x="-104.14" y="-55.88" smashed="yes">
 <attribute name="FARNELL" x="-104.14" y="-55.88" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="-104.14" y="-54.356" size="1.778" layer="95" font="vector" align="bottom-center"/>
-<attribute name="VALUE" x="-104.14" y="-57.404" size="1.778" layer="96" font="vector" align="top-center"/>
+<attribute name="NAME" x="-104.14" y="-54.356" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-104.14" y="-57.404" size="1.778" layer="96" font="vector"/>
 </instance>
 </instances>
 <busses>
@@ -17059,13 +17061,13 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <instances>
 <instance part="R3" gate="G$1" x="-68.58" y="-15.24" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="-68.58" y="-15.24" size="1.778" layer="96" rot="R90" display="off"/>
-<attribute name="NAME" x="-70.104" y="-15.24" size="1.778" layer="95" font="vector" rot="R90" align="bottom-center"/>
-<attribute name="VALUE" x="-67.056" y="-15.24" size="1.778" layer="96" font="vector" rot="R90" align="top-center"/>
+<attribute name="NAME" x="-70.104" y="-15.24" size="1.778" layer="95" font="vector" rot="R90"/>
+<attribute name="VALUE" x="-67.056" y="-15.24" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
 <instance part="R5" gate="G$1" x="-68.58" y="-27.94" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="-68.58" y="-27.94" size="1.778" layer="96" rot="R90" display="off"/>
-<attribute name="NAME" x="-70.104" y="-27.94" size="1.778" layer="95" font="vector" rot="R90" align="bottom-center"/>
-<attribute name="VALUE" x="-67.056" y="-27.94" size="1.778" layer="96" font="vector" rot="R90" align="top-center"/>
+<attribute name="NAME" x="-70.104" y="-27.94" size="1.778" layer="95" font="vector" rot="R90"/>
+<attribute name="VALUE" x="-67.056" y="-27.94" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
 <instance part="REG1" gate="G$1" x="7.62" y="-33.02" smashed="yes">
 <attribute name="FARNELL" x="7.62" y="-33.02" size="1.778" layer="96" display="off"/>
@@ -17089,23 +17091,23 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </instance>
 <instance part="R7" gate="G$1" x="-10.16" y="35.56" smashed="yes" rot="R180">
 <attribute name="FARNELL" x="-10.16" y="35.56" size="1.778" layer="96" rot="R180" display="off"/>
-<attribute name="NAME" x="-10.16" y="34.036" size="1.778" layer="95" font="vector" rot="R180" align="bottom-center"/>
-<attribute name="VALUE" x="-10.16" y="37.084" size="1.778" layer="96" font="vector" rot="R180" align="top-center"/>
+<attribute name="NAME" x="-10.16" y="34.036" size="1.778" layer="95" font="vector" rot="R180"/>
+<attribute name="VALUE" x="-10.16" y="37.084" size="1.778" layer="96" font="vector" rot="R180"/>
 </instance>
 <instance part="R9" gate="G$1" x="-20.32" y="30.48" smashed="yes" rot="R270">
 <attribute name="FARNELL" x="-20.32" y="30.48" size="1.778" layer="96" rot="R270" display="off"/>
-<attribute name="NAME" x="-18.796" y="30.48" size="1.778" layer="95" font="vector" rot="R270" align="bottom-center"/>
-<attribute name="VALUE" x="-21.844" y="30.48" size="1.778" layer="96" font="vector" rot="R270" align="top-center"/>
+<attribute name="NAME" x="-18.796" y="30.48" size="1.778" layer="95" font="vector" rot="R270"/>
+<attribute name="VALUE" x="-21.844" y="30.48" size="1.778" layer="96" font="vector" rot="R270"/>
 </instance>
 <instance part="R10" gate="G$1" x="-20.32" y="15.24" smashed="yes" rot="R270">
 <attribute name="FARNELL" x="-20.32" y="15.24" size="1.778" layer="96" rot="R270" display="off"/>
-<attribute name="NAME" x="-18.796" y="15.24" size="1.778" layer="95" font="vector" rot="R270" align="bottom-center"/>
-<attribute name="VALUE" x="-21.844" y="15.24" size="1.778" layer="96" font="vector" rot="R270" align="top-center"/>
+<attribute name="NAME" x="-18.796" y="15.24" size="1.778" layer="95" font="vector" rot="R270"/>
+<attribute name="VALUE" x="-21.844" y="15.24" size="1.778" layer="96" font="vector" rot="R270"/>
 </instance>
 <instance part="R11" gate="G$1" x="53.34" y="15.24" smashed="yes">
 <attribute name="FARNELL" x="53.34" y="15.24" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="53.34" y="16.764" size="1.778" layer="95" font="vector" align="bottom-center"/>
-<attribute name="VALUE" x="53.34" y="13.716" size="1.778" layer="96" font="vector" align="top-center"/>
+<attribute name="NAME" x="53.34" y="16.764" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="53.34" y="13.716" size="1.778" layer="96" font="vector"/>
 </instance>
 <instance part="C7" gate="G$1" x="-12.7" y="17.78" smashed="yes">
 <attribute name="FARNELL" x="-12.7" y="17.78" size="1.778" layer="96" display="off"/>
@@ -17119,7 +17121,7 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </instance>
 <instance part="U8" gate="G$1" x="71.12" y="-25.4" smashed="yes">
 <attribute name="FARNELL" x="71.12" y="-25.4" size="1.778" layer="96" display="off"/>
-<attribute name="VALUE" x="71.12" y="-21.59" size="1.27" layer="96" align="center"/>
+<attribute name="VALUE" x="71.12" y="-21.59" size="1.27" layer="96"/>
 </instance>
 <instance part="GND17" gate="1" x="76.2" y="-10.16" smashed="yes">
 <attribute name="VALUE" x="73.66" y="-12.7" size="1.778" layer="96"/>
@@ -17142,22 +17144,27 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <attribute name="NAME" x="67.564" y="0.381" size="1.778" layer="95" font="vector"/>
 <attribute name="VALUE" x="67.564" y="-4.699" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="Q7" gate="G$1" x="27.94" y="5.08" smashed="yes">
-<attribute name="FARNELL" x="27.94" y="5.08" size="1.778" layer="96" display="off"/>
-<attribute name="VALUE" x="16.51" y="5.08" size="1.778" layer="96"/>
-<attribute name="NAME" x="16.51" y="7.62" size="1.778" layer="95"/>
+<instance part="Q7" gate="G$1" x="27.94" y="-2.54" smashed="yes">
+<attribute name="FARNELL" x="27.94" y="-2.54" size="1.778" layer="96" display="off"/>
+<attribute name="VALUE" x="16.51" y="-2.54" size="1.778" layer="96"/>
+<attribute name="NAME" x="16.51" y="0" size="1.778" layer="95"/>
 </instance>
-<instance part="R18" gate="G$1" x="7.62" y="-2.54" smashed="yes" rot="R90">
-<attribute name="FARNELL" x="7.62" y="-2.54" size="1.778" layer="96" rot="R90" display="off"/>
-<attribute name="NAME" x="6.096" y="-2.54" size="1.778" layer="95" font="vector" rot="R90" align="bottom-center"/>
-<attribute name="VALUE" x="9.144" y="-2.54" size="1.778" layer="96" font="vector" rot="R90" align="top-center"/>
+<instance part="R18" gate="G$1" x="7.62" y="-10.16" smashed="yes" rot="R90">
+<attribute name="FARNELL" x="7.62" y="-10.16" size="1.778" layer="96" rot="R90" display="off"/>
+<attribute name="NAME" x="6.096" y="-10.16" size="1.778" layer="95" font="vector" rot="R90"/>
+<attribute name="VALUE" x="9.144" y="-10.16" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
-<instance part="C17" gate="G$1" x="7.62" y="7.62" smashed="yes">
-<attribute name="FARNELL" x="7.62" y="7.62" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="9.144" y="10.541" size="1.778" layer="95" font="vector"/>
-<attribute name="VALUE" x="9.144" y="5.461" size="1.778" layer="96" font="vector"/>
+<instance part="C17" gate="G$1" x="7.62" y="0" smashed="yes">
+<attribute name="FARNELL" x="7.62" y="0" size="1.778" layer="96" display="off"/>
+<attribute name="NAME" x="9.144" y="2.921" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="9.144" y="-2.159" size="1.778" layer="96" font="vector"/>
 </instance>
 <instance part="SW1" gate="G$1" x="-50.8" y="38.1" smashed="yes"/>
+<instance part="D2" gate="G$1" x="33.02" y="10.16" smashed="yes" rot="R270">
+<attribute name="FARNELL" x="33.02" y="10.16" size="1.778" layer="96" rot="R270" display="off"/>
+<attribute name="NAME" x="33.5026" y="7.62" size="1.778" layer="95" rot="R270"/>
+<attribute name="VALUE" x="30.7086" y="7.62" size="1.778" layer="96" rot="R270"/>
+</instance>
 </instances>
 <busses>
 </busses>
@@ -17222,8 +17229,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </segment>
 <segment>
 <pinref part="C17" gate="G$1" pin="1"/>
-<wire x1="7.62" y1="12.7" x2="7.62" y2="15.24" width="0.1524" layer="91"/>
-<label x="7.62" y="15.24" size="1.27" layer="95" xref="yes"/>
+<wire x1="7.62" y1="5.08" x2="7.62" y2="7.62" width="0.1524" layer="91"/>
+<label x="7.62" y="7.62" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
 <net name="VCC" class="1">
@@ -17285,13 +17292,13 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </segment>
 <segment>
 <pinref part="Q7" gate="G$1" pin="S"/>
-<wire x1="33.02" y1="2.54" x2="33.02" y2="-2.54" width="0.1524" layer="91"/>
-<label x="33.02" y="-2.54" size="1.27" layer="95" xref="yes"/>
+<wire x1="33.02" y1="-5.08" x2="33.02" y2="-10.16" width="0.1524" layer="91"/>
+<label x="33.02" y="-10.16" size="1.27" layer="95" xref="yes"/>
 </segment>
 <segment>
 <pinref part="R18" gate="G$1" pin="1"/>
-<wire x1="7.62" y1="-7.62" x2="7.62" y2="-10.16" width="0.1524" layer="91"/>
-<label x="7.62" y="-10.16" size="1.27" layer="95" xref="yes"/>
+<wire x1="7.62" y1="-15.24" x2="7.62" y2="-17.78" width="0.1524" layer="91"/>
+<label x="7.62" y="-17.78" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
 <net name="N$7" class="1">
@@ -17359,8 +17366,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <wire x1="33.02" y1="15.24" x2="33.02" y2="25.4" width="0.1524" layer="91"/>
 <pinref part="U3" gate="G$1" pin="VM"/>
 <wire x1="33.02" y1="25.4" x2="27.94" y2="25.4" width="0.1524" layer="91"/>
-<pinref part="Q7" gate="G$1" pin="D"/>
-<wire x1="33.02" y1="7.62" x2="33.02" y2="15.24" width="0.1524" layer="91"/>
+<pinref part="D2" gate="G$1" pin="A"/>
+<wire x1="33.02" y1="15.24" x2="33.02" y2="12.7" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="VUSB" class="0">
@@ -17390,10 +17397,17 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <net name="N$19" class="0">
 <segment>
 <pinref part="Q7" gate="G$1" pin="G"/>
-<wire x1="22.86" y1="2.54" x2="7.62" y2="2.54" width="0.1524" layer="91"/>
+<wire x1="22.86" y1="-5.08" x2="7.62" y2="-5.08" width="0.1524" layer="91"/>
 <pinref part="R18" gate="G$1" pin="2"/>
 <pinref part="C17" gate="G$1" pin="2"/>
-<wire x1="7.62" y1="5.08" x2="7.62" y2="2.54" width="0.1524" layer="91"/>
+<wire x1="7.62" y1="-2.54" x2="7.62" y2="-5.08" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$22" class="0">
+<segment>
+<pinref part="D2" gate="G$1" pin="C"/>
+<pinref part="Q7" gate="G$1" pin="D"/>
+<wire x1="33.02" y1="7.62" x2="33.02" y2="0" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
@@ -17411,8 +17425,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </instance>
 <instance part="R8" gate="G$1" x="-5.08" y="-20.32" smashed="yes" rot="R180">
 <attribute name="FARNELL" x="-5.08" y="-20.32" size="1.778" layer="96" rot="R180" display="off"/>
-<attribute name="NAME" x="-5.08" y="-21.844" size="1.778" layer="95" font="vector" rot="R180" align="bottom-center"/>
-<attribute name="VALUE" x="-5.08" y="-18.796" size="1.778" layer="96" font="vector" rot="R180" align="top-center"/>
+<attribute name="NAME" x="-5.08" y="-21.844" size="1.778" layer="95" font="vector" rot="R180"/>
+<attribute name="VALUE" x="-5.08" y="-18.796" size="1.778" layer="96" font="vector" rot="R180"/>
 </instance>
 <instance part="B1" gate="G$1" x="5.08" y="-2.54" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="5.08" y="-2.54" size="1.778" layer="96" rot="R90" display="off"/>
@@ -17724,8 +17738,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </instance>
 <instance part="R22" gate="G$1" x="-63.5" y="48.26" smashed="yes">
 <attribute name="FARNELL" x="-63.5" y="48.26" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="-63.5" y="49.784" size="1.778" layer="95" font="vector" align="bottom-center"/>
-<attribute name="VALUE" x="-63.5" y="46.736" size="1.778" layer="96" font="vector" align="top-center"/>
+<attribute name="NAME" x="-63.5" y="49.784" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="-63.5" y="46.736" size="1.778" layer="96" font="vector"/>
 </instance>
 </instances>
 <busses>
@@ -18099,8 +18113,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </instance>
 <instance part="R4" gate="G$1" x="15.24" y="0" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="15.24" y="0" size="1.27" layer="96" rot="R90" display="off"/>
-<attribute name="NAME" x="13.716" y="0" size="1.778" layer="95" font="vector" rot="R90" align="bottom-center"/>
-<attribute name="VALUE" x="16.764" y="0" size="1.778" layer="96" font="vector" rot="R90" align="top-center"/>
+<attribute name="NAME" x="13.716" y="0" size="1.778" layer="95" font="vector" rot="R90"/>
+<attribute name="VALUE" x="16.764" y="0" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
 <instance part="C15" gate="G$1" x="-50.8" y="-12.7" smashed="yes">
 <attribute name="FARNELL" x="-50.8" y="-12.7" size="1.27" layer="96" display="off"/>
@@ -18114,8 +18128,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </instance>
 <instance part="R2" gate="G$1" x="15.24" y="-12.7" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="15.24" y="-12.7" size="1.778" layer="96" rot="R90" display="off"/>
-<attribute name="NAME" x="13.716" y="-12.7" size="1.778" layer="95" font="vector" rot="R90" align="bottom-center"/>
-<attribute name="VALUE" x="16.764" y="-12.7" size="1.778" layer="96" font="vector" rot="R90" align="top-center"/>
+<attribute name="NAME" x="13.716" y="-12.7" size="1.778" layer="95" font="vector" rot="R90"/>
+<attribute name="VALUE" x="16.764" y="-12.7" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
 <instance part="D1" gate="G$1" x="2.54" y="12.7" smashed="yes">
 <attribute name="FARNELL" x="2.54" y="12.7" size="1.778" layer="96" display="off"/>
@@ -18138,8 +18152,8 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </instance>
 <instance part="R6" gate="G$1" x="76.2" y="-27.94" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="76.2" y="-27.94" size="1.27" layer="96" rot="R90" display="off"/>
-<attribute name="NAME" x="74.676" y="-27.94" size="1.778" layer="95" font="vector" rot="R90" align="bottom-center"/>
-<attribute name="VALUE" x="77.724" y="-27.94" size="1.778" layer="96" font="vector" rot="R90" align="top-center"/>
+<attribute name="NAME" x="74.676" y="-27.94" size="1.778" layer="95" font="vector" rot="R90"/>
+<attribute name="VALUE" x="77.724" y="-27.94" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
 <instance part="R14" gate="G$1" x="40.64" y="-5.08" smashed="yes" rot="R90">
 <attribute name="FARNELL" x="40.64" y="-5.08" size="1.27" layer="96" rot="R90" display="off"/>
