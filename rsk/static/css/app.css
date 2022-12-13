@@ -92,12 +92,12 @@ body {
     display:none;
 }
 
-.robots-warning .robots-show-warning {
-    display:inline;
-}
-
 .control-show-warning {
     display:none;
+}
+
+.robots-warning .robots-show-warning {
+    display:inline;
 }
 
 .control-warning .control-show-warning {
