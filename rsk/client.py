@@ -149,18 +149,21 @@ class ClientRobot(ClientTracked):
 class Client:
     def __init__(self, host="127.0.0.1", key="", wait_ready=True):
 
-        logging.basicConfig(
-            format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s",
-            level=logging.INFO,
-        )
+        logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
         self.logger: logging.Logger = logging.getLogger("client")
-
+        
         self.error_management = "print"  # "ignore", "print", "raise"
         self.running = True
         self.key = key
         self.lock = threading.Lock()
         self.robots = {}
-        print(1)
+
+        # Declaring stubs for auto completion
+        self.green1: ClientRobot
+        self.green2: ClientRobot
+        self.blue1: ClientRobot
+        self.blue2: ClientRobot
+
         # Creating self.green1, self.green2 etc.
         for color, number in utils.all_robots():
             robot_id = utils.robot_list2str(color, number)
@@ -170,12 +173,12 @@ class Client:
             if color not in self.robots:
                 self.robots[color] = {}
             self.robots[color][number] = robot
-        print(2)
+
         # Custom objects to track
         self.objs = {n: ClientTracked() for n in range(1, 9)}
 
         self.ball = None
-        print(3)
+
         # ZMQ Context
         self.context = zmq.Context()
 
@@ -188,14 +191,14 @@ class Client:
         self.sub_packets = 0
         self.sub_thread = threading.Thread(target=lambda: self.sub_process())
         self.sub_thread.start()
-        print(4)
+
         # Informations from referee
         self.referee = None
-        print(5)
+
         # Creating request connection
         self.req = self.context.socket(zmq.REQ)
         self.req.connect("tcp://" + host + ":7558")
-        print(6)
+
         # Waiting for the first packet to be received, guarantees to have robot state after
         # client creation
         dt = 0.05
@@ -207,10 +210,9 @@ class Client:
             if t > 3 and not warning_showed:
                 warning_showed = True
                 self.logger.warning("Still no message from vision after 3s")
-                self.logger.warning(
-                    "if you want to operate without vision, pass wait_ready=False to the client"
-                )
-        print(7)
+                self.logger.warning("if you want to operate without vision, pass wait_ready=False to the client")
+
+
 
     def __enter__(self):
         return self
