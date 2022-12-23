@@ -152,6 +152,12 @@ class Client:
         self.lock = threading.Lock()
         self.robots = {}
 
+        # Declaring stubs for auto completion
+        self.green1: ClientRobot
+        self.green2: ClientRobot
+        self.blue1: ClientRobot
+        self.blue2: ClientRobot
+
         # Creating self.green1, self.green2 etc.
         for color, number in utils.all_robots():
             robot_id = utils.robot_list2str(color, number)
