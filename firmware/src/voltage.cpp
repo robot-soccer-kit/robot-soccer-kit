@@ -18,7 +18,10 @@ static float max_variation = 0.25;
 
 static void voltage_sample(bool first = false) {
   last_measurement = millis();
-  float sampled_voltage = (analogRead(VOLTAGE) * 3.3 / 4096) / DIVIDER_RATIO;
+
+  // Since ESP32 uncalibrated ADC seems to be inaccurate, we use 3.5 instead of 3.3V here.
+  // Note that the goal is to only provide a warning; the batteries are physically protected by the BMS
+  float sampled_voltage = (analogRead(VOLTAGE) * 3.5 / 4095) / DIVIDER_RATIO;
 
   if (first) {
     voltage = sampled_voltage;
