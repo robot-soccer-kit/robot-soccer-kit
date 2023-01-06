@@ -14,7 +14,7 @@ def package_files(directory):
 
 setuptools.setup(
     name="robot-soccer-kit",
-    version="1.1.0",
+    version="1.1.1",
     author="Rhoban team",
     author_email="team@rhoban.com",
     description="Robot Soccer Kit",
@@ -39,7 +39,7 @@ setuptools.setup(
             "flask",
             "flask-cors",
             "waitress",
-            "opencv-contrib-python"
+            "opencv-contrib-python<4.7"
         ]
     },
     include_package_data=True,
