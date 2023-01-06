@@ -51,13 +51,16 @@ def main():
 
 
 # Setting up the logger
-logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
+logging.basicConfig(
+    format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO
+)
 logging.getLogger("werkzeug").setLevel(logging.CRITICAL)
 logging.getLogger("robot-soccer-kit").info("Starting robot-soccer-kit Game Controller")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", "-p", type=str, default="7070")
 parser.add_argument("--ip", "-ip", type=str, default="127.0.0.1")
+parser.add_argument("--simulate", "-s", action="store_true")
 args = parser.parse_args()
 
 

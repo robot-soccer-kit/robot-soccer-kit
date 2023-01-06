@@ -208,8 +208,13 @@
             <div class="row">
               <div class="col-12">
                 <div class="vision-show-running">
-                  <div class="camera-area-referee justify-content-center d-flex">
-                      <img class="card camera-image m-0"/>
+                  <div id="camera-area" class="camera-area-referee justify-content-center d-flex">
+                      <canvas id="back" class="card d-none m-0"></canvas>
+                      <canvas id="green1" class="sim_vim"></canvas>
+                      <canvas id="green2" class="sim_vim"></canvas>
+                      <canvas id="blue1" class="sim_vim"></canvas>
+                      <canvas id="blue2" class="sim_vim"></canvas>
+                      <img id="vision_fgg" class="card camera-image m-0"/>
                   </div>
                 </div>
               </div>
@@ -219,9 +224,10 @@
                 <button id="MidTimeChange" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#staticBackdrop" disabled>
                   <i class="bi bi-arrow-repeat"></i> Half time Change 
                 </button>
-                  <input class="form-check-input display-setting" type="checkbox" role="switch" rel="landmark" checked="checked" control-id="ControlID-54">
-                  <label class="form-label" for="flexSwitchCheckDefault"> Simulate  View</label>
-              
+
+                <button id="ViewChange" class="btn btn-warning btn-sm">
+                  <i class="bi bi-camera"></i> Simulated View
+                </button>
               </div>
             </div>
             <div class="row d-flex robot-penalize-tab">

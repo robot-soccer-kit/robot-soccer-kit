@@ -103,11 +103,12 @@ function video_initialize(backend)
 
     // Retrieving the images
     setInterval(function() {
+
         is_vision = current_tab == 'vision' || 'referee';
         backend.enableVideoDebug(is_vision);
 
         backend.get_video(is_vision, function(video) {
-            if (video.image) {
+            if (video.image && !simulated_view) {
                 $('.camera-image').attr('src', 'data:image/jpeg;base64,'+video.image);
             }
         
@@ -152,6 +153,8 @@ function video_initialize(backend)
             } else {
                 $('body').removeClass('vision-no-error');
             }
+
+
         });
     }, 50);
 }

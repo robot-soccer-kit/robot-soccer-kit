@@ -16,7 +16,11 @@ class Backend:
         return self.video.cameras()
 
     def constants(self) -> dict:
-        return {"team_colors": utils.robot_teams(), "default_penalty": constants.default_penalty}
+        return {
+            "team_colors": utils.robot_teams(),
+            "default_penalty": constants.default_penalty,
+            "field_size": (constants.field_length, constants.field_width),
+        }
 
     def resolutions(self):
         return self.video.resolutions()

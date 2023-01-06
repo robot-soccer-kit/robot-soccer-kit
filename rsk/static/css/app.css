@@ -4,6 +4,13 @@ html {
   
 body {
     font-size:20px;
+    position: relative;
+}
+
+.sim_vim {
+    position: absolute;
+    z-index: 0;
+    opacity: 100;
 }
 
 .style_fps {

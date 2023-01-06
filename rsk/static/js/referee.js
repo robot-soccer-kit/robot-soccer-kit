@@ -215,6 +215,10 @@ function referee_initialize(backend)
         backend.start_half_time();
     });
 
+    $('#ViewChange').click(function() {
+          
+    });
+
     $('#Y_ChangeCover').click(function() {
         $('.ChangeCover').addClass('d-none');
         $('.MidTimeIdentify').removeClass('d-none');
@@ -337,4 +341,89 @@ function referee_initialize(backend)
             backend.cancel_penalty(robot_id);
         });
     });
+
+
+    markers = {"blue1": [NaN,NaN,[0,0,0]],"blue2": [NaN,NaN,[0,0,0]],"green1": [NaN,NaN,[0,0,0]],"green2": [NaN,NaN,[0,0,0]]}
+    simulated_view = false;
+    intervalId = 0;
+
+    backend.constants(function(constants) {
+        var context = document.getElementsByTagName('canvas')[0].getContext('2d');
+        ctx_width = context.canvas.width
+        ctx_height = context.canvas.height
+        robot_size = ctx_height/8
+
+        var background = new Image();
+        background.src = "static/imgs/field.png";
+        background.onload = function(){
+            context.drawImage(background,0,0,ctx_width,ctx_height)
+        }
+
+        function cam_to_sim(robot) {
+            field_size = constants["field_size"];
+            let pos_sim = [0.0, 0.0, 0.0];
+            pos = [robot.position[0],robot.position[1],robot.orientation]
+
+            pos_sim[0] = Math.round(((pos[0] + field_size[0]/2) * document.getElementById('back').offsetWidth) / field_size[0]) ;
+            pos_sim[1] = Math.round(((-pos[1] + field_size[1]/2) * document.getElementById('back').offsetHeight) / field_size[1]) ; 
+            pos_sim[2] = round(-pos[2]+Math.PI/2)
+            return pos_sim;
+        }
+        function compute_view(){
+            backend.get_video(false, function(video) {
+                
+                for (var key in markers) {
+                    markers[key][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
+                }
+
+                for (let entry in video.detection.markers) {
+                    let robot = video.detection.markers[entry];
+                    let robot_pos = cam_to_sim(robot);
+                    robot_size = document.getElementById('back').offsetHeight/8
+
+                    canvas = markers[entry][1].canvas
+
+                    markers[entry][1].drawImage(markers[entry][0],-robot_size/2,-robot_size/2,robot_size,robot_size)
+                    markers[entry][1].rotate(-markers[entry][2][2])
+                    markers[entry][1].translate(-markers[entry][2][0],-markers[entry][2][1])
+                    
+                    markers[entry][1].translate(robot_pos[0],robot_pos[1])
+                    markers[entry][1].rotate(robot_pos[2])
+                    
+                    markers[entry][2] = robot_pos
+
+                }
+            });
+        };
+
+
+        $('#ViewChange').click(function() {
+            if (!simulated_view) {
+
+                $('#ViewChange').html("<i class='bi bi-camera'></i> Camera View")
+                $('#vision_fgg').addClass('d-none')
+                $('#back').removeClass('d-none')
+                $('.sim_vim').css('opacity', '100')
+                simulated_view = true;
+                markers = {"blue1": [NaN,NaN,[0,0,0]],"blue2": [NaN,NaN,[0,0,0]],"green1": [NaN,NaN,[0,0,0]],"green2": [NaN,NaN,[0,0,0]]}
+                for (var key in markers) {
+                    markers[key][0] = new Image();
+                    markers[key][0].src = "static/imgs/robot"+ key +".svg";
+                    canvas = document.getElementById(key)
+                    canvas.width = document.getElementById('back').offsetWidth
+                    canvas.height = document.getElementById('back').offsetHeight
+                    markers[key][1] = canvas.getContext('2d');
+                }
+                intervalId = setInterval(compute_view, 50)
+            }else{
+                clearInterval(intervalId);
+                $('#ViewChange').html("<i class='bi bi-camera'></i> Simulated View")
+                $('#vision_fgg').removeClass('d-none')
+                $('#back').addClass('d-none')
+                $('.sim_vim').css('opacity', '0')
+                simulated_view = false;
+
+            }
+        })
+    })
 }
