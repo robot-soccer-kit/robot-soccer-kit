@@ -355,8 +355,13 @@ function referee_initialize(backend)
 
         var background = new Image();
         background.src = "static/imgs/field.png";
+        background.width = this.naturalWidth;
+        background.height = this.naturalHeight;
+
         background.onload = function(){
-            context.drawImage(background,0,0,ctx_width,ctx_height)
+            context.canvas.width = this.naturalWidth;
+            context.canvas.height = this.naturalHeight;
+            context.drawImage(background,0,0)
         }
 
         function cam_to_sim(robot) {
@@ -401,7 +406,7 @@ function referee_initialize(backend)
             if (!simulated_view) {
 
                 $('#ViewChange').html("<i class='bi bi-camera'></i> Camera View")
-                $('#vision_fgg').addClass('d-none')
+                $('#vision').addClass('d-none')
                 $('#back').removeClass('d-none')
                 $('.sim_vim').css('opacity', '100')
                 simulated_view = true;
@@ -418,7 +423,7 @@ function referee_initialize(backend)
             }else{
                 clearInterval(intervalId);
                 $('#ViewChange').html("<i class='bi bi-camera'></i> Simulated View")
-                $('#vision_fgg').removeClass('d-none')
+                $('#vision').removeClass('d-none')
                 $('#back').addClass('d-none')
                 $('.sim_vim').css('opacity', '0')
                 simulated_view = false;
