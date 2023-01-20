@@ -364,10 +364,11 @@ function referee_initialize(backend)
             context.drawImage(background,0,0)
         }
 
-        function cam_to_sim(robot) {
+
+        function cam_to_sim(position, orientation) {
             field_size = constants["field_size"];
             let pos_sim = [0.0, 0.0, 0.0];
-            pos = [robot.position[0],robot.position[1],robot.orientation]
+            pos = [position[0],position[1],orientation]
 
             pos_sim[0] = Math.round(((pos[0] + field_size[0]/2) * document.getElementById('back').offsetWidth) / field_size[0]) ;
             pos_sim[1] = Math.round(((-pos[1] + field_size[1]/2) * document.getElementById('back').offsetHeight) / field_size[1]) ; 
@@ -383,7 +384,7 @@ function referee_initialize(backend)
 
                 for (let entry in video.detection.markers) {
                     let robot = video.detection.markers[entry];
-                    let robot_pos = cam_to_sim(robot);
+                    let robot_pos = cam_to_sim(robot.position,robot.orientation);
                     robot_size = document.getElementById('back').offsetHeight/8
 
                     canvas = markers[entry][1].canvas
@@ -398,6 +399,14 @@ function referee_initialize(backend)
                     markers[entry][2] = robot_pos
 
                 }
+                ball_ctx = document.getElementById("ball").getContext('2d');
+                ball_ctx.clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
+                ball_pose = video.detection.ball
+                let ball = cam_to_sim(ball_pose);
+                ball_ctx.beginPath();
+                ball_ctx.fillStyle="red";
+                ball_ctx.arc(ball[0], ball[1], 10, 0, Math.PI*2);
+                ball_ctx.fill()
             });
         };
 
@@ -411,14 +420,20 @@ function referee_initialize(backend)
                 $('.sim_vim').css('opacity', '100')
                 simulated_view = true;
                 markers = {"blue1": [NaN,NaN,[0,0,0]],"blue2": [NaN,NaN,[0,0,0]],"green1": [NaN,NaN,[0,0,0]],"green2": [NaN,NaN,[0,0,0]]}
+                ball = [NaN,NaN,[0,0,0]]
+                back_canvas = document.getElementById('back')
                 for (var key in markers) {
                     markers[key][0] = new Image();
                     markers[key][0].src = "static/imgs/robot"+ key +".svg";
                     canvas = document.getElementById(key)
-                    canvas.width = document.getElementById('back').offsetWidth
-                    canvas.height = document.getElementById('back').offsetHeight
+                    canvas.width = back_canvas.offsetWidth
+                    canvas.height = back_canvas.offsetHeight
                     markers[key][1] = canvas.getContext('2d');
                 }
+                    canvas = document.getElementById("ball")
+                    canvas.width = back_canvas.offsetWidth
+                    canvas.height = back_canvas.offsetHeight
+
                 intervalId = setInterval(compute_view, 50)
             }else{
                 clearInterval(intervalId);
