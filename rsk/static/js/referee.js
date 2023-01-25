@@ -343,7 +343,7 @@ function referee_initialize(backend)
     });
 
 
-    markers = {"blue1": [NaN,NaN,[0,0,0]],"blue2": [NaN,NaN,[0,0,0]],"green1": [NaN,NaN,[0,0,0]],"green2": [NaN,NaN,[0,0,0]]}
+    markers = {"blue1": [NaN,NaN,[0,0,0],true],"blue2": [NaN,NaN,[0,0,0],true],"green1": [NaN,NaN,[0,0,0],true],"green2": [NaN,NaN,[0,0,0],true]}
     simulated_view = false;
     intervalId = 0;
 
@@ -369,44 +369,62 @@ function referee_initialize(backend)
             field_size = constants["field_size"];
             let pos_sim = [0.0, 0.0, 0.0];
             pos = [position[0],position[1],orientation]
-
             pos_sim[0] = Math.round(((pos[0] + field_size[0]/2) * document.getElementById('back').offsetWidth) / field_size[0]) ;
             pos_sim[1] = Math.round(((-pos[1] + field_size[1]/2) * document.getElementById('back').offsetHeight) / field_size[1]) ; 
             pos_sim[2] = round(-pos[2]+Math.PI/2)
             return pos_sim;
         }
+        function if_mouv(last_pos, position){
+            if (Math.abs(last_pos[0] - position[0]) > 1.5){
+                    return true
+            }else if (Math.abs(last_pos[1] - position[1]) >  1.5){
+                    return true
+            }else if (Math.abs(last_pos[2] - position[2]) > 0.1){
+                    return true
+            }
+            return false
+        }
+        function draw_ball(position){
+            ball_ctx = document.getElementById("ball").getContext('2d');
+            ball_ctx.clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
+            let ball = cam_to_sim(position);
+            ball_ctx.beginPath();
+            ball_ctx.fillStyle="red";
+            ball_ctx.arc(ball[0], ball[1], 10, 0, Math.PI*2);
+            ball_ctx.fill()
+        }
         function compute_view(){
             backend.get_video(false, function(video) {
                 
+                let present_marker = video.detection.markers
                 for (var key in markers) {
-                    markers[key][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
+                    if(!(key in present_marker)){
+                        markers[key][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
+                        markers[key][3] = true
+                    }
                 }
 
-                for (let entry in video.detection.markers) {
-                    let robot = video.detection.markers[entry];
+                for (let entry in present_marker) {
+
+                    let robot = present_marker[entry];
                     let robot_pos = cam_to_sim(robot.position,robot.orientation);
-                    robot_size = document.getElementById('back').offsetHeight/8
 
-                    canvas = markers[entry][1].canvas
+                    if (if_mouv(markers[entry][2], robot_pos) || markers[entry][3]) {
+                        markers[entry][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
+                        robot_size = document.getElementById('back').offsetHeight/8
 
-                    markers[entry][1].drawImage(markers[entry][0],-robot_size/2,-robot_size/2,robot_size,robot_size)
-                    markers[entry][1].rotate(-markers[entry][2][2])
-                    markers[entry][1].translate(-markers[entry][2][0],-markers[entry][2][1])
-                    
-                    markers[entry][1].translate(robot_pos[0],robot_pos[1])
-                    markers[entry][1].rotate(robot_pos[2])
-                    
-                    markers[entry][2] = robot_pos
+                        markers[entry][1].rotate(-markers[entry][2][2])
+                        markers[entry][1].translate(-markers[entry][2][0],-markers[entry][2][1])
 
+                        markers[entry][1].translate(robot_pos[0],robot_pos[1])
+                        markers[entry][1].rotate(robot_pos[2])
+                        markers[entry][1].drawImage(markers[entry][0],-robot_size/2,-robot_size/2,robot_size,robot_size)
+                        
+                        markers[entry][2] = robot_pos
+                        markers[entry][3] = false
+                    }
                 }
-                ball_ctx = document.getElementById("ball").getContext('2d');
-                ball_ctx.clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
-                ball_pose = video.detection.ball
-                let ball = cam_to_sim(ball_pose);
-                ball_ctx.beginPath();
-                ball_ctx.fillStyle="red";
-                ball_ctx.arc(ball[0], ball[1], 10, 0, Math.PI*2);
-                ball_ctx.fill()
+                let ball = draw_ball(video.detection.ball);
             });
         };
 
@@ -419,7 +437,7 @@ function referee_initialize(backend)
                 $('#back').removeClass('d-none')
                 $('.sim_vim').css('opacity', '100')
                 simulated_view = true;
-                markers = {"blue1": [NaN,NaN,[0,0,0]],"blue2": [NaN,NaN,[0,0,0]],"green1": [NaN,NaN,[0,0,0]],"green2": [NaN,NaN,[0,0,0]]}
+                markers = {"blue1": [NaN,NaN,[0,0,0],true],"blue2": [NaN,NaN,[0,0,0],true],"green1": [NaN,NaN,[0,0,0],true],"green2": [NaN,NaN,[0,0,0],true]}   
                 ball = [NaN,NaN,[0,0,0]]
                 back_canvas = document.getElementById('back')
                 for (var key in markers) {
@@ -430,9 +448,9 @@ function referee_initialize(backend)
                     canvas.height = back_canvas.offsetHeight
                     markers[key][1] = canvas.getContext('2d');
                 }
-                    canvas = document.getElementById("ball")
-                    canvas.width = back_canvas.offsetWidth
-                    canvas.height = back_canvas.offsetHeight
+                canvas = document.getElementById("ball")
+                canvas.width = back_canvas.offsetWidth
+                canvas.height = back_canvas.offsetHeight
 
                 intervalId = setInterval(compute_view, 50)
             }else{
