@@ -151,7 +151,7 @@ class Client:
 
         logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
         self.logger: logging.Logger = logging.getLogger("client")
-        
+
         self.error_management = "print"  # "ignore", "print", "raise"
         self.running = True
         self.key = key
@@ -173,12 +173,10 @@ class Client:
             if color not in self.robots:
                 self.robots[color] = {}
             self.robots[color][number] = robot
-
         # Custom objects to track
         self.objs = {n: ClientTracked() for n in range(1, 9)}
 
         self.ball = None
-
         # ZMQ Context
         self.context = zmq.Context()
 
