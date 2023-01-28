@@ -26,7 +26,7 @@
           </a>
           
           <ul class="navbar-nav">
-            <li class="nav-item rounded nav-tab" rel="vision">
+            <li  class="nav-item rounded nav-tab not_show_simulated" rel="vision">
               <a class="nav-link active" aria-current="page" href="#">
                 <span class="input-group">
                   <i class="bi bi-webcam"></i>&nbsp;
@@ -36,7 +36,7 @@
                 </span>
               </a>
             </li>
-            <li class="nav-item rounded nav-tab" rel="robots">
+            <li class="nav-item rounded nav-tab not_show_simulated" rel="robots">
               <a class="nav-link" href="#">
                 <i class="bi bi-gear"></i>&nbsp;
                 Robots&nbsp;
@@ -209,7 +209,7 @@
               <div class="col-12">
                 <div class="vision-show-running">
                   <div id="camera-area" class="camera-area-referee justify-content-center d-flex">
-                      <canvas id="back" class="card d-none m-0"></canvas>
+                      <canvas id="back" class="card d-none m-0 tamere" height="100" width="100"></canvas>
                       <canvas id="green1" class="sim_vim"></canvas>
                       <canvas id="green2" class="sim_vim"></canvas>
                       <canvas id="blue1" class="sim_vim"></canvas>
@@ -226,7 +226,7 @@
                   <i class="bi bi-arrow-repeat"></i> Half time Change 
                 </button>
 
-                <button id="ViewChange" class="btn btn-warning btn-sm" z-index="0">
+                <button id="ViewChange" class="btn btn-warning btn-sm " z-index="0">
                   <i class="bi bi-camera" ></i> Simulated View
                 </button>
               </div>

@@ -1,16 +1,41 @@
 from . import api
-from . import video, robots, control, field, referee, detection, utils, constants
+from . import (
+    video,
+    robots,
+    control,
+    field,
+    referee,
+    detection,
+    utils,
+    constants,
+    simulator,
+)
 
 
 class Backend:
-    def __init__(self):
+    def __init__(self, simulated=False):
         super().__init__()
 
-        self.video: video.Video = video.Video()
-        self.detection: detection.Detection = self.video.detection
-        self.robots: robots.Robots = robots.Robots(self.detection)
+        self.simulated = simulated
+        if simulated:
+            print("SIMULATEUR")
+            self.video: simulator.Video = simulator.Video()
+            self.detection: simulator.Detection = self.video.detection
+            self.robots: simulator.Robots = simulator.Robots(self.detection)
+            self.simulator: simulator.Simulator = simulator.Simulator(
+                self.detection, self.robots
+            )
+        else:
+            print("ESSAIE REEL")
+            self.video: video.Video = video.Video()
+            self.detection: detection.Detection = self.video.detection
+            self.robots: robots.Robots = robots.Robots(self.detection)
+
         self.referee: referee.Referee = referee.Referee(self.robots.control)
         self.detection.referee = self.referee
+
+    def is_simulated(self):
+        return self.simulated
 
     def cameras(self):
         return self.video.cameras()

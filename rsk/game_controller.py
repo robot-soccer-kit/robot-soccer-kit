@@ -11,8 +11,23 @@ from flask_cors import CORS
 from .backend import Backend
 from . import api
 
+
+# Setting up the logger
+logging.basicConfig(
+    format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO
+)
+logging.getLogger("werkzeug").setLevel(logging.CRITICAL)
+logging.getLogger("robot-soccer-kit").info("Starting robot-soccer-kit Game Controller")
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--port", "-p", type=str, default="7070")
+parser.add_argument("--ip", "-ip", type=str, default="127.0.0.1")
+parser.add_argument("--simulated", "-s", action="store_true")
+args = parser.parse_args()
+
+
 has_client: bool = False
-backend: Backend = Backend()
+backend: Backend = Backend(args.simulated)
 api.register(backend)
 
 # Starting a Flask app serving API requests and files of static/ directory
@@ -48,20 +63,6 @@ def handle_api():
 @app.route("/", methods=["GET"])
 def main():
     return send_from_directory(static, "index.html")
-
-
-# Setting up the logger
-logging.basicConfig(
-    format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO
-)
-logging.getLogger("werkzeug").setLevel(logging.CRITICAL)
-logging.getLogger("robot-soccer-kit").info("Starting robot-soccer-kit Game Controller")
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--port", "-p", type=str, default="7070")
-parser.add_argument("--ip", "-ip", type=str, default="127.0.0.1")
-parser.add_argument("--simulate", "-s", action="store_true")
-args = parser.parse_args()
 
 
 def run_browser():

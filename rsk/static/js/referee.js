@@ -348,6 +348,7 @@ function referee_initialize(backend)
     intervalId = 0;
 
     backend.constants(function(constants) {
+
         var context = document.getElementsByTagName('canvas')[0].getContext('2d');
         ctx_width = context.canvas.width
         ctx_height = context.canvas.height
@@ -395,7 +396,6 @@ function referee_initialize(backend)
         }
         function compute_view(){
             backend.get_video(false, function(video) {
-                
                 let present_marker = video.detection.markers
                 for (var key in markers) {
                     if(!(key in present_marker)){
@@ -407,8 +407,8 @@ function referee_initialize(backend)
                 for (let entry in present_marker) {
 
                     let robot = present_marker[entry];
+                    console.log(robot.position)
                     let robot_pos = cam_to_sim(robot.position,robot.orientation);
-
                     if (if_mouv(markers[entry][2], robot_pos) || markers[entry][3]) {
                         markers[entry][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
                         robot_size = document.getElementById('back').offsetHeight/8
@@ -429,7 +429,7 @@ function referee_initialize(backend)
         };
 
 
-        $('#ViewChange').click(function() {
+        function view() {
             if (!simulated_view) {
 
                 $('#ViewChange').html("<i class='bi bi-camera'></i> Camera View")
@@ -447,6 +447,7 @@ function referee_initialize(backend)
                     canvas.width = back_canvas.offsetWidth
                     canvas.height = back_canvas.offsetHeight
                     markers[key][1] = canvas.getContext('2d');
+                    console.log(back_canvas.offsetWidth)
                 }
                 canvas = document.getElementById("ball")
                 canvas.width = back_canvas.offsetWidth
@@ -462,6 +463,12 @@ function referee_initialize(backend)
                 simulated_view = false;
 
             }
-        })
+        }
+        if(backend.simulated){
+            simulated_view = false
+            $('body').addClass('vision-running');  
+        }
+        view()
+        $('#ViewChange').click(view)
     })
 }
