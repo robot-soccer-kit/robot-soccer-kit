@@ -370,8 +370,9 @@ function referee_initialize(backend)
             field_size = constants["field_size"];
             let pos_sim = [0.0, 0.0, 0.0];
             pos = [position[0],position[1],orientation]
-            pos_sim[0] = Math.round(((pos[0] + field_size[0]/2) * document.getElementById('back').offsetWidth) / field_size[0]) ;
-            pos_sim[1] = Math.round(((-pos[1] + field_size[1]/2) * document.getElementById('back').offsetHeight) / field_size[1]) ; 
+            ratio = document.getElementById('back').offsetWidth / field_size[0]
+            pos_sim[0] = Math.round(((pos[0] + field_size[0]/2) * ratio)) ;
+            pos_sim[1] = Math.round(((-pos[1] + field_size[1]/2) * ratio)) ; 
             pos_sim[2] = round(-pos[2]+Math.PI/2)
             return pos_sim;
         }
@@ -391,7 +392,7 @@ function referee_initialize(backend)
             let ball = cam_to_sim(position);
             ball_ctx.beginPath();
             ball_ctx.fillStyle="red";
-            ball_ctx.arc(ball[0], ball[1], 10, 0, Math.PI*2);
+            ball_ctx.arc(ball[0], ball[1], 7, 0, Math.PI*2);
             ball_ctx.fill()
         }
         function compute_view(){
@@ -407,11 +408,11 @@ function referee_initialize(backend)
                 for (let entry in present_marker) {
 
                     let robot = present_marker[entry];
-                    console.log(robot.position)
                     let robot_pos = cam_to_sim(robot.position,robot.orientation);
                     if (if_mouv(markers[entry][2], robot_pos) || markers[entry][3]) {
                         markers[entry][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
-                        robot_size = document.getElementById('back').offsetHeight/8
+                        console.log(field_size[0])
+                        robot_size = (0.0595 * 2 * document.getElementById('back').offsetWidth) / field_size[0]
 
                         markers[entry][1].rotate(-markers[entry][2][2])
                         markers[entry][1].translate(-markers[entry][2][0],-markers[entry][2][1])
