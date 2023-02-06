@@ -54,14 +54,17 @@ class Detection:
 
     def get_detection(self):
         while True:
-            return {
-                "ball": list(SimulatedObject.get_ball().position[:2].tolist()),
-                "markers": self.new_markers(),
-                "calibrated": self.field.calibrated(),
-                "see_whole_field": self.field.see_whole_field,
-                "referee": self.referee.get_game_state(full=False),
-                "printable_point": self.printable_point,
-            }
+            try:
+                return {
+                    "ball": list(SimulatedObject.get_ball().position[:2].tolist()),
+                    "markers": self.new_markers(),
+                    "calibrated": self.field.calibrated(),
+                    "see_whole_field": self.field.see_whole_field,
+                    "referee": self.referee.get_game_state(full=False),
+                    "printable_point": self.printable_point,
+                }
+            except Exception as err:
+                print("Thread init error : ", err)
 
     def new_markers(self):
         markers = dict()
@@ -88,137 +91,53 @@ class Simulator:
         self.robots = robots
         self.detection = detection
 
-        SimulatedObject("ball", [0, 0, 0], 0.1, 0.3)
+        SimulatedObject("ball", [0, 0, 0], 0.01, 0.3)
         self.objects = SimulatedObject.get_objects()
 
         self.simu_thread = threading.Thread(target=lambda: self.thread())
         self.simu_thread.start()
 
+        self.lock = threading.Lock()
+
     def thread(self):
         last_time = time.time()
-        last_markers = copy.deepcopy(self.detection.markers)
-        while 1:
-            time.sleep(0.01)
+        while True:
             self.dt = time.time() - last_time
             last_time = time.time()
+            # time.sleep(0.005)
+            # print("DT : ", self.dt)
 
-            for obj in self.objects:
-                if np.linalg.norm(obj.speed) != 0:
-                    futur_pos = obj.position + utils.frame(tuple(obj.position)) @ (
-                        obj.speed * self.dt
-                    )
-                    for check_obj in self.objects:
-                        if check_obj != obj:
-                            if dist(futur_pos, check_obj.position) < (
-                                obj.radius + check_obj.radius
-                            ):
+            for obj in SimulatedObject.get_objects():
+                obj.action()
+                speed = obj.speed
+                if np.linalg.norm(speed) != 0:
+                    futur_pos = obj.position + (speed * self.dt) @ utils.frame_inv(utils.frame(tuple(obj.position)))
+                    for check_obj in SimulatedObject.get_objects():
+                        if check_obj.marker != obj.marker:
+                            if dist(futur_pos[:2], check_obj.position[:2]) < (obj.radius + check_obj.radius):
                                 if check_obj.marker == "ball":
-                                    check_obj.speed = obj.speed
+                                    print("bam")
+                                    check_obj.speed = speed / 4 @ utils.frame_inv(utils.frame(tuple(obj.position)))
+                                    check_obj.speed[2] = 0
                                 else:
-                                    futur_pos = obj.position
+                                    C = (futur_pos[:2] + check_obj.position[:2]) / 2
+                                    futur_pos += (*(obj.position[:2] - C) / 6, 0)
 
-                    obj.position = futur_pos
-                    obj.speed = obj.speed / np.linalg.norm(obj.speed) * obj.deceleration
+                    obj.position = np.array(futur_pos)
 
+                    # obj.speed = speed * (
+                    #     1 - (obj.deceleration * self.dt) / np.linalg.norm([speed[:2] if sum(speed[:2]) else speed])
+                    # )
+
+                    obj.speed = speed * (hypot(*speed[:2]) - obj.deceleration * self.dt) / hypot(*speed[:2])
+
+                    if np.linalg.norm(obj.speed) < 0.01:
+                        obj.speed = np.array([0, 0, 0])
+
+                    if np.isnan(obj.speed[0]):
+                        while True:
+                            pass
             self.detection.publish()
-
-            # for marker in self.robots.robots_by_marker:
-
-            #     if self.robots.robots_by_marker[marker].command:
-
-            #         command = self.robots.robots_by_marker[marker].command.pop(0)
-            #         if command[0] == "control":
-            #             robot = self.detection.markers[marker]
-            #             x, y, o = command = self.compute_mouv(marker, command)
-            #             robot["position"][0] += x
-            #             robot["position"][1] += y
-            #             robot["orientation"] += o
-
-            #         elif command[0] == "kick":
-            #             print("kick")
-            #             if self.compute_kick(marker):
-            #                 print("ok")
-
-            # if sum(self.ball_speed) != 0:
-            #     self.detection.ball = [
-            #         self.detection.ball[0] + self.ball_speed[0] * self.dt,
-            #         self.detection.ball[1] + self.ball_speed[1] * self.dt,
-            #     ]
-
-            #     self.ball_speed *= (
-            #         hypot(*self.ball_speed) - self.ball_deceleration * self.dt
-            #     ) / hypot(*self.ball_speed)
-
-            #     if -0.01 < self.ball_speed[0] < 0.01:
-            #         self.ball_speed[0] = 0
-            #     if -0.01 < self.ball_speed[1] < 0.01:
-            #         self.ball_speed[1] = 0
-
-            # last_markers = copy.deepcopy(self.detection.markers)
-            # self.detection.publish()
-
-    def distance_obj(self, posA, posB):
-        distance_xy = np.array(posA) - np.array(posB)
-        distance = hypot(distance_xy[0], distance_xy[1])
-        return distance
-
-    def compute_mouv(self, marker, command):
-        robot = self.detection.markers[marker]
-
-        command[1] = kinematics.clip_target_order(np.array(command[1]))
-
-        x_r, y_r = command[1][:2]
-        o_r = robot["orientation"]  # + command[1][2] * self.dt
-
-        x = (x_r * cos(-o_r) + y_r * sin(-o_r)) * self.dt
-        y = (y_r * cos(-o_r) - x_r * sin(-o_r)) * self.dt
-
-        command = [x, y, command[1][2] * self.dt]
-        new_pos = (
-            robot["position"][0] + command[0],
-            robot["position"][1] + command[1],
-        )
-
-        for mark in self.robots.robots_by_marker:
-            if marker != mark:
-                pos = self.detection.markers[mark]["position"]
-                distance_xy = np.array(new_pos) - np.array(pos)
-                distance = hypot(distance_xy[0], distance_xy[1])
-                if distance < kinematics.robot_radius * 2:
-                    command = [-command[1], -command[0], command[2]]
-
-        if (
-            self.distance_obj(new_pos, self.detection.ball)
-            < 0.021 + kinematics.robot_radius
-        ):
-            self.ball_speed = np.array(command[:2])
-
-        return command
-
-    def compute_kick(self, marker):
-        robot = self.detection.markers[marker]
-        ball = self.detection.ball
-        distance_xy = np.array(robot["position"]) - np.array(self.detection.ball)
-        distance = hypot(distance_xy[0], distance_xy[1])
-
-        o_r = robot["orientation"]
-
-        ball_R = [0, 0]
-        _ = np.array(ball) - np.array(robot["position"])
-        ball_R[0] = (_[0]) * cos(o_r) + (_[1]) * sin(o_r)
-        ball_R[1] = (_[1]) * cos(o_r) - (_[0]) * sin(o_r)
-
-        if (
-            -self.kicker_range[1] < ball_R[1] < self.kicker_range[1]
-            and 0 < (ball_R[0] - kinematics.robot_radius) < self.kicker_range[0]
-        ):
-
-            vecteur = (np.array(distance_xy) / hypot(*distance_xy)) * self.kicker_power
-            self.ball_speed = -vecteur
-
-    def compute_ball_acceleration(self):
-        if self.ball_acc != [0, 0]:
-            self.ball_acc
 
 
 class Robots:
@@ -252,9 +171,7 @@ class Robots:
         for entry in self.robots:
             last_detection = None
             if self.robots[entry].marker in self.detection.last_updates:
-                last_detection = (
-                    time.time() - self.detection.last_updates[self.robots[entry].marker]
-                )
+                last_detection = time.time() - self.detection.last_updates[self.robots[entry].marker]
 
             data[entry] = {
                 "state": self.robots[entry].state,
@@ -269,42 +186,53 @@ class Robots:
 
 
 class SimulatedObject:
-    sim_object = dict()
+    sim_objects = dict()
 
     def __init__(self, marker, position, radius, deceleration):
-        SimulatedObject.sim_object[marker] = self
+        SimulatedObject.sim_objects[marker] = self
         self.marker = marker
         self.position = np.array([float(i) for i in position])
         self.deceleration = deceleration
         self.radius = radius
         self.speed = np.array([0.0, 0.0, 0.0])
-        self.action = None
+        self.action = lambda: 0
 
     def get_objects():
-        return [
-            SimulatedObject.sim_object[marker] for marker in SimulatedObject.sim_object
-        ]
+        return [SimulatedObject.sim_objects[key] for key in SimulatedObject.sim_objects]
 
     def get_object(marker):
-        return SimulatedObject.sim_object[marker]
+        return SimulatedObject.sim_objects[marker]
 
     def get_ball():
-        return SimulatedObject.sim_object["ball"]
+        return SimulatedObject.sim_objects["ball"]
 
 
 class Robot(SimulatedObject):
     def __init__(self, marker, position):
-
-        super().__init__(marker, position, kinematics.robot_radius, 1)
+        super().__init__(marker, position, kinematics.robot_radius, 0)
+        self.kicker_range = [0.05, 0.05]
 
     def control(self, dx: float, dy: float, dturn: float):
+        # print(self.marker, " : ", [dx, dy, dturn])
         self.speed = kinematics.clip_target_order(np.array([dx, dy, dturn]))
 
     def kick(self, power: float = 1.0):
-        self.action = self.compute_kick()
+        self.action = self.compute_kick
 
     def compute_kick(self):
-        pass
+        print("KICK")
+        self.action = lambda: 0
+        vector_BR = SimulatedObject.get_ball().position[:2] - self.position[:2]
+        ball_position = [*vector_BR, 0] @ utils.frame(tuple(self.position))
+        if (
+            -self.kicker_range[1] < ball_position[1] < self.kicker_range[1]
+            and 0 < (ball_position[0] - self.radius) < self.kicker_range[0]
+        ):
+            print("kick_valid")
+
+            SimulatedObject.get_ball().speed[:2] = vector_BR[:2] / np.linalg.norm(vector_BR[:2]) * 0.4
+            print(np.linalg.norm(SimulatedObject.get_ball().speed))
+            # [0.4, 0, 0] @ utils.frame_inv(utils.frame(tuple(self.position)))
 
     def leds(self, r: int, g: int, b: int):
         pass
