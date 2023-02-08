@@ -353,7 +353,6 @@ function referee_initialize(backend)
         ctx_width = context.canvas.width
         ctx_height = context.canvas.height
         robot_size = ctx_height/8
-
         var background = new Image();
         background.src = "static/imgs/field.png";
         background.width = this.naturalWidth;
@@ -465,10 +464,13 @@ function referee_initialize(backend)
 
             }
         }
-        if(backend.simulated){
-            simulated_view = false
+        backend.is_simulated(function (simulated) {
+            if (simulated){
             $('body').addClass('vision-running');  
-        }
+                simulated_view = false
+                $('body').addClass('vision-running');  
+            }
+        })
         view()
         $('#ViewChange').click(view)
     })

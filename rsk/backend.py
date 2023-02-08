@@ -19,8 +19,8 @@ class Backend:
         self.simulated = simulated
         if simulated:
             print("SIMULATEUR")
-            self.video: simulator.Video = simulator.Video()
-            self.detection: simulator.Detection = self.video.detection
+            self.detection: simulator.Detection = simulator.Detection()
+            self.video: simulator.Detection = self.detection
             self.robots: simulator.Robots = simulator.Robots(self.detection)
             self.simulator: simulator.Simulator = simulator.Simulator(
                 self.detection, self.robots
