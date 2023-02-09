@@ -3,20 +3,17 @@ import threading
 import time
 import zmq
 import numpy as np
+from numpy.linalg import norm
 from math import dist
 from . import kinematics, utils, control
 
 
-
-
 class Detection:
     def __init__(self):
-
         # Video attribute
         self.detection = self
         self.capture = None
         self.period = None
-
 
         self.referee = None
         # Publishing server
@@ -70,7 +67,6 @@ class Detection:
 
 class Simulator:
     def __init__(self, detection, robots):
-
         self.robots = robots
         self.detection = detection
 
@@ -85,32 +81,21 @@ class Simulator:
     def thread(self):
         last_time = time.time()
         while True:
-            self.dt = time.time() - last_time
-            last_time = time.time()
-
+            self.dt = -(last_time - (last_time := time.time()))
             for obj in self.objects():
                 obj.action()
+                obj.actualise_speed(self.dt)
                 speed = obj.speed
-                if np.linalg.norm(speed) != 0:
+                if norm(speed) != 0:
                     futur_pos = obj.position + (speed * self.dt) @ utils.frame_inv(utils.frame(tuple(obj.position)))
                     for check_obj in self.objects():
                         if check_obj.marker != obj.marker:
                             if dist(futur_pos[:2], check_obj.position[:2]) < (obj.radius + check_obj.radius):
-                                if check_obj.marker == "ball":
-                                    check_obj.speed = speed / 4 @ utils.frame_inv(utils.frame(tuple(obj.position)))
-                                    check_obj.speed[2] = 0
-                                else:
-                                    C = (futur_pos[:2] + check_obj.position[:2]) / 2
-                                    futur_pos += (*(obj.position[:2] - C) / 6, 0)
-
+                                obj.colision(check_obj)
+                                futur_pos = obj.position + (speed * self.dt) @ utils.frame_inv(
+                                    utils.frame(tuple(obj.position))
+                                )
                     obj.position = np.array(futur_pos)
-
-                    obj.speed = speed * (
-                        1 - (obj.deceleration * self.dt) / np.linalg.norm([speed[:2] if sum(speed[:2]) else speed])
-                    )
-
-                    if np.linalg.norm(obj.speed) < 0.01:
-                        obj.speed = np.array([0, 0, 0])
 
             self.detection.publish()
 
@@ -123,7 +108,6 @@ class Robots:
         self.detection: Detection = detection
         self.robots: dict = {}
         self.robots_by_marker: dict = {}
-
 
         for marker, position in zip(
             ["green1", "green2", "blue1", "blue2"],
@@ -165,13 +149,17 @@ class Robots:
 class SimulatedObject:
     sim_objects = dict()
 
-    def __init__(self, marker, position, radius, deceleration):
+    def __init__(self, marker, position, radius, deceleration, mass=1):
         SimulatedObject.sim_objects[marker] = self
         self.marker = marker
-        self.position = np.array([float(i) for i in position])
-        self.deceleration = deceleration
         self.radius = radius
+
+        self.mass = mass
+        self.position = np.array([float(i) for i in position])
+
         self.speed = np.array([0.0, 0.0, 0.0])
+        self.deceleration = deceleration
+
         self.action = lambda: 0
 
     def get_objects():
@@ -183,14 +171,33 @@ class SimulatedObject:
     def get_ball():
         return SimulatedObject.sim_objects["ball"]
 
+    def actualise_speed(self, dt):
+        if norm(self.speed):
+            self.speed = np.array(
+                self.speed * (1 - (self.deceleration * dt) / norm([self.speed[:2] if sum(self.speed[:2]) else self.speed]))
+            )
+
+        if norm(self.speed) < 0.01:
+            self.speed = np.array([0, 0, 0])
+
+    def colision(self, obj):
+        m1, v1 = self.mass, (self.speed @ utils.frame_inv(utils.frame(tuple(self.position))))[:2]
+        m2, v2 = obj.mass, (obj.speed @ utils.frame_inv(utils.frame(tuple(obj.position))))[:2]
+        nv1 = (m1 - m2) / (m1 + m2) * v1 + (2 * m2) / (m1 + m2) * v2
+        nv2 = (2 * m1) / (m1 + m2) * v1 - (m1 - m2) / (m1 + m2) * v2
+        self.speed[:2] = (m1 - m2) / (m1 + m2) * v1 + (2 * m2) / (m1 + m2) * v2
+        obj.speed = np.array([*nv2, obj.speed[2]])
+
 
 class Robot(SimulatedObject):
     def __init__(self, marker, position):
-        super().__init__(marker, position, kinematics.robot_radius, 0)
+        super().__init__(marker, position, kinematics.robot_radius, 0, 3)
         self.kicker_range = [0.05, 0.05]
+        self.acc_max = 1
+        self.control_cmd = np.array([0.0, 0.0, 0.0])
 
     def control(self, dx: float, dy: float, dturn: float):
-        self.speed = kinematics.clip_target_order(np.array([dx, dy, dturn]))
+        self.control_cmd = kinematics.clip_target_order(np.array([dx, dy, dturn]))
 
     def kick(self, power: float = 1.0):
         self.action = self.compute_kick
@@ -208,10 +215,14 @@ class Robot(SimulatedObject):
             print("Kick_Valid")
             vector = (self.kicker_range[0], 0, 0) @ utils.frame(tuple(self.position))
             SimulatedObject.get_ball().position[2] = self.position[2]
-            SimulatedObject.get_ball().speed = np.array([0.7,0,0])
+            SimulatedObject.get_ball().speed = np.array([0.7, 0, 0])
 
-            # SimulatedObject.get_ball().speed = np.array([*(vector[:2] / np.linalg.norm(vector[:2]) * 0.4), 0])
+    def actualise_speed(self, dt):
+        ratio = max(1, norm(self.control_cmd - self.speed) / self.acc_max)
+        self.speed = self.speed + ((self.control_cmd - self.speed) / ratio)
 
+        if norm(self.speed) < 0.01:
+            self.speed = np.array([0, 0, 0])
 
     def leds(self, r: int, g: int, b: int):
         pass

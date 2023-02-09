@@ -406,11 +406,10 @@ function referee_initialize(backend)
 
                 for (let entry in present_marker) {
 
-                    let robot = present_marker[entry];
+                    let robot = present_marker[entry]
                     let robot_pos = cam_to_sim(robot.position,robot.orientation);
                     if (if_mouv(markers[entry][2], robot_pos) || markers[entry][3]) {
                         markers[entry][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
-                        console.log(field_size[0])
                         robot_size = (0.0595 * 2 * document.getElementById('back').offsetWidth) / field_size[0]
 
                         markers[entry][1].rotate(-markers[entry][2][2])
@@ -447,7 +446,6 @@ function referee_initialize(backend)
                     canvas.width = back_canvas.offsetWidth
                     canvas.height = back_canvas.offsetHeight
                     markers[key][1] = canvas.getContext('2d');
-                    console.log(back_canvas.offsetWidth)
                 }
                 canvas = document.getElementById("ball")
                 canvas.width = back_canvas.offsetWidth
