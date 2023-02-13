@@ -451,7 +451,7 @@ function referee_initialize(backend)
                 canvas.width = back_canvas.offsetWidth
                 canvas.height = back_canvas.offsetHeight
 
-                intervalId = setInterval(compute_view, 50)
+                intervalId = setInterval(compute_view, 10)
             }else{
                 clearInterval(intervalId);
                 $('#ViewChange').html("<i class='bi bi-camera'></i> Simulated View")
@@ -469,7 +469,7 @@ function referee_initialize(backend)
                 $('body').addClass('vision-running');  
             }
         })
-        view()
+        setTimeout(view, 1000)
         $('#ViewChange').click(view)
     })
 }
