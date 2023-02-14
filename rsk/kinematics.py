@@ -6,6 +6,8 @@ the robots themselfs, allowing them to compute their own kinematics. This is onl
 we need to do some simulations.
 """
 
+# TODO: Move to constants?
+
 # Maxium wheel RPM [rotation/min]
 max_wheel_rpm: float = 150
 

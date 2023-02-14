@@ -5,7 +5,7 @@ import zmq
 import numpy as np
 from numpy.linalg import norm
 from math import dist
-from . import kinematics, utils, control
+from . import kinematics, utils, control, constants
 import abc
 
 
@@ -70,24 +70,27 @@ class Detection:
 class Simulator(Detection):
     def __init__(self, robots):
         super().__init__()
-        self.robots = robots
         self.objects: dict = {}
 
         # Creating the ball
-        self.add_object(SimulatedObject("ball", [0, 0, 0], 0.01, 0.3))
+        self.add_object(
+            SimulatedObject("ball", [0, 0, 0], constants.ball_radius, constants.ball_deceleration, constants.ball_mass)
+        )
 
         # Adding the robots
-        for object in self.robots.robots_by_marker.values():
+        for object in robots.robots_by_marker.values():
             self.add_object(object)
+
+        self.on_tick = None
 
         self.simu_thread = threading.Thread(target=lambda: self.thread())
         self.simu_thread.start()
+
         self.period = None
         self.lock = threading.Lock()
 
     def get_ball(self) -> list:
-
-        return list(self.objects['ball'].position[:2])
+        return list(self.objects["ball"].position[:2])
 
     def get_markers(self) -> dict:
         markers = dict()
@@ -105,30 +108,53 @@ class Simulator(Detection):
         last_time = time.time()
         while True:
             self.dt = -(last_time - (last_time := time.time()))
+
             for obj in self.objects.values():
                 # Execute actions (e.g: kick)
                 obj.execute_actions()
 
-                obj.actualise_velocity(self.dt)
+                # Update object velocity (e.g: deceleration, taking commands in account)
+                obj.update_velocity(self.dt)
 
-                velocity = obj.velocity
-                if norm(velocity) != 0:
-                    futur_pos = obj.position + velocity * self.dt
-                    # for check_obj in self.objects:
-                    #     if check_obj.marker != obj.marker:
-                    #         if dist(futur_pos[:2], check_obj.position[:2]) < (obj.radius + check_obj.radius):
-                    #             obj.colision(check_obj)
-                    #             futur_pos = obj.position + (velocity * self.dt) @ utils.frame_inv(
-                    #                 utils.frame(tuple(obj.position))
-                    #             )
-                    obj.position = np.array(futur_pos)
+                if norm(obj.velocity) > 0:
+                    # Where the object would arrive without collisions
+                    future_pos = obj.position + obj.velocity * self.dt
+
+                    # Check for collisions
+                    for marker in self.objects:
+                        if marker != obj.marker:
+                            check_obj = self.objects[marker]
+                            if dist(future_pos[:2], check_obj.position[:2]) < (obj.radius + check_obj.radius):
+                                obj.collision(check_obj)
+                                has_collision = True
+
+            for obj in self.objects.values():
+                # Check for collisions
+                for marker in self.objects:
+                    if marker != obj.marker:
+                        check_obj = self.objects[marker]
+                        future_pos = obj.position + obj.velocity * self.dt
+
+                        if dist(future_pos[:2], check_obj.position[:2]) < (obj.radius + check_obj.radius):
+                            R_collision_world = obj.collision_R(check_obj)
+                            velocity_collision = R_collision_world @ obj.velocity[:2]
+                            velocity_collision[0] = min(0, velocity_collision[0])
+                            obj.velocity[:2] = R_collision_world.T @ velocity_collision
+
+                obj.position = obj.position + (obj.velocity * self.dt)
 
             # TODO: Remove this
-            if np.linalg.norm(self.objects["ball"].position) > 1.5:
-                self.objects["ball"].position[:2] = [0., 0.]
-                self.objects["ball"].velocity[:2] = [0., 0.]
+            if np.linalg.norm(self.objects["ball"].position[:2]) > 1.5:
+                self.objects["ball"].position[:3] = [0.0, 0.0, 0.0]
+                self.objects["ball"].velocity[:3] = [0.0, 0.0, 0.0]
+
+            if self.on_tick is not None:
+                self.on_tick()
 
             self.detection.publish()
+
+            # TODO: Configure the frequency
+            time.sleep(0.01)
 
 
 class Robots:
@@ -178,7 +204,7 @@ class Robots:
 
 
 class SimulatedObject:
-    def __init__(self, marker, position, radius, deceleration:float=0, mass:float=1):
+    def __init__(self, marker, position, radius, deceleration: float = 0, mass: float = 1):
         self.marker = marker
         self.radius = radius
 
@@ -196,66 +222,87 @@ class SimulatedObject:
             action()
         self.pending_actions = []
 
-    def actualise_velocity(self, dt):
-        self.velocity[:2] = utils.update_limit_variation(self.velocity[:2], np.array([0., 0.]), self.deceleration * dt)
+    def update_velocity(self, dt):
+        self.velocity[:2] = utils.update_limit_variation(self.velocity[:2], np.array([0.0, 0.0]), self.deceleration * dt)
 
-    def colision(self, obj):
+    def collision_R(self, obj):
+        """
+        Given another object, computes the collision frame.
+        It returns R_collision_world
+        """
+
+        # Computing unit vectors normal and tangent to contact (self to obj)
+        normal = obj.position[:2] - self.position[:2]
+        normal = normal / norm(normal)
+        tangent = np.array([[0, -1], [1, 0]]) @ normal
+
+        return np.vstack((normal, tangent))
+
+    def collision(self, obj):
         print("Collision")
 
-        m1, v1 = self.mass, (self.velocity @ utils.frame_inv(utils.frame(tuple(self.position))))[:2]
-        m2, v2 = obj.mass, (obj.velocity @ utils.frame_inv(utils.frame(tuple(obj.position))))[:2]
+        R_collision_world = self.collision_R(obj)
 
-        nv1 = (m1 - m2) / (m1 + m2) * v1 + (2 * m2) / (m1 + m2) * v2
-        nv2 = (2 * m1) / (m1 + m2) * v1 - (m1 - m2) / (m1 + m2) * v2
+        # Velocities expressed in the collision frame
+        self_velocity_collision = R_collision_world @ self.velocity[:2]
+        obj_velocity_collision = R_collision_world @ obj.velocity[:2]
 
-        self.velocity[:2] = nv1
-        obj.velocity = np.array([*nv2, obj.velocity[2]])
+        # Updating velocities using elastic collision
+        u1 = self_velocity_collision[0]
+        u2 = obj_velocity_collision[0]
+        m1 = self.mass
+        m2 = obj.mass
+        Cr = 0.5
+
+        self_velocity_collision[0] = (m1 * u1 + m2 * u2 + m2 * Cr * (u2 - u1)) / (m1 + m2)
+        obj_velocity_collision[0] = (m1 * u1 + m2 * u2 + m1 * Cr * (u1 - u2)) / (m1 + m2)
+
+        # Velocities back in the world frame
+        self.velocity[:2] = R_collision_world.T @ self_velocity_collision
+        obj.velocity[:2] = R_collision_world.T @ obj_velocity_collision
 
 
 class Robot(SimulatedObject):
     def __init__(self, marker, position):
-        super().__init__(marker, position, kinematics.robot_radius, 0, 2)
-        self.kicker_range = [0.05, 0.05]
-        self.acc_max = 1
-        # TODO: Make constants
-        self.max_linear_acc = 3 # m s^{-2}
-        self.max_angular_acc = 50 # rad s^{-2}
+        super().__init__(marker, position, kinematics.robot_radius, 0, constants.robot_mass)
         self.control_cmd = np.array([0.0, 0.0, 0.0])
 
     def control(self, dx: float, dy: float, dturn: float):
         self.control_cmd = kinematics.clip_target_order(np.array([dx, dy, dturn]))
 
     def kick(self, power: float = 1.0):
-        self.pending_actions.append(
-            lambda: self.compute_kick(power)
-        )
+        self.pending_actions.append(lambda: self.compute_kick(power))
 
     def compute_kick(self, power):
         # Robot to ball vector, expressed in world
-        ball_world = self.sim.objects['ball'].position[:2]
+        ball_world = self.sim.objects["ball"].position[:2]
         T_world_robot = utils.frame(tuple(self.position))
         T_robot_world = utils.frame_inv(T_world_robot)
         ball_robot = utils.frame_transform(T_robot_world, ball_world)
 
-        if utils.in_rectangle(ball_robot, 
-            [self.radius - self.kicker_range[0], -self.kicker_range[1]],
-            [self.radius + self.kicker_range[0], self.kicker_range[1]]
+        if utils.in_rectangle(
+            ball_robot,
+            [self.radius - constants.kicker_x_tolerance, -constants.kicker_y_tolerance],
+            [self.radius + constants.kicker_x_tolerance, constants.kicker_y_tolerance],
         ):
-            print("Kick_Valid")            
-            self.sim.objects['ball'].position[2] = self.position[2]
+            print("Kick_Valid")
 
             # TODO: Move in constants
-            ball_speed_robot = [np.clip(power, 0, 1)*np.random.normal(0.8, 0.1), 0]
-            self.sim.objects['ball'].velocity[:2] = T_world_robot[:2, :2] @ ball_speed_robot
+            ball_speed_robot = [np.clip(power, 0, 1) * np.random.normal(0.8, 0.1), 0]
+            self.sim.objects["ball"].velocity[:2] = T_world_robot[:2, :2] @ ball_speed_robot
 
-    def actualise_velocity(self, dt):
+    def update_velocity(self, dt):
         target_velocity_robot = self.control_cmd
 
         T_world_robot = utils.frame(tuple(self.position))
         target_velocity_world = T_world_robot[:2, :2] @ target_velocity_robot[:2]
 
-        self.velocity[:2] = utils.update_limit_variation(self.velocity[:2], target_velocity_world, self.max_linear_acc * dt)
-        self.velocity[2:] = utils.update_limit_variation(self.velocity[2:], target_velocity_robot[2:], self.max_angular_acc * dt)
+        self.velocity[:2] = utils.update_limit_variation(
+            self.velocity[:2], target_velocity_world, constants.max_linear_acceleration * dt
+        )
+        self.velocity[2:] = utils.update_limit_variation(
+            self.velocity[2:], target_velocity_robot[2:], constants.max_angular_accceleration * dt
+        )
 
     def leds(self, r: int, g: int, b: int):
         pass

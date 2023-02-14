@@ -19,6 +19,7 @@ class Backend:
         self.simulated = simulated
         if simulated:
             print("SIMULATEUR")
+            # TODO: Clean this dependency mess
             self.robots: simulator.Robots = simulator.Robots()
             self.simulator: simulator.Simulator = simulator.Simulator(self.robots)
             self.detection = self.simulator

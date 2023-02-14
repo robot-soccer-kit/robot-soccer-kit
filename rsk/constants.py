@@ -42,7 +42,11 @@ robot_tag_size: float = 0.08  # [m]
 
 # Heights
 robot_height: float = 0.076  # [m]
-ball_height: float = 0.021  # [m]
+ball_radius: float = 0.021  # [m]
+
+# We detect the center of the orange blog to see the ball, and not the top of the ball
+# that is why we use the radius here instead of the diameter
+ball_height: float = ball_radius  # [m]
 
 # Durations
 game_duration: float = 300.0  # [s]
@@ -55,6 +59,16 @@ penalty_spots: int = 10
 penalty_spot_lock_time: int = 1
 # Parameters
 referee_history_size: int = 3
+
+# For simulation
+robot_mass: float = 0.710  # [kg]
+max_linear_acceleration: float = 3  # [m.s^-2]
+max_angular_accceleration: float = 50  # [rad.s^-2]
+ball_mass: float = 0.008  # [kg]
+ball_deceleration: float = 0.3  # [m.s^-2]
+kicker_x_tolerance: float = 0.05  # [m]
+kicker_y_tolerance: float = 0.05  # [m]
+
 
 # Goals coordinates
 def goal_posts(x_positive: bool = True) -> np.ndarray:
