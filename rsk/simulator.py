@@ -1,70 +1,10 @@
-from .field import Field
 import threading
 import time
-import zmq
 import numpy as np
 from numpy.linalg import norm
 from math import dist
 from . import kinematics, utils, control, constants
-import abc
-
-
-class Detection:
-    def __init__(self):
-        # Video attribute
-        self.detection = self
-        self.capture = None
-        self.period = None
-
-        self.referee = None
-        # Publishing server
-        self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.PUB)
-        self.socket.set_hwm(1)
-        self.socket.bind("tcp://*:7557")
-
-        self.field = Field()
-
-    def get_detection(self):
-        while True:
-            try:
-                return {
-                    "ball": self.get_ball(),
-                    "markers": self.get_markers(),
-                    "calibrated": self.field.calibrated(),
-                    "see_whole_field": self.field.see_whole_field,
-                    "referee": None if self.referee is None else self.referee.get_game_state(full=False),
-                }
-            except Exception as err:
-                print("Thread init error : ", err)
-
-    @abc.abstractmethod
-    def get_ball() -> list:
-        ...
-
-    @abc.abstractmethod
-    def get_markers(self) -> dict:
-        ...
-
-    def publish(self) -> None:
-        """
-        Publish the detection informations on the network
-        """
-        info = self.get_detection()
-
-        self.socket.send_json(info, flags=zmq.NOBLOCK)
-
-        if self.referee is not None:
-            self.referee.set_detection_info(info)
-
-    # Video method
-    def get_video(self, with_image: bool):
-        data = {
-            "running": self.capture is not None,
-            "fps": round(1 / self.period, 1) if self.period is not None else 0,
-            "detection": self.detection.get_detection(),
-        }
-        return data
+from .detection import Detection
 
 
 class Simulator(Detection):

@@ -5,11 +5,72 @@ import time
 from .field import Field
 from . import constants, config
 import os
+import abc
 
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 
 class Detection:
+    def __init__(self):
+        # Video attribute
+        self.detection = self
+        self.capture = None
+        self.period = None
+
+        self.referee = None
+        # Publishing server
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.PUB)
+        self.socket.set_hwm(1)
+        self.socket.bind("tcp://*:7557")
+
+        self.field = Field()
+
+    def get_detection(self, foo=None):
+        while True:
+            try:
+                return {
+                    "ball": self.get_ball(),
+                    "markers": self.get_markers(),
+                    "calibrated": self.field.calibrated(),
+                    "see_whole_field": self.field.see_whole_field,
+                    "referee": None
+                    if self.referee is None
+                    else self.referee.get_game_state(full=False),
+                }
+            except Exception as err:
+                print("Thread init error : ", err)
+
+    @abc.abstractmethod
+    def get_ball() -> list:
+        ...
+
+    @abc.abstractmethod
+    def get_markers(self) -> dict:
+        ...
+
+    def publish(self) -> None:
+        """
+        Publish the detection informations on the network
+        """
+        info = self.get_detection()
+        self.socket.send_json(info, flags=zmq.NOBLOCK)
+
+        if self.referee is not None:
+            self.referee.set_detection_info(info)
+
+    # Video method
+    def get_video(self, with_image: bool):
+        print("qosfikdjikqsflkj<sdiklfj")
+        data = {
+            "running": self.capture is not None,
+            "fps": round(1 / self.period, 1) if self.period is not None else 0,
+            "detection": self.detection.get_detection(),
+        }
+        return data
+
+
+class RealDetection(Detection):
     def __init__(self):
         self.referee = None
 
@@ -423,19 +484,11 @@ class Detection:
             if self.no_ball > 10:
                 self.ball = None
 
-    def get_detection(self) -> dict:
-        """
-        Returns the detection informations
+    def get_markers(self):
+        return self.markers
 
-        :return dict: detection informations (ball, markers, field calibration status)
-        """
-        return {
-            "ball": self.ball,
-            "markers": self.markers,
-            "calibrated": self.field.calibrated(),
-            "see_whole_field": self.field.see_whole_field,
-            "referee": self.referee.get_game_state(full=False),
-        }
+    def get_ball(self):
+        return self.ball
 
     def publish(self) -> None:
         """

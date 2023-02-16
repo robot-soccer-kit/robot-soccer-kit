@@ -395,8 +395,8 @@ function referee_initialize(backend)
             ball_ctx.fill()
         }
         function compute_view(){
-            backend.get_video(false, function(video) {
-                let present_marker = video.detection.markers
+            backend.get_detection(function(detection) {
+                let present_marker = detection.markers
                 for (var key in markers) {
                     if(!(key in present_marker)){
                         markers[key][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
@@ -423,7 +423,7 @@ function referee_initialize(backend)
                         markers[entry][3] = false
                     }
                 }
-                let ball = draw_ball(video.detection.ball);
+                let ball = draw_ball(detection.ball);
             });
         };
 
