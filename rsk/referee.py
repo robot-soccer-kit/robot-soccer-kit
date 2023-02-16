@@ -56,8 +56,8 @@ class Referee:
 
         # Robots Penalties
         self.penalties = {}
-        self.penalty_spot = {
-            i: [0, (x, side * constants.field_width / 2, side * np.pi / 2)]
+        self.penalty_spot = { # Pourquoi ça serait un dict et pas une liste ?
+            i: [0, (x, side * constants.field_width / 2, side * np.pi / 2)] # ça pourrait être un dict avec des clés claires
             for (i, (x, side)) in enumerate(
                 [
                     (x, side)
