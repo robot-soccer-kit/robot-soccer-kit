@@ -46,7 +46,7 @@ class Video:
         # Ask main thread to stop capture
         self.should_stop_capture = False
 
-        self.detection = detection.Detection()
+        self.detection = detection.RealDetection()
 
         self.settings = {
             "brightness": 0,

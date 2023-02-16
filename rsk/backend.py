@@ -24,7 +24,7 @@ class Backend:
             self.simulator: simulator.Simulator = simulator.Simulator(self.robots)
             self.detection = self.simulator
             self.robots.detection = self.detection
-            self.video = self.detection
+
         else:
             print("ESSAIE REEL")
             self.video: video.Video = video.Video()
@@ -46,6 +46,9 @@ class Backend:
             "default_penalty": constants.default_penalty,
             "field_size": (constants.field_length, constants.field_width),
         }
+
+    def get_detection(self):
+        return self.detection.get_detection()
 
     def resolutions(self):
         return self.video.resolutions()
