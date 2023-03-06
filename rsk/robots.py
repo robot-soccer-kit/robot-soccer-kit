@@ -4,7 +4,7 @@ import time
 import copy
 import math
 import logging
-from . import config, control, robot, utils, detection
+from . import config, control, robot, utils, state
 
 
 class Robots:
@@ -13,18 +13,15 @@ class Robots:
     physical robot.
     """
 
-    def __init__(self, detection: detection.Detection):
+    def __init__(self, state=None):
         self.logger: logging.Logger = logging.getLogger("robots")
 
-        self.detection: detection.Detection = detection
+        self.state: state.State = state
 
         # Robots (indexed by physical port)
         self.robots: dict = {}
         # Robots (indexed by marker strings)
         self.robots_by_marker: dict = {}
-
-        self.control = control.Control(self)
-        self.control.start()
 
         # Loading robots from the configuration
         if "robots" in config.config:
@@ -65,7 +62,7 @@ class Robots:
         for port in self.robots:
             self.logger.info(f"Identifying {port}...")
             # Detection before the robot moves
-            before = copy.deepcopy(self.detection.get_detection())["markers"]
+            before = copy.deepcopy(self.state.get_state())["markers"]
             after = copy.deepcopy(before)
 
             # Makes the robot rotating at 50°/s for 1s
@@ -73,7 +70,7 @@ class Robots:
             self.robots[port].beep(200, 100)
             self.robots[port].control(0, 0, math.radians(50))
             for _ in range(100):
-                markers = copy.deepcopy(self.detection.get_detection())["markers"]
+                markers = copy.deepcopy(self.state.get_state())["markers"]
                 before = {**markers, **before}
                 after = {**after, **markers}
                 time.sleep(0.01)
@@ -126,8 +123,8 @@ class Robots:
         data = {}
         for entry in self.robots:
             last_detection = None
-            if self.robots[entry].marker in self.detection.last_updates:
-                last_detection = time.time() - self.detection.last_updates[self.robots[entry].marker]
+            if self.robots[entry].marker in self.state.last_updates:
+                last_detection = time.time() - self.state.last_updates[self.robots[entry].marker]
 
             data[entry] = {
                 "state": self.robots[entry].state,

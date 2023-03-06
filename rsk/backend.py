@@ -1,9 +1,9 @@
 from . import api
 from . import (
+    state,
     video,
     robots,
     control,
-    field,
     referee,
     detection,
     utils,
@@ -17,22 +17,29 @@ class Backend:
         super().__init__()
 
         self.simulated = simulated
+
+        self.state: state.State = state.State()
+        self.referee: referee.Referee = referee.Referee(self.state)
+        self.control: control.Control = self.referee.control
+
         if simulated:
             print("SIMULATEUR")
-            # TODO: Clean this dependency mess
-            self.robots: simulator.Robots = simulator.Robots()
-            self.simulator: simulator.Simulator = simulator.Simulator(self.robots)
-            self.detection = self.simulator
-            self.robots.detection = self.detection
+            self.robots: robots.Robots = simulator.Robots(self.state)
+            self.simulator: simulator.Simulator = simulator.Simulator(self.robots, self.state)
 
         else:
             print("ESSAIE REEL")
-            self.video: video.Video = video.Video()
-            self.detection: detection.Detection = self.video.detection
-            self.robots: robots.Robots = robots.Robots(self.detection)
+            self.robots: robots.Robots = robots.Robots(self.state)
 
-        self.referee: referee.Referee = referee.Referee(self.robots.control)
-        self.detection.referee = self.referee
+            self.video: video.Video = video.Video()
+
+            self.detection: detection.Detection = self.video.detection
+            self.detection.state = self.state
+            self.detection.referee = self.referee
+
+        self.control.robots = self.robots
+        self.state.start_pub()
+        self.control.start()
 
     def is_simulated(self):
         return self.simulated
@@ -47,8 +54,8 @@ class Backend:
             "field_size": (constants.field_length, constants.field_width),
         }
 
-    def get_detection(self):
-        return self.detection.get_detection()
+    def get_state(self):
+        return self.state.get_state()
 
     def resolutions(self):
         return self.video.resolutions()
@@ -100,16 +107,16 @@ class Backend:
             self.robots.robots[port].kick()
 
     def control_status(self):
-        return self.robots.control.status()
+        return self.control.status()
 
     def allow_team_control(self, team: str, allow: bool):
-        self.robots.control.allow_team_control(team, allow)
+        self.control.allow_team_control(team, allow)
 
     def emergency(self):
-        self.robots.control.emergency()
+        self.control.emergency()
 
     def set_key(self, team: str, key: str):
-        self.robots.control.set_key(team, key)
+        self.control.set_key(team, key)
 
     def identify(self):
         self.robots.identify()

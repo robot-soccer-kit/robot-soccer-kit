@@ -3,13 +3,14 @@ import time
 import numpy as np
 from numpy.linalg import norm
 from math import dist
-from . import kinematics, utils, control, constants
-from .detection import Detection
+from . import kinematics, utils, constants, state
 
 
-class Simulator(Detection):
-    def __init__(self, robots):
-        super().__init__()
+class Simulator:
+    def __init__(self, robots, state):
+        self.state = state
+        self.robots = robots
+
         self.objects: dict = {}
 
         # Creating the ball
@@ -17,9 +18,7 @@ class Simulator(Detection):
             SimulatedObject("ball", [0, 0, 0], constants.ball_radius, constants.ball_deceleration, constants.ball_mass)
         )
 
-        # Adding the robots
-        for object in robots.robots_by_marker.values():
-            self.add_object(object)
+        self.refresh_robots()
 
         self.on_tick = None
 
@@ -29,20 +28,13 @@ class Simulator(Detection):
         self.period = None
         self.lock = threading.Lock()
 
-    def get_ball(self) -> list:
-        return list(self.objects["ball"].position[:2])
-
-    def get_markers(self) -> dict:
-        markers = dict()
-        for marker in ["green1", "green2", "blue1", "blue2"]:
-            pos = self.objects[marker].position.tolist()
-            markers[marker] = {"position": pos[:2], "orientation": pos[2]}
-
-        return markers
-
     def add_object(self, object) -> None:
         self.objects[object.marker] = object
         object.sim = self
+
+    def refresh_robots(self):
+        for object in self.robots.robots_by_marker.values():
+            self.add_object(object)
 
     def thread(self):
         last_time = time.time()
@@ -66,7 +58,6 @@ class Simulator(Detection):
                             check_obj = self.objects[marker]
                             if dist(future_pos[:2], check_obj.position[:2]) < (obj.radius + check_obj.radius):
                                 obj.collision(check_obj)
-                                has_collision = True
 
             for obj in self.objects.values():
                 # Check for collisions
@@ -91,20 +82,25 @@ class Simulator(Detection):
             if self.on_tick is not None:
                 self.on_tick()
 
-            self.detection.publish()
+            self.push()
 
             # TODO: Configure the frequency
             time.sleep(0.01)
 
+    def push(self):
+        for marker in self.objects:
+            pos = self.objects[marker].position
+            if marker == "ball":
+                self.state.set_ball(pos[:2].tolist())
+            else:
+                self.state.set_marker(marker, pos[:2].tolist(), pos[2])
+
 
 class Robots:
-    def __init__(self):
-        self.control = control.Control(self)
-        self.control.start()
-
-        self.detection: Detection = None
+    def __init__(self, state=None):
         self.robots: dict = {}
         self.robots_by_marker: dict = {}
+        self.state: state.State = state
 
         for marker, position in zip(
             ["green1", "green2", "blue1", "blue2"],

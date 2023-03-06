@@ -16,10 +16,10 @@ class Control:
     force them to be placed somewhere on the field.
     """
 
-    def __init__(self, robots):
-        self.logger: logging.Logger = logging.getLogger("control")
+    def __init__(self):
+        self.logger: logging.Logger = logging.getLogger("control")  # type: ignore[annotation-unchecked]
 
-        self.robots = robots
+        self.robots: robots.Robots = None
 
         # Publishing server
         self.context = zmq.Context()

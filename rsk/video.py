@@ -46,7 +46,7 @@ class Video:
         # Ask main thread to stop capture
         self.should_stop_capture = False
 
-        self.detection = detection.RealDetection()
+        self.detection = detection.Detection()
 
         self.settings = {
             "brightness": 0,
@@ -219,7 +219,6 @@ class Video:
                         self.detection.detect_markers(image_captured, image_debug)
                         self.detection.detect_ball(image_captured, image_debug)
                         self.detection.draw_annotations(image_debug)
-                        self.detection.publish()
 
                     # Computing time
                     current_period = time.time() - t0
