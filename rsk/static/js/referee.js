@@ -344,36 +344,36 @@ function referee_initialize(backend)
 
 
     markers = {"blue1": [NaN,NaN,[0,0,0],true],"blue2": [NaN,NaN,[0,0,0],true],"green1": [NaN,NaN,[0,0,0],true],"green2": [NaN,NaN,[0,0,0],true]}
-    simulated_view = false;
-    intervalId = 0;
+    simulated_view = false
+    intervalId = 0
 
     backend.constants(function(constants) {
 
-        var context = document.getElementsByTagName('canvas')[0].getContext('2d');
+        var context = document.getElementsByTagName('canvas')[0].getContext('2d')
         ctx_width = context.canvas.width
         ctx_height = context.canvas.height
         robot_size = ctx_height/8
-        var background = new Image();
-        background.src = "static/imgs/field.png";
-        background.width = this.naturalWidth;
-        background.height = this.naturalHeight;
+        var background = new Image()
+        background.src = "static/imgs/field.png"
+        background.width = this.naturalWidth
+        background.height = this.naturalHeight
 
         background.onload = function(){
-            context.canvas.width = this.naturalWidth;
-            context.canvas.height = this.naturalHeight;
+            context.canvas.width = this.naturalWidth
+            context.canvas.height = this.naturalHeight
             context.drawImage(background,0,0)
         }
 
 
         function cam_to_sim(position, orientation) {
-            field_size = constants["field_size"];
-            let pos_sim = [0.0, 0.0, 0.0];
+            field_size = constants["field_size"]
+            let pos_sim = [0.0, 0.0, 0.0]
             pos = [position[0],position[1],orientation]
             ratio = document.getElementById('back').offsetWidth / field_size[0]
-            pos_sim[0] = Math.round(((pos[0] + field_size[0]/2) * ratio)) ;
-            pos_sim[1] = Math.round(((-pos[1] + field_size[1]/2) * ratio)) ; 
+            pos_sim[0] = Math.round(((pos[0] + field_size[0]/2) * ratio))
+            pos_sim[1] = Math.round(((-pos[1] + field_size[1]/2) * ratio)) 
             pos_sim[2] = round(-pos[2]+Math.PI/2)
-            return pos_sim;
+            return pos_sim
         }
         function if_mouv(last_pos, position){
             if (Math.abs(last_pos[0] - position[0]) > 1.5){
@@ -386,11 +386,12 @@ function referee_initialize(backend)
             return false
         }
         function draw_ball(position){
-            ball_ctx = document.getElementById("ball").getContext('2d');
-            ball_ctx.clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
-            let ball = cam_to_sim(position);
-            ball_ctx.beginPath();
-            ball_ctx.fillStyle="red";
+            ball_canvas = document.getElementById("ball")
+            ball_ctx = ball_canvas.getContext('2d')
+            ball_ctx.clearRect(0,0,ball_canvas.width,ball_canvas.height)
+            let ball = cam_to_sim(position)
+            ball_ctx.beginPath()
+            ball_ctx.fillStyle="red"
             ball_ctx.arc(ball[0], ball[1], 7, 0, Math.PI*2);
             ball_ctx.fill()
         }
@@ -399,7 +400,8 @@ function referee_initialize(backend)
                 let present_marker = state.markers
                 for (var key in markers) {
                     if(!(key in present_marker)){
-                        markers[key][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
+                        canvas = markers[key][1].canvas
+                        markers[key][1].clearRect(0,0,canvas.width,canvas.height)
                         markers[key][3] = true
                     }
                 }
@@ -407,7 +409,7 @@ function referee_initialize(backend)
                 for (let entry in present_marker) {
 
                     let robot = present_marker[entry]
-                    let robot_pos = cam_to_sim(robot.position,robot.orientation);
+                    let robot_pos = cam_to_sim(robot.position,robot.orientation)
                     if (if_mouv(markers[entry][2], robot_pos) || markers[entry][3]) {
                         markers[entry][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
                         robot_size = (0.0595 * 2 * document.getElementById('back').offsetWidth) / field_size[0]
@@ -425,38 +427,40 @@ function referee_initialize(backend)
                 }
                 var position_ball = state.ball
                 if (position_ball != null){
-                    let ball = draw_ball(position_ball);
+                    let ball = draw_ball(position_ball)
                 }
             });
         };
 
-
+        function resize(){
+            simulated_view = !simulated_view
+            view()
+        }
         function view() {
             if (!simulated_view) {
-                console.log("qdsqqsfd")
                 $('#ViewChange').html("<i class='bi bi-camera'></i> Camera View")
                 $('#vision').addClass('d-none')
                 $('#back').removeClass('d-none')
                 $('.sim_vim').css('opacity', '100')
-                simulated_view = true;
+                simulated_view = true
                 markers = {"blue1": [NaN,NaN,[0,0,0],true],"blue2": [NaN,NaN,[0,0,0],true],"green1": [NaN,NaN,[0,0,0],true],"green2": [NaN,NaN,[0,0,0],true]}   
                 ball = [NaN,NaN,[0,0,0]]
                 back_canvas = document.getElementById('back')
                 for (var key in markers) {
                     markers[key][0] = new Image();
-                    markers[key][0].src = "static/imgs/robot"+ key +".svg";
+                    markers[key][0].src = "static/imgs/robot"+ key +".svg"
                     canvas = document.getElementById(key)
                     canvas.width = back_canvas.offsetWidth
                     canvas.height = back_canvas.offsetHeight
-                    markers[key][1] = canvas.getContext('2d');
+                    markers[key][1] = canvas.getContext('2d')
                 }
                 canvas = document.getElementById("ball")
                 canvas.width = back_canvas.offsetWidth
                 canvas.height = back_canvas.offsetHeight
-
+                clearInterval(intervalId)
                 intervalId = setInterval(compute_view, 10)
             }else{
-                clearInterval(intervalId);
+                clearInterval(intervalId)
                 $('#ViewChange').html("<i class='bi bi-camera'></i> Simulated View")
                 $('#vision').removeClass('d-none')
                 $('#back').addClass('d-none')
@@ -469,10 +473,12 @@ function referee_initialize(backend)
             if (simulated){
             $('body').addClass('vision-running');  
                 simulated_view = false
-                $('body').addClass('vision-running');  
+                $('body').addClass('vision-running')
             }
         })
         setTimeout(view, 1000)
         $('#ViewChange').click(view)
+        window.onresize = resize
+
     })
 }
