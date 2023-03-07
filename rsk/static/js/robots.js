@@ -12,6 +12,22 @@ function robots_initialize(backend)
         });
     }
     updatePorts();
+    function removeOffline(){
+        backend.get_robots(function(robots) {
+            console.log(robots)
+            for (let port in robots) {
+                if (!   robots[port].last_message ||   robots[port].last_message > 5) {
+                    backend.removeRobot(port)
+                }
+            }
+        });
+    }
+
+    $('.remove-offline').click(function (event) {
+        event.preventDefault();
+        removeOffline();
+    });
+
     $('.refresh-ports').click(function (event) {
         event.preventDefault();
         updatePorts();
