@@ -9,6 +9,10 @@ the rules.
 field_length: float = 1.84  # [m] (x axis)
 field_width: float = 1.23  # [m] (y axis)
 
+# Carpet dimension
+carpet_length: float = 2.45  # [m] (x axis)
+carpet_width: float = 1.84  # [m] (y axis)
+
 # Goals size
 goal_width: float = 0.6  # [m]
 goal_virtual_height: float = 0.1  # [m]

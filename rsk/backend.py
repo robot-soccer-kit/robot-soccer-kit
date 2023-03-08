@@ -52,6 +52,7 @@ class Backend:
             "team_colors": utils.robot_teams(),
             "default_penalty": constants.default_penalty,
             "field_size": (constants.field_length, constants.field_width),
+            "carpet_size": (constants.carpet_length, constants.carpet_width),
         }
 
     def get_state(self):

@@ -191,7 +191,6 @@ class Simulator:
 
             for obj in self.objects.values():
                 # Execute actions (e.g: kick)
-                obj.execute_actions()
 
                 # Update object velocity (e.g: deceleration, taking commands in account)
                 obj.update_velocity(self.dt)
@@ -221,9 +220,10 @@ class Simulator:
                             obj.velocity[:2] = R_collision_world.T @ velocity_collision
 
                 obj.position = obj.position + (obj.velocity * self.dt)
+                obj.execute_actions()
 
             # TODO: Remove this
-            if np.linalg.norm(self.objects["ball"].position[:2]) > 0.7:
+            if np.linalg.norm(self.objects["ball"].position[:2]) > 1:
                 self.objects["ball"].position[:3] = [0.0, 0.0, 0.0]
                 self.objects["ball"].velocity[:3] = [0.0, 0.0, 0.0]
 

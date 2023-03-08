@@ -365,7 +365,7 @@ function referee_initialize(backend)
         ctx_height = context.canvas.height
         robot_size = ctx_height/8
         var background = new Image()
-        background.src = "static/imgs/field.png"
+        background.src = "static/imgs/field.svg"
         background.width = this.naturalWidth
         background.height = this.naturalHeight
 
@@ -377,12 +377,12 @@ function referee_initialize(backend)
 
 
         function cam_to_sim(position, orientation) {
-            field_size = constants["field_size"]
+            carpet_size = constants["carpet_size"]
             let pos_sim = [0.0, 0.0, 0.0]
             pos = [position[0],position[1],orientation]
-            ratio = document.getElementById('back').offsetWidth / field_size[0]
-            pos_sim[0] = Math.round(((pos[0] + field_size[0]/2) * ratio))
-            pos_sim[1] = Math.round(((-pos[1] + field_size[1]/2) * ratio)) 
+            ratio = document.getElementById('back').offsetWidth / carpet_size[0]
+            pos_sim[0] = Math.round(((pos[0] + carpet_size[0]/2) * ratio))
+            pos_sim[1] = Math.round(((-pos[1] + carpet_size[1]/2) * ratio)) 
             pos_sim[2] = round(-pos[2]+Math.PI/2)
             return pos_sim
         }
@@ -423,7 +423,7 @@ function referee_initialize(backend)
                     let robot_pos = cam_to_sim(robot.position,robot.orientation)
                     if (if_mouv(markers[entry][2], robot_pos) || markers[entry][3]) {
                         markers[entry][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
-                        robot_size = (0.0595 * 2 * document.getElementById('back').offsetWidth) / field_size[0]
+                        robot_size = (0.0595 * 2 * document.getElementById('back').offsetWidth) / carpet_size[0]
 
                         markers[entry][1].rotate(-markers[entry][2][2])
                         markers[entry][1].translate(-markers[entry][2][0],-markers[entry][2][1])
@@ -494,16 +494,16 @@ function referee_initialize(backend)
         let canvas = document.getElementById("ball")
         canvas.addEventListener("mousedown", function(e) {
 
-            field_size = constants["field_size"]
+            carpet_size = constants["carpet_size"]
             let pos_reel = [0.0, 0.0, 0.0]
             if (selected_robot != "ball"){
                 pos = [e.x,e.y,markers[selected_robot][2][2]]
             }else{
                 pos = [e.x,e.y,0]
             }
-            ratio = field_size[0] / document.getElementById('back').offsetWidth
-            pos_reel[0] = (pos[0] - document.getElementById('back').offsetWidth/2) * ratio
-            pos_reel[1] = -(pos[1] - document.getElementById('back').offsetHeight/2) * ratio
+            ratio = carpet_size[0] / document.getElementById('back').offsetWidth
+            pos_reel[0] = (pos[0]) * ratio - document.getElementById('back').offsetWidth/2
+            pos_reel[1] = -(pos[1]) * ratio - document.getElementById('back').offsetHeight/2
             pos_reel[2] = -(pos[2]-Math.PI/2)
 
             backend.telep(selected_robot, pos_reel[0], pos_reel[1], pos_reel[2])
