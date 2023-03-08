@@ -96,6 +96,9 @@ class Control:
                     else:
                         response[0] = 2
                         response[1] = "Only master can set the LEDs"
+                elif command[0] == "telep" and len(command) == 4:
+                    robot.telep(float(command[1]), float(command[2]), float(command[3]))
+                    response = [True, "ok"]
                 else:
                     response[0] = 2
                     response[1] = "Unknown command"

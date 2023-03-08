@@ -106,6 +106,12 @@ class Backend:
         if port in self.robots.robots:
             self.robots.robots[port].kick()
 
+    def telep(self, marker: str, x: float, y: float, turn: float):
+        print(self.robots.robots_by_marker)
+        print(marker)
+        if marker in self.robots.robots_by_marker or marker == "ball":
+            self.simulator.objects[marker].telep(x, y, turn)
+
     def control_status(self):
         return self.control.status()
 

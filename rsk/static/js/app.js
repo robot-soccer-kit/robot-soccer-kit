@@ -36,6 +36,7 @@ $(document).ready(function () {
             $('.not_show_simulated').css("display", 'none')
         }else{
            console.log("REEL")
+           $('.show_simulated').css("display", 'none')
            video_initialize(backend); 
         }
     })

@@ -28,6 +28,9 @@ class SimulatedObject:
             action()
         self.pending_actions = []
 
+    def telep(self, x: float, y: float, turn: float):
+        self.position = np.array((x, y, turn))
+
     def update_velocity(self, dt) -> None:
         self.velocity[:2] = utils.update_limit_variation(self.velocity[:2], np.array([0.0, 0.0]), self.deceleration * dt)
 
@@ -39,7 +42,8 @@ class SimulatedObject:
 
         # Computing unit vectors normal and tangent to contact (self to obj)
         normal = obj.position[:2] - self.position[:2]
-        normal = normal / norm(normal)
+
+        normal = (normal / norm(normal)) if norm(normal) != 0 else (0, 0)
         tangent = np.array([[0, -1], [1, 0]]) @ normal
 
         return np.vstack((normal, tangent))

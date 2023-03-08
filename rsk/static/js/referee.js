@@ -340,12 +340,23 @@ function referee_initialize(backend)
         $(this).find('.unpenalize').click(function() {
             backend.cancel_penalty(robot_id);
         });
+        $(this).find('.move').click(function() {
+            
+            $('.move').removeClass('btn-danger')
+            if(selected_robot == robot_id){
+                selected_robot = "ball";
+            }else{
+                $(this).addClass("btn-danger")
+                selected_robot = robot_id;
+            }
+        });
     });
 
 
     markers = {"blue1": [NaN,NaN,[0,0,0],true],"blue2": [NaN,NaN,[0,0,0],true],"green1": [NaN,NaN,[0,0,0],true],"green2": [NaN,NaN,[0,0,0],true]}
     simulated_view = false
     intervalId = 0
+    let selected_robot = "ball"
 
     backend.constants(function(constants) {
 
@@ -479,6 +490,24 @@ function referee_initialize(backend)
         setTimeout(view, 1000)
         $('#ViewChange').click(view)
         window.onresize = resize
+
+        let canvas = document.getElementById("ball")
+        canvas.addEventListener("mousedown", function(e) {
+
+            field_size = constants["field_size"]
+            let pos_reel = [0.0, 0.0, 0.0]
+            if (selected_robot != "ball"){
+                pos = [e.x,e.y,markers[selected_robot][2][2]]
+            }else{
+                pos = [e.x,e.y,0]
+            }
+            ratio = field_size[0] / document.getElementById('back').offsetWidth
+            pos_reel[0] = (pos[0] - document.getElementById('back').offsetWidth/2) * ratio
+            pos_reel[1] = -(pos[1] - document.getElementById('back').offsetHeight/2) * ratio
+            pos_reel[2] = -(pos[2]-Math.PI/2)
+
+            backend.telep(selected_robot, pos_reel[0], pos_reel[1], pos_reel[2])
+        })
 
     })
 }
