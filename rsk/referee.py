@@ -553,8 +553,8 @@ class Referee:
         last_tick = time.time()
 
         while True:
+            self.state_info = self.state.game_state
             self.state.set_referee(self.get_game_state())
-            self.state_info = self.state.get_state()
 
             elapsed = time.time() - last_tick
             if self.chrono_is_running:

@@ -13,13 +13,14 @@ class State:
         self.ball = None
         self.game_state = None
         self.last_updates = {}
+        self.referee = {}
 
         self.context = None
         self.last_time = None
         self.frequency_pub = frequency_pub
 
     def get_state(self):
-        return {"markers": self.markers, "ball": self.ball, "referee": self.game_state}
+        return {"markers": self.markers, "ball": self.ball, "referee": self.referee}
 
     def start_pub(self):
         # Publishing server
@@ -66,5 +67,5 @@ class State:
         self.ball = position
 
     @_refresh
-    def set_referee(self, game_state):
-        self.referee = game_state
+    def set_referee(self, referee):
+        self.referee = referee
