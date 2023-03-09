@@ -497,13 +497,13 @@ function referee_initialize(backend)
             carpet_size = constants["carpet_size"]
             let pos_reel = [0.0, 0.0, 0.0]
             if (selected_robot != "ball"){
-                pos = [e.x,e.y,markers[selected_robot][2][2]]
+                pos = [e.layerX,e.layerY,markers[selected_robot][2][2]]
             }else{
-                pos = [e.x,e.y,0]
+                pos = [e.layerX,e.layerY,0]
             }
             ratio = carpet_size[0] / document.getElementById('back').offsetWidth
-            pos_reel[0] = (pos[0]) * ratio - document.getElementById('back').offsetWidth/2
-            pos_reel[1] = -(pos[1]) * ratio - document.getElementById('back').offsetHeight/2
+            pos_reel[0] = (pos[0] - document.getElementById('back').offsetWidth/2) * ratio
+            pos_reel[1] = -(pos[1] - document.getElementById('back').offsetHeight/2) * ratio
             pos_reel[2] = -(pos[2]-Math.PI/2)
 
             backend.telep(selected_robot, pos_reel[0], pos_reel[1], pos_reel[2])
