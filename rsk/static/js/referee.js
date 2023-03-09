@@ -491,23 +491,26 @@ function referee_initialize(backend)
         $('#ViewChange').click(view)
         window.onresize = resize
 
-        let canvas = document.getElementById("ball")
-        canvas.addEventListener("mousedown", function(e) {
+        backend.is_simulated(function (simulated) {
+            if (simulated) {
+                let canvas = document.getElementById("ball")
+                canvas.addEventListener("mousedown", function(e) {
 
-            carpet_size = constants["carpet_size"]
-            let pos_reel = [0.0, 0.0, 0.0]
-            if (selected_robot != "ball"){
-                pos = [e.layerX,e.layerY,markers[selected_robot][2][2]]
-            }else{
-                pos = [e.layerX,e.layerY,0]
+                    carpet_size = constants["carpet_size"]
+                    let pos_reel = [0.0, 0.0, 0.0]
+                    if (selected_robot != "ball"){
+                        pos = [e.layerX,e.layerY,markers[selected_robot][2][2]]
+                    }else{
+                        pos = [e.layerX,e.layerY,0]
+                    }
+                    ratio = carpet_size[0] / document.getElementById('back').offsetWidth
+                    pos_reel[0] = (pos[0] - document.getElementById('back').offsetWidth/2) * ratio
+                    pos_reel[1] = -(pos[1] - document.getElementById('back').offsetHeight/2) * ratio
+                    pos_reel[2] = -(pos[2]-Math.PI/2)
+
+                    backend.telep(selected_robot, pos_reel[0], pos_reel[1], pos_reel[2])
+                })
             }
-            ratio = carpet_size[0] / document.getElementById('back').offsetWidth
-            pos_reel[0] = (pos[0] - document.getElementById('back').offsetWidth/2) * ratio
-            pos_reel[1] = -(pos[1] - document.getElementById('back').offsetHeight/2) * ratio
-            pos_reel[2] = -(pos[2]-Math.PI/2)
-
-            backend.telep(selected_robot, pos_reel[0], pos_reel[1], pos_reel[2])
         })
-
     })
 }

@@ -49,6 +49,8 @@ class State:
     @_refresh
     def set_markers(self, markers):
         self.markers = markers
+        for marker in markers:
+            self.last_updates[marker] = time.time()
 
     @_refresh
     def set_marker(self, marker, position, orientation):
@@ -57,7 +59,7 @@ class State:
         else:
             self.markers[marker]["position"] = position
             self.markers[marker]["orientation"] = orientation
-            self.last_updates[marker] = time.time()
+        self.last_updates[marker] = time.time()
 
     @_refresh
     def set_ball(self, position):

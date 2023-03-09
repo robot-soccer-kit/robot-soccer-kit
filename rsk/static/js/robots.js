@@ -14,7 +14,6 @@ function robots_initialize(backend)
     updatePorts();
     function removeOffline(){
         backend.get_robots(function(robots) {
-            console.log(robots)
             for (let port in robots) {
                 if (!   robots[port].last_message ||   robots[port].last_message > 5) {
                     backend.removeRobot(port)
@@ -101,9 +100,11 @@ function robots_initialize(backend)
 
         if(infos.marker && (!infos.last_detection || infos.last_detection > 0.15)){
             hasWarning = true;
+            console.log(infos)
             div.find('.not-detected').html('Not detected ' + warning);
             div.find('.not-detected').removeClass('invisible');
         }else{
+            console.log("SEE")
             div.find('.not-detected').addClass('invisible');
         }
             return hasWarning;
