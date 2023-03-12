@@ -57,18 +57,13 @@ class Referee:
 
         # Robots Penalties
         self.penalties = {}
-        self.penalty_spot = {  # Pourquoi ça serait un dict et pas une liste ?
-            i: [0, (x, side * constants.field_width / 2, side * np.pi / 2)]  # ça pourrait être un dict avec des clés claires
-            for (i, (x, side)) in enumerate(
-                [
-                    (x, side)
-                    for x in np.linspace(
-                        -constants.field_width / 2, constants.field_width / 2, constants.penalty_spots // 2 + 2
-                    )[1:-1]
-                    for side in (-1, 1)
-                ],
-            )
-        }
+        self.penalty_spot = [
+            {"robot": None, "last_use": 0, "pos": (x, side * constants.field_width / 2, side * np.pi / 2)}
+            for x in np.linspace(-constants.field_length / 2, constants.field_length / 2, constants.penalty_spots // 2 + 2)[
+                1:-1
+            ]
+            for side in (-1, 1)
+        ]
         self.reset_penalties()
 
         # Starting the Referee thread
@@ -321,19 +316,20 @@ class Referee:
                 x, y = self.state_info["markers"][robot]["position"]
 
                 # Find the nearest free penalty spot
-                euclidean_distance = [
-                    math.dist((x, y), self.penalty_spot[key][1][:2])
-                    if type(self.penalty_spot[key][0]) != type(robot)
-                    and time.time() - self.penalty_spot[key][0] > constants.penalty_spot_lock_time
+                distance = [
+                    math.dist((x, y), penalty_spot["pos"][:2])
+                    if penalty_spot["robot"] is None
+                    and time.time() - penalty_spot["last_use"] > constants.penalty_spot_lock_time
                     else math.inf
-                    for key in self.penalty_spot
+                    for penalty_spot in self.penalty_spot
                 ]
-                free_penaltly_spot = euclidean_distance.index(min(euclidean_distance))
 
-                target = self.penalty_spot[free_penaltly_spot][1]
-                self.penalty_spot[free_penaltly_spot][0] = robot
+                free_penaltly_spot_index = distance.index(min(distance))
 
-                self.logger.info(f"----  Penalty Spot : {free_penaltly_spot}")
+                target = self.penalty_spot[free_penaltly_spot_index]["pos"]
+                self.penalty_spot[free_penaltly_spot_index]["robot"] = robot
+
+                self.logger.info(f"----  Penalty Spot : {free_penaltly_spot_index}")
 
                 task = tasks.GoToTask(task_name, team, number, target, forever=True)
             else:
@@ -351,9 +347,9 @@ class Referee:
         """
         self.penalties[robot] = {"remaining": None, "reason": None, "grace": constants.grace_time}
 
-        key = [key for key in self.penalty_spot if self.penalty_spot[key][0] == robot]
-        if key != []:
-            self.penalty_spot[key[0]][0] = time.time()
+        penalty_spot = [spot for spot in self.penalty_spot if spot["robot"] == robot]
+        if penalty_spot != []:
+            penalty_spot[0]["last_use"] = time.time()
 
         # Replacing the control task with a one-time stop to ensure the robot is not moving
         team, number = utils.robot_str2list(robot)
@@ -553,7 +549,7 @@ class Referee:
         last_tick = time.time()
 
         while True:
-            self.state_info = self.state.game_state
+            self.state_info = self.state.get_state()
             self.state.set_referee(self.get_game_state())
 
             elapsed = time.time() - last_tick

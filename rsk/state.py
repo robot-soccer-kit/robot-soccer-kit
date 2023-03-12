@@ -11,7 +11,6 @@ class State:
         """
         self.markers = {}
         self.ball = None
-        self.game_state = None
         self.last_updates = {}
         self.referee = {}
 
