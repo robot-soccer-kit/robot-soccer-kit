@@ -30,6 +30,7 @@ class SimulatedObject:
 
     def telep(self, x: float, y: float, turn: float):
         self.position = np.array((x, y, turn))
+        self.velocity = np.array([0.0, 0.0, 0.0])
 
     def update_velocity(self, dt) -> None:
         self.velocity[:2] = utils.update_limit_variation(self.velocity[:2], np.array([0.0, 0.0]), self.deceleration * dt)
@@ -164,12 +165,12 @@ class Simulator:
 
         self.objects: dict[str, Robot] = {}
 
+        self.refresh_robots()
+
         # Creating the ball
         self.add_object(
             SimulatedObject("ball", [0, 0, 0], constants.ball_radius, constants.ball_deceleration, constants.ball_mass)
         )
-
-        self.refresh_robots()
 
         self.simu_thread: threading.Thread = threading.Thread(target=lambda: self.thread())
         self.simu_thread.start()
@@ -186,8 +187,14 @@ class Simulator:
 
     def thread(self) -> None:
         last_time = time.time()
+        dtForMean = list()
         while True:
             self.dt = -(last_time - (last_time := time.time()))
+
+            # dtForMean.append(self.dt)
+            # if sum(dtForMean) > 1:
+            #     print("Tick per second : ", 1 / np.mean(dtForMean))
+            #     dtForMean = list()
 
             for obj in self.objects.values():
                 # Execute actions (e.g: kick)
@@ -222,12 +229,17 @@ class Simulator:
                 obj.position = obj.position + (obj.velocity * self.dt)
                 obj.execute_actions()
 
-            # TODO: Remove this
-            if np.linalg.norm(self.objects["ball"].position[:2]) > 1:
+            if not utils.in_rectangle(
+                self.objects["ball"].position[:2],
+                [-constants.field_length / 2, -constants.field_width / 2],
+                [constants.field_length / 2, constants.field_width / 2],
+            ):
                 self.objects["ball"].position[:3] = [0.0, 0.0, 0.0]
                 self.objects["ball"].velocity[:3] = [0.0, 0.0, 0.0]
-
             self.push()
+
+            # while (time.time() - last_time) < 1 / 60:
+            #     time.sleep(0)
 
     def push(self) -> None:
         for marker in self.objects:

@@ -92,7 +92,6 @@ class Control:
                 elif command[0] == "telep" and len(command) == 4:
                     robot.telep(float(command[1]), float(command[2]), float(command[3]))
                     response = [True, "ok"]
-
                 elif command[0] == "leds" and len(command) == 4:
                     if is_master or self.state is not None and not self.state.get_state()["referee"]["game_is_running"]:
                         robot.leds(int(command[1]), int(command[2]), int(command[3]))
