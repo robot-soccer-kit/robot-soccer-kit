@@ -16,7 +16,7 @@ class Referee:
     def __init__(self, state: state.State):
         self.logger: logging.Logger = logging.getLogger("referee")
 
-        self.control: control.Control = control.Control()
+        self.control: control.Control = control.Control(state)
 
         # Info from detection
         self._state_info = None
@@ -350,6 +350,7 @@ class Referee:
         penalty_spot = [spot for spot in self.penalty_spot if spot["robot"] == robot]
         if penalty_spot != []:
             penalty_spot[0]["last_use"] = time.time()
+            penalty_spot[0]["robot"] = None
 
         # Replacing the control task with a one-time stop to ensure the robot is not moving
         team, number = utils.robot_str2list(robot)

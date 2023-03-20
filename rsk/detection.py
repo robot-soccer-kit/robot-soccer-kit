@@ -277,15 +277,15 @@ class Detection:
                 )
 
             if self.should_display("penalty_spot"):
-                for stat, pos in self.referee.penalty_spot.values():
+                for penalty_spot in self.referee.penalty_spot:
                     color = (0, 255, 0)
-                    if type(stat) == type("robot"):
+                    if penalty_spot["robot"] is not None:
                         color = (0, 0, 255)
-                    elif time.time() - stat < constants.penalty_spot_lock_time:
+                    elif time.time() - penalty_spot["last_use"] < constants.penalty_spot_lock_time:
                         color = (0, 128, 255)
                     self.draw_point2square(
                         image_debug,
-                        pos[:-1],
+                        penalty_spot["pos"][:-1],
                         0.1,
                         color,
                         5,

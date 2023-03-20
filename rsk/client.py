@@ -105,8 +105,13 @@ class ClientRobot(ClientTracked):
 
     def control(self, dx, dy, dturn):
         self.moved = True
-
         return self.client.command(self.color, self.number, "control", [dx, dy, dturn])
+
+    def tp(self, x, y, turn):
+        return self.client.command(self.color, self.number, "telep", [x, y, turn])
+
+    def beep(self, frequency: int, duration: int):
+        return self.client.command(self.color, self.number, "beep", [frequency, duration])
 
     def leds(self, r, g, b):
         return self.client.command(self.color, self.number, "leds", [r, g, b])
@@ -148,11 +153,10 @@ class ClientRobot(ClientTracked):
 
 class Client:
     def __init__(self, host="127.0.0.1", key="", wait_ready=True):
-
         logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
         self.logger: logging.Logger = logging.getLogger("client")
 
-        self.error_management = "print"  # "ignore", "print", "raise"
+        self.error_management = "raise"  # "ignore", "print", "raise"
         self.running = True
         self.key = key
         self.lock = threading.Lock()
@@ -210,8 +214,6 @@ class Client:
                 self.logger.warning("Still no message from vision after 3s")
                 self.logger.warning("if you want to operate without vision, pass wait_ready=False to the client")
 
-
-
     def __enter__(self):
         return self
 
@@ -243,13 +245,9 @@ class Client:
                         number = int(entry[-1])
 
                         if team == "obj":
-                            self.update_position(
-                                self.objs[number], json["markers"][entry]
-                            )
+                            self.update_position(self.objs[number], json["markers"][entry])
                         else:
-                            self.update_position(
-                                self.robots[team][number], json["markers"][entry]
-                            )
+                            self.update_position(self.robots[team][number], json["markers"][entry])
 
                 if "referee" in json:
                     self.referee = json["referee"]

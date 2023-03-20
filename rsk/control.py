@@ -6,7 +6,7 @@ import time
 import uuid
 import threading
 import logging
-from . import robots, utils, client, constants, tasks
+from . import robots, utils, client, constants, tasks, state
 
 
 class Control:
@@ -16,11 +16,11 @@ class Control:
     force them to be placed somewhere on the field.
     """
 
-    def __init__(self):
+    def __init__(self, state: state.State = None):
         self.logger: logging.Logger = logging.getLogger("control")  # type: ignore[annotation-unchecked]
 
         self.robots: robots.Robots = None
-
+        self.state: state.State = state
         # Publishing server
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REP)
@@ -89,16 +89,25 @@ class Control:
                 elif command[0] == "control" and len(command) == 4:
                     robot.control(float(command[1]), float(command[2]), float(command[3]))
                     response = [True, "ok"]
+                elif command[0] == "telep" and len(command) == 4:
+                    robot.telep(float(command[1]), float(command[2]), float(command[3]))
+                    response = [True, "ok"]
+
                 elif command[0] == "leds" and len(command) == 4:
-                    if is_master:
+                    if is_master or self.state is not None and not self.state.get_state()["referee"]["game_is_running"]:
                         robot.leds(int(command[1]), int(command[2]), int(command[3]))
                         response = [True, "ok"]
                     else:
                         response[0] = 2
                         response[1] = "Only master can set the LEDs"
-                elif command[0] == "telep" and len(command) == 4:
-                    robot.telep(float(command[1]), float(command[2]), float(command[3]))
-                    response = [True, "ok"]
+
+                elif command[0] == "beep" and len(command) == 3:
+                    if is_master or self.state is not None and not self.state.get_state()["referee"]["game_is_running"]:
+                        robot.beep(int(command[1]), int(command[2]))
+                        response = [True, "ok"]
+                    else:
+                        response[0] = 2
+                        response[1] = "Only master can set the LEDs"
                 else:
                     response[0] = 2
                     response[1] = "Unknown command"

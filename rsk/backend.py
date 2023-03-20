@@ -23,12 +23,10 @@ class Backend:
         self.control: control.Control = self.referee.control
 
         if simulated:
-            print("SIMULATEUR")
             self.robots: robots.Robots = simulator.Robots(self.state)
             self.simulator: simulator.Simulator = simulator.Simulator(self.robots, self.state)
 
         else:
-            print("ESSAIE REEL")
             self.robots: robots.Robots = robots.Robots(self.state)
 
             self.video: video.Video = video.Video()
@@ -108,8 +106,6 @@ class Backend:
             self.robots.robots[port].kick()
 
     def telep(self, marker: str, x: float, y: float, turn: float):
-        print(self.robots.robots_by_marker)
-        print(marker)
         if marker in self.robots.robots_by_marker or marker == "ball":
             self.simulator.objects[marker].telep(x, y, turn)
 
