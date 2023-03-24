@@ -34,7 +34,6 @@ function video_initialize(backend)
 
     function get_display_settings() {
         backend.get_display_settings(false, function(display_settings) {
-            console.log(display_settings)
 
             let html = ''
             for (setting_name in display_settings) {

@@ -100,11 +100,9 @@ function robots_initialize(backend)
 
         if(infos.marker && (!infos.last_detection || infos.last_detection > 0.15)){
             hasWarning = true;
-            console.log(infos)
             div.find('.not-detected').html('Not detected ' + warning);
             div.find('.not-detected').removeClass('invisible');
         }else{
-            console.log("SEE")
             div.find('.not-detected').addClass('invisible');
         }
             return hasWarning;
