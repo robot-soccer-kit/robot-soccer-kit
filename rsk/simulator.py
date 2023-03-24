@@ -1,3 +1,4 @@
+import sys
 import threading
 import time
 import numpy as np
@@ -54,13 +55,20 @@ class SimulatedObject:
         # Velocities expressed in the collision frame
         self_velocity_collision = R_collision_world @ self.velocity[:2]
         obj_velocity_collision = R_collision_world @ obj.velocity[:2]
+        print("Speeds in the collision frame:")
+        print(self_velocity_collision)
+        print(obj_velocity_collision)
 
         # Updating velocities using elastic collision
         u1 = self_velocity_collision[0]
         u2 = obj_velocity_collision[0]
         m1 = self.mass
         m2 = obj.mass
-        Cr = 0.5
+        Cr = 0.25
+
+        # If the objects are not getting closer to each other, don't proceed
+        if u2 - u1 > 0:
+            return
 
         self_velocity_collision[0] = (m1 * u1 + m2 * u2 + m2 * Cr * (u2 - u1)) / (m1 + m2)
         obj_velocity_collision[0] = (m1 * u1 + m2 * u2 + m1 * Cr * (u1 - u2)) / (m1 + m2)
@@ -69,10 +77,15 @@ class SimulatedObject:
         self.velocity[:2] = R_collision_world.T @ self_velocity_collision
         obj.velocity[:2] = R_collision_world.T @ obj_velocity_collision
 
+        print(f"Updating velocity for {self.marker} / {obj.marker}")
+        print(self.velocity[:2])
+        print(obj.velocity[:2])
+
+
 
 class SimulatedRobot(SimulatedObject):
     def __init__(self, name: str, position: np.ndarray) -> None:
-        super().__init__(name, position, kinematics.robot_radius, 0, constants.robot_mass)
+        super().__init__(name, position, constants.robot_radius, 0, constants.robot_mass)
         self.control_cmd: np.ndarray = np.array([0.0, 0.0, 0.0])
 
     def compute_kick(self, power: float) -> None:
@@ -84,10 +97,11 @@ class SimulatedRobot(SimulatedObject):
 
         if utils.in_rectangle(
             ball_robot,
-            [self.radius - constants.kicker_x_tolerance, -constants.kicker_y_tolerance],
-            [self.radius + constants.kicker_x_tolerance, constants.kicker_y_tolerance],
+            [self.radius + constants.ball_radius - constants.kicker_x_tolerance, -constants.kicker_y_tolerance],
+            [self.radius + constants.ball_radius + constants.kicker_x_tolerance, constants.kicker_y_tolerance],
         ):
-            # TODO: Move in constants
+            # TODO: Move the ball kicking velocity to constants
+            # TODO: We should not set the ball velocity to 0 in the y direction but keep its velocity
             ball_speed_robot = [np.clip(power, 0, 1) * np.random.normal(0.8, 0.1), 0]
             self.sim.objects["ball"].velocity[:2] = T_world_robot[:2, :2] @ ball_speed_robot
 
@@ -121,7 +135,7 @@ class RobotSim(robot.Robot):
         self.object.control_cmd = kinematics.clip_target_order(np.array([dx, dy, dturn]))
 
     def kick(self, power: float = 1.0) -> None:
-        self.object.pending_actions.append(lambda: self.compute_kick(power))
+        self.object.pending_actions.append(lambda: self.object.compute_kick(power))
 
 class Simulator:
     def __init__(self, robots: robots.Robots, state: state.State):
@@ -139,12 +153,11 @@ class Simulator:
 
         self.objects: dict = {}
 
-        self.refresh_robots()
-
         # Creating the ball
         self.add_object(
             SimulatedObject("ball", [0, 0, 0], constants.ball_radius, constants.ball_deceleration, constants.ball_mass)
         )
+        self.add_robot_objects()
 
         self.simu_thread: threading.Thread = threading.Thread(target=lambda: self.thread())
         self.simu_thread.start()
@@ -155,7 +168,7 @@ class Simulator:
         self.objects[object.marker] = object
         object.sim = self
 
-    def refresh_robots(self) -> None:
+    def add_robot_objects(self) -> None:
         for robot in self.robots.robots_by_marker.values():
             self.add_object(robot.object)
 
@@ -169,6 +182,12 @@ class Simulator:
             # if sum(dtForMean) > 1:
             #     print("Tick per second : ", 1 / np.mean(dtForMean))
             #     dtForMean = list()
+
+            # Simulator proceed in two steps:
+            # 1) We handle future collisions as elastic collisions and change the velocity vectors
+            #    accordingly.
+            # 2) We apply the object velocities, removing all the components in the velocities that would
+            #    create collision.
 
             for obj in self.objects.values():
                 # Execute actions (e.g: kick)
@@ -203,17 +222,21 @@ class Simulator:
                 obj.position = obj.position + (obj.velocity * self.dt)
                 obj.execute_actions()
 
+            print("Ball velocity:")
+            print(self.objects["ball"].velocity)
+
             if not utils.in_rectangle(
                 self.objects["ball"].position[:2],
-                [-constants.field_length / 2, -constants.field_width / 2],
-                [constants.field_length / 2, constants.field_width / 2],
+                [-constants.carpet_length / 2, -constants.carpet_width / 2],
+                [constants.carpet_length / 2, constants.carpet_width / 2],
             ):
                 self.objects["ball"].position[:3] = [0.0, 0.0, 0.0]
                 self.objects["ball"].velocity[:3] = [0.0, 0.0, 0.0]
             self.push()
+            sys.stdout.flush()
 
-            # while (time.time() - last_time) < 1 / 60:
-            #     time.sleep(0)
+            while (time.time() - last_time) < 1 / 60:
+                time.sleep(0.01)
 
     def push(self) -> None:
         for marker in self.objects:

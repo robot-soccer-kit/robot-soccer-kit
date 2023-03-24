@@ -22,6 +22,8 @@ class Backend:
         self.simulated = simulated
 
         self.state: state.State = state.State()
+        self.state.start_pub()
+        
         self.referee: referee.Referee = referee.Referee(self.state)
         self.control: control.Control = self.referee.control
         self.robots: robots.Robots = robots.Robots(self.state)
@@ -37,7 +39,6 @@ class Backend:
             self.detection.referee = self.referee
 
         self.control.robots = self.robots
-        self.state.start_pub()
         self.control.start()
 
     def is_simulated(self):
@@ -47,12 +48,18 @@ class Backend:
         return self.video.cameras()
 
     def constants(self) -> dict:
-        return {
-            "team_colors": utils.robot_teams(),
-            "default_penalty": constants.default_penalty,
-            "field_size": (constants.field_length, constants.field_width),
-            "carpet_size": (constants.carpet_length, constants.carpet_width),
-        }
+        # Retrieving all values declared in constants.py
+        values: dict = {}
+        constant_variables = vars(constants)
+        
+        for name in constant_variables:
+            if type(constant_variables[name]) in [int, bool, float]:
+                values[name] = constant_variables[name]
+
+        # Adding team colors
+        values["team_colors"] = utils.robot_teams()
+
+        return values
 
     def get_state(self):
         return self.state.get_state()

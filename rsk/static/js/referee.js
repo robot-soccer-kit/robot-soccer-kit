@@ -359,6 +359,7 @@ function referee_initialize(backend)
     let selected_robot = "ball"
 
     backend.constants(function(constants) {
+        let carpet_size = [constants["carpet_length"], constants["carpet_width"]]
 
         var context = document.getElementsByTagName('canvas')[0].getContext('2d')
         ctx_width = context.canvas.width
@@ -375,12 +376,14 @@ function referee_initialize(backend)
             context.drawImage(background,0,0)
         }
 
+        function meters_to_pixels_ratio() {
+            return document.getElementById('back').offsetWidth / carpet_size[0]
+        }
 
         function cam_to_sim(position, orientation) {
-            carpet_size = constants["carpet_size"]
             let pos_sim = [0.0, 0.0, 0.0]
             pos = [position[0],position[1],orientation]
-            ratio = document.getElementById('back').offsetWidth / carpet_size[0]
+            ratio = meters_to_pixels_ratio()
             pos_sim[0] = Math.round(((pos[0] + carpet_size[0]/2) * ratio))
             pos_sim[1] = Math.round(((-pos[1] + carpet_size[1]/2) * ratio)) 
             pos_sim[2] = round(-pos[2]+Math.PI/2)
@@ -403,7 +406,7 @@ function referee_initialize(backend)
             let ball = cam_to_sim(position)
             ball_ctx.beginPath()
             ball_ctx.fillStyle="red"
-            ball_ctx.arc(ball[0], ball[1], 7, 0, Math.PI*2);
+            ball_ctx.arc(ball[0], ball[1], constants["ball_radius"] * meters_to_pixels_ratio(), 0, Math.PI*2);
             ball_ctx.fill()
         }
         function compute_view(){
@@ -423,7 +426,7 @@ function referee_initialize(backend)
                     let robot_pos = cam_to_sim(robot.position,robot.orientation)
                     if (if_mouv(markers[entry][2], robot_pos) || markers[entry][3]) {
                         markers[entry][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
-                        robot_size = (0.0595 * 2 * document.getElementById('back').offsetWidth) / carpet_size[0]
+                        robot_size = constants["robot_radius"] * 2 * meters_to_pixels_ratio()
 
                         markers[entry][1].rotate(-markers[entry][2][2])
                         markers[entry][1].translate(-markers[entry][2][0],-markers[entry][2][1])
@@ -495,8 +498,6 @@ function referee_initialize(backend)
             if (simulated) {
                 let canvas = document.getElementById("ball")
                 canvas.addEventListener("mousedown", function(e) {
-
-                    carpet_size = constants["carpet_size"]
                     let pos_reel = [0.0, 0.0, 0.0]
                     if (selected_robot != "ball"){
                         pos = [e.layerX,e.layerY,markers[selected_robot][2][2]]

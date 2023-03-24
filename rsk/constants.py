@@ -70,9 +70,17 @@ max_linear_acceleration: float = 3  # [m.s^-2]
 max_angular_accceleration: float = 50  # [rad.s^-2]
 ball_mass: float = 0.008  # [kg]
 ball_deceleration: float = 0.3  # [m.s^-2]
-kicker_x_tolerance: float = 0.05  # [m]
-kicker_y_tolerance: float = 0.05  # [m]
+kicker_x_tolerance: float = 0.03  # [m]
+kicker_y_tolerance: float = 0.065  # [m]
 
+# Wheel radius [m]
+wheel_radius: float = 0.035
+
+# Distance between its center and wheels [m]
+wheel_center_spacing: float = 0.0595
+
+# Robot radius [m]
+robot_radius: float = 0.088
 
 # Goals coordinates
 def goal_posts(x_positive: bool = True) -> np.ndarray:

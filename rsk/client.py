@@ -107,8 +107,8 @@ class ClientRobot(ClientTracked):
         self.moved = True
         return self.client.command(self.color, self.number, "control", [dx, dy, dturn])
 
-    def tp(self, x, y, turn):
-        return self.client.command(self.color, self.number, "telep", [x, y, turn])
+    def teleport(self, x, y, turn):
+        return self.client.command(self.color, self.number, "teleport", [x, y, turn])
 
     def beep(self, frequency: int, duration: int):
         return self.client.command(self.color, self.number, "beep", [frequency, duration])
