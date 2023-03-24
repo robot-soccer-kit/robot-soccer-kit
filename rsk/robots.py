@@ -1,5 +1,4 @@
 import numpy as np
-from serial.tools import list_ports
 import time
 import copy
 import math
@@ -18,28 +17,33 @@ class Robots:
 
         self.state: state.State = state
 
-        # Robots (indexed by physical port)
+        # Robots (indexed by urls)
         self.robots: dict = {}
+
         # Robots (indexed by marker strings)
         self.robots_by_marker: dict = {}
 
+    def load_config(self) -> None:
         # Loading robots from the configuration
         if "robots" in config.config:
-            for port, marker in config.config["robots"]:
-                self.robots[port] = robot.Robot(port)
-                if marker != "":
-                    self.robots[port].set_marker(marker)
+            for url, marker in config.config["robots"]:
+                config_robot = self.add_robot(url)
+                if config_robot and marker != "":
+                    config_robot.set_marker(marker)
 
         self.update()
+
+    # Registered protocols
+    protocols: dict = {}
 
     def update(self):
         """
         Updates robots_by_marker for it to be consistent with robots
         """
         new_robots_by_marker = {}
-        for port in self.robots:
-            if self.robots[port].marker is not None:
-                new_robots_by_marker[self.robots[port].marker] = self.robots[port]
+        for url in self.robots:
+            if self.robots[url].marker is not None:
+                new_robots_by_marker[self.robots[url].marker] = self.robots[url]
         self.robots_by_marker = new_robots_by_marker
 
     def should_restore_leds(self, robot: str) -> bool:
@@ -59,22 +63,22 @@ class Robots:
         """
         Starts the identification procedure, to detect markers on the top of each robots
         """
-        for port in self.robots:
-            self.logger.info(f"Identifying {port}...")
+        for url in self.robots:
+            self.logger.info(f"Identifying {url}...")
             # Detection before the robot moves
             before = copy.deepcopy(self.state.get_state())["markers"]
             after = copy.deepcopy(before)
 
             # Makes the robot rotating at 50°/s for 1s
-            self.set_marker(port, None)
-            self.robots[port].beep(200, 100)
-            self.robots[port].control(0, 0, math.radians(50))
+            self.set_marker(url, None)
+            self.robots[url].beep(200, 100)
+            self.robots[url].control(0, 0, math.radians(50))
             for _ in range(100):
                 markers = copy.deepcopy(self.state.get_state())["markers"]
                 before = {**markers, **before}
                 after = {**after, **markers}
                 time.sleep(0.01)
-            self.robots[port].control(0, 0, 0)
+            self.robots[url].control(0, 0, 0)
 
             # We assign the marker to the robot that moved
             for marker in before:
@@ -82,37 +86,52 @@ class Robots:
                 b = after[marker]["orientation"]
                 delta = np.rad2deg(utils.angle_wrap(b - a))
 
-                self.logger.info(f"marker={marker}, port={port}, delta={delta}")
+                self.logger.info(f"marker={marker}, url={url}, delta={delta}")
                 if delta > 25 and delta < 90:
-                    logging.info(f"Identified port {port} to be {marker}")
-                    self.set_marker(port, marker)
+                    logging.info(f"Identified robot {url} to be {marker}")
+                    self.set_marker(url, marker)
 
-    def ports(self) -> list:
+    def available_urls(self) -> list:
         """
-        Retrieve a list of physical ports available
+        Retrieve a list of available URLs
 
-        :return list: a list of (str) com ports
+        :return list: a list of (str) urls
         """
-        return [entry.device for entry in list_ports.comports()]
+        urls: list = []
+        for protocol in self.protocols:
+            urls += [f"{protocol}://{url}" for url in self.protocols[protocol].available_urls()]
+
+        return urls
 
     def save_config(self) -> None:
         """
         Save the configuration file
         """
         config.config["robots"] = []
-        for port in self.robots:
-            config.config["robots"].append([port, self.robots[port].marker])
+        for url in self.robots:
+            config.config["robots"].append([url, self.robots[url].marker])
         config.save()
 
-    def add_robot(self, port: str) -> None:
+    def add_robot(self, full_url: str):
         """
-        Adds a port to the robots list
+        Adds an url to the robots list
 
-        :param str port: the port name
+        :param str url: the robot's url
         """
-        if port not in self.robots:
-            self.robots[port] = robot.Robot(port)
-            self.save_config()
+        if full_url not in self.robots:
+            result = full_url.split('://', 1)
+            if len(result) == 2:
+                protocol, url = result
+                if protocol in self.protocols:
+                    self.robots[full_url] = self.protocols[protocol](url)
+                    self.save_config()
+                    return self.robots[full_url]
+                else:
+                    print(f"Unknown protocol: {protocol} in robot URL \"{full_url}\"")
+            else:
+                print(f"Bad url: {full_url}")
+        
+        return None
 
     def get_robots(self) -> dict:
         """
@@ -137,34 +156,34 @@ class Robots:
 
         return data
 
-    def set_marker(self, port: str, marker: str) -> None:
+    def set_marker(self, url: str, marker: str) -> None:
         """
-        Sets the marker for a robot on a given port
+        Sets the marker for a robot on a given url
 
-        :param str port: the port name
+        :param str url: the url
         :param str marker: the marker
         """
-        if port in self.robots:
-            self.robots[port].set_marker(marker)
+        if url in self.robots:
+            self.robots[url].set_marker(marker)
             self.save_config()
             self.update()
 
-    def remove(self, port: str) -> None:
+    def remove(self, url: str) -> None:
         """
-        Removes a port from
+        Removes a url from
 
-        :param str port: the port name
+        :param str url: the url
         """
-        if port in self.robots:
-            self.robots[port].close()
-            del self.robots[port]
+        if url in self.robots:
+            self.robots[url].close()
+            del self.robots[url]
             self.save_config()
             self.update()
 
     def stop(self):
         """
-        Stops execution and closes all the ports
+        Stops execution and closes all the connections
         """
         self.control.stop()
-        for port in self.robots:
-            self.robots[port].close()
+        for url in self.robots:
+            self.robots[url].close()

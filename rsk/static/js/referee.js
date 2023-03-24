@@ -363,7 +363,7 @@ function referee_initialize(backend)
         var context = document.getElementsByTagName('canvas')[0].getContext('2d')
         ctx_width = context.canvas.width
         ctx_height = context.canvas.height
-        robot_size = ctx_height/8
+        robot_size = ctx_width/8
         var background = new Image()
         background.src = "static/imgs/field.svg"
         background.width = this.naturalWidth

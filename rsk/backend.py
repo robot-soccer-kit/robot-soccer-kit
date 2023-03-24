@@ -3,6 +3,7 @@ from . import (
     state,
     video,
     robots,
+    robot_serial,
     control,
     referee,
     detection,
@@ -15,20 +16,20 @@ from . import (
 class Backend:
     def __init__(self, simulated=False):
         super().__init__()
+        robots.Robots.protocols["serial"] = robot_serial.RobotSerial
+        robots.Robots.protocols["sim"] = simulator.RobotSim
 
         self.simulated = simulated
 
         self.state: state.State = state.State()
         self.referee: referee.Referee = referee.Referee(self.state)
         self.control: control.Control = self.referee.control
+        self.robots: robots.Robots = robots.Robots(self.state)
 
         if simulated:
-            self.robots: robots.Robots = simulator.Robots(self.state)
             self.simulator: simulator.Simulator = simulator.Simulator(self.robots, self.state)
-
         else:
-            self.robots: robots.Robots = robots.Robots(self.state)
-
+            self.robots.load_config()
             self.video: video.Video = video.Video()
 
             self.detection: detection.Detection = self.video.detection
@@ -82,28 +83,28 @@ class Backend:
         self.video.set_camera_settings(settings)
         return True
 
-    def ports(self):
-        return self.robots.ports()
+    def available_urls(self):
+        return self.robots.available_urls()
 
-    def add_robot(self, port: str):
-        self.robots.add_robot(port)
+    def add_robot(self, url: str):
+        self.robots.add_robot(url)
 
     def get_robots(self):
         return self.robots.get_robots()
 
-    def set_marker(self, port: str, marker):
-        self.robots.set_marker(port, marker)
+    def set_marker(self, url: str, marker):
+        self.robots.set_marker(url, marker)
 
-    def removeRobot(self, port: str):
-        self.robots.remove(port)
+    def removeRobot(self, url: str):
+        self.robots.remove(url)
 
-    def blink(self, port: str):
-        if port in self.robots.robots:
-            self.robots.robots[port].blink()
+    def blink(self, url: str):
+        if url in self.robots.robots:
+            self.robots.robots[url].blink()
 
-    def kick(self, port: str):
-        if port in self.robots.robots:
-            self.robots.robots[port].kick()
+    def kick(self, url: str):
+        if url in self.robots.robots:
+            self.robots.robots[url].kick()
 
     def telep(self, marker: str, x: float, y: float, turn: float):
         if marker in self.robots.robots_by_marker or marker == "ball":

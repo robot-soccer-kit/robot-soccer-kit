@@ -3,21 +3,20 @@ import time
 import numpy as np
 from numpy.linalg import norm
 from math import dist
-from . import kinematics, utils, constants, state
+from . import kinematics, utils, constants, state, robot, robots
 
 from collections.abc import Callable
-import numpy.typing as npt
 
 
 class SimulatedObject:
-    def __init__(self, marker: str, position: npt.NDArray, radius: int, deceleration: float = 0, mass: float = 1) -> None:
+    def __init__(self, marker: str, position: np.ndarray, radius: int, deceleration: float = 0, mass: float = 1) -> None:
         self.marker: str = marker
         self.radius: int = radius
 
         self.mass: float = mass
-        self.position: npt.NDArray = np.array([float(i) for i in position])
+        self.position: np.ndarray = np.array([float(i) for i in position])
 
-        self.velocity: npt.NDArray = np.array([0.0, 0.0, 0.0])
+        self.velocity: np.ndarray = np.array([0.0, 0.0, 0.0])
         self.deceleration: float = deceleration
 
         self.pending_actions: list(Callable) = []
@@ -71,59 +70,10 @@ class SimulatedObject:
         obj.velocity[:2] = R_collision_world.T @ obj_velocity_collision
 
 
-class Robots:
-    def __init__(self, state=None) -> None:
-        self.robots: dict = {}
-        self.robots_by_marker: dict[str, Robot] = {}
-        self.state: state.State = state
-
-        for marker, position in zip(
-            ["green1", "green2", "blue1", "blue2"],
-            [[-0.5, 0.5, 0], [-0.5, -0.5, 0], [0.5, 0.5, 0], [0.5, -0.5, 0]],
-        ):
-            robot: Robot = Robot(marker, position)
-            self.robots_by_marker[marker] = robot
-
-    def should_restore_leds(self, robot: str) -> None:
-        pass
-
-    def ports(self) -> list[int]:
-        return [0, 0, 0, 0]
-
-    def get_robots(self) -> dict:
-        """
-        Gets robots informations.
-
-        :return dict: information about robots
-        """
-        data = {}
-        for entry in self.robots:
-            last_detection = None
-            if self.robots[entry].marker in self.detection.last_updates:
-                last_detection = time.time() - self.detection.last_updates[self.robots[entry].marker]
-
-            data[entry] = {
-                "state": self.robots[entry].state,
-                "marker": self.robots[entry].marker,
-                "last_detection": last_detection,
-                "last_message": time.time() - self.robots[entry].last_message
-                if self.robots[entry].last_message is not None
-                else None,
-            }
-
-        return data
-
-
-class Robot(SimulatedObject):
-    def __init__(self, marker: str, position: npt.NDArray) -> None:
-        super().__init__(marker, position, kinematics.robot_radius, 0, constants.robot_mass)
-        self.control_cmd: npt.NDArray = np.array([0.0, 0.0, 0.0])
-
-    def control(self, dx: float, dy: float, dturn: float) -> None:
-        self.control_cmd = kinematics.clip_target_order(np.array([dx, dy, dturn]))
-
-    def kick(self, power: float = 1.0) -> None:
-        self.pending_actions.append(lambda: self.compute_kick(power))
+class SimulatedRobot(SimulatedObject):
+    def __init__(self, name: str, position: np.ndarray) -> None:
+        super().__init__(name, position, kinematics.robot_radius, 0, constants.robot_mass)
+        self.control_cmd: np.ndarray = np.array([0.0, 0.0, 0.0])
 
     def compute_kick(self, power: float) -> None:
         # Robot to ball vector, expressed in world
@@ -157,13 +107,37 @@ class Robot(SimulatedObject):
     def leds(self, r: int, g: int, b: int) -> None:
         pass
 
+class RobotSim(robot.Robot):
+    def __init__(self, url: str):
+        super().__init__(url)
+        self.set_marker(url)
+
+        self.object: SimulatedRobot = None
+
+    def initialize(self, position: np.ndarray) -> None:
+        self.object = SimulatedRobot(self.marker, position)
+    
+    def control(self, dx: float, dy: float, dturn: float) -> None:
+        self.object.control_cmd = kinematics.clip_target_order(np.array([dx, dy, dturn]))
+
+    def kick(self, power: float = 1.0) -> None:
+        self.object.pending_actions.append(lambda: self.compute_kick(power))
 
 class Simulator:
-    def __init__(self, robots: Robots, state: state.State):
+    def __init__(self, robots: robots.Robots, state: state.State):
         self.state: state.State = state
-        self.robots: Robots = robots
+        self.robots: robot.Robots = robots
 
-        self.objects: dict[str, Robot] = {}
+        for marker, position in zip(
+            ["green1", "green2", "blue1", "blue2"],
+            [[-0.5, 0.5, 0], [-0.5, -0.5, 0], [0.5, 0.5, 0], [0.5, -0.5, 0]],
+        ):
+            robot: RobotSim = self.robots.add_robot(f"sim://{marker}")
+            robot.initialize(position)
+
+        self.robots.update()
+
+        self.objects: dict = {}
 
         self.refresh_robots()
 
@@ -182,8 +156,8 @@ class Simulator:
         object.sim = self
 
     def refresh_robots(self) -> None:
-        for object in self.robots.robots_by_marker.values():
-            self.add_object(object)
+        for robot in self.robots.robots_by_marker.values():
+            self.add_object(robot.object)
 
     def thread(self) -> None:
         last_time = time.time()
