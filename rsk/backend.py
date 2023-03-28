@@ -113,9 +113,9 @@ class Backend:
         if url in self.robots.robots:
             self.robots.robots[url].kick()
 
-    def telep(self, marker: str, x: float, y: float, turn: float):
+    def teleport(self, marker: str, x: float, y: float, turn: float):
         if marker in self.robots.robots_by_marker or marker == "ball":
-            self.simulator.objects[marker].telep(x, y, turn)
+            self.simulator.objects[marker].teleport(x, y, turn)
 
     def control_status(self):
         return self.control.status()

@@ -399,16 +399,37 @@ function referee_initialize(backend)
             }
             return false
         }
+
+        function draw_leds(color, context){
+            for(i = -30; i<-30+120*3; i+= 120){
+                angle =  i * Math.PI/180
+                x = Math.round(Math.cos(angle)*constants["robot_radius"]*meters_to_pixels_ratio()*0.93)
+                y = Math.round(Math.sin(angle)*constants["robot_radius"]*meters_to_pixels_ratio()*0.93)
+                context.beginPath()
+                gradient = context.createRadialGradient(x, y, 0, x, y, 70);
+                gradient.addColorStop(0.05, color);
+                gradient.addColorStop(0.20, "transparent");
+                context.fillStyle = gradient
+                context.fillRect(x-25, y-25, 200, 200);
+            }
+        }
+
+        function draw_circle(position, radius, color, canvas, clear = false){
+            context = canvas.getContext('2d')
+            if(clear) context.clearRect(0,0,canvas.width,canvas.height)
+            context.beginPath()
+            context.fillStyle = color
+            context.arc(position[0], position[1], radius, 0, Math.PI*2);
+            context.fill()
+        }
+
         function draw_ball(position){
             ball_canvas = document.getElementById("ball")
-            ball_ctx = ball_canvas.getContext('2d')
-            ball_ctx.clearRect(0,0,ball_canvas.width,ball_canvas.height)
-            let ball = cam_to_sim(position)
-            ball_ctx.beginPath()
-            ball_ctx.fillStyle="red"
-            ball_ctx.arc(ball[0], ball[1], constants["ball_radius"] * meters_to_pixels_ratio(), 0, Math.PI*2);
-            ball_ctx.fill()
+            ball = cam_to_sim(position)
+            radius = constants["ball_radius"] * meters_to_pixels_ratio()
+            draw_circle(ball, radius, "orange", ball_canvas, true)
         }
+
         function compute_view(){
             backend.get_state(function(state) {
                 let present_marker = state.markers
@@ -419,7 +440,6 @@ function referee_initialize(backend)
                         markers[key][3] = true
                     }
                 }
-
                 for (let entry in present_marker) {
 
                     let robot = present_marker[entry]
@@ -431,12 +451,25 @@ function referee_initialize(backend)
                         markers[entry][1].rotate(-markers[entry][2][2])
                         markers[entry][1].translate(-markers[entry][2][0],-markers[entry][2][1])
 
+
                         markers[entry][1].translate(robot_pos[0],robot_pos[1])
                         markers[entry][1].rotate(robot_pos[2])
+                        let rgb = state["leds"][entry]
+                        for (var i = 0; i < 3; i++) {
+                            rgb[i] = Math.round(Math.log(rgb[i]+1)/Math.log(256) * 255)
+                        }
+                        draw_leds("rgba("+rgb+",0.7)", markers[entry][1])
                         markers[entry][1].drawImage(markers[entry][0],-robot_size/2,-robot_size/2,robot_size,robot_size)
+
+
                         
                         markers[entry][2] = robot_pos
                         markers[entry][3] = false
+
+                        
+
+
+
                     }
                 }
                 var position_ball = state.ball
@@ -497,6 +530,8 @@ function referee_initialize(backend)
         backend.is_simulated(function (simulated) {
             if (simulated) {
                 let canvas = document.getElementById("ball")
+
+                click_select = None
                 canvas.addEventListener("mousedown", function(e) {
                     let pos_reel = [0.0, 0.0, 0.0]
                     if (selected_robot != "ball"){
@@ -509,7 +544,7 @@ function referee_initialize(backend)
                     pos_reel[1] = -(pos[1] - document.getElementById('back').offsetHeight/2) * ratio
                     pos_reel[2] = -(pos[2]-Math.PI/2)
 
-                    backend.telep(selected_robot, pos_reel[0], pos_reel[1], pos_reel[2])
+                    backend.teleport(selected_robot, pos_reel[0], pos_reel[1], pos_reel[2])
                 })
             }
         })

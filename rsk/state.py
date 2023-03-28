@@ -9,17 +9,18 @@ class State:
         Args:
             frequency_pub (int, optional): publication frequency [Hz]
         """
-        self.markers = {}
+        self.markers: dict = {}
         self.ball = None
-        self.last_updates = {}
-        self.referee = {}
+        self.last_updates: dict = {}
+        self.referee: dict = {}
 
         self.context = None
         self.last_time = None
         self.frequency_pub = frequency_pub
+        self.leds: dict = {}
 
     def get_state(self):
-        return {"markers": self.markers, "ball": self.ball, "referee": self.referee}
+        return {"markers": self.markers, "ball": self.ball, "referee": self.referee, "leds": self.leds}
 
     def start_pub(self):
         # Publishing server
@@ -51,6 +52,10 @@ class State:
         self.markers = markers
         for marker in markers:
             self.last_updates[marker] = time.time()
+
+    @_refresh
+    def set_leds(self, marker, leds):
+        self.leds[marker] = leds
 
     @_refresh
     def set_marker(self, marker, position, orientation):

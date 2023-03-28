@@ -28,7 +28,7 @@ class SimulatedObject:
             action()
         self.pending_actions = []
 
-    def telep(self, x: float, y: float, turn: float):
+    def teleport(self, x: float, y: float, turn: float):
         self.position = np.array((x, y, turn))
         self.velocity = np.array([0.0, 0.0, 0.0])
 
@@ -55,9 +55,6 @@ class SimulatedObject:
         # Velocities expressed in the collision frame
         self_velocity_collision = R_collision_world @ self.velocity[:2]
         obj_velocity_collision = R_collision_world @ obj.velocity[:2]
-        print("Speeds in the collision frame:")
-        print(self_velocity_collision)
-        print(obj_velocity_collision)
 
         # Updating velocities using elastic collision
         u1 = self_velocity_collision[0]
@@ -77,16 +74,12 @@ class SimulatedObject:
         self.velocity[:2] = R_collision_world.T @ self_velocity_collision
         obj.velocity[:2] = R_collision_world.T @ obj_velocity_collision
 
-        print(f"Updating velocity for {self.marker} / {obj.marker}")
-        print(self.velocity[:2])
-        print(obj.velocity[:2])
-
-
 
 class SimulatedRobot(SimulatedObject):
     def __init__(self, name: str, position: np.ndarray) -> None:
         super().__init__(name, position, constants.robot_radius, 0, constants.robot_mass)
         self.control_cmd: np.ndarray = np.array([0.0, 0.0, 0.0])
+        self.leds = None  # [R,G,B] (0-255) None for off
 
     def compute_kick(self, power: float) -> None:
         # Robot to ball vector, expressed in world
@@ -118,8 +111,9 @@ class SimulatedRobot(SimulatedObject):
             self.velocity[2:], target_velocity_robot[2:], constants.max_angular_accceleration * dt
         )
 
-    def leds(self, r: int, g: int, b: int) -> None:
-        pass
+    def control_leds(self, r: int, g: int, b: int) -> None:
+        self.leds = [r, g, b]
+
 
 class RobotSim(robot.Robot):
     def __init__(self, url: str):
@@ -130,17 +124,28 @@ class RobotSim(robot.Robot):
 
     def initialize(self, position: np.ndarray) -> None:
         self.object = SimulatedRobot(self.marker, position)
-    
+
     def control(self, dx: float, dy: float, dturn: float) -> None:
         self.object.control_cmd = kinematics.clip_target_order(np.array([dx, dy, dturn]))
 
     def kick(self, power: float = 1.0) -> None:
         self.object.pending_actions.append(lambda: self.object.compute_kick(power))
 
+    def leds(self, red: int, green: int, blue: int) -> None:
+        """
+        Controls the robot LEDs
+
+        :param int red: red brightness (0-255)
+        :param int green: green brightness (0-255)
+        :param int blue: blue brightness (0-255)
+        """
+        self.object.pending_actions.append(lambda: self.object.control_leds(red, green, blue))
+
+
 class Simulator:
     def __init__(self, robots: robots.Robots, state: state.State):
         self.state: state.State = state
-        self.robots: robot.Robots = robots
+        self.robots: robots.Robots = robots
 
         for marker, position in zip(
             ["green1", "green2", "blue1", "blue2"],
@@ -222,9 +227,6 @@ class Simulator:
                 obj.position = obj.position + (obj.velocity * self.dt)
                 obj.execute_actions()
 
-            print("Ball velocity:")
-            print(self.objects["ball"].velocity)
-
             if not utils.in_rectangle(
                 self.objects["ball"].position[:2],
                 [-constants.carpet_length / 2, -constants.carpet_width / 2],
@@ -233,7 +235,6 @@ class Simulator:
                 self.objects["ball"].position[:3] = [0.0, 0.0, 0.0]
                 self.objects["ball"].velocity[:3] = [0.0, 0.0, 0.0]
             self.push()
-            sys.stdout.flush()
 
             while (time.time() - last_time) < 1 / 60:
                 time.sleep(0.01)
@@ -245,3 +246,4 @@ class Simulator:
                 self.state.set_ball(pos[:2].tolist())
             else:
                 self.state.set_marker(marker, pos[:2].tolist(), pos[2])
+                self.state.set_leds(marker, self.objects[marker].leds)
