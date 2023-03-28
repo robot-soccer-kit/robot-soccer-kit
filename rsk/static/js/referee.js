@@ -459,16 +459,9 @@ function referee_initialize(backend)
                             rgb[i] = Math.round(Math.log(rgb[i]+1)/Math.log(256) * 255)
                         }
                         draw_leds("rgba("+rgb+",0.7)", markers[entry][1])
-                        markers[entry][1].drawImage(markers[entry][0],-robot_size/2,-robot_size/2,robot_size,robot_size)
-
-
-                        
+                        markers[entry][1].drawImage(markers[entry][0],-robot_size/2,-robot_size/2,robot_size,robot_size)                 
                         markers[entry][2] = robot_pos
                         markers[entry][3] = false
-
-                        
-
-
 
                     }
                 }
@@ -531,8 +524,32 @@ function referee_initialize(backend)
             if (simulated) {
                 let canvas = document.getElementById("ball")
 
-                click_select = None
+                const distance = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1); 
+
+                click_select = NaN
                 canvas.addEventListener("mousedown", function(e) {
+                    for (let marker in markers){
+                        if (distance(markers[marker][2][0], markers[marker][2][1], e.layerX, e.layerY) < constants["robot_radius"]*meters_to_pixels_ratio()){
+                            selected_robot = marker
+                        }
+                    }
+                })
+
+                canvas.addEventListener("mouseup", function(e) {
+                    let pos_reel = [0.0, 0.0, 0.0]
+                    pos = [e.layerX,e.layerY,0]
+                    ratio = carpet_size[0] / document.getElementById('back').offsetWidth
+                    pos_reel[0] = (pos[0] - document.getElementById('back').offsetWidth/2) * ratio
+                    pos_reel[1] = -(pos[1] - document.getElementById('back').offsetHeight/2) * ratio
+                    pos_reel[2] = -(pos[2]-Math.PI/2)
+
+                    backend.teleport(selected_robot, pos_reel[0], pos_reel[1], pos_reel[2])
+                    selected_robot = "ball"
+                })
+
+
+
+/*
                     let pos_reel = [0.0, 0.0, 0.0]
                     if (selected_robot != "ball"){
                         pos = [e.layerX,e.layerY,markers[selected_robot][2][2]]
@@ -545,7 +562,7 @@ function referee_initialize(backend)
                     pos_reel[2] = -(pos[2]-Math.PI/2)
 
                     backend.teleport(selected_robot, pos_reel[0], pos_reel[1], pos_reel[2])
-                })
+                })*/
             }
         })
     })
