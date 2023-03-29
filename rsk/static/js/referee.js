@@ -343,11 +343,11 @@ function referee_initialize(backend)
         $(this).find('.move').click(function() {
             
             $('.move').removeClass('btn-danger')
-            if(selected_robot == robot_id){
-                selected_robot = "ball";
+            if(selected_objet == robot_id){
+                selected_objet = "ball";
             }else{
                 $(this).addClass("btn-danger")
-                selected_robot = robot_id;
+                selected_objet = robot_id;
             }
         });
     });
@@ -356,7 +356,7 @@ function referee_initialize(backend)
     markers = {"blue1": [NaN,NaN,[0,0,0],true],"blue2": [NaN,NaN,[0,0,0],true],"green1": [NaN,NaN,[0,0,0],true],"green2": [NaN,NaN,[0,0,0],true]}
     simulated_view = false
     intervalId = 0
-    let selected_robot = "ball"
+    let selected_objet = "ball"
 
     backend.constants(function(constants) {
         let carpet_size = [constants["carpet_length"], constants["carpet_width"]]
@@ -522,37 +522,46 @@ function referee_initialize(backend)
 
         backend.is_simulated(function (simulated) {
             if (simulated) {
+                
                 let canvas = document.getElementById("ball")
-
                 const distance = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1); 
 
-                click_select = NaN
+                function teleport_selected_object_on_mouse(e){
+                    let pos_reel = [0.0, 0.0, 0.0]
+                        if (selected_objet == "ball"){
+                            pos = [e.layerX,e.layerY,0]
+                        }else{
+                            pos = [e.layerX,e.layerY,markers[selected_objet][2][2]]
+
+                        }
+
+                        ratio = carpet_size[0] / document.getElementById('back').offsetWidth
+                        pos_reel[0] = (pos[0] - document.getElementById('back').offsetWidth/2) * ratio
+                        pos_reel[1] = -(pos[1] - document.getElementById('back').offsetHeight/2) * ratio
+                        pos_reel[2] = -(pos[2]-Math.PI/2)
+
+                        backend.teleport(selected_objet, pos_reel[0], pos_reel[1], pos_reel[2])
+                }
+
                 canvas.addEventListener("mousedown", function(e) {
                     for (let marker in markers){
                         if (distance(markers[marker][2][0], markers[marker][2][1], e.layerX, e.layerY) < constants["robot_radius"]*meters_to_pixels_ratio()){
-                            selected_robot = marker
+                            selected_objet = marker
                         }
                     }
+                    canvas.addEventListener("mousemove", teleport_selected_object_on_mouse)
                 })
-
-                canvas.addEventListener("mouseup", function(e) {
-                    let pos_reel = [0.0, 0.0, 0.0]
-                    pos = [e.layerX,e.layerY,0]
-                    ratio = carpet_size[0] / document.getElementById('back').offsetWidth
-                    pos_reel[0] = (pos[0] - document.getElementById('back').offsetWidth/2) * ratio
-                    pos_reel[1] = -(pos[1] - document.getElementById('back').offsetHeight/2) * ratio
-                    pos_reel[2] = -(pos[2]-Math.PI/2)
-
-                    backend.teleport(selected_robot, pos_reel[0], pos_reel[1], pos_reel[2])
-                    selected_robot = "ball"
+                canvas.addEventListener("mouseup", function(e){ 
+                    canvas.removeEventListener("mousemove",teleport_selected_object_on_mouse)
+                    selected_objet = "ball"
                 })
 
 
 
 /*
                     let pos_reel = [0.0, 0.0, 0.0]
-                    if (selected_robot != "ball"){
-                        pos = [e.layerX,e.layerY,markers[selected_robot][2][2]]
+                    if (selected_objet != "ball"){
+                        pos = [e.layerX,e.layerY,markers[selected_objet][2][2]]
                     }else{
                         pos = [e.layerX,e.layerY,0]
                     }
@@ -561,7 +570,7 @@ function referee_initialize(backend)
                     pos_reel[1] = -(pos[1] - document.getElementById('back').offsetHeight/2) * ratio
                     pos_reel[2] = -(pos[2]-Math.PI/2)
 
-                    backend.teleport(selected_robot, pos_reel[0], pos_reel[1], pos_reel[2])
+                    backend.teleport(selected_objet, pos_reel[0], pos_reel[1], pos_reel[2])
                 })*/
             }
         })
