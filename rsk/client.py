@@ -280,7 +280,6 @@ class Client:
         if threading.current_thread() is threading.main_thread():
             sigint_handler = signal.getsignal(signal.SIGINT)
             signal.signal(signal.SIGINT, signal.SIG_IGN)
-
         self.lock.acquire()
         self.req.send_json([self.key, color, number, [name, *parameters]])
         success, message = self.req.recv_json()

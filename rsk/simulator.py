@@ -125,6 +125,16 @@ class RobotSim(robot.Robot):
     def initialize(self, position: np.ndarray) -> None:
         self.object = SimulatedRobot(self.marker, position)
 
+    def teleport(self, x: float, y: float, turn: float) -> None:
+        """
+        Teleports the robot to a given position/orientation
+
+        :param float x: x position [m]
+        :param float y: y position [m]
+        :param float turn: orientation [rad]
+        """
+        self.object.teleport(x, y, turn)
+
     def control(self, dx: float, dy: float, dturn: float) -> None:
         self.object.control_cmd = kinematics.clip_target_order(np.array([dx, dy, dturn]))
 
@@ -143,7 +153,7 @@ class RobotSim(robot.Robot):
 
 
 class Simulator:
-    def __init__(self, robots: robots.Robots, state: state.State):
+    def __init__(self, robots: robots.Robots, state: state.State = None):
         self.state: state.State = state
         self.robots: robots.Robots = robots
 
@@ -164,10 +174,18 @@ class Simulator:
         )
         self.add_robot_objects()
 
+        self.run = True
+        self.set_test_param()
+
         self.simu_thread: threading.Thread = threading.Thread(target=lambda: self.thread())
         self.simu_thread.start()
 
         self.lock: threading.Lock = threading.Lock()
+
+    def set_test_param(self, fps_limit=120, dt_multiplicator=1, dt_fixe=None):
+        self.fps_limit = fps_limit
+        self.dt_multiplicator = dt_multiplicator
+        self.dt_fixe = dt_fixe
 
     def add_object(self, object: SimulatedObject) -> None:
         self.objects[object.marker] = object
@@ -178,15 +196,17 @@ class Simulator:
             self.add_object(robot.object)
 
     def thread(self) -> None:
+        dt = lambda: ((time.time() - last_time) * self.dt_multiplicator) if self.dt_fixe is None else self.dt_fixe
         last_time = time.time()
-        dtForMean = list()
+        self.time = 0
+        self.tick = 0
         while True:
-            self.dt = -(last_time - (last_time := time.time()))
-
-            # dtForMean.append(self.dt)
-            # if sum(dtForMean) > 1:
-            #     print("Tick per second : ", 1 / np.mean(dtForMean))
-            #     dtForMean = list()
+            self.dt = (
+                ((-last_time - (last_time := time.time())) * self.dt_multiplicator) if self.dt_fixe is None else self.dt_fixe
+            )
+            last_time = time.time()
+            self.time += self.dt
+            self.tick += 1
 
             # Simulator proceed in two steps:
             # 1) We handle future collisions as elastic collisions and change the velocity vectors
@@ -227,23 +247,25 @@ class Simulator:
                 obj.position = obj.position + (obj.velocity * self.dt)
                 obj.execute_actions()
 
-            if not utils.in_rectangle(
+            if "ball" in self.objects and not utils.in_rectangle(
                 self.objects["ball"].position[:2],
                 [-constants.carpet_length / 2, -constants.carpet_width / 2],
                 [constants.carpet_length / 2, constants.carpet_width / 2],
             ):
                 self.objects["ball"].position[:3] = [0.0, 0.0, 0.0]
                 self.objects["ball"].velocity[:3] = [0.0, 0.0, 0.0]
+
             self.push()
 
-            while (time.time() - last_time) < 1 / 60:
-                time.sleep(0.01)
+            while (self.fps_limit is not None) and (time.time() - last_time < 1 / self.fps_limit):
+                time.sleep(0)
 
     def push(self) -> None:
-        for marker in self.objects:
-            pos = self.objects[marker].position
-            if marker == "ball":
-                self.state.set_ball(pos[:2].tolist())
-            else:
-                self.state.set_marker(marker, pos[:2].tolist(), pos[2])
-                self.state.set_leds(marker, self.objects[marker].leds)
+        if self.state is not None:
+            for marker in self.objects:
+                pos = self.objects[marker].position
+                if marker == "ball":
+                    self.state.set_ball(pos[:2].tolist())
+                else:
+                    self.state.set_marker(marker, pos[:2].tolist(), pos[2])
+                    self.state.set_leds(marker, self.objects[marker].leds)
