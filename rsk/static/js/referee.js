@@ -183,6 +183,8 @@ function referee_initialize(backend)
             });
 
         }, 200);
+
+
     });
 
     $('.toast').toast('show');
@@ -352,8 +354,6 @@ function referee_initialize(backend)
         });
     });
 
-
-    markers = {"blue1": [NaN,NaN,[0,0,0],true],"blue2": [NaN,NaN,[0,0,0],true],"green1": [NaN,NaN,[0,0,0],true],"green2": [NaN,NaN,[0,0,0],true]}
     simulated_view = false
     intervalId = 0
     let selected_objet = "ball"
@@ -389,7 +389,7 @@ function referee_initialize(backend)
             pos_sim[2] = round(-pos[2]+Math.PI/2)
             return pos_sim
         }
-        function if_mouv(last_pos, position){
+        function if_move(last_pos, position){
             if (Math.abs(last_pos[0] - position[0]) > 1.5){
                     return true
             }else if (Math.abs(last_pos[1] - position[1]) >  1.5){
@@ -436,142 +436,127 @@ function referee_initialize(backend)
                 for (var key in markers) {
                     if(!(key in present_marker)){
                         canvas = markers[key][1].canvas
-                        markers[key][1].clearRect(0,0,canvas.width,canvas.height)
-                        markers[key][3] = true
+                        markers[key]["context"].clearRect(0,0,canvas.width,canvas.height)
+                        markers[key]["clear"] = true
                     }
                 }
-                for (let entry in present_marker) {
+                for (var entry in present_marker) {
 
-                    let robot = present_marker[entry]
-                    let robot_pos = cam_to_sim(robot.position,robot.orientation)
-                    if (if_mouv(markers[entry][2], robot_pos) || markers[entry][3]) {
-                        markers[entry][1].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
+                    robot = present_marker[entry]
+                    robot_pos = cam_to_sim(robot.position,robot.orientation)
+
+                    if (if_move(markers[entry]["pos"], robot_pos) || markers[entry]["clear"]) {
+                        markers[entry]["context"].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
                         robot_size = constants["robot_radius"] * 2 * meters_to_pixels_ratio()
 
-                        markers[entry][1].rotate(-markers[entry][2][2])
-                        markers[entry][1].translate(-markers[entry][2][0],-markers[entry][2][1])
+                        markers[entry]["context"].rotate(-markers[entry]["pos"][2])
+                        markers[entry]["context"].translate(-markers[entry]["pos"][0],-markers[entry]["pos"][1])
 
 
-                        markers[entry][1].translate(robot_pos[0],robot_pos[1])
-                        markers[entry][1].rotate(robot_pos[2])
-                        let rgb = state["leds"][entry]
+                        markers[entry]["context"].translate(robot_pos[0],robot_pos[1])
+                        markers[entry]["context"].rotate(robot_pos[2])
+                        rgb = state["leds"][entry]
                         for (var i = 0; i < 3; i++) {
                             rgb[i] = Math.round(Math.log(rgb[i]+1)/Math.log(256) * 255)
                         }
-                        draw_leds("rgba("+rgb+",0.7)", markers[entry][1])
-                        markers[entry][1].drawImage(markers[entry][0],-robot_size/2,-robot_size/2,robot_size,robot_size)                 
-                        markers[entry][2] = robot_pos
-                        markers[entry][3] = false
+                        draw_leds("rgba("+rgb+",0.7)", markers[entry]["context"])
+                        markers[entry]["context"].drawImage(markers[entry]["image"],-robot_size/2,-robot_size/2,robot_size,robot_size)                 
+                        markers[entry]["pos"] = robot_pos
+                        markers[entry]["clear"] = false
 
                     }
                 }
-                var position_ball = state.ball
-                if (position_ball != null){
-                    let ball = draw_ball(position_ball)
+                if (state.ball != null){
+                    draw_ball(state.ball)
                 }
             });
         };
 
         function resize(){
             simulated_view = !simulated_view
-            view()
+            run_view()
         }
-        function view() {
+        function resize_canvas(canvas){
+                back_canvas = document.getElementById('back')
+                canvas.width = back_canvas.offsetWidth
+                canvas.height = back_canvas.offsetHeight
+                return canvas
+        }
+        function run_view() {
             if (!simulated_view) {
                 $('#ViewChange').html("<i class='bi bi-camera'></i> Camera View")
                 $('#vision').addClass('d-none')
                 $('#back').removeClass('d-none')
                 $('.sim_vim').css('opacity', '100')
-                simulated_view = true
-                markers = {"blue1": [NaN,NaN,[0,0,0],true],"blue2": [NaN,NaN,[0,0,0],true],"green1": [NaN,NaN,[0,0,0],true],"green2": [NaN,NaN,[0,0,0],true]}   
-                ball = [NaN,NaN,[0,0,0]]
-                back_canvas = document.getElementById('back')
-                for (var key in markers) {
-                    markers[key][0] = new Image();
-                    markers[key][0].src = "static/imgs/robot"+ key +".svg"
-                    canvas = document.getElementById(key)
-                    canvas.width = back_canvas.offsetWidth
-                    canvas.height = back_canvas.offsetHeight
-                    markers[key][1] = canvas.getContext('2d')
+
+                markers = {"blue1":NaN,"blue2":NaN,"green1":NaN,"green2":NaN}
+                for(let marker in markers){
+                    console.log(marker)
+                    markers[marker] = {"image":NaN,"context":NaN, "pos":[0,0,0],"clear":true}
                 }
-                canvas = document.getElementById("ball")
-                canvas.width = back_canvas.offsetWidth
-                canvas.height = back_canvas.offsetHeight
+                for (var key in markers) {
+                    markers[key]["image"] = new Image();
+                    markers[key]["image"].src = "static/imgs/robot"+ key +".svg"
+                    canvas = resize_canvas(document.getElementById(key))
+                    markers[key]["context"] = canvas.getContext('2d')
+                }
+                resize_canvas(document.getElementById("ball"))
+
                 clearInterval(intervalId)
-                intervalId = setInterval(compute_view, 10)
+                intervalId = setInterval(compute_view, 1000/60)
+                simulated_view = true
+
             }else{
                 clearInterval(intervalId)
                 $('#ViewChange').html("<i class='bi bi-camera'></i> Simulated View")
                 $('#vision').removeClass('d-none')
                 $('#back').addClass('d-none')
                 $('.sim_vim').css('opacity', '0')
-                simulated_view = false;
+                simulated_view = false; 
 
             }
         }
-        backend.is_simulated(function (simulated) {
-            if (simulated){
-            $('body').addClass('vision-running');  
-                simulated_view = false
-                $('body').addClass('vision-running')
-            }
-        })
-        setTimeout(view, 1000)
-        $('#ViewChange').click(view)
+
+        setTimeout(run_view, 1000)
         window.onresize = resize
 
+        $('#ViewChange').click(run_view)
+
         backend.is_simulated(function (simulated) {
-            if (simulated) {
-                
+            if(simulated) {
+                $('body').addClass('vision-running')
                 let canvas = document.getElementById("ball")
                 const distance = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1); 
-
+ 
                 function teleport_selected_object_on_mouse(e){
                     let pos_reel = [0.0, 0.0, 0.0]
                         if (selected_objet == "ball"){
                             pos = [e.layerX,e.layerY,0]
                         }else{
-                            pos = [e.layerX,e.layerY,markers[selected_objet][2][2]]
+                            pos = [e.layerX,e.layerY,markers[selected_objet]["pos"][2]]
 
                         }
-
-                        ratio = carpet_size[0] / document.getElementById('back').offsetWidth
-                        pos_reel[0] = (pos[0] - document.getElementById('back').offsetWidth/2) * ratio
-                        pos_reel[1] = -(pos[1] - document.getElementById('back').offsetHeight/2) * ratio
+                        back_canvas = document.getElementById('back')
+                        ratio = 1/meters_to_pixels_ratio()
+                        pos_reel[0] = (pos[0] - back_canvas.offsetWidth/2) * ratio
+                        pos_reel[1] = -(pos[1] - back_canvas.offsetHeight/2) * ratio
                         pos_reel[2] = -(pos[2]-Math.PI/2)
-
                         backend.teleport(selected_objet, pos_reel[0], pos_reel[1], pos_reel[2])
                 }
 
                 canvas.addEventListener("mousedown", function(e) {
                     for (let marker in markers){
-                        if (distance(markers[marker][2][0], markers[marker][2][1], e.layerX, e.layerY) < constants["robot_radius"]*meters_to_pixels_ratio()){
+                        if (distance(markers[marker]["pos"][0], markers[marker]["pos"][1], e.layerX, e.layerY) < constants["robot_radius"]*meters_to_pixels_ratio()){
                             selected_objet = marker
                         }
                     }
                     canvas.addEventListener("mousemove", teleport_selected_object_on_mouse)
                 })
                 canvas.addEventListener("mouseup", function(e){ 
+                    teleport_selected_object_on_mouse(e)
                     canvas.removeEventListener("mousemove",teleport_selected_object_on_mouse)
                     selected_objet = "ball"
                 })
-
-
-
-/*
-                    let pos_reel = [0.0, 0.0, 0.0]
-                    if (selected_objet != "ball"){
-                        pos = [e.layerX,e.layerY,markers[selected_objet][2][2]]
-                    }else{
-                        pos = [e.layerX,e.layerY,0]
-                    }
-                    ratio = carpet_size[0] / document.getElementById('back').offsetWidth
-                    pos_reel[0] = (pos[0] - document.getElementById('back').offsetWidth/2) * ratio
-                    pos_reel[1] = -(pos[1] - document.getElementById('back').offsetHeight/2) * ratio
-                    pos_reel[2] = -(pos[2]-Math.PI/2)
-
-                    backend.teleport(selected_objet, pos_reel[0], pos_reel[1], pos_reel[2])
-                })*/
             }
         })
     })
