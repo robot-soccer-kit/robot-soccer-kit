@@ -59,7 +59,7 @@ default_penalty: float = 5.0  # [s]
 grace_time: float = 3.0  # [s]
 
 # Number of penalty spots
-penalty_spots: int = 10
+penalty_spots: int = 8
 penalty_spot_lock_time: int = 1
 # Parameters
 referee_history_size: int = 3
@@ -81,6 +81,7 @@ wheel_center_spacing: float = 0.0595
 
 # Robot radius [m]
 robot_radius: float = 0.088
+
 
 # Goals coordinates
 def goal_posts(x_positive: bool = True) -> np.ndarray:
