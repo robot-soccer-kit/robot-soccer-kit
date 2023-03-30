@@ -153,7 +153,7 @@ class RobotSim(robot.Robot):
 
 
 class Simulator:
-    def __init__(self, robots: robots.Robots, state: state.State = None):
+    def __init__(self, robots: robots.Robots, state: state.State = None, run_thread=True):
         self.state: state.State = state
         self.robots: robots.Robots = robots
 
@@ -174,18 +174,16 @@ class Simulator:
         )
         self.add_robot_objects()
 
-        self.run = True
-        self.set_test_param()
+        self.fps_limit = 30
 
+        if run_thread:
+            self.run_thread()
+
+    def run_thread(self):
+        self.run = True
         self.simu_thread: threading.Thread = threading.Thread(target=lambda: self.thread())
         self.simu_thread.start()
-
         self.lock: threading.Lock = threading.Lock()
-
-    def set_test_param(self, fps_limit=120, dt_multiplicator=1, dt_fixe=None):
-        self.fps_limit = fps_limit
-        self.dt_multiplicator = dt_multiplicator
-        self.dt_fixe = dt_fixe
 
     def add_object(self, object: SimulatedObject) -> None:
         self.objects[object.marker] = object
@@ -196,69 +194,63 @@ class Simulator:
             self.add_object(robot.object)
 
     def thread(self) -> None:
-        dt = lambda: ((time.time() - last_time) * self.dt_multiplicator) if self.dt_fixe is None else self.dt_fixe
         last_time = time.time()
-        self.time = 0
-        self.tick = 0
-        while True:
-            self.dt = (
-                ((-last_time - (last_time := time.time())) * self.dt_multiplicator) if self.dt_fixe is None else self.dt_fixe
-            )
-            last_time = time.time()
-            self.time += self.dt
-            self.tick += 1
+        while self.run:
+            self.dt = -last_time + (last_time := time.time())
+            self.loop(self.dt)
 
-            # Simulator proceed in two steps:
-            # 1) We handle future collisions as elastic collisions and change the velocity vectors
-            #    accordingly.
-            # 2) We apply the object velocities, removing all the components in the velocities that would
-            #    create collision.
+            while (self.fps_limit is not None) and (time.time() - last_time < 1 / self.fps_limit):
+                time.sleep(0)
 
-            for obj in self.objects.values():
-                # Execute actions (e.g: kick)
+    def loop(self, dt):
+        # Simulator proceed in two steps:
+        # 1) We handle future collisions as elastic collisions and change the velocity vectors
+        #    accordingly.
+        # 2) We apply the object velocities, removing all the components in the velocities that would
+        #    create collision.
 
-                # Update object velocity (e.g: deceleration, taking commands in account)
-                obj.update_velocity(self.dt)
+        for obj in self.objects.values():
+            # Execute actions (e.g: kick)
 
-                if norm(obj.velocity) > 0:
-                    # Where the object would arrive without collisions
-                    future_pos = obj.position + obj.velocity * self.dt
+            # Update object velocity (e.g: deceleration, taking commands in account)
+            obj.update_velocity(dt)
 
-                    # Check for collisions
-                    for marker in self.objects:
-                        if marker != obj.marker:
-                            check_obj = self.objects[marker]
-                            if dist(future_pos[:2], check_obj.position[:2]) < (obj.radius + check_obj.radius):
-                                obj.collision(check_obj)
+            if norm(obj.velocity) > 0:
+                # Where the object would arrive without collisions
+                future_pos = obj.position + obj.velocity * dt
 
-            for obj in self.objects.values():
                 # Check for collisions
                 for marker in self.objects:
                     if marker != obj.marker:
                         check_obj = self.objects[marker]
-                        future_pos = obj.position + obj.velocity * self.dt
-
                         if dist(future_pos[:2], check_obj.position[:2]) < (obj.radius + check_obj.radius):
-                            R_collision_world = obj.collision_R(check_obj)
-                            velocity_collision = R_collision_world @ obj.velocity[:2]
-                            velocity_collision[0] = min(0, velocity_collision[0])
-                            obj.velocity[:2] = R_collision_world.T @ velocity_collision
+                            obj.collision(check_obj)
 
-                obj.position = obj.position + (obj.velocity * self.dt)
-                obj.execute_actions()
+        for obj in self.objects.values():
+            # Check for collisions
+            for marker in self.objects:
+                if marker != obj.marker:
+                    check_obj = self.objects[marker]
+                    future_pos = obj.position + obj.velocity * dt
 
-            if "ball" in self.objects and not utils.in_rectangle(
-                self.objects["ball"].position[:2],
-                [-constants.carpet_length / 2, -constants.carpet_width / 2],
-                [constants.carpet_length / 2, constants.carpet_width / 2],
-            ):
-                self.objects["ball"].position[:3] = [0.0, 0.0, 0.0]
-                self.objects["ball"].velocity[:3] = [0.0, 0.0, 0.0]
+                    if dist(future_pos[:2], check_obj.position[:2]) < (obj.radius + check_obj.radius):
+                        R_collision_world = obj.collision_R(check_obj)
+                        velocity_collision = R_collision_world @ obj.velocity[:2]
+                        velocity_collision[0] = min(0, velocity_collision[0])
+                        obj.velocity[:2] = R_collision_world.T @ velocity_collision
 
-            self.push()
+            obj.position = obj.position + (obj.velocity * dt)
+            obj.execute_actions()
 
-            while (self.fps_limit is not None) and (time.time() - last_time < 1 / self.fps_limit):
-                time.sleep(0)
+        if "ball" in self.objects and not utils.in_rectangle(
+            self.objects["ball"].position[:2],
+            [-constants.carpet_length / 2, -constants.carpet_width / 2],
+            [constants.carpet_length / 2, constants.carpet_width / 2],
+        ):
+            self.objects["ball"].position[:3] = [0.0, 0.0, 0.0]
+            self.objects["ball"].velocity[:3] = [0.0, 0.0, 0.0]
+
+        self.push()
 
     def push(self) -> None:
         if self.state is not None:
