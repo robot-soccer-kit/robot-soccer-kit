@@ -1,6 +1,7 @@
 import signal
 import numpy as np
 import zmq
+import sys
 import threading
 import logging
 import time
@@ -201,18 +202,25 @@ class Client:
         self.req = self.context.socket(zmq.REQ)
         self.req.connect("tcp://" + host + ":7558")
 
+        if threading.current_thread() is threading.main_thread():
+            signal.signal(signal.SIGINT, self.sigint)
+
         # Waiting for the first packet to be received, guarantees to have robot state after
         # client creation
         dt = 0.05
         t = 0
         warning_showed = False
-        while wait_ready and self.sub_packets < 1:
+        while wait_ready and self.sub_packets < 1 and self.running:
             t += dt
             time.sleep(dt)
             if t > 3 and not warning_showed:
                 warning_showed = True
                 self.logger.warning("Still no message from vision after 3s")
                 self.logger.warning("if you want to operate without vision, pass wait_ready=False to the client")
+
+    def sigint(self, signal_received, frame):
+        self.stop()
+        sys.exit(0)
 
     def __enter__(self):
         return self
@@ -231,7 +239,7 @@ class Client:
         last_t = time.time()
         while self.running:
             try:
-                json = self.sub.recv_json()
+                json = self.sub.recv_json(zmq.NOBLOCK)
                 ts = time.time()
                 dt = ts - last_t
                 last_t = ts

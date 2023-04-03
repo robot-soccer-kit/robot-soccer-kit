@@ -23,7 +23,7 @@ class Backend:
 
         self.state: state.State = state.State()
         self.state.start_pub()
-        
+
         self.referee: referee.Referee = referee.Referee(self.state)
         self.control: control.Control = self.referee.control
         self.robots: robots.Robots = robots.Robots(self.state)
@@ -51,7 +51,7 @@ class Backend:
         # Retrieving all values declared in constants.py
         values: dict = {}
         constant_variables = vars(constants)
-        
+
         for name in constant_variables:
             if type(constant_variables[name]) in [int, bool, float]:
                 values[name] = constant_variables[name]
@@ -188,6 +188,9 @@ class Backend:
 
     def get_game_state(self) -> dict:
         return self.referee.get_game_state()
+
+    def get_wait_ball_position(self):
+        return self.referee.wait_ball_position
 
     def validate_goal(self, yes_no: bool):
         self.referee.validate_goal(yes_no)

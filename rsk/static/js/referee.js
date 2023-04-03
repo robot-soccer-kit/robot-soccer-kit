@@ -383,11 +383,12 @@ function referee_initialize(backend)
         function cam_to_sim(position, orientation) {
             let pos_sim = [0.0, 0.0, 0.0]
             pos = [position[0],position[1],orientation]
-            ratio = meters_to_pixels_ratio()
-            pos_sim[0] = Math.round(((pos[0] + carpet_size[0]/2) * ratio))
-            pos_sim[1] = Math.round(((-pos[1] + carpet_size[1]/2) * ratio)) 
+            ratio_w = document.getElementById('back').offsetWidth / carpet_size[0]
+            ratio_h = document.getElementById('back').offsetHeight / carpet_size[1]
+            pos_sim[0] = ((pos[0] + carpet_size[0]/2)* ratio_w)
+            pos_sim[1] = ((-pos[1] + carpet_size[1]/2) * ratio_h) 
             pos_sim[2] = round(-pos[2]+Math.PI/2)
-            return pos_sim
+            return pos_sim  
         }
         function if_move(last_pos, position){
             if (Math.abs(last_pos[0] - position[0]) > 1.5){
@@ -407,20 +408,24 @@ function referee_initialize(backend)
                 y = Math.round(Math.sin(angle)*constants["robot_radius"]*meters_to_pixels_ratio()*0.93)
                 context.beginPath()
                 gradient = context.createRadialGradient(x, y, 0, x, y, 70);
-                gradient.addColorStop(0.05, color);
-                gradient.addColorStop(0.20, "transparent");
+                gradient.addColorStop(0.05, "rgba("+color+",1)");
+                gradient.addColorStop(0.1, "rgba("+color+",0.5)");
+                gradient.addColorStop(0.25, "rgba("+color+",0)");
                 context.fillStyle = gradient
                 context.fillRect(x-25, y-25, 200, 200);
             }
         }
 
-        function draw_circle(position, radius, color, canvas, clear = false){
+        function draw_circle(position, radius, color, canvas, clear=false, tickness=0){
             context = canvas.getContext('2d')
             if(clear) context.clearRect(0,0,canvas.width,canvas.height)
             context.beginPath()
+            context.strokeStyle = color
             context.fillStyle = color
             context.arc(position[0], position[1], radius, 0, Math.PI*2);
-            context.fill()
+            context.lineWidth = tickness    
+            if(tickness==0) context.fill()
+            else context.stroke()
         }
 
         function draw_ball(position){
@@ -457,18 +462,25 @@ function referee_initialize(backend)
                         markers[entry]["context"].rotate(robot_pos[2])
                         rgb = state["leds"][entry]
                         for (var i = 0; i < 3; i++) {
-                            rgb[i] = Math.round(Math.log(rgb[i]+1)/Math.log(256) * 255)
+                            rgb[i] = Math.round(Math.min(255, 50+Math.log(rgb[i]+1)/Math.log(256) * 255))
                         }
-                        draw_leds("rgba("+rgb+",0.7)", markers[entry]["context"])
+                        draw_leds(rgb, markers[entry]["context"])
                         markers[entry]["context"].drawImage(markers[entry]["image"],-robot_size/2,-robot_size/2,robot_size,robot_size)                 
                         markers[entry]["pos"] = robot_pos
                         markers[entry]["clear"] = false
 
                     }
                 }
-                if (state.ball != null){
-                    draw_ball(state.ball)
-                }
+                backend.get_wait_ball_position(function(wait_ball_position){
+
+                    if (state.ball != null){
+                        draw_ball(state.ball)
+                    }
+                   if (wait_ball_position != null){
+                        draw_circle(cam_to_sim(wait_ball_position), 20, "red", document.getElementById("ball"), false, 1)
+                    }
+                })
+
             });
         };
 
@@ -527,21 +539,26 @@ function referee_initialize(backend)
                 $('body').addClass('vision-running')
                 let canvas = document.getElementById("ball")
                 const distance = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1); 
+                let drag_type = null
+                let initial_position = null
  
                 function teleport_selected_object_on_mouse(e){
                     let pos_reel = [0.0, 0.0, 0.0]
-                        if (selected_objet == "ball"){
-                            pos = [e.layerX,e.layerY,0]
-                        }else{
-                            pos = [e.layerX,e.layerY,markers[selected_objet]["pos"][2]]
+                    pos = [...initial_position]
 
-                        }
-                        back_canvas = document.getElementById('back')
-                        ratio = 1/meters_to_pixels_ratio()
-                        pos_reel[0] = (pos[0] - back_canvas.offsetWidth/2) * ratio
-                        pos_reel[1] = -(pos[1] - back_canvas.offsetHeight/2) * ratio
-                        pos_reel[2] = -(pos[2]-Math.PI/2)
-                        backend.teleport(selected_objet, pos_reel[0], pos_reel[1], pos_reel[2])
+                    if (drag_type == "position") {
+                        pos[0] = e.layerX
+                        pos[1] = e.layerY
+                    } else {
+                        pos[2] = Math.atan2(e.layerY - initial_position[1], e.layerX - initial_position[0]) + Math.PI/2
+                    }
+
+                    back_canvas = document.getElementById('back')
+                    ratio = 1/meters_to_pixels_ratio()
+                    pos_reel[0] = (pos[0] - back_canvas.offsetWidth/2) * ratio
+                    pos_reel[1] = -(pos[1] - back_canvas.offsetHeight/2) * ratio
+                    pos_reel[2] = -(pos[2]-Math.PI/2)
+                    backend.teleport(selected_objet, pos_reel[0], pos_reel[1], pos_reel[2])
                 }
 
                 canvas.addEventListener("mousedown", function(e) {
@@ -550,6 +567,13 @@ function referee_initialize(backend)
                             selected_objet = marker
                         }
                     }
+                    drag_type = (e.button == 0) ? "position" : "orientation"
+                    if (selected_objet != "ball") {
+                        initial_position = markers[selected_objet]["pos"]
+                    } else {
+                        initial_position = [0., 0., 0.]
+                    }
+
                     canvas.addEventListener("mousemove", teleport_selected_object_on_mouse)
                 })
                 canvas.addEventListener("mouseup", function(e){ 

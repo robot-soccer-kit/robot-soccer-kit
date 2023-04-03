@@ -550,7 +550,7 @@ class Referee:
         last_tick = time.time()
 
         while True:
-            self.state_info = self.state.get_state()
+            self.state_info = copy.deepcopy(self.state.get_state())
             self.state.set_referee(self.get_game_state())
             self.control.allow_extra_features = self.game_state["game_is_running"]
 

@@ -7,16 +7,16 @@ def frame(x, y=0, orientation=0):
     Given a position and an orientation of a body "b" in a frame "a", builds the 3x3 2D transformation
     matrix T_a_b:
 
-    T_a_b = [ cos(alpha)  -sin(alpha)   x ] 
-            [ sin(alpha)  cos(alpha)    y ] 
-            [     0           0         1 ] 
+    T_a_b = [ cos(alpha)  -sin(alpha)   x ]
+            [ sin(alpha)  cos(alpha)    y ]
+            [     0           0         1 ]
     """
     if type(x) is tuple or type(x) is list:
         x, y, orientation = x
 
     cos, sin = np.cos(orientation), np.sin(orientation)
 
-    return np.array([[cos, -sin, x], [sin, cos, y], [0., 0., 1.]])
+    return np.array([[cos, -sin, x], [sin, cos, y], [0.0, 0.0, 1.0]])
 
 
 def frame_inv(frame):
@@ -29,8 +29,10 @@ def frame_inv(frame):
     frame_inv[:2, 2] = -R.T @ frame[:2, 2]
     return frame_inv
 
+
 def frame_transform(frame, vector):
     return (frame @ [*vector, 1])[:2]
+
 
 def robot_frame(robot):
     pos = robot.position
@@ -39,6 +41,7 @@ def robot_frame(robot):
 
 def angle_wrap(alpha):
     return (alpha + np.pi) % (2 * np.pi) - np.pi
+
 
 def update_limit_variation(current_value: np.ndarray, target_value: np.ndarray, max_variation: float):
     variation = np.linalg.norm(target_value - current_value)
@@ -50,15 +53,15 @@ def update_limit_variation(current_value: np.ndarray, target_value: np.ndarray, 
     else:
         return target_value
 
-def intersect(A, B, C, D):
 
+def intersect(A, B, C, D):
     u = B - A
     v = D - C
 
     uv = np.vstack((u, -v)).T
 
     if np.linalg.det(uv) == 0:
-        return None
+        return (False, None)
     else:
         lambdas = np.linalg.inv(uv) @ (C - A)
 
