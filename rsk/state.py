@@ -3,7 +3,7 @@ import time
 
 
 class State:
-    def __init__(self, frequency_pub=30):
+    def __init__(self, frequency_pub=30, simulated=False):
         """Summary
 
         Args:
@@ -13,6 +13,7 @@ class State:
         self.ball = None
         self.last_updates: dict = {}
         self.referee: dict = {}
+        self.simulated = simulated
 
         self.context = None
         self.last_time = None
@@ -20,7 +21,13 @@ class State:
         self.leds: dict = {}
 
     def get_state(self):
-        return {"markers": self.markers, "ball": self.ball, "referee": self.referee, "leds": self.leds}
+        return {
+            "markers": self.markers,
+            "ball": self.ball,
+            "referee": self.referee,
+            "leds": self.leds,
+            "simulated": self.simulated,
+        }
 
     def start_pub(self):
         # Publishing server

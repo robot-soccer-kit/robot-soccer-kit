@@ -391,11 +391,13 @@ function referee_initialize(backend)
             return pos_sim  
         }
         function if_move(last_pos, position){
-            if (Math.abs(last_pos[0] - position[0]) > 1.5){
+            min_translation = 1
+            min_rotation = 0.05
+            if (Math.abs(last_pos[0] - position[0]) > min_translation){
                     return true
-            }else if (Math.abs(last_pos[1] - position[1]) >  1.5){
+            }else if (Math.abs(last_pos[1] - position[1]) >  min_translation){
                     return true
-            }else if (Math.abs(last_pos[2] - position[2]) > 0.1){
+            }else if (Math.abs(last_pos[2] - position[2]) > min_rotation){
                     return true
             }
             return false
@@ -450,21 +452,24 @@ function referee_initialize(backend)
                     robot = present_marker[entry]
                     robot_pos = cam_to_sim(robot.position,robot.orientation)
 
-                    if (if_move(markers[entry]["pos"], robot_pos) || markers[entry]["clear"]) {
+                    if (if_move(markers[entry]["pos"], robot_pos) || markers[entry]["clear"] || markers[entry]["pos"] != state["leds"][entry]) {
                         markers[entry]["context"].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
                         robot_size = constants["robot_radius"] * 2 * meters_to_pixels_ratio()
 
                         markers[entry]["context"].rotate(-markers[entry]["pos"][2])
                         markers[entry]["context"].translate(-markers[entry]["pos"][0],-markers[entry]["pos"][1])
 
-
                         markers[entry]["context"].translate(robot_pos[0],robot_pos[1])
                         markers[entry]["context"].rotate(robot_pos[2])
-                        rgb = state["leds"][entry]
-                        for (var i = 0; i < 3; i++) {
-                            rgb[i] = Math.round(Math.min(255, 50+Math.log(rgb[i]+1)/Math.log(256) * 255))
+
+                        if (Object.keys(state["leds"]).length != 0){
+                            markers[entry]["leds"] = state["leds"][entry]
+                            for (var i = 0; i < 3; i++) {
+                                markers[entry]["leds"][i] = Math.round(Math.min(255, 50+Math.log(markers[entry]["leds"][i]+1)/Math.log(256) * 255))
+                            }
+                            draw_leds(markers[entry]["leds"], markers[entry]["context"])
                         }
-                        draw_leds(rgb, markers[entry]["context"])
+
                         markers[entry]["context"].drawImage(markers[entry]["image"],-robot_size/2,-robot_size/2,robot_size,robot_size)                 
                         markers[entry]["pos"] = robot_pos
                         markers[entry]["clear"] = false
@@ -472,11 +477,10 @@ function referee_initialize(backend)
                     }
                 }
                 backend.get_wait_ball_position(function(wait_ball_position){
-
                     if (state.ball != null){
                         draw_ball(state.ball)
                     }
-                   if (wait_ball_position != null){
+                    if (wait_ball_position != null){
                         draw_circle(cam_to_sim(wait_ball_position), 20, "red", document.getElementById("ball"), false, 1)
                     }
                 })
@@ -503,9 +507,9 @@ function referee_initialize(backend)
 
                 markers = {"blue1":NaN,"blue2":NaN,"green1":NaN,"green2":NaN}
                 for(let marker in markers){
-                    console.log(marker)
-                    markers[marker] = {"image":NaN,"context":NaN, "pos":[0,0,0],"clear":true}
+                    markers[marker] = {"image":NaN,"context":NaN,"pos":[0,0,0],"leds":[0,0,0],"clear":true}
                 }
+
                 for (var key in markers) {
                     markers[key]["image"] = new Image();
                     markers[key]["image"].src = "static/imgs/robot"+ key +".svg"
@@ -515,7 +519,7 @@ function referee_initialize(backend)
                 resize_canvas(document.getElementById("ball"))
 
                 clearInterval(intervalId)
-                intervalId = setInterval(compute_view, 1000/60)
+                intervalId = setInterval(compute_view, 1000/120)
                 simulated_view = true
 
             }else{

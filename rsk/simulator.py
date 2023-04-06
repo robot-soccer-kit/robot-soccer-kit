@@ -174,7 +174,7 @@ class Simulator:
         )
         self.add_robot_objects()
 
-        self.fps_limit = 60
+        self.fps_limit = 100
 
         if run_thread:
             self.run_thread()

@@ -17,11 +17,10 @@ class Backend:
     def __init__(self, simulated=False):
         super().__init__()
         robots.Robots.protocols["serial"] = robot_serial.RobotSerial
-        robots.Robots.protocols["sim"] = simulator.RobotSim
 
         self.simulated = simulated
 
-        self.state: state.State = state.State()
+        self.state: state.State = state.State(30, self.simulated)
         self.state.start_pub()
 
         self.referee: referee.Referee = referee.Referee(self.state)
@@ -29,6 +28,7 @@ class Backend:
         self.robots: robots.Robots = robots.Robots(self.state)
 
         if simulated:
+            robots.Robots.protocols["sim"] = simulator.RobotSim
             self.simulator: simulator.Simulator = simulator.Simulator(self.robots, self.state)
         else:
             self.robots.load_config()
