@@ -437,12 +437,25 @@ function referee_initialize(backend)
             draw_circle(ball, radius, "orange", ball_canvas, true)
         }
 
+        tick = 0
+        T0 = Date.now()
         function compute_view(){
+
+
             backend.get_state(function(state) {
+                if (state.simulated){
+                    tick += 1
+                    if (Date.now()-T0 > 100){
+                        $('.fps').text("FPS : " + Math.round(1000/((Date.now()-T0)/tick)));
+                        T0 = Date.now()
+                        tick = 0
+                    }
+                }
+
                 let present_marker = state.markers
                 for (var key in markers) {
                     if(!(key in present_marker)){
-                        canvas = markers[key][1].canvas
+                        canvas = markers[key]["context"].canvas
                         markers[key]["context"].clearRect(0,0,canvas.width,canvas.height)
                         markers[key]["clear"] = true
                     }
