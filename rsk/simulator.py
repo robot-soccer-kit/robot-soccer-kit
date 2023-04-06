@@ -173,6 +173,7 @@ class Simulator:
             SimulatedObject("ball", [0, 0, 0], constants.ball_radius, constants.ball_deceleration, constants.ball_mass)
         )
         self.add_robot_objects()
+        self.robots.ball = self.objects["ball"]
 
         self.fps_limit = 100
 
@@ -241,7 +242,6 @@ class Simulator:
 
             obj.position = obj.position + (obj.velocity * dt)
             obj.execute_actions()
-
         if "ball" in self.objects and not utils.in_rectangle(
             self.objects["ball"].position[:2],
             [-constants.carpet_length / 2, -constants.carpet_width / 2],

@@ -168,6 +168,7 @@ class Client:
         self.green2: ClientRobot
         self.blue1: ClientRobot
         self.blue2: ClientRobot
+        self.ballObject: ClientRobot = ClientRobot("ball", 0, self)
 
         # Creating self.green1, self.green2 etc.
         for color, number in utils.all_robots():
@@ -178,6 +179,7 @@ class Client:
             if color not in self.robots:
                 self.robots[color] = {}
             self.robots[color][number] = robot
+
         # Custom objects to track
         self.objs = {n: ClientTracked() for n in range(1, 9)}
 

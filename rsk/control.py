@@ -6,7 +6,7 @@ import time
 import uuid
 import threading
 import logging
-from . import robots, utils, client, constants, tasks, state
+from . import robots, utils, client, constants, tasks
 from .robot import RobotError
 
 
@@ -17,11 +17,10 @@ class Control:
     force them to be placed somewhere on the field.
     """
 
-    def __init__(self, state: state.State = None):
+    def __init__(self):
         self.logger: logging.Logger = logging.getLogger("control")  # type: ignore[annotation-unchecked]
 
         self.robots: robots.Robots = None
-        self.state: state.State = state
 
         # Publishing server
         self.context = zmq.Context()
@@ -116,6 +115,9 @@ class Control:
                     else:
                         response[0] = 2
                         response[1] = "Unknown command"
+            elif marker == "ball":
+                self.robots.ball.teleport(float(command[1]), float(command[2]), float(command[3]))
+                response = [True, "ok"]
             else:
                 response[1] = f"Unknown robot: {marker}"
         except RobotError as e:
@@ -157,8 +159,11 @@ class Control:
                         if allow_control:
                             marker = utils.robot_list2str(team, number)
                             response = self.process_command(marker, command, is_master)
-
                         self.teams[team]["packets"] += 1
+
+                    if team == "ball":
+                        is_master = key == self.master_key
+                        response = self.process_command("ball", command, is_master)
 
                 self.socket.send_json(response)
             except zmq.error.Again:

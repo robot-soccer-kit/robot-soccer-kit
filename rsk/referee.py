@@ -16,7 +16,7 @@ class Referee:
     def __init__(self, state: state.State):
         self.logger: logging.Logger = logging.getLogger("referee")
 
-        self.control: control.Control = control.Control(state)
+        self.control: control.Control = control.Control()
 
         # Info from detection
         self._state_info = None
