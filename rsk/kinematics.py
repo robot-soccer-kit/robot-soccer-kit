@@ -17,7 +17,9 @@ wheel_alphas: list = [-90, 30, 150]
 drive_vectors = np.array([[np.cos(np.deg2rad(alpha)), np.sin(np.deg2rad(alpha))] for alpha in wheel_alphas])
 
 # Inverse Kinematics matrix
-IK: np.ndarray = (1 / constants.wheel_radius) * np.hstack((drive_vectors, np.array([[constants.wheel_center_spacing] * len(wheel_alphas)]).T))
+IK: np.ndarray = (1 / constants.wheel_radius) * np.hstack(
+    (drive_vectors, np.array([[constants.wheel_center_spacing] * len(wheel_alphas)]).T)
+)
 
 # Forward Kinematics matrix
 FK: np.ndarray = np.linalg.pinv(IK)

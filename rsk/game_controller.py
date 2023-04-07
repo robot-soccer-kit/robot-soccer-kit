@@ -13,9 +13,7 @@ from . import api
 
 
 # Setting up the logger
-logging.basicConfig(
-    format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO
-)
+logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
 logging.getLogger("werkzeug").setLevel(logging.CRITICAL)
 logging.getLogger("robot-soccer-kit").info("Starting robot-soccer-kit Game Controller")
 

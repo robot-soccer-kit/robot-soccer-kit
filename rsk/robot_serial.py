@@ -19,6 +19,7 @@ PACKET_MONITOR_DATA = 5
 
 logger: logging.Logger = logging.getLogger("robot")
 
+
 class Packet:
     """
     Represents a physical packet that is sent or received (binary protocol)
@@ -94,13 +95,15 @@ class Packet:
     def checksum(self):
         return sum(self.payload) % 256
 
+
 class RobotSerial(robot.Robot):
     """
     Connection with a physical robot
     """
+
     def __init__(self, url: str):
         super().__init__(url)
-        
+
         # Instance of serial connection
         self.bt = None
         # Is the connection initialized ?

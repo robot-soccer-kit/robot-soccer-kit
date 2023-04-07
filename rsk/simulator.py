@@ -201,7 +201,7 @@ class Simulator:
             self.loop(self.dt)
 
             while (self.fps_limit is not None) and (time.time() - last_time < 1 / self.fps_limit):
-                time.sleep(0)
+                time.sleep(1e-3)
 
     def loop(self, dt):
         # Simulator proceed in two steps:

@@ -1,6 +1,6 @@
-
 class RobotError(Exception):
     ...
+
 
 class Robot:
     def __init__(self, url: str):
@@ -21,7 +21,7 @@ class Robot:
 
     def available_urls() -> list:
         return []
-    
+
     def set_marker(self, marker: str) -> None:
         """
         Sets the robot's marker
@@ -47,7 +47,7 @@ class Robot:
         :param float dy: y axis (robot frame) velocity [m/s]
         :param float dturn: rotation (robot frame) velocity [rad/s]
         :raises RobotError: if the operation is not supported
-        """     
+        """
         raise RobotError("This robot can't move")
 
     def leds(self, red: int, green: int, blue: int) -> None:
@@ -79,5 +79,5 @@ class Robot:
         :param float y: y position [m]
         :param float theta: orientation [rad]
         :raises RobotError: if the operation is not supported
-        """               
+        """
         raise RobotError("This robot can't be teleported")

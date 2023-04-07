@@ -119,7 +119,7 @@ class Robots:
         :param str url: the robot's url
         """
         if full_url not in self.robots:
-            result = full_url.split('://', 1)
+            result = full_url.split("://", 1)
             if len(result) == 2:
                 protocol, url = result
                 if protocol in self.protocols:
@@ -127,10 +127,10 @@ class Robots:
                     self.save_config()
                     return self.robots[full_url]
                 else:
-                    print(f"Unknown protocol: {protocol} in robot URL \"{full_url}\"")
+                    print(f'Unknown protocol: {protocol} in robot URL "{full_url}"')
             else:
                 print(f"Bad url: {full_url}")
-        
+
         return None
 
     def get_robots(self) -> dict:
