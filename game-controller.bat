@@ -13,7 +13,7 @@ echo.
 echo ERROR: Python not found: please install it before!
 echo.
 pause
-start "" "https://www.python.org/ftp/python/3.9.0/python-3.9.0-amd64.exe"
+start "" "https://www.python.org/ftp/python/3.10.9/python-3.10.9-amd64.exe"
 goto :EOF
 
 :PYTHON_DOES_EXIST

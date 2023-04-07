@@ -3,7 +3,7 @@ import copy
 import numpy as np
 import threading
 import logging
-from . import constants, utils, config, control, tasks
+from . import constants, utils, config, control, tasks, state
 from .field import Field
 import time
 
@@ -13,13 +13,14 @@ class Referee:
     Handles the referee
     """
 
-    def __init__(self, control: control.Control):
+    def __init__(self, state: state.State):
         self.logger: logging.Logger = logging.getLogger("referee")
 
-        self.control: control.Control = control
+        self.control: control.Control = control.Control()
 
         # Info from detection
-        self._detection_info = None
+        self._state_info = None
+        self.state: state.State = state
 
         # Last actions
         self.referee_history = []
@@ -56,16 +57,13 @@ class Referee:
 
         # Robots Penalties
         self.penalties = {}
-        self.penalties_poses = {
-            i: [
-                None,
-                (
-                    np.sign(int(i / 2) - 1) * (constants.field_length / 2),
-                    np.sign(i % 2 - 0.5) * (constants.field_width / 2),
-                ),
+        self.penalty_spot = [
+            {"robot": None, "last_use": 0, "pos": (x, side * constants.field_width / 2, side * np.pi / 2)}
+            for x in np.linspace(-constants.field_length / 2, constants.field_length / 2, constants.penalty_spots // 2 + 2)[
+                1:-1
             ]
-            for i in range(6)
-        }
+            for side in (-1, 1)
+        ]
         self.reset_penalties()
 
         # Starting the Referee thread
@@ -73,14 +71,14 @@ class Referee:
         self.referee_thread = threading.Thread(target=lambda: self.thread())
         self.referee_thread.start()
 
-    def set_detection_info(self, info: dict) -> None:
+    def set_state_info(self, info: dict) -> None:
         """
         Sets internal detection info
 
         :param dict info: detection infos
         """
         self.lock.acquire()
-        self._detection_info = info
+        self._state_info = info
         self.lock.release()
 
     def get_game_state(self, full: bool = True) -> dict:
@@ -138,7 +136,7 @@ class Referee:
         Starts the game
         """
         self.logger.info("Game started")
-
+        self.game_state["timer"] = constants.game_duration
         self.game_state["game_is_running"] = True
         self.referee_history = []
         self.reset_score()
@@ -171,7 +169,6 @@ class Referee:
         self.wait_ball_position = None
 
         if self.control.has_task("game-start"):
-            self.game_state["timer"] = constants.game_duration
             self.chrono_is_running = True
 
         self.control.remove_task("manually-paused")
@@ -315,16 +312,24 @@ class Referee:
             task_name = "penalty-" + robot
             self.logger.info(f"Adding penalty for robot {robot}, reason: {reason}")
 
-            if robot in self.detection_info["markers"]:
-                x, y = self.detection_info["markers"][robot]["position"]
+            if robot in self.state_info["markers"]:
+                x, y = self.state_info["markers"][robot]["position"]
 
-                dist = [
-                    math.dist((x, y), self.penalties_poses[key][1]) if self.penalties_poses[key][0] == None else math.inf
-                    for key in self.penalties_poses
+                # Find the nearest free penalty spot
+                distance = [
+                    math.dist((x, y), penalty_spot["pos"][:2])
+                    if penalty_spot["robot"] is None
+                    and time.time() - penalty_spot["last_use"] > constants.penalty_spot_lock_time
+                    else math.inf
+                    for penalty_spot in self.penalty_spot
                 ]
-                penaltlies_place = dist.index(min(dist))
-                target = [*self.penalties_poses[penaltlies_place][1], self.detection_info["markers"][robot]["orientation"]]
-                self.penalties_poses[penaltlies_place][0] = robot
+
+                free_penaltly_spot_index = distance.index(min(distance))
+
+                target = self.penalty_spot[free_penaltly_spot_index]["pos"]
+                self.penalty_spot[free_penaltly_spot_index]["robot"] = robot
+
+                self.logger.info(f"----  Penalty Spot : {free_penaltly_spot_index}")
 
                 task = tasks.GoToTask(task_name, team, number, target, forever=True)
             else:
@@ -341,9 +346,11 @@ class Referee:
         :param str robot: the robot
         """
         self.penalties[robot] = {"remaining": None, "reason": None, "grace": constants.grace_time}
-        key = [key for key in self.penalties_poses if self.penalties_poses[key][0] == robot]
-        if key != []:
-            self.penalties_poses[key[0]][0] = None
+
+        penalty_spot = [spot for spot in self.penalty_spot if spot["robot"] == robot]
+        if penalty_spot != []:
+            penalty_spot[0]["last_use"] = time.time()
+            penalty_spot[0]["robot"] = None
 
         # Replacing the control task with a one-time stop to ensure the robot is not moving
         team, number = utils.robot_str2list(robot)
@@ -484,16 +491,16 @@ class Referee:
         """
         # Checking the robot respect timed circle and defense area rules
         defender = {}
-        for marker in self.detection_info["markers"]:
+        for marker in self.state_info["markers"]:
             team, number = utils.robot_str2list(marker)
-            robot_position = np.array(self.detection_info["markers"][marker]["position"])
+            robot_position = np.array(self.state_info["markers"][marker]["position"])
 
             if team in utils.robot_teams():
                 robot = (team, number)
 
                 # Penalizing robots that are staying close to the ball
-                if self.detection_info["ball"] is not None and self.can_be_penalized(marker):
-                    ball_position = np.array(self.detection_info["ball"])
+                if self.state_info["ball"] is not None and self.can_be_penalized(marker):
+                    ball_position = np.array(self.state_info["ball"])
                     distance = np.linalg.norm(ball_position - robot_position)
 
                     if distance < constants.timed_circle_radius:
@@ -543,9 +550,9 @@ class Referee:
         last_tick = time.time()
 
         while True:
-            self.lock.acquire()
-            self.detection_info = self._detection_info
-            self.lock.release()
+            self.state_info = copy.deepcopy(self.state.get_state())
+            self.state.set_referee(self.get_game_state())
+            self.control.allow_extra_features = not self.game_state["game_is_running"]
 
             elapsed = time.time() - last_tick
             if self.chrono_is_running:
@@ -562,9 +569,9 @@ class Referee:
                 self.negative_team, self.positive_team = all_teams
 
             if not self.game_state["game_paused"]:
-                if self.detection_info is not None:
-                    if self.detection_info["ball"] is not None:
-                        ball_coord = np.array(self.detection_info["ball"])
+                if self.state_info is not None:
+                    if self.state_info["ball"] is not None:
+                        ball_coord = np.array(self.state_info["ball"])
                         if (ball_coord != ball_coord_old).any():
                             self.check_line_crosses(ball_coord, ball_coord_old)
                             ball_coord_old = ball_coord
@@ -576,10 +583,10 @@ class Referee:
                 # Waiting for the ball to be at a specific position to resume the game
                 if (
                     (self.wait_ball_position is not None)
-                    and (self.detection_info is not None)
-                    and (self.detection_info["ball"] is not None)
+                    and (self.state_info is not None)
+                    and (self.state_info["ball"] is not None)
                 ):
-                    distance = np.linalg.norm(np.array(self.wait_ball_position) - np.array(self.detection_info["ball"]))
+                    distance = np.linalg.norm(np.array(self.wait_ball_position) - np.array(self.state_info["ball"]))
 
                     if distance < constants.place_ball_margin:
                         if wait_ball_timestamp is None:

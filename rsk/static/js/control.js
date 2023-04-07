@@ -33,6 +33,12 @@ function control_initialize(backend) {
                         $('.key-'+team).val(game[team]['key']);
                     }
                 }
+                if(game['green']['allow_control'] && game['blue']['allow_control'])
+                {
+                    $('body').removeClass('control-warning');
+                }else {
+                    $('body').addClass('control-warning');
+                }
             });
         }, 200);
     });

@@ -9,15 +9,33 @@ import os
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 
-class Detection:
+class Detect:
     def __init__(self):
-        self.referee = None
+        # Video attribute
+        self.detection = self
+        self.capture = None
+        self.period = None
 
+        self.referee = None
         # Publishing server
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
         self.socket.set_hwm(1)
         self.socket.bind("tcp://*:7557")
+
+        self.field = Field()
+
+
+class Detection:
+    def __init__(self):
+        self.state = None
+        self.referee = None
+
+        # Publishing server
+        # self.context = zmq.Context()
+        # self.socket = self.context.socket(zmq.PUB)
+        # self.socket.set_hwm(1)
+        # self.socket.bind("tcp://*:7557")
 
         # ArUco parameters
         self.arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
@@ -34,6 +52,7 @@ class Detection:
             "ball": {"label": "Ball", "default": True},
             "goals": {"label": "Goals", "default": True},
             "landmark": {"label": "Center Landmark", "default": True},
+            "penalty_spot": {"label": "Penalty Spot", "default": False},
             "sideline": {"label": "Sideline Delimitations", "default": False},
             "timed_circle": {"label": "Timed Circle", "default": False},
         }
@@ -257,6 +276,21 @@ class Detection:
                     dashed=True,
                 )
 
+            if self.should_display("penalty_spot"):
+                for penalty_spot in self.referee.penalty_spot:
+                    color = (0, 255, 0)
+                    if penalty_spot["robot"] is not None:
+                        color = (0, 0, 255)
+                    elif time.time() - penalty_spot["last_use"] < constants.penalty_spot_lock_time:
+                        color = (0, 128, 255)
+                    self.draw_point2square(
+                        image_debug,
+                        penalty_spot["pos"][:-1],
+                        0.1,
+                        color,
+                        5,
+                    )
+
             if self.referee.wait_ball_position is not None:
                 self.draw_circle(
                     image_debug,
@@ -275,7 +309,7 @@ class Detection:
         new_markers = {}
 
         if len(corners) > 0:
-            for (markerCorner, markerID) in zip(corners, ids.flatten()):
+            for markerCorner, markerID in zip(corners, ids.flatten()):
                 if markerID not in self.arucoItems:
                     continue
 
@@ -342,7 +376,7 @@ class Detection:
                     self.last_updates[item] = time.time()
 
         self.field.update_calibration(image)
-        self.markers = new_markers
+        self.state.set_markers(new_markers)
 
     def detect_ball(self, image, image_debug):
         """
@@ -407,27 +441,17 @@ class Detection:
             if self.no_ball > 10:
                 self.ball = None
 
-    def get_detection(self) -> dict:
-        """
-        Returns the detection informations
+        self.state.set_ball(self.ball)
 
-        :return dict: detection informations (ball, markers, field calibration status)
-        """
-        return {
-            "ball": self.ball,
-            "markers": self.markers,
-            "calibrated": self.field.calibrated(),
-            "see_whole_field": self.field.see_whole_field,
-            "referee": self.referee.get_game_state(full=False),
-        }
-
-    def publish(self) -> None:
-        """
-        Publish the detection informations on the network
-        """
-        info = self.get_detection()
-
-        self.socket.send_json(info, flags=zmq.NOBLOCK)
-
-        if self.referee is not None:
-            self.referee.set_detection_info(info)
+    def get_detection(self, foo=None):
+        while True:
+            try:
+                return {
+                    "ball": self.ball,
+                    "markers": self.markers,
+                    "calibrated": self.field.calibrated(),
+                    "see_whole_field": self.field.see_whole_field,
+                    "referee": None if self.referee is None else self.referee.get_game_state(full=False),
+                }
+            except Exception as err:
+                print("Thread init error : ", err)

@@ -9,6 +9,10 @@ the rules.
 field_length: float = 1.84  # [m] (x axis)
 field_width: float = 1.23  # [m] (y axis)
 
+# Carpet dimension
+carpet_length: float = 2.45  # [m] (x axis)
+carpet_width: float = 1.84  # [m] (y axis)
+
 # Goals size
 goal_width: float = 0.6  # [m]
 goal_virtual_height: float = 0.1  # [m]
@@ -42,7 +46,11 @@ robot_tag_size: float = 0.08  # [m]
 
 # Heights
 robot_height: float = 0.076  # [m]
-ball_height: float = 0.021  # [m]
+ball_radius: float = 0.021  # [m]
+
+# We detect the center of the orange blog to see the ball, and not the top of the ball
+# that is why we use the radius here instead of the diameter
+ball_height: float = ball_radius  # [m]
 
 # Durations
 game_duration: float = 300.0  # [s]
@@ -50,8 +58,30 @@ halftime_duration: float = 120.0  # [s]
 default_penalty: float = 5.0  # [s]
 grace_time: float = 3.0  # [s]
 
+# Number of penalty spots
+penalty_spots: int = 8
+penalty_spot_lock_time: int = 1
 # Parameters
 referee_history_size: int = 3
+
+# For simulation
+robot_mass: float = 0.710  # [kg]
+max_linear_acceleration: float = 3  # [m.s^-2]
+max_angular_accceleration: float = 50  # [rad.s^-2]
+ball_mass: float = 0.008  # [kg]
+ball_deceleration: float = 0.3  # [m.s^-2]
+kicker_x_tolerance: float = 0.03  # [m]
+kicker_y_tolerance: float = 0.065  # [m]
+
+# Wheel radius [m]
+wheel_radius: float = 0.035
+
+# Distance between its center and wheels [m]
+wheel_center_spacing: float = 0.0595
+
+# Robot radius [m]
+robot_radius: float = 0.088
+
 
 # Goals coordinates
 def goal_posts(x_positive: bool = True) -> np.ndarray:

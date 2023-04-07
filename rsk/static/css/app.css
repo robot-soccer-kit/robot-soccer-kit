@@ -4,12 +4,21 @@ html {
   
 body {
     font-size:20px;
+    position: relative;
+}
+
+.sim_vim {
+    position: absolute;
+    z-index: 0;
+    opacity: 100;
 }
 
 .style_fps {
     background-color:#333;
-    margin-left: 0px; 
+    margin-left: 0px;
     font-size:28px;
+    text-align:center;
+    min-width: 5em;
   }
 
 .card {
@@ -41,6 +50,9 @@ body {
 .camera-setting label {
     text-align:right;
     font-weight:bold;
+}
+.invisible {
+    opacity:0;
 }
 
 .vision-show-running {
@@ -87,7 +99,15 @@ body {
     display:none;
 }
 
+.control-show-warning {
+    display:none;
+}
+
 .robots-warning .robots-show-warning {
+    display:inline;
+}
+
+.control-warning .control-show-warning {
     display:inline;
 }
 
@@ -146,6 +166,9 @@ body {
 
 .bg-body-grey{
     background-color: rgba(180, 180, 180, 0.205);
+}
+.bg-body-red{
+    background-color: rgba(250, 53, 69, 1);
 }
 
 .vert-align{

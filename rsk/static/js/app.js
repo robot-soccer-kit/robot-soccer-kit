@@ -30,7 +30,17 @@ class APIBackend {
 $(document).ready(function () {
     // Backend initialization
     var backend = new APIBackend('http://127.0.0.1:7070/api');
-    video_initialize(backend);
+    backend.is_simulated(function (simulated) {
+        if (simulated) {
+            console.log("SIMULATION")
+            $('.not_show_simulated').css("display", 'none')
+        }else{
+           console.log("REEL")
+           $('.show_simulated').css("display", 'none')
+           video_initialize(backend); 
+        }
+    })
+
     robots_initialize(backend);
     control_initialize(backend);
     referee_initialize(backend);

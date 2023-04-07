@@ -7,6 +7,7 @@ import uuid
 import threading
 import logging
 from . import robots, utils, client, constants, tasks
+from .robot import RobotError
 
 
 class Control:
@@ -16,10 +17,10 @@ class Control:
     force them to be placed somewhere on the field.
     """
 
-    def __init__(self, robots):
-        self.logger: logging.Logger = logging.getLogger("control")
+    def __init__(self):
+        self.logger: logging.Logger = logging.getLogger("control")  # type: ignore[annotation-unchecked]
 
-        self.robots = robots
+        self.robots: robots.Robots = None
 
         # Publishing server
         self.context = zmq.Context()
@@ -27,6 +28,9 @@ class Control:
         self.socket.bind("tcp://*:7558")
         self.socket.RCVTIMEO = 1000
         self.master_key = str(uuid.uuid4())
+
+        # Allowing "extra" features (LEDs, buzzer etc.)
+        self.allow_extra_features: bool = True
 
         # Target for client
         self.targets = {robot: None for robot in utils.all_robots()}
@@ -79,26 +83,45 @@ class Control:
     def process_command(self, marker: str, command: list, is_master: bool) -> list:
         response: list = [False, "Unknown error"]
 
-        if marker in self.robots.robots_by_marker:
-            if type(command) == list:
-                robot = self.robots.robots_by_marker[marker]
+        try:
+            if marker in self.robots.robots_by_marker:
+                if type(command) == list:
+                    robot = self.robots.robots_by_marker[marker]
 
-                if command[0] == "kick" and len(command) == 2:
-                    robot.kick(float(command[1]))
-                    response = [True, "ok"]
-                elif command[0] == "control" and len(command) == 4:
-                    robot.control(float(command[1]), float(command[2]), float(command[3]))
-                    response = [True, "ok"]
-                elif command[0] == "leds" and len(command) == 4:
-                    if is_master:
-                        robot.leds(int(command[1]), int(command[2]), int(command[3]))
+                    if command[0] == "kick" and len(command) == 2:
+                        robot.kick(float(command[1]))
                         response = [True, "ok"]
+                    elif command[0] == "control" and len(command) == 4:
+                        robot.control(float(command[1]), float(command[2]), float(command[3]))
+                        response = [True, "ok"]
+                    elif command[0] == "teleport" and len(command) == 4:
+                        robot.teleport(float(command[1]), float(command[2]), float(command[3]))
+                        response = [True, "ok"]
+                    elif command[0] == "leds" and len(command) == 4:
+                        if is_master or self.allow_extra_features:
+                            robot.leds(int(command[1]), int(command[2]), int(command[3]))
+                            response = [True, "ok"]
+                        else:
+                            response[0] = 2
+                            response[1] = "Only master can set the LEDs"
+
+                    elif command[0] == "beep" and len(command) == 3:
+                        if is_master or self.allow_extra_features:
+                            robot.beep(int(command[1]), int(command[2]))
+                            response = [True, "ok"]
+                        else:
+                            response[0] = 2
+                            response[1] = "Only master can set the LEDs"
                     else:
-                        response[1] = "Only master can set the LEDs"
-                else:
-                    response[1] = "Unknown command"
-        else:
-            response[1] = f"Unknown robot: {marker}"
+                        response[0] = 2
+                        response[1] = "Unknown command"
+            elif marker == "ball":
+                self.robots.ball.teleport(float(command[1]), float(command[2]), float(command[3]))
+                response = [True, "ok"]
+            else:
+                response[1] = f"Unknown robot: {marker}"
+        except RobotError as e:
+            response = [False, str(e)]
 
         return response
 
@@ -124,18 +147,23 @@ class Control:
                                 response[1] = f"Bad key for team {team}"
                                 allow_control = False
                             elif not self.teams[team]["allow_control"]:
+                                response[0] = 2
                                 response[1] = f"You are not allowed to control the robots of team {team}"
                                 allow_control = False
                             elif len(tasks):
                                 reasons = str(tasks)
+                                response[0] = 2
                                 response[1] = f"Robot {number} of team {team} is preempted: {reasons}"
                                 allow_control = False
 
                         if allow_control:
                             marker = utils.robot_list2str(team, number)
                             response = self.process_command(marker, command, is_master)
-
                         self.teams[team]["packets"] += 1
+
+                    if team == "ball":
+                        is_master = key == self.master_key
+                        response = self.process_command("ball", command, is_master)
 
                 self.socket.send_json(response)
             except zmq.error.Again:

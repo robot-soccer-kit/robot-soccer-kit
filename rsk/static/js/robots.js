@@ -1,29 +1,44 @@
 function robots_initialize(backend)
 {
-    function updatePorts() {
-        backend.ports(function(ports) {
+    function updateURLs() {
+        backend.available_urls(function(urls) {
             let options = '';
 
-            for (let port of ports) {
-                options += '<option value="'+port+'">'+port+'</option>';
+            for (let url of urls) {
+                options += '<option value="'+url+'">'+url+'</option>';
             }
 
-            $('.ports').html(options);
+            $('.urls').html(options);
         });
     }
-    updatePorts();
-    $('.refresh-ports').click(function (event) {
+    updateURLs();
+    function removeOffline(){
+        backend.get_robots(function(robots) {
+            for (let url in robots) {
+                if (!robots[url].last_message || robots[url].last_message > 5) {
+                    backend.removeRobot(url)
+                }
+            }
+        });
+    }
+
+    $('.remove-offline').click(function (event) {
         event.preventDefault();
-        updatePorts();
+        removeOffline();
+    });
+
+    $('.refresh-urls').click(function (event) {
+        event.preventDefault();
+        updateURLs();
     });
 
     $('.add-robot').click(function(event) {
         event.preventDefault();
-        backend.add_robot($('.ports').val());
+        backend.add_robot($('.urls').val());
     });
     $('.add-all-robots').click(function(event) {
         event.preventDefault();
-        $('.ports option').each(function() {
+        $('.urls option').each(function() {
             backend.add_robot($(this).val());
         });
     });
@@ -34,6 +49,7 @@ function robots_initialize(backend)
 
     $.get('static/robot.html', function(robot_template) {
         let warning = '<i class="bi text-warning bi-exclamation-circle"></i>';
+        let success = '<i class="bi text-success bi-check-circle"></i>';
 
         function updateInfos(div, infos) {
             let hasWarning = false;
@@ -81,13 +97,14 @@ function robots_initialize(backend)
                 div.find('.marker-select').val('none');
             }
 
-            if (infos.marker && (!infos.last_detection || infos.last_detection > 0.15)) {
-                hasWarning = true;
-                div.find('.not-detected').html('Not detected ' + warning);
-            } else {
-                div.find('.not-detected').html('');
-            }
 
+        if(infos.marker && (!infos.last_detection || infos.last_detection > 0.15)){
+            hasWarning = true;
+            div.find('.not-detected').html('Not detected ' + warning);
+            div.find('.not-detected').removeClass('invisible');
+        }else{
+            div.find('.not-detected').addClass('invisible');
+        }
             return hasWarning;
         }
 
@@ -97,38 +114,38 @@ function robots_initialize(backend)
                 let robotsOk = 0;
                 let robotsCount = 0;
 
-                for (let port in robots) {
-                    let div = $('.robot[rel="'+port+'"]');
+                for (let url in robots) {
+                    let div = $('.robot[rel="'+url+'"]');
                     if (!div.length) {
-                        let html = robot_template.replace(/{port}/g, port);
+                        let html = robot_template.replace(/{url}/g, url);
                         $('.robots').append(html);
 
-                        let div = $('.robot[rel="'+port+'"]');
+                        let div = $('.robot[rel="'+url+'"]');
                         div.find('.marker-select').change(function() {
                             let marker = $(this).val();
                             if (marker == 'none') {
                                 marker = null;
                             }
-                            backend.set_marker(port, marker);
+                            backend.set_marker(url, marker);
                         });
 
                         div.find('.remove').click(function(event) {
                             event.preventDefault();
-                            backend.removeRobot(port);
+                            backend.removeRobot(url);
                         });
 
                         div.find('.blink').click(function(event) {
                             event.preventDefault();
-                            backend.blink(port);
+                            backend.blink(url);
                         });
 
                         div.find('.kick').click(function(event) {
                             event.preventDefault();
-                            backend.kick(port);
+                            backend.kick(url);
                         });
                     }
 
-                    let error = updateInfos(div, robots[port]);
+                    let error = updateInfos(div, robots[url]);
                     robotsCount += 1;
                     if (!error) {
                         robotsOk += 1;

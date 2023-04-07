@@ -1,4 +1,5 @@
 import numpy as np
+from . import constants
 
 """
 This file provide IK/FK kinematics for the robot. Note that there is an equivalent code embedded in
@@ -9,12 +10,6 @@ we need to do some simulations.
 # Maxium wheel RPM [rotation/min]
 max_wheel_rpm: float = 150
 
-# Wheel radius [m]
-wheel_radius: float = 0.035
-
-# Robot radius (distance between its center and wheels) [m]
-robot_radius: float = 0.0595
-
 # Wheel drive direction orientations [deg]
 wheel_alphas: list = [-90, 30, 150]
 
@@ -22,7 +17,7 @@ wheel_alphas: list = [-90, 30, 150]
 drive_vectors = np.array([[np.cos(np.deg2rad(alpha)), np.sin(np.deg2rad(alpha))] for alpha in wheel_alphas])
 
 # Inverse Kinematics matrix
-IK: np.ndarray = (1 / wheel_radius) * np.hstack((drive_vectors, np.array([[robot_radius] * len(wheel_alphas)]).T))
+IK: np.ndarray = (1 / constants.wheel_radius) * np.hstack((drive_vectors, np.array([[constants.wheel_center_spacing] * len(wheel_alphas)]).T))
 
 # Forward Kinematics matrix
 FK: np.ndarray = np.linalg.pinv(IK)

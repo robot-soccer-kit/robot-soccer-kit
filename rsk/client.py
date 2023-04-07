@@ -1,7 +1,9 @@
 import signal
 import numpy as np
 import zmq
+import sys
 import threading
+import logging
 import time
 from . import constants, utils
 
@@ -104,8 +106,13 @@ class ClientRobot(ClientTracked):
 
     def control(self, dx, dy, dturn):
         self.moved = True
-
         return self.client.command(self.color, self.number, "control", [dx, dy, dturn])
+
+    def teleport(self, x, y, turn):
+        return self.client.command(self.color, self.number, "teleport", [x, y, turn])
+
+    def beep(self, frequency: int, duration: int):
+        return self.client.command(self.color, self.number, "beep", [frequency, duration])
 
     def leds(self, r, g, b):
         return self.client.command(self.color, self.number, "leds", [r, g, b])
@@ -147,6 +154,10 @@ class ClientRobot(ClientTracked):
 
 class Client:
     def __init__(self, host="127.0.0.1", key="", wait_ready=True):
+        logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
+        self.logger: logging.Logger = logging.getLogger("client")
+
+        self.error_management = "raise"  # "ignore", "print", "raise"
         self.running = True
         self.key = key
         self.lock = threading.Lock()
@@ -157,6 +168,7 @@ class Client:
         self.green2: ClientRobot
         self.blue1: ClientRobot
         self.blue2: ClientRobot
+        self.ballObject: ClientRobot = ClientRobot("ball", 0, self)
 
         # Creating self.green1, self.green2 etc.
         for color, number in utils.all_robots():
@@ -172,7 +184,6 @@ class Client:
         self.objs = {n: ClientTracked() for n in range(1, 9)}
 
         self.ball = None
-
         # ZMQ Context
         self.context = zmq.Context()
 
@@ -193,18 +204,25 @@ class Client:
         self.req = self.context.socket(zmq.REQ)
         self.req.connect("tcp://" + host + ":7558")
 
+        if threading.current_thread() is threading.main_thread():
+            signal.signal(signal.SIGINT, self.sigint)
+
         # Waiting for the first packet to be received, guarantees to have robot state after
         # client creation
         dt = 0.05
         t = 0
         warning_showed = False
-        while wait_ready and self.sub_packets < 1:
+        while wait_ready and self.sub_packets < 1 and self.running:
             t += dt
             time.sleep(dt)
             if t > 3 and not warning_showed:
                 warning_showed = True
-                print("WARNING: Still no message from vision after 3s")
-                print("if you want to operate without vision, pass wait_ready=False to the client")
+                self.logger.warning("Still no message from vision after 3s")
+                self.logger.warning("if you want to operate without vision, pass wait_ready=False to the client")
+
+    def sigint(self, signal_received, frame):
+        self.stop()
+        sys.exit(0)
 
     def __enter__(self):
         return self
@@ -223,7 +241,7 @@ class Client:
         last_t = time.time()
         while self.running:
             try:
-                json = self.sub.recv_json()
+                json = self.sub.recv_json(zmq.NOBLOCK)
                 ts = time.time()
                 dt = ts - last_t
                 last_t = ts
@@ -272,7 +290,6 @@ class Client:
         if threading.current_thread() is threading.main_thread():
             sigint_handler = signal.getsignal(signal.SIGINT)
             signal.signal(signal.SIGINT, signal.SIG_IGN)
-
         self.lock.acquire()
         self.req.send_json([self.key, color, number, [name, *parameters]])
         success, message = self.req.recv_json()
@@ -283,8 +300,11 @@ class Client:
 
         time.sleep(0.01)
 
-        if not success:
-            raise ClientError('Command "' + name + '" failed: ' + message)
+        if success != 1:
+            if self.error_management == "raise" or not success:
+                raise ClientError('Command "' + name + '" failed: ' + message)
+            elif self.error_management == "print":
+                self.logger.warning('Command "' + name + '" failed: ' + message)
 
     def goto_configuration(self, configuration_name="side", wait=False):
         targets = configurations[configuration_name]
