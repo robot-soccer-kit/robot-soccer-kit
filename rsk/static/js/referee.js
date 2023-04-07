@@ -475,13 +475,13 @@ function referee_initialize(backend)
                         markers[entry]["context"].translate(robot_pos[0],robot_pos[1])
                         markers[entry]["context"].rotate(robot_pos[2])
 
-                        if (Object.keys(state["leds"]).length != 0){
-                            markers[entry]["leds"] = state["leds"][entry]
-                            for (var i = 0; i < 3; i++) {
-                                markers[entry]["leds"][i] = Math.round(Math.min(255, 50+Math.log(markers[entry]["leds"][i]+1)/Math.log(256) * 255))
+                            if (Object.keys(state["leds"]).length != 0){
+                                markers[entry]["leds"] = state["leds"][entry]
+                                for (var i = 0; i < 3; i++) {
+                                    markers[entry]["leds"][i] = Math.round(Math.min(255, 50+Math.log(markers[entry]["leds"][i]+1)/Math.log(256) * 255))
+                                }
+                                draw_leds(markers[entry]["leds"], markers[entry]["context"])
                             }
-                            draw_leds(markers[entry]["leds"], markers[entry]["context"])
-                        }
 
                         markers[entry]["context"].drawImage(markers[entry]["image"],-robot_size/2,-robot_size/2,robot_size,robot_size)                 
                         markers[entry]["pos"] = robot_pos
@@ -532,7 +532,7 @@ function referee_initialize(backend)
                 resize_canvas(document.getElementById("ball"))
 
                 clearInterval(intervalId)
-                intervalId = setInterval(compute_view, 1000/120)
+                intervalId = setInterval(compute_view, 1000/30)
                 simulated_view = true
 
             }else{
