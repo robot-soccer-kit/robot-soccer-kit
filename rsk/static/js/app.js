@@ -40,7 +40,7 @@ $(document).ready(function () {
            video_initialize(backend); 
         }
     })
-
+    simulator_initialize(backend)
     robots_initialize(backend);
     control_initialize(backend);
     referee_initialize(backend);

@@ -386,7 +386,11 @@ class Referee:
         """
         tasks = self.control.robot_tasks(*utils.robot_str2list(robot))
 
-        return len(tasks) == 0 and (self.penalties[robot]["remaining"] is None) and (self.penalties[robot]["grace"] is None)
+        return (
+            len(tasks) == 0
+            and (self.penalties[robot]["remaining"] is None)
+            and (self.penalties[robot]["grace"] is None)
+        )
 
     def set_team_name(self, team: str, name: str):
         self.game_state["teams"][team]["name"] = name

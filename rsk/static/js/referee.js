@@ -12,6 +12,7 @@ function referee_initialize(backend)
     });
 
     backend.constants(function(constants) {
+
         setInterval(function() {
             backend.get_game_state(function(game_state) {
 
@@ -181,12 +182,8 @@ function referee_initialize(backend)
                     $('.robot-penalize-tab').css("flex-direction", "row-reverse");
                 }
             });
-
         }, 200);
-
-
-    });
-
+    })
     $('.toast').toast('show');
 
     // Game Start&Stop
@@ -279,14 +276,14 @@ function referee_initialize(backend)
 
     // Scores 
     $('.score-zone').each(function() {
-        let robot_id = $(this).attr('rel');
+        let robotId = $(this).attr('rel');
 
         $(this).find('.up-score').click(function() {
-            backend.increment_score(robot_id, 1);
+            backend.increment_score(robotId, 1);
         });
 
         $(this).find('.down-score').click(function() {
-            backend.increment_score(robot_id, -1);
+            backend.increment_score(robotId, -1);
         });
     });
 
@@ -334,271 +331,13 @@ function referee_initialize(backend)
     
     // Robots Penalties
     $('.robot-penalty').each(function() {
-        let robot_id = $(this).attr('rel');
+        let robotId = $(this).attr('rel');
 
         $(this).find('.penalize').click(function() {
-            backend.add_penalty(5, robot_id);
+            backend.add_penalty(5, robotId);
         });
         $(this).find('.unpenalize').click(function() {
-            backend.cancel_penalty(robot_id);
-        });
-        $(this).find('.move').click(function() {
-            
-            $('.move').removeClass('btn-danger')
-            if(selected_objet == robot_id){
-                selected_objet = "ball";
-            }else{
-                $(this).addClass("btn-danger")
-                selected_objet = robot_id;
-            }
+            backend.cancel_penalty(robotId);
         });
     });
-
-    simulated_view = false
-    intervalId = 0
-    let selected_objet = "ball"
-
-    backend.constants(function(constants) {
-        let carpet_size = [constants["carpet_length"], constants["carpet_width"]]
-
-        var context = document.getElementsByTagName('canvas')[0].getContext('2d')
-        ctx_width = context.canvas.width
-        ctx_height = context.canvas.height
-        robot_size = ctx_width/8
-        var background = new Image()
-        background.src = "static/imgs/field.svg"
-        background.width = this.naturalWidth
-        background.height = this.naturalHeight
-
-        background.onload = function(){
-            context.canvas.width = this.naturalWidth
-            context.canvas.height = this.naturalHeight
-            context.drawImage(background,0,0)
-        }
-
-        function meters_to_pixels_ratio() {
-            return document.getElementById('back').offsetWidth / carpet_size[0]
-        }
-
-        function cam_to_sim(position, orientation) {
-            let pos_sim = [0.0, 0.0, 0.0]
-            pos = [position[0],position[1],orientation]
-            ratio_w = document.getElementById('back').offsetWidth / carpet_size[0]
-            ratio_h = document.getElementById('back').offsetHeight / carpet_size[1]
-            pos_sim[0] = ((pos[0] + carpet_size[0]/2)* ratio_w)
-            pos_sim[1] = ((-pos[1] + carpet_size[1]/2) * ratio_h) 
-            pos_sim[2] = round(-pos[2]+Math.PI/2)
-            return pos_sim  
-        }
-        function if_move(last_pos, position){
-            min_translation = 1
-            min_rotation = 0.05
-            if (Math.abs(last_pos[0] - position[0]) > min_translation){
-                    return true
-            }else if (Math.abs(last_pos[1] - position[1]) >  min_translation){
-                    return true
-            }else if (Math.abs(last_pos[2] - position[2]) > min_rotation){
-                    return true
-            }
-            return false
-        }
-
-        function draw_leds(color, context){
-            for(i = -30; i<-30+120*3; i+= 120){
-                angle =  i * Math.PI/180
-                x = Math.round(Math.cos(angle)*constants["robot_radius"]*meters_to_pixels_ratio()*0.93)
-                y = Math.round(Math.sin(angle)*constants["robot_radius"]*meters_to_pixels_ratio()*0.93)
-                context.beginPath()
-                gradient = context.createRadialGradient(x, y, 0, x, y, 70);
-                gradient.addColorStop(0.05, "rgba("+color+",1)");
-                gradient.addColorStop(0.1, "rgba("+color+",0.5)");
-                gradient.addColorStop(0.25, "rgba("+color+",0)");
-                context.fillStyle = gradient
-                context.fillRect(x-25, y-25, 200, 200);
-            }
-        }
-
-        function draw_circle(position, radius, color, canvas, clear=false, tickness=0){
-            context = canvas.getContext('2d')
-            if(clear) context.clearRect(0,0,canvas.width,canvas.height)
-            context.beginPath()
-            context.strokeStyle = color
-            context.fillStyle = color
-            context.arc(position[0], position[1], radius, 0, Math.PI*2);
-            context.lineWidth = tickness    
-            if(tickness==0) context.fill()
-            else context.stroke()
-        }
-
-        function draw_ball(position){
-            ball_canvas = document.getElementById("ball")
-            ball = cam_to_sim(position)
-            radius = constants["ball_radius"] * meters_to_pixels_ratio()
-            draw_circle(ball, radius, "orange", ball_canvas, true)
-        }
-
-        tick = 0
-        T0 = Date.now()
-        function compute_view(){
-
-
-            backend.get_state(function(state) {
-                if (state.simulated){
-                    tick += 1
-                    if (Date.now()-T0 > 100){
-                        $('.fps').text("FPS : " + Math.round(1000/((Date.now()-T0)/tick)));
-                        T0 = Date.now()
-                        tick = 0
-                    }
-                }
-
-                let present_marker = state.markers
-                for (var key in markers) {
-                    if(!(key in present_marker)){
-                        canvas = markers[key]["context"].canvas
-                        markers[key]["context"].clearRect(0,0,canvas.width,canvas.height)
-                        markers[key]["clear"] = true
-                    }
-                }
-                for (var entry in present_marker) {
-
-                    robot = present_marker[entry]
-                    robot_pos = cam_to_sim(robot.position,robot.orientation)
-
-                    if (if_move(markers[entry]["pos"], robot_pos) || markers[entry]["clear"] || markers[entry]["pos"] != state["leds"][entry]) {
-                        markers[entry]["context"].clearRect(-8*ctx_width,-8*ctx_height,8*2*ctx_width,8*2*ctx_height)
-                        robot_size = constants["robot_radius"] * 2 * meters_to_pixels_ratio()
-
-                        markers[entry]["context"].rotate(-markers[entry]["pos"][2])
-                        markers[entry]["context"].translate(-markers[entry]["pos"][0],-markers[entry]["pos"][1])
-
-                        markers[entry]["context"].translate(robot_pos[0],robot_pos[1])
-                        markers[entry]["context"].rotate(robot_pos[2])
-
-                            if (Object.keys(state["leds"]).length != 0){
-                                markers[entry]["leds"] = state["leds"][entry]
-                                for (var i = 0; i < 3; i++) {
-                                    markers[entry]["leds"][i] = Math.round(Math.min(255, 50+Math.log(markers[entry]["leds"][i]+1)/Math.log(256) * 255))
-                                }
-                                draw_leds(markers[entry]["leds"], markers[entry]["context"])
-                            }
-
-                        markers[entry]["context"].drawImage(markers[entry]["image"],-robot_size/2,-robot_size/2,robot_size,robot_size)                 
-                        markers[entry]["pos"] = robot_pos
-                        markers[entry]["clear"] = false
-
-                    }
-                }
-                backend.get_wait_ball_position(function(wait_ball_position){
-                    if (state.ball != null){
-                        draw_ball(state.ball)
-                    }
-                    if (wait_ball_position != null){
-                        draw_circle(cam_to_sim(wait_ball_position), 20, "red", document.getElementById("ball"), false, 1)
-                    }
-                })
-
-            });
-        };
-
-        function resize(){
-            simulated_view = !simulated_view
-            run_view()
-        }
-        function resize_canvas(canvas){
-                back_canvas = document.getElementById('back')
-                canvas.width = back_canvas.offsetWidth
-                canvas.height = back_canvas.offsetHeight
-                return canvas
-        }
-        function run_view() {
-            if (!simulated_view) {
-                $('#ViewChange').html("<i class='bi bi-camera'></i> Camera View")
-                $('#vision').addClass('d-none')
-                $('#back').removeClass('d-none')
-                $('.sim_vim').css('opacity', '100')
-
-                markers = {"blue1":NaN,"blue2":NaN,"green1":NaN,"green2":NaN}
-                for(let marker in markers){
-                    markers[marker] = {"image":NaN,"context":NaN,"pos":[0,0,0],"leds":[0,0,0],"clear":true}
-                }
-
-                for (var key in markers) {
-                    markers[key]["image"] = new Image();
-                    markers[key]["image"].src = "static/imgs/robot"+ key +".svg"
-                    canvas = resize_canvas(document.getElementById(key))
-                    markers[key]["context"] = canvas.getContext('2d')
-                }
-                resize_canvas(document.getElementById("ball"))
-
-                clearInterval(intervalId)
-                intervalId = setInterval(compute_view, 1000/30)
-                simulated_view = true
-
-            }else{
-                clearInterval(intervalId)
-                $('#ViewChange').html("<i class='bi bi-camera'></i> Simulated View")
-                $('#vision').removeClass('d-none')
-                $('#back').addClass('d-none')
-                $('.sim_vim').css('opacity', '0')
-                simulated_view = false; 
-
-            }
-        }
-
-        setTimeout(run_view, 1000)
-        window.onresize = resize
-
-        $('#ViewChange').click(run_view)
-
-        backend.is_simulated(function (simulated) {
-            if(simulated) {
-                $('body').addClass('vision-running')
-                let canvas = document.getElementById("ball")
-                const distance = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1); 
-                let drag_type = null
-                let initial_position = null
- 
-                function teleport_selected_object_on_mouse(e){
-                    let pos_reel = [0.0, 0.0, 0.0]
-                    pos = [...initial_position]
-
-                    if (drag_type == "position") {
-                        pos[0] = e.layerX
-                        pos[1] = e.layerY
-                    } else {
-                        pos[2] = Math.atan2(e.layerY - initial_position[1], e.layerX - initial_position[0]) + Math.PI/2
-                    }
-
-                    back_canvas = document.getElementById('back')
-                    ratio = 1/meters_to_pixels_ratio()
-                    pos_reel[0] = (pos[0] - back_canvas.offsetWidth/2) * ratio
-                    pos_reel[1] = -(pos[1] - back_canvas.offsetHeight/2) * ratio
-                    pos_reel[2] = -(pos[2]-Math.PI/2)
-                    backend.teleport(selected_objet, pos_reel[0], pos_reel[1], pos_reel[2])
-                }
-
-                canvas.addEventListener("mousedown", function(e) {
-                    for (let marker in markers){
-                        if (distance(markers[marker]["pos"][0], markers[marker]["pos"][1], e.layerX, e.layerY) < constants["robot_radius"]*meters_to_pixels_ratio()){
-                            selected_objet = marker
-                        }
-                    }
-                    drag_type = (e.button == 0) ? "position" : "orientation"
-                    if (selected_objet != "ball") {
-                        initial_position = markers[selected_objet]["pos"]
-                    } else {
-                        initial_position = [0., 0., 0.]
-                    }
-
-                    canvas.addEventListener("mousemove", teleport_selected_object_on_mouse)
-                })
-                canvas.addEventListener("mouseup", function(e){ 
-                    teleport_selected_object_on_mouse(e)
-                    canvas.removeEventListener("mousemove",teleport_selected_object_on_mouse)
-                    selected_objet = "ball"
-                })
-            }
-        })
-    })
 }
