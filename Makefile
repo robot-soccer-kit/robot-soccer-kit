@@ -1,10 +1,9 @@
-
-format:
-	black -l 127 rsk/
-
 all:
 	@rm -rf dist/*
 	python3 setup.py sdist bdist_wheel
+
+format:
+	black -l 127 rsk/
 
 upload:
 	python3 -m twine upload --repository pypi dist/*
