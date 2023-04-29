@@ -107,7 +107,7 @@ function video_initialize(backend)
         backend.enableVideoDebug(is_vision);
 
         backend.get_video(is_vision, function(video) {
-            if (video.image && isNaN(intervalId)) {
+            if (video.image) {
                 $('.camera-image').attr('src', 'data:image/jpeg;base64,'+video.image);
             }
         
