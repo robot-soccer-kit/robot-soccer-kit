@@ -38,8 +38,13 @@ class Detection:
         # self.socket.bind("tcp://*:7557")
 
         # ArUco parameters
-        self.arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
-        self.arucoParams = cv2.aruco.DetectorParameters_create()
+        if cv2.__version__.startswith("4.6"):
+            self.arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
+            self.arucoParams = cv2.aruco.DetectorParameters_create()
+        else:
+            dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+            parameters =  cv2.aruco.DetectorParameters()
+            self.detector = cv2.aruco.ArucoDetector(dictionary, parameters)
         # arucoParams.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_APRILTAG
 
         # Goals Colors
@@ -305,7 +310,10 @@ class Detection:
         """
         Detect the fiducial markers on the image, they are passed to the field for calibration
         """
-        (corners, ids, rejected) = cv2.aruco.detectMarkers(image, self.arucoDict, parameters=self.arucoParams)
+        if cv2.__version__.startswith("4.6"):
+            (corners, ids, rejected) = cv2.aruco.detectMarkers(image, self.arucoDict, parameters=self.arucoParams)
+        else:
+            (corners, ids, rejected) = self.detector.detectMarkers(image)
         new_markers = {}
 
         if len(corners) > 0:
