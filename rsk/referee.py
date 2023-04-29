@@ -189,6 +189,7 @@ class Referee:
         self.game_state["game_paused"] = True
         self.game_state["game_is_running"] = False
         self.chrono_is_running = False
+        self.wait_ball_position = None
         self.start_timer = 0.0
 
         self.reset_penalties()
