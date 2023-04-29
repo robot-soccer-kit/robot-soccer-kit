@@ -241,7 +241,7 @@ class Client:
         last_t = time.time()
         while self.running:
             try:
-                json = self.sub.recv_json(zmq.NOBLOCK)
+                json = self.sub.recv_json()
                 ts = time.time()
                 dt = ts - last_t
                 last_t = ts
