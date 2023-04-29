@@ -17,6 +17,7 @@ class Detect:
         self.period = None
 
         self.referee = None
+
         # Publishing server
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
@@ -31,20 +32,14 @@ class Detection:
         self.state = None
         self.referee = None
 
-        # Publishing server
-        # self.context = zmq.Context()
-        # self.socket = self.context.socket(zmq.PUB)
-        # self.socket.set_hwm(1)
-        # self.socket.bind("tcp://*:7557")
-
         # ArUco parameters
-        if cv2.__version__.startswith("4.6"):
+        if self.is_new_aruco_api():
+            dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+            parameters = cv2.aruco.DetectorParameters()
+            self.detector = cv2.aruco.ArucoDetector(dictionary, parameters)
+        else:
             self.arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
             self.arucoParams = cv2.aruco.DetectorParameters_create()
-        else:
-            dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
-            parameters =  cv2.aruco.DetectorParameters()
-            self.detector = cv2.aruco.ArucoDetector(dictionary, parameters)
         # arucoParams.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_APRILTAG
 
         # Goals Colors
@@ -101,6 +96,22 @@ class Detection:
         self.ball = None
         self.no_ball = 0
         self.field = Field()
+
+    def is_new_aruco_api(self) -> bool:
+        """
+        Aruco API changed slightly in opencv >= 4.7, see:
+        https://stackoverflow.com/questions/74964527/attributeerror-module-cv2-aruco-has-no-attribute-dictionary-get
+
+        We check OpenCV version and assume
+        """
+        (major, minor, _) = cv2.__version__.split(".")
+
+        if int(major) < 4 or (int(major) == 4 and int(minor) <= 6):
+            # OpenCV <= 4.6
+            return False
+        else:
+            # OpenCV > 4.6
+            return True
 
     def should_display(self, entry: list) -> bool:
         return self.displaySettings[entry]["value"]
@@ -310,10 +321,11 @@ class Detection:
         """
         Detect the fiducial markers on the image, they are passed to the field for calibration
         """
-        if cv2.__version__.startswith("4.6"):
-            (corners, ids, rejected) = cv2.aruco.detectMarkers(image, self.arucoDict, parameters=self.arucoParams)
-        else:
+        if self.is_new_aruco_api():
             (corners, ids, rejected) = self.detector.detectMarkers(image)
+        else:
+            (corners, ids, rejected) = cv2.aruco.detectMarkers(image, self.arucoDict, parameters=self.arucoParams)
+
         new_markers = {}
 
         if len(corners) > 0:
