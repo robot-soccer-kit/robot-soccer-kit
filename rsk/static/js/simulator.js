@@ -1,4 +1,4 @@
-function simulator_initialize(backend)
+function simulator_initialize(backend, isView)
 {
     backend.constants(function(constants) {
         function getMetersToPixelsRatio(){
@@ -194,9 +194,12 @@ function simulator_initialize(backend)
         let tick = 0
         let T0 = Date.now()
 
-        setTimeout(runView, 1000)
-        runView()
-        window.onresize = runView
+        if(isView){
+            setTimeout(runView, 1000)
+            runView()
+        }
+        window.onresize = runView     
+
         $('#ViewChange').click(switchView)
 
         backend.is_simulated(function (isSimulated) {
