@@ -44,16 +44,30 @@ function simulator_initialize(backend, isView)
             }
         }
 
-        function drawCircle(position, radius, color, canvas, clear=false, tickness=0){
+        function drawCircle(position, radius, color, canvas, clear=false, tickness=0, dash=0){
             context = canvas.getContext('2d')
             if(clear) context.clearRect(0,0,canvas.width,canvas.height)
             context.beginPath()
             context.strokeStyle = color
             context.fillStyle = color
+            if(dash!=0) context.setLineDash(dash);
+            else context.setLineDash([]);
             context.arc(position[0], position[1], radius, 0, Math.PI*2);
             context.lineWidth = tickness    
             if(tickness==0) context.fill()
             else context.stroke()
+        }
+
+        function drawline(begin, end, canvas, color, tickness=0){
+            context = canvas.getContext('2d')
+            context.beginPath()
+            context.strokeStyle = color
+            context.fillStyle = color
+
+            context.moveTo(...begin);
+            context.lineTo(...end);
+            context.lineWidth = tickness    
+            context.stroke()
         }
 
         function drawBall(position){
@@ -119,13 +133,28 @@ function simulator_initialize(backend, isView)
 
                     }
                 }
+
+
                 //Draw Ball and placement circle 
                 backend.get_wait_ball_position(function(placementCirclePosition){
+                    ballCanvas = document.getElementById("ball")
+                    ballContext = ballCanvas.getContext("2d")
+
                     if (state.ball != null){
                         drawBall(state.ball)
                     }
                     if (placementCirclePosition != null){
-                        drawCircle(transformViewToSim(placementCirclePosition), 20, "red", document.getElementById("ball"), false, 1)
+                        drawCircle(transformViewToSim(placementCirclePosition), constants.place_ball_margin*getMetersToPixelsRatio(), "red", ballCanvas, false, 1)
+                    }
+
+                    if(display_settings["landmark"]["value"]){
+                        center = [ballCanvas.width/2, ballCanvas.height/2]
+                        drawline(center, [center[0],center[1]-100], ballCanvas, "blue")
+                        drawline(center, [center[0]+100,center[1]], ballCanvas, "red")
+                    }
+
+                    if(display_settings["timed_circle"]["value"]){
+                        drawCircle(transformViewToSim(state.ball), constants.timed_circle_radius*getMetersToPixelsRatio(), "red", ballCanvas, false, 1, [10,10])
                     }
                 })
 
@@ -188,6 +217,42 @@ function simulator_initialize(backend, isView)
             }
         }
 
+
+        function get_display_settings() {
+            let html = ''
+            for (setting_name in display_settings ) {
+                let setting = display_settings[setting_name]
+                let checked = setting["value"] ? 'checked="checked"' : ''
+
+                html += '<div class="form-check form-switch">'
+                html += '    <input class="form-check-input display-setting" type="checkbox" '
+                html += 'role="switch" rel="'+setting_name+'" '+checked+'>'
+                html += '    <label class="form-check-label" for="flexSwitchCheckDefault">'
+                html += '    '+setting['label']
+                html += '    </label>'
+                html += '</div>'
+            }
+            $('.display-settings').html(html)
+            $('.display-setting').click(function() {
+                console.log($(this).attr('rel'))
+                console.log($(this).is(':checked'))
+                display_settings[$(this).attr('rel')]["value"] = $(this).is(':checked')
+            });
+    }
+        $('.display-python-settings').click(function() {
+            get_display_settings()
+        });
+
+        display_settings = {
+            "landmark": {"label": "Center Landmark", "default": true},
+            "timed_circle": {"label": "Timed Circle", "default": false},
+        }
+        for (setting_name in display_settings ) {
+            display_settings[setting_name]["value"] = display_settings[setting_name]["default"]
+        }
+
+
+
         const carpetSize = [constants["carpet_length"], constants["carpet_width"]]
         intervalId = NaN
         let selectedObjet = "ball"
@@ -228,7 +293,6 @@ function simulator_initialize(backend, isView)
                     reelPos[2] = -(pos[2]-Math.PI/2)
                     backend.teleport(selectedObjet, reelPos[0], reelPos[1], reelPos[2])
                 }
-
                 canvas.addEventListener("mousedown", function(e) {
                     for (let marker in markers){
                         if (distance(markers[marker]["pos"][0], markers[marker]["pos"][1], e.layerX, e.layerY) < constants["robot_radius"]*getMetersToPixelsRatio()){
