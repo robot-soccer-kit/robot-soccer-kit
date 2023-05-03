@@ -30,7 +30,7 @@ defense_area_length = 0.3  # [m]
 
 # Timed circle radius and maximum time before being penalized
 timed_circle_radius: float = 0.25  # [m]
-timed_circle_time: float = 5  # [s]
+timed_circle_time: float = 3 # [s]
 
 # Margin for ball re-placement (on the center or on dots)
 place_ball_margin: float = 0.05  # [m]
