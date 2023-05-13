@@ -189,6 +189,7 @@ class Referee:
         self.game_state["game_paused"] = True
         self.game_state["game_is_running"] = False
         self.chrono_is_running = False
+        self.wait_ball_position = None
         self.start_timer = 0.0
 
         self.reset_penalties()
@@ -386,7 +387,11 @@ class Referee:
         """
         tasks = self.control.robot_tasks(*utils.robot_str2list(robot))
 
-        return len(tasks) == 0 and (self.penalties[robot]["remaining"] is None) and (self.penalties[robot]["grace"] is None)
+        return (
+            len(tasks) == 0
+            and (self.penalties[robot]["remaining"] is None)
+            and (self.penalties[robot]["grace"] is None)
+        )
 
     def set_team_name(self, team: str, name: str):
         self.game_state["teams"][team]["name"] = name
@@ -522,8 +527,8 @@ class Referee:
                     opponent_defense_area = constants.defense_area(self.positive_team != team)
 
                     # This is penalizing robots for abusive attack (suspended)
-                    # if utils.in_rectangle(robot_position, *opponent_defense_area):
-                    #     self.add_penalty(constants.default_penalty, marker, "abusive_attack")
+                    if utils.in_rectangle(robot_position, *opponent_defense_area):
+                        self.add_penalty(constants.default_penalty, marker, "abusive_attack")
 
                     if utils.in_rectangle(robot_position, *my_defense_area):
                         if team in defender:

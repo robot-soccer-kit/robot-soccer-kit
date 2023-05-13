@@ -122,6 +122,9 @@ class Control:
                 response[1] = f"Unknown robot: {marker}"
         except RobotError as e:
             response = [False, str(e)]
+        except (TypeError, ValueError) as e:
+            response = [False, "ArgumentError: "+str(e)]
+
 
         return response
 

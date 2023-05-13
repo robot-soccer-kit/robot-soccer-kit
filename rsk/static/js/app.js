@@ -34,13 +34,15 @@ $(document).ready(function () {
         if (simulated) {
             console.log("SIMULATION")
             $('.not_show_simulated').css("display", 'none')
+            simulator_initialize(backend, true)
         }else{
            console.log("REEL")
            $('.show_simulated').css("display", 'none')
            video_initialize(backend); 
+           simulator_initialize(backend, false)
         }
     })
-
+    
     robots_initialize(backend);
     control_initialize(backend);
     referee_initialize(backend);

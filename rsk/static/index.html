@@ -1,5 +1,24 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link rel="stylesheet" type="text/css" href="static/bootstrap/css/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="static/icons/font/bootstrap-icons.css" />
+        <link rel="stylesheet" type="text/css" href="static/css/app.css" />
+        <script type="text/javascript" src="static/jquery/jquery.js"></script>
+        <script type="text/javascript" src="static/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script type="text/javascript" src="static/js/utils.js"></script>
+        <script type="text/javascript" src="static/js/video.js"></script>
+        <script type="text/javascript" src="static/js/robots.js"></script>
+        <script type="text/javascript" src="static/js/referee.js"></script>
+        <script type="text/javascript" src="static/js/simulator.js"></script>
+        <script type="text/javascript" src="static/js/competition.js"></script>
+        <script type="text/javascript" src="static/js/control.js"></script>
+        <script type="text/javascript" src="static/js/tabs.js"></script>
+        <script type="text/javascript" src="static/js/app.js"></script>
+        <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon">
+        <title>Robot Soccer Kit</title>
+    </head>
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -219,21 +238,19 @@
         </div>
 
         <div class="row">
-            <div id="first-col" class="col-7">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="vision-show-running">
-                            <div id="camera-area" class="camera-area-referee justify-content-center d-flex">
-                                <canvas id="back" class="card d-none m-0" height="100" width="100"></canvas>
-                                <canvas id="green1" class="sim_vim"></canvas>
-                                <canvas id="green2" class="sim_vim"></canvas>
-                                <canvas id="blue1" class="sim_vim"></canvas>
-                                <canvas id="blue2" class="sim_vim"></canvas>
-                                <canvas id="ball" class="sim_vim"></canvas>
-                                <img id="vision" class="card camera-image m-0" />
-                            </div>
-                        </div>
-                    </div>
+          <div id="first-col" class="col-7">
+            <div class="row">
+              <div class="col-12">
+                <div class="vision-show-running">
+                  <div id="camera-area" class="camera-area-referee justify-content-center d-flex">
+                      <canvas id="back" class="card d-none m-0"></canvas>
+                      <canvas id="green1" class="sim_vim"></canvas>
+                      <canvas id="green2" class="sim_vim"></canvas>
+                      <canvas id="blue1" class="sim_vim"></canvas>
+                      <canvas id="blue2" class="sim_vim"></canvas>
+                      <canvas id="ball" class="sim_vim"></canvas>
+                      <img id="vision" class="card camera-image m-0"/>
+                  </div>
                 </div>
                 <div class="row">
                     <div class="col-12 py-2 text-center">
