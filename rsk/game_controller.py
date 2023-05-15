@@ -8,9 +8,24 @@ import threading
 import waitress
 from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
+from flask_httpauth import HTTPBasicAuth
+from werkzeug.security import generate_password_hash, check_password_hash
 from .backend import Backend
 from . import api
 
+
+auth = HTTPBasicAuth()
+
+users = {
+    "john": generate_password_hash("hello"),
+    "susan": generate_password_hash("bye")
+}
+
+@auth.verify_password
+def verify_password(username, password):
+    if username in users and \
+            check_password_hash(users.get(username), password):
+        return username
 
 # Setting up the logger
 logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
@@ -19,7 +34,7 @@ logging.getLogger("robot-soccer-kit").info("Starting robot-soccer-kit Game Contr
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", "-p", type=str, default="7070")
-parser.add_argument("--ip", "-ip", type=str, default="127.0.0.1")
+parser.add_argument("--ip", "-ip", type=str, default="0.0.0.0")
 parser.add_argument("--simulated", "-s", action="store_true")
 args = parser.parse_args()
 
@@ -58,6 +73,7 @@ def handle_api():
         return jsonify([0, "Error while processing command"])
 
 
+#@auth.login_required
 @app.route("/", methods=["GET"])
 def main():
     return send_from_directory(static, "index.html")
