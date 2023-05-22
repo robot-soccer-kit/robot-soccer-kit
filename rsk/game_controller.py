@@ -14,18 +14,6 @@ from .backend import Backend
 from . import api
 
 
-auth = HTTPBasicAuth()
-
-users = {
-    "john": generate_password_hash("hello"),
-    "susan": generate_password_hash("bye")
-}
-
-@auth.verify_password
-def verify_password(username, password):
-    if username in users and \
-            check_password_hash(users.get(username), password):
-        return username
 
 # Setting up the logger
 logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
@@ -34,9 +22,19 @@ logging.getLogger("robot-soccer-kit").info("Starting robot-soccer-kit Game Contr
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", "-p", type=str, default="7070")
-parser.add_argument("--ip", "-ip", type=str, default="0.0.0.0")
+parser.add_argument("--ip", "-ip", type=str, default="192.168.0.77")
 parser.add_argument("--simulated", "-s", action="store_true")
 args = parser.parse_args()
+
+auth = HTTPBasicAuth()
+users = {
+    "admin": 'pbkdf2:sha256:600000$R7cU35KCJOOT0O99$9657bd0616574504eb15c2542e25903c79beb42a47ef714d02270e9dc250ec13',
+}
+@auth.verify_password
+def verify_password(username, password):
+    if username in users and \
+            check_password_hash(users.get(username), password):
+        return username
 
 
 has_client: bool = False
@@ -47,7 +45,6 @@ api.register(backend)
 static = os.path.dirname(__file__) + "/static/"
 app = Flask("Game controller", static_folder=static)
 CORS(app)
-
 
 @app.route("/api", methods=["GET"])
 def handle_api():
@@ -73,8 +70,8 @@ def handle_api():
         return jsonify([0, "Error while processing command"])
 
 
-#@auth.login_required
 @app.route("/", methods=["GET"])
+@auth.login_required
 def main():
     return send_from_directory(static, "index.html")
 
