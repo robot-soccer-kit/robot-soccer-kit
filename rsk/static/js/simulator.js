@@ -149,7 +149,7 @@ function simulator_initialize(backend, isView)
 
                     if(display_settings["landmark"]["value"]){
                         center = [ballCanvas.width/2, ballCanvas.height/2]
-                        drawline(center, [center[0],center[1]-100], ballCanvas, "blue")
+                        drawline(center, [center[0],center[1]-100], ballCanvas, "green")
                         drawline(center, [center[0]+100,center[1]], ballCanvas, "red")
                     }
 
