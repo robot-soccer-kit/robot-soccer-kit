@@ -42,6 +42,13 @@ $(document).ready(function () {
            simulator_initialize(backend, false)
         }
     })
+
+    backend.is_competition(function (competition) {
+        if (competition) {
+            $('.competition-mode').show();
+            competition_initialize(backend);
+        }
+    });
     
     robots_initialize(backend);
     control_initialize(backend);

@@ -1,4 +1,4 @@
-$(document).ready(function () {
+function competition_initialize(backend) {
     let teams = {};
 
     let data = localStorage.getItem("teams")
@@ -11,9 +11,9 @@ $(document).ready(function () {
     }
 
     function setTeam(name, color) {
-        $(".team-name[rel="+color+"]").val(name)
-        $(".key-"+color).val(teams[name]);
-        $(".key-"+color).change();
+        $(".team-name[rel=" + color + "]").val(name)
+        $(".key-" + color).val(teams[name]);
+        $(".key-" + color).change();
     }
 
     function renderTeams() {
@@ -23,26 +23,26 @@ $(document).ready(function () {
             html += "<tr>"
             html += "  <td>" + name + "</td>"
             html += '  <td>'
-            html += '<a class="m-2 btn btn-primary team-blue" rel="'+name+'" href="#">Blue</a>'
-            html += '<a class="m-2 btn btn-success team-green" rel="'+name+'" href="#">Green</a>'
-            html += '<a class="m-2 btn btn-danger team-remove"  rel="'+name+'" href="#">Remove</a>'
+            html += '<a class="m-2 btn btn-primary team-blue" rel="' + name + '" href="#">Blue</a>'
+            html += '<a class="m-2 btn btn-success team-green" rel="' + name + '" href="#">Green</a>'
+            html += '<a class="m-2 btn btn-danger team-remove"  rel="' + name + '" href="#">Remove</a>'
             html += '</td>'
             html += "</tr>"
         }
         $('.competition-teams').html(html);
-        
 
-        $('.team-blue').click(function() {
+
+        $('.team-blue').click(function () {
             let name = $(this).attr('rel');
             setTeam(name, "blue");
         });
-        $('.team-green').click(function() {
+        $('.team-green').click(function () {
             let name = $(this).attr('rel');
             setTeam(name, "green");
         });
-        $('.team-remove').click(function() {
+        $('.team-remove').click(function () {
             let name = $(this).attr('rel');
-            delete(teams[name]);
+            delete (teams[name]);
             renderTeams();
         });
     }
@@ -54,4 +54,4 @@ $(document).ready(function () {
     });
 
     renderTeams();
-});
+}

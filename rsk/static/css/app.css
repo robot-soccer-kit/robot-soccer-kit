@@ -187,3 +187,7 @@ div.progress{
 .card-header {
     text-transform: capitalize;
 }
+
+.competition-mode {
+    display:none;
+}
