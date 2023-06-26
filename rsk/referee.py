@@ -207,6 +207,7 @@ class Referee:
         Start an half time break
         """
         self.game_state["timer"] = constants.halftime_duration
+        self.chrono_is_running = True
         self.game_state["game_is_running"] = False
         self.game_state["halftime_is_running"] = True
         self.game_state["game_paused"] = True
@@ -223,6 +224,8 @@ class Referee:
         """
         Resume after an half time break
         """
+        self.pause_game("game-start")
+        self.chrono_is_running = False
         self.game_state["timer"] = constants.game_duration
         self.game_state["halftime_is_running"] = False
         self.game_state["game_is_running"] = True
