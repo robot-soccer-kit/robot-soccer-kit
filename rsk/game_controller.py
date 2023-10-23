@@ -24,7 +24,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--port", "-p", type=str, default="7070")
 parser.add_argument("--ip", "-ip", type=str, default="127.0.0.1")
 parser.add_argument("--simulated", "-s", action="store_true")
+<<<<<<< HEAD
 parser.add_argument("--remote", "-r", action="store_true")
+=======
+parser.add_argument("--competition", "-c", action="store_true")
+>>>>>>> origin/master
 args = parser.parse_args()
 
 auth = HTTPBasicAuth()
@@ -40,7 +44,7 @@ def verify_password(username, password):
 
 
 has_client: bool = False
-backend: Backend = Backend(args.simulated)
+backend: Backend = Backend(args.simulated, args.competition)
 api.register(backend)
 
 # Starting a Flask app serving API requests and files of static/ directory

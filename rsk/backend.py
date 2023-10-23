@@ -14,11 +14,12 @@ from . import (
 
 
 class Backend:
-    def __init__(self, simulated=False):
+    def __init__(self, simulated=False, competition=False):
         super().__init__()
         robots.Robots.protocols["serial"] = robot_serial.RobotSerial
 
         self.simulated = simulated
+        self.competition = competition
 
         self.state: state.State = state.State(30, self.simulated)
         self.state.start_pub()
@@ -40,6 +41,9 @@ class Backend:
 
         self.control.robots = self.robots
         self.control.start()
+
+    def is_competition(self):
+        return self.competition
 
     def is_simulated(self):
         return self.simulated

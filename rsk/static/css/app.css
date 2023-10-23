@@ -7,6 +7,45 @@ body {
     position: relative;
 }
 
+
+.waiting-screen{
+    position: fixed;
+    z-index: 1;
+    background-color: rgba(0, 0, 0, 0.8);
+    width: 100%;
+    height: 100%;
+    display: inherit;
+}
+.loader-text{
+    position: fixed;
+    text-align: center;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    top: calc(80%);
+    font-size: 50px;
+    color: white;
+}
+
+.loader-robot{
+    position: fixed;
+    z-index: 2;
+    left: calc(50% - 240px);
+    top: calc(40% - 240px);
+    width: 470px;
+    height: 470px;
+    animation: spin 5s linear infinite;
+    animation-play-state: running;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); content: url("../imgs/robotblue1.svg"); }
+    25% { content: url("../imgs/robotgreen1.svg"); }
+    50% { content: url("../imgs/robotblue2.svg"); }
+    75% { content: url("../imgs/robotgreen2.svg"); }
+    100% { transform: rotate(360deg); }
+}
+
 .sim_vim {
     position: absolute;
     z-index: 0;
@@ -186,4 +225,8 @@ div.progress{
 
 .card-header {
     text-transform: capitalize;
+}
+
+.competition-mode {
+    display:none;
 }

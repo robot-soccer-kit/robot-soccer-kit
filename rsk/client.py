@@ -39,16 +39,16 @@ configurations = {
         ["blue", 2, (-0.6, constants.field_width / 2, -np.pi / 2)],
     ],
     "swap_covers_green_positive": [
-        ["green", 1, (0.09, -0.2, np.pi)],
-        ["green", 2, (0.09, 0.2, np.pi)],
-        ["blue", 1, (-0.09, -0.2, 0)],
-        ["blue", 2, (-0.09, 0.2, 0)],
+        ["green", 1, (0.15, -0.2, np.pi)],
+        ["green", 2, (0.15, 0.2, np.pi)],
+        ["blue", 1, (-0.15, -0.2, 0)],
+        ["blue", 2, (-0.15, 0.2, 0)],
     ],
     "swap_covers_blue_positive": [
-        ["green", 1, (-0.09, -0.2, 0)],
-        ["green", 2, (-0.09, 0.2, 0)],
-        ["blue", 1, (0.09, -0.2, np.pi)],
-        ["blue", 2, (0.09, 0.2, np.pi)],
+        ["green", 1, (-0.15, -0.2, 0)],
+        ["green", 2, (-0.15, 0.2, 0)],
+        ["blue", 1, (0.15, -0.2, np.pi)],
+        ["blue", 2, (0.15, 0.2, np.pi)],
     ],
     "gently_swap_side": [
         ["green", 1, (0, -0.15, 0)],
@@ -168,7 +168,6 @@ class Client:
         self.green2: ClientRobot
         self.blue1: ClientRobot
         self.blue2: ClientRobot
-        self.ballObject: ClientRobot = ClientRobot("ball", 0, self)
 
         # Creating self.green1, self.green2 etc.
         for color, number in utils.all_robots():
@@ -285,6 +284,9 @@ class Client:
     def stop(self):
         self.stop_motion()
         self.running = False
+
+    def teleport_ball(self, x: float, y: float):
+        return self.command("ball", 0, "teleport", [x, y, 0])
 
     def command(self, color, number, name, parameters):
         if threading.current_thread() is threading.main_thread():

@@ -9,7 +9,9 @@ class APIBackend {
                         callback = args.pop();
                     }
 
-                    $.get(url, { 'command': name, 'args': JSON.stringify(args) }, function (result) {
+                    $.get({"url" : url, "data" :{ 'command': name, 'args': JSON.stringify(args)}, 'success':function (result) {
+                        $('.waiting-screen').css("display", 'None')
+                        $('.loader-robot').css("animation-play-state", 'paused')
                         if (result) {
                             if (result[0]) {
                                 if (callback) {
@@ -19,7 +21,10 @@ class APIBackend {
                                 console.log('Error: ' + result[1]);
                             }
                         }
-                    });
+                    }, "timeout": 1000}).fail(function(){
+                        $('.waiting-screen').css("display", 'inherit')
+                        $('.loader-robot').css("animation-play-state", 'running')
+                    });;
                 }
             }
         });
@@ -42,6 +47,13 @@ $(document).ready(function () {
            simulator_initialize(backend, false)
         }
     })
+
+    backend.is_competition(function (competition) {
+        if (competition) {
+            $('.competition-mode').show();
+            competition_initialize(backend);
+        }
+    });
     
     robots_initialize(backend);
     control_initialize(backend);

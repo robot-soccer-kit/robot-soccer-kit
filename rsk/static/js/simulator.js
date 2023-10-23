@@ -81,7 +81,6 @@ function simulator_initialize(backend, isView)
 
             // FPS Limit
             backend.get_state(function(state) {
-
                 if (state.simulated){
                     tick += 1
                     if (Date.now()-T0 > 100){
@@ -149,7 +148,7 @@ function simulator_initialize(backend, isView)
 
                     if(display_settings["landmark"]["value"]){
                         center = [ballCanvas.width/2, ballCanvas.height/2]
-                        drawline(center, [center[0],center[1]-100], ballCanvas, "blue")
+                        drawline(center, [center[0],center[1]-100], ballCanvas, "green")
                         drawline(center, [center[0]+100,center[1]], ballCanvas, "red")
                     }
 
@@ -197,7 +196,7 @@ function simulator_initialize(backend, isView)
             resizeCanvas(document.getElementById("ball"))
 
             clearInterval(intervalId)
-            intervalId = setInterval(UpdateView, 1000/30)
+            intervalId = setInterval(UpdateView, 1000/fps_limit)
         } 
 
         function clearView(){
@@ -225,27 +224,44 @@ function simulator_initialize(backend, isView)
                 let checked = setting["value"] ? 'checked="checked"' : ''
 
                 html += '<div class="form-check form-switch">'
-                html += '    <input class="form-check-input display-setting" type="checkbox" '
+                html += '    <input class="form-check-input display-setting" type="checkbox"'
                 html += 'role="switch" rel="'+setting_name+'" '+checked+'>'
                 html += '    <label class="form-check-label" for="flexSwitchCheckDefault">'
                 html += '    '+setting['label']
                 html += '    </label>'
                 html += '</div>'
             }
+            html += '<div class="range">'
+            html += '<label class="form-label" for="flexSwitchCheckDefault">FPS Limit : '+fps_limit+'</label>'      
+            html += '<input id="aaaa" type="range" class="form-range" min="10" max="65" step="5" value="'+fps_limit+'", >'
+            html += '</div>'
+
             $('.display-settings').html(html)
             $('.display-setting').click(function() {
-                console.log($(this).attr('rel'))
-                console.log($(this).is(':checked'))
                 display_settings[$(this).attr('rel')]["value"] = $(this).is(':checked')
             });
+
+            document.querySelector(".range .form-range").addEventListener('input', function(aa) {
+                fps_limit = this.value
+                clearInterval(intervalId)
+                if(fps_limit == 65)
+                {
+                    intervalId = setInterval(UpdateView, 1000/240)
+                    $('.form-label').text("FPS Limit : unlimited")
+                }else{
+                    intervalId = setInterval(UpdateView, 1000/fps_limit)
+                    $('.form-label').text("FPS Limit : "+fps_limit)
+                }
+            })
+
     }
         $('.display-python-settings').click(function() {
             get_display_settings()
         });
 
         display_settings = {
-            "landmark": {"label": "Center Landmark", "default": true},
-            "timed_circle": {"label": "Timed Circle", "default": false},
+            "landmark": {"label": "Center Landmark", "default": true , "type":""},
+            "timed_circle": {"label": "Timed Circle", "default": false , "type":""},
         }
         for (setting_name in display_settings ) {
             display_settings[setting_name]["value"] = display_settings[setting_name]["default"]
@@ -255,6 +271,7 @@ function simulator_initialize(backend, isView)
 
         const carpetSize = [constants["carpet_length"], constants["carpet_width"]]
         intervalId = NaN
+        let fps_limit = 30
         let selectedObjet = "ball"
         let tick = 0
         let T0 = Date.now()
