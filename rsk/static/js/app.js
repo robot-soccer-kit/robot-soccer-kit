@@ -34,7 +34,7 @@ class APIBackend {
 
 $(document).ready(function () {
     // Backend initialization
-    var backend = new APIBackend('http://192.168.0.77:7070/api');
+    var backend = new APIBackend('http://127.0.0.1:7070/api');
     backend.is_simulated(function (simulated) {
         if (simulated) {
             console.log("SIMULATION")

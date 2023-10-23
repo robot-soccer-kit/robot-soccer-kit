@@ -14,7 +14,6 @@ from .backend import Backend
 from . import api
 
 
-
 # Setting up the logger
 logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
 logging.getLogger("werkzeug").setLevel(logging.CRITICAL)
@@ -24,22 +23,19 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--port", "-p", type=str, default="7070")
 parser.add_argument("--ip", "-ip", type=str, default="127.0.0.1")
 parser.add_argument("--simulated", "-s", action="store_true")
-<<<<<<< HEAD
 parser.add_argument("--remote", "-r", action="store_true")
-=======
 parser.add_argument("--competition", "-c", action="store_true")
->>>>>>> origin/master
 args = parser.parse_args()
 
 auth = HTTPBasicAuth()
 users = {
-    "admin": 'scrypt:32768:8:1$j9gQIiONIsQ6wenA$7da7778a7ff169a35426ccbb3fc7b5bb5d766a59bb60273d0e08d63d1c36d95c6522b61a8320d5ba6d43ecc247d14fffc367fe2634e9f31311e53f7b09f288d1',
+    "admin": "scrypt:32768:8:1$j9gQIiONIsQ6wenA$7da7778a7ff169a35426ccbb3fc7b5bb5d766a59bb60273d0e08d63d1c36d95c6522b61a8320d5ba6d43ecc247d14fffc367fe2634e9f31311e53f7b09f288d1",
 }
+
 
 @auth.verify_password
 def verify_password(username, password):
-    if username in users and \
-            check_password_hash(users.get(username), password):
+    if username in users and check_password_hash(users.get(username), password):
         return username
 
 
@@ -48,13 +44,14 @@ backend: Backend = Backend(args.simulated, args.competition)
 api.register(backend)
 
 # Starting a Flask app serving API requests and files of static/ directory
-static = os.path.dirname(__file__) + "/static/"
-app = Flask("Game controller", static_folder=static)
+static_pub = os.path.dirname(__file__) + "/static/"
+app = Flask("Game controller", static_folder=static_pub)
 CORS(app)
 
 static = os.path.dirname(__file__) + "/static/"
 app_public = Flask("Game controller", static_folder=static)
 CORS(app_public)
+
 
 @app.route("/api", methods=["GET"])
 @app_public.route("/api", methods=["GET"])
@@ -84,11 +81,13 @@ def handle_api():
 @app_public.route("/", methods=["GET"])
 @auth.login_required
 def mainPub():
-    return send_from_directory(static, "index.html")
+    return send_from_directory(static_pub, "index.html")
+
 
 @app.route("/", methods=["GET"])
 def main():
     return send_from_directory(static, "index.html")
+
 
 def run_browser():
     # If no request arrived for 3s, starting a browser interface on local
@@ -96,8 +95,10 @@ def run_browser():
     if not has_client:
         webbrowser.open(f"http://{args.ip}:{args.port}")
 
+
 def run_waitress_public():
     waitress.serve(app_public, listen="%s:%s" % ("192.168.0.77", args.port), threads=8)
+
 
 thread = threading.Thread(target=run_browser)
 thread.start()
