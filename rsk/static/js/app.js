@@ -21,7 +21,7 @@ class APIBackend {
                                 console.log('Error: ' + result[1]);
                             }
                         }
-                    }, "timeout": 1000}).fail(function(){
+                    }, "timeout": 1500}).fail(function(){
                         $('.waiting-screen').css("display", 'inherit')
                         $('.loader-robot').css("animation-play-state", 'running')
                     });;
