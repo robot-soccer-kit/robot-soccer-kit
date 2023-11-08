@@ -10,6 +10,7 @@ from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
+import socket
 from .backend import Backend
 from . import api
 
@@ -44,13 +45,27 @@ backend: Backend = Backend(args.simulated, args.competition)
 api.register(backend)
 
 # Starting a Flask app serving API requests and files of static/ directory
-static_pub = os.path.dirname(__file__) + "/static/"
-app = Flask("Game controller", static_folder=static_pub)
-CORS(app)
 
 static = os.path.dirname(__file__) + "/static/"
-app_public = Flask("Game controller", static_folder=static)
+app = Flask("Game controller", static_folder=static)
+CORS(app)
+
+
+static_pub = os.path.dirname(__file__) + "/static/"
+app_public = Flask("Game controller", static_folder=static_pub)
 CORS(app_public)
+
+static_pub = os.path.dirname(__file__) + "/static/"
+
+
+def create_app_and_send(ip):
+    with open(static_pub + "/js/appModel.js", "r") as f:
+        data = f.read()
+        data = data.replace("IP_HERE", ip)
+    with open(static_pub + "/js/app.js", "w") as f:
+        f.write(data)
+
+    return send_from_directory(static_pub, "index.html")
 
 
 @app.route("/api", methods=["GET"])
@@ -81,12 +96,12 @@ def handle_api():
 @app_public.route("/", methods=["GET"])
 @auth.login_required
 def mainPub():
-    return send_from_directory(static_pub, "index.html")
+    return create_app_and_send(socket.gethostbyname(socket.gethostname()))
 
 
 @app.route("/", methods=["GET"])
 def main():
-    return send_from_directory(static, "index.html")
+    return create_app_and_send(args.ip)
 
 
 def run_browser():
@@ -97,7 +112,7 @@ def run_browser():
 
 
 def run_waitress_public():
-    waitress.serve(app_public, listen="%s:%s" % ("192.168.0.77", args.port), threads=8)
+    waitress.serve(app_public, listen="%s:%s" % (socket.gethostbyname(socket.gethostname()), args.port), threads=8)
 
 
 thread = threading.Thread(target=run_browser)
