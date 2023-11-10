@@ -4,7 +4,7 @@ import time
 import numpy as np
 from numpy.linalg import norm
 from math import dist
-from . import kinematics, utils, constants, state, robot, robots
+from . import kinematics, utils, constants, state, robot, robots, client
 
 from collections.abc import Callable
 
@@ -157,12 +157,10 @@ class Simulator:
         self.state: state.State = state
         self.robots: robots.Robots = robots
 
-        for marker, position in zip(
-            ["green1", "green2", "blue1", "blue2"],
-            [[-0.5, 0.5, 0], [-0.5, -0.5, 0], [0.5, 0.5, 0], [0.5, -0.5, 0]],
-        ):
-            robot: RobotSim = self.robots.add_robot(f"sim://{marker}")
-            robot.initialize(position)
+        # Creating the robots
+        for configuration in client.configurations["game_green_positive"]:
+            robot: RobotSim = self.robots.add_robot(f"sim://{utils.robot_list2str(*configuration[:2])}")
+            robot.initialize(configuration[2])
 
         self.robots.update()
 

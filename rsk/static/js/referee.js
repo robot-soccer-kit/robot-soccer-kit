@@ -211,7 +211,6 @@ function referee_initialize(backend)
     $('#MidTimeChange').click(function() {
 
         $("#RefereeHistory").append('<h5 class="text-muted m-3">Half Time</h5>');
-        backend.swap_team_sides();
         backend.start_half_time();
     });
 
@@ -230,6 +229,7 @@ function referee_initialize(backend)
         backend.place_game('gently_swap_side');
         $('.ChangeCover').addClass('d-none');
         $('.SecondHalfTime').removeClass('d-none');
+        backend.swap_team_sides();
         setTimeout(function() {
             backend.place_game('standard');
         }, 5000);
@@ -255,6 +255,7 @@ function referee_initialize(backend)
         $('.MidTimeIdentify').addClass('d-none');
         $('.MidTimeIdentifyBefore').addClass('d-none');
         $('.SecondHalfTime').removeClass('d-none');
+        backend.swap_team_sides();
         backend.place_game('standard');
     });
 
