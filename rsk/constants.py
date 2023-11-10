@@ -83,23 +83,35 @@ wheel_center_spacing: float = 0.0595
 robot_radius: float = 0.088
 
 
-# Goals coordinates
 def goal_posts(x_positive: bool = True) -> np.ndarray:
+    """
+    Returns the coordinates of the goal posts
+    :param x_positive: True if the goal is on the positive x axis, False otherwise
+    :return: The coordinates of the goal posts
+    """
     sign = 1 if x_positive else -1
 
     return np.array([[sign * field_length / 2, -goal_width / 2.0], [sign * field_length / 2, goal_width / 2]])
 
 
-# Field coordinates with margins (For goals and sideline)
 def field_corners(margin: float = 0) -> np.ndarray:
+    """
+    Returns the coordinates of the field corners with margins (For goals and sideline)
+    :param margin: Margin to add to the field
+    :return: The coordinates of the field corners
+    """
     return [
         np.array([sign1 * ((field_length / 2.0) + margin), sign2 * ((field_width / 2.0) + margin)])
         for sign1, sign2 in [[1, 1], [1, -1], [-1, -1], [-1, 1]]
     ]
 
 
-# Returns the defense area rectangle
 def defense_area(x_positive: bool = True) -> np.ndarray:
+    """
+    Returns the coordinates of the defense area
+    :param x_positive: True if the goal is on the positive x axis, False otherwise
+    :return: The coordinates of the defense area
+    """
     if x_positive:
         return [
             [field_length / 2 - defense_area_length, -defense_area_width / 2],

@@ -72,6 +72,11 @@ class ClientTracked:
 
 
 class ClientRobot(ClientTracked):
+    """
+    This class represents a robot from the client point of view. It is used to send commands
+    to the robot and to get its position.
+    """
+
     def __init__(self, color, number, client):
         super().__init__()
         self.moved = False
@@ -86,9 +91,16 @@ class ClientRobot(ClientTracked):
         self.y_min = -self.y_max
 
     def ball(self):
+        """
+        Returns the ball position in the robot frame.
+        """
         return self.client.ball
 
     def has_position(self, skip_old):
+        """
+        Returns True if the robot has a position, False otherwise.
+        :param skip_old: If True, returns False if the position is older than 1 second.
+        """
         seen = (self.position is not None) and (self.orientation is not None)
         if skip_old:
             seen = seen and self.age() < 1
@@ -96,28 +108,63 @@ class ClientRobot(ClientTracked):
         return seen
 
     def age(self):
+        """
+        Returns the age of the last position update.
+        """
         if self.last_update is None:
             return None
 
         return time.time() - self.last_update
 
     def kick(self, power=1):
+        """
+        Kick the ball.
+        :param power: The power of the kick, between 0 and 1.
+        """
         return self.client.command(self.color, self.number, "kick", [power])
 
     def control(self, dx, dy, dturn):
+        """
+        Control the robot in the robot frame.
+        :param dx: The speed along the  x axis, in m.s^-1
+        :param dy: The speed along the y axis, in m.s^-1
+        :param dturn: The speed of rotation, in rad.s^-1
+        """
         self.moved = True
         return self.client.command(self.color, self.number, "control", [dx, dy, dturn])
 
     def teleport(self, x, y, turn):
+        """
+        Teleport the robot to the given position on simulation only.
+        :param x: The x position in the field frame, in m.
+        :param y: The y position in the field frame, in m.
+        :param turn: The orientation of the robot, in rad.
+        """
         return self.client.command(self.color, self.number, "teleport", [x, y, turn])
 
     def beep(self, frequency: int, duration: int):
+        """
+        Make the robot beep.
+        :param frequency: The frequency of the noize, in Hz.
+        :param duration: The duration of the noize, in ms.
+        """
         return self.client.command(self.color, self.number, "beep", [frequency, duration])
 
     def leds(self, r, g, b):
+        """
+        Change the color of the leds on the robot.
+        :param r: The red component, between 0 and 255.
+        :param g: The green component, between 0 and 255.
+        :param b: The blue component, between 0 and 255.
+        """
         return self.client.command(self.color, self.number, "leds", [r, g, b])
 
     def goto_compute_order(self, target, skip_old=True):
+        """
+        Compute the order to send to the robot to go to the given target.
+        :param target: The target to go to. Can be a tuple (x, y, orientation) or a function returning such a tuple.
+        :param skip_old: If True, returns False if the position is older than 1 second.
+        """
         if not self.has_position(skip_old):
             return False, (0.0, 0.0, 0.0)
 
@@ -140,6 +187,12 @@ class ClientRobot(ClientTracked):
         return arrived, order
 
     def goto(self, target, wait=True, skip_old=True):
+        """
+        Go to the given target.
+        :param target: The target to go to. Can be a tuple (x, y, orientation) or a function returning such a tuple.
+        :param wait: If True, waits for the robot to arrive at the target.
+        :param skip_old: If True, returns False if the position is older than 1 second.
+        """
         if wait:
             while not self.goto(target, wait=False):
                 time.sleep(0.05)
@@ -153,6 +206,10 @@ class ClientRobot(ClientTracked):
 
 
 class Client:
+    """
+    This class represents the client. It is used to send commands to the robots and to get their positions.
+    """
+
     def __init__(self, host="127.0.0.1", key="", wait_ready=True):
         logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
         self.logger: logging.Logger = logging.getLogger("client")
@@ -224,18 +281,30 @@ class Client:
         sys.exit(0)
 
     def __enter__(self):
+        """
+        This method is called when using the client in a with statement.
+        """
         return self
 
     def __exit__(self, type, value, tb):
+        """
+        This method is called when exiting the with statement.
+        """
         self.stop()
 
     def update_position(self, tracked, infos):
+        """
+        Updates the position of the given tracked object.
+        """
         tracked.position = np.array(infos["position"])
         tracked.orientation = infos["orientation"]
         tracked.pose = np.array(list(tracked.position) + [tracked.orientation])
         tracked.last_update = time.time()
 
     def sub_process(self):
+        """
+        This method is called in a thread to receive packets from the vision.
+        """
         self.sub.RCVTIMEO = 1000
         last_t = time.time()
         while self.running:
@@ -286,9 +355,21 @@ class Client:
         self.running = False
 
     def teleport_ball(self, x: float, y: float):
+        """
+        Teleport the ball to the given position.
+        :param x: The x position in the field frame, in m.
+        :param y: The y position in the field frame, in m.
+        """
         return self.command("ball", 0, "teleport", [x, y, 0])
 
     def command(self, color, number, name, parameters):
+        """
+        Send a command to the given robot.
+        :param color: The color of the robot.
+        :param number: The number of the robot.
+        :param name: The name of the command.
+        :param parameters: The parameters of the command.
+        """
         if threading.current_thread() is threading.main_thread():
             sigint_handler = signal.getsignal(signal.SIGINT)
             signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -309,6 +390,11 @@ class Client:
                 self.logger.warning('Command "' + name + '" failed: ' + message)
 
     def goto_configuration(self, configuration_name="side", wait=False):
+        """
+        Go to the given configuration.
+        :param configuration_name: The name of the configuration to go to.
+        :param wait: If True, waits for the robots to arrive at their targets.
+        """
         targets = configurations[configuration_name]
 
         arrived = False

@@ -130,6 +130,7 @@ class Referee:
         self.wait_ball_position = target_position
         self.game_state["game_paused"] = True
         self.game_state["game_state_msg"] = "Place the ball on the dot"
+        # The wait is managed in the referee thread
 
     def start_game(self):
         """

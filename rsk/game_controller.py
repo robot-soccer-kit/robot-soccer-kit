@@ -50,6 +50,7 @@ def handle_api():
                     if method["args"][k] is not None:
                         args[k] = method["args"][k](args[k])
                 result = method["func"](*args)
+
                 return jsonify([1, result])
             except ValueError:
                 return jsonify([0, "Bad argument type for command %s" % command])
