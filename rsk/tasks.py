@@ -83,11 +83,14 @@ class GoToConfigurationTask(ControlTask):
     Send all robots to a given configuration
     """
 
-    def __init__(self, name: str, configuration=None, skip_old=True, robots_filter=None, forever=False, **kwargs):
+    def __init__(
+        self, name: str, configuration=None, skip_old=True, robots_filter=None, forever=False, end_buzz=False, **kwargs
+    ):
         super().__init__(name, **kwargs)
         self.targets = {}
         self.skip_old: bool = skip_old
         self.forever: bool = forever
+        self.end_buzz: bool = end_buzz
 
         if configuration is not None:
             for team, number, target in client.configurations[configuration]:
@@ -119,6 +122,12 @@ class GoToConfigurationTask(ControlTask):
             if (team, number) in self.targets:
                 team, number = utils.robot_str2list(robot)
                 client.robots[team][number].control(0.0, 0.0, 0.0)
+
+        if self.end_buzz:
+            for robot in available_robots:
+                team, number = utils.robot_str2list(robot)
+                client.robots[team][number].leds(255, 255, 255)
+                client.robots[team][number].beep(100, 500)
 
         return True
 

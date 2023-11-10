@@ -169,8 +169,8 @@ class Backend:
     def calibrate_camera(self):
         self.detection.calibrate_camera()
 
-    def place_game(self, configuration: str):
-        self.referee.place_game(configuration)
+    def place_game(self, configuration: str, end_buzz=False):
+        self.referee.place_game(configuration, end_buzz=end_buzz)
 
     def set_team_name(self, team: str, name: str):
         self.referee.set_team_name(team, name)

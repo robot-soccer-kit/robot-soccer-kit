@@ -223,7 +223,7 @@ function referee_initialize(backend)
         $('.ChangeCover').addClass('d-none');
         $('.MidTimeIdentify').removeClass('d-none');
         $('.MidTimeIdentifyBefore').removeClass('d-none');
-        backend.place_game('swap_covers');
+        backend.place_game('swap_covers', end_buzz=true);
     });
 
     $('#N_ChangeCover').click(function() {

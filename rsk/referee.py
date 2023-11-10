@@ -232,16 +232,16 @@ class Referee:
         self.game_state["game_state_msg"] = "Game is running..."
         self.wait_for_ball_placement()
 
-    def force_place(self, configuration: str):
+    def force_place(self, configuration: str, **kwargs):
         """
         Force the robots to be placed somewhere
 
         :param str configuration: the name of the target configuration
         """
-        task = tasks.GoToConfigurationTask("force-place", configuration, priority=50)
+        task = tasks.GoToConfigurationTask("force-place", configuration, priority=50, **kwargs)
         self.control.add_task(task)
 
-    def place_game(self, configuration: str):
+    def place_game(self, configuration: str, **kwargs):
         """
         Place the robot for the current game setup
 
@@ -260,7 +260,7 @@ class Referee:
             else:
                 configuration = "swap_covers_green_positive"
 
-        self.force_place(configuration)
+        self.force_place(configuration, **kwargs)
 
     def increment_score(self, team: str, increment: int):
         """
@@ -415,9 +415,9 @@ class Referee:
         """
         if yes_no:
             if self.game_state["teams"]["blue"]["x_positive"]:
-                self.force_place("game_blue_positive")
+                self.force_place("game_blue_positive", True)
             else:
-                self.force_place("game_green_positive")
+                self.force_place("game_green_positive", True)
 
             self.wait_for_ball_placement()
             self.goal_validated = True
