@@ -13,15 +13,9 @@ def package_files(directory):
                 paths.append(os.path.join("..", path, filename))
     return paths
 
-
-if sys.platform.startswith("win"):
-    opencv_version = "opencv-contrib-python<4.7"
-else:
-    opencv_version = "opencv-contrib-python"
-
 setuptools.setup(
     name="robot-soccer-kit",
-    version="2.1.5",
+    version="2.1.6",
     author="Rhoban team",
     author_email="team@rhoban.com",
     description="Robot Soccer Kit",
@@ -37,7 +31,10 @@ setuptools.setup(
     keywords="robot holonomic omniwheel ssl sct robocup junior soccer standard localized tracking",
     install_requires=["numpy", "pyzmq", "pyyaml"],
     extras_require={
-        "gc": ["pyserial", "flask", "flask-cors", "waitress", opencv_version],  # Game controller extra requirements
+        "gc": ["pyserial", "flask", "flask-cors", "waitress", 
+            "opencv-contrib-python<4.7;platform_system=='Windows'",
+            "opencv-contrib-python;platform_system=='Linux'"
+            ],  # Game controller extra requirements
     },
     include_package_data=True,
     package_data={"": package_files("rsk")},
