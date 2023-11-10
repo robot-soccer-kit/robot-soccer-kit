@@ -58,7 +58,11 @@ class Referee:
         # Robots Penalties
         self.penalties = {}
         self.penalty_spot = [
-            {"robot": None, "last_use": 0, "pos": (x, side * constants.field_width / 2, side * np.pi / 2)}
+            {
+                "robot": None,
+                "last_use": 0,
+                "pos": (x, side * (constants.field_width / 2 + constants.robot_radius), side * np.pi / 2),
+            }
             for x in np.linspace(-constants.field_length / 2, constants.field_length / 2, constants.penalty_spots // 2 + 2)[
                 1:-1
             ]
@@ -310,6 +314,7 @@ class Referee:
         :param str reason: penalty reason, defaults to "manually_penalized"
         """
         self.penalties[robot]["reason"] = reason
+        markers = self.state_info["markers"]
 
         if self.penalties[robot]["remaining"] is None:
             self.penalties[robot]["remaining"] = float(duration)
@@ -317,19 +322,28 @@ class Referee:
             task_name = "penalty-" + robot
             self.logger.info(f"Adding penalty for robot {robot}, reason: {reason}")
 
-            if robot in self.state_info["markers"]:
-                x, y = self.state_info["markers"][robot]["position"]
+            if robot in markers:
+                x, y = markers[robot]["position"]
 
                 # Find the nearest free penalty spot
-                distance = [
-                    math.dist((x, y), penalty_spot["pos"][:2])
-                    if penalty_spot["robot"] is None
-                    and time.time() - penalty_spot["last_use"] > constants.penalty_spot_lock_time
-                    else math.inf
-                    for penalty_spot in self.penalty_spot
-                ]
+                distances = []
+                for penalty_spot in self.penalty_spot:
+                    distance = math.dist((x, y), penalty_spot["pos"][:2])
+                    for marker in markers:
+                        if (
+                            marker != robot
+                            and math.dist(markers[marker]["position"], penalty_spot["pos"][:2]) < constants.robot_radius * 1.3
+                        ):
+                            distance = math.inf
 
-                free_penaltly_spot_index = distance.index(min(distance))
+                    if (
+                        penalty_spot["robot"] is not None
+                        or time.time() - penalty_spot["last_use"] < constants.penalty_spot_lock_time
+                    ):
+                        distance = math.inf
+                    distances.append(distance)
+
+                free_penaltly_spot_index = distances.index(min(distances))
 
                 target = self.penalty_spot[free_penaltly_spot_index]["pos"]
                 self.penalty_spot[free_penaltly_spot_index]["robot"] = robot
@@ -391,11 +405,7 @@ class Referee:
         """
         tasks = self.control.robot_tasks(*utils.robot_str2list(robot))
 
-        return (
-            len(tasks) == 0
-            and (self.penalties[robot]["remaining"] is None)
-            and (self.penalties[robot]["grace"] is None)
-        )
+        return len(tasks) == 0 and (self.penalties[robot]["remaining"] is None) and (self.penalties[robot]["grace"] is None)
 
     def set_team_name(self, team: str, name: str):
         self.game_state["teams"][team]["name"] = name
