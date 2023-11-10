@@ -21,7 +21,7 @@ else:
 
 setuptools.setup(
     name="robot-soccer-kit",
-    version="2.1.3",
+    version="2.1.4",
     author="Rhoban team",
     author_email="team@rhoban.com",
     description="Robot Soccer Kit",
