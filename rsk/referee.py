@@ -426,9 +426,9 @@ class Referee:
         """
         if yes_no:
             if self.game_state["teams"]["blue"]["x_positive"]:
-                self.force_place("game_blue_positive", True)
+                self.force_place("game_blue_positive", end_buzz=True)
             else:
-                self.force_place("game_green_positive", True)
+                self.force_place("game_green_positive", end_buzz=True)
 
             self.wait_for_ball_placement()
             self.goal_validated = True
