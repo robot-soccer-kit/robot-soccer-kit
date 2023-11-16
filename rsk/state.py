@@ -13,6 +13,7 @@ class State:
         self.ball = None
         self.last_updates: dict = {}
         self.referee: dict = {}
+        self.time = 0
         self.simulated = simulated
 
         self.context = None
@@ -27,6 +28,7 @@ class State:
             "referee": self.referee,
             "leds": self.leds,
             "simulated": self.simulated,
+            "time": self.get_time(),
         }
 
     def start_pub(self):
@@ -80,3 +82,12 @@ class State:
     @_refresh
     def set_referee(self, referee):
         self.referee = referee
+
+    def get_time(self):
+        if self.simulated:
+            return self.time
+        else:
+            return time.time()
+
+    def add_time(self, time):
+        self.time += time

@@ -240,6 +240,7 @@ class Simulator:
 
             obj.position = obj.position + (obj.velocity * dt)
             obj.execute_actions()
+
         if "ball" in self.objects and not utils.in_rectangle(
             self.objects["ball"].position[:2],
             [-constants.carpet_length / 2, -constants.carpet_width / 2],
@@ -248,10 +249,11 @@ class Simulator:
             self.objects["ball"].position[:3] = [0.0, 0.0, 0.0]
             self.objects["ball"].velocity[:3] = [0.0, 0.0, 0.0]
 
-        self.push()
+        self.push(dt)
 
-    def push(self) -> None:
+    def push(self, dt) -> None:
         if self.state is not None:
+            self.state.add_time(dt)
             for marker in self.objects:
                 pos = self.objects[marker].position
                 if marker == "ball":

@@ -338,7 +338,7 @@ class Referee:
 
                     if (
                         penalty_spot["robot"] is not None
-                        or time.time() - penalty_spot["last_use"] < constants.penalty_spot_lock_time
+                        or self.state.get_time() - penalty_spot["last_use"] < constants.penalty_spot_lock_time
                     ):
                         distance = math.inf
                     distances.append(distance)
@@ -368,7 +368,7 @@ class Referee:
 
         penalty_spot = [spot for spot in self.penalty_spot if spot["robot"] == robot]
         if penalty_spot != []:
-            penalty_spot[0]["last_use"] = time.time()
+            penalty_spot[0]["last_use"] = self.state.get_time()
             penalty_spot[0]["robot"] = None
 
         # Replacing the control task with a one-time stop to ensure the robot is not moving
@@ -566,18 +566,18 @@ class Referee:
         ball_coord_old = np.array([0, 0])
 
         self.game_state["game_state_msg"] = "Game is ready to start"
-        last_tick = time.time()
+        last_tick = self.state.get_time()
 
         while True:
             self.state_info = copy.deepcopy(self.state.get_state())
             self.state.set_referee(self.get_game_state())
             self.control.allow_extra_features = not self.game_state["game_is_running"]
 
-            elapsed = time.time() - last_tick
+            elapsed = self.state.get_time() - last_tick
             if self.chrono_is_running:
                 self.game_state["timer"] -= elapsed
 
-            last_tick = time.time()
+            last_tick = self.state.get_time()
 
             # Updating positive and negative teams
             all_teams = utils.robot_teams()
@@ -609,8 +609,8 @@ class Referee:
 
                     if distance < constants.place_ball_margin:
                         if wait_ball_timestamp is None:
-                            wait_ball_timestamp = time.time()
-                        elif time.time() - wait_ball_timestamp >= 1:
+                            wait_ball_timestamp = self.state.get_time()
+                        elif self.state.get_time() - wait_ball_timestamp >= 1:
                             self.game_state["game_state_msg"] = "Game is running..."
                             self.goal_validated = None
                             self.resume_game()
