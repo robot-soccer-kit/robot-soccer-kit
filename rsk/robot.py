@@ -30,7 +30,7 @@ class Robot:
         """
         self.marker = marker
 
-    def kick(self, power: float) -> None:
+    def kick(self, power: float = 1.0) -> None:
         """
         Kicks
 
