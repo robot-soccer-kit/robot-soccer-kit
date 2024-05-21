@@ -126,7 +126,6 @@ class RobotSerial(robot.Robot):
         self.lock = threading.Lock()
 
     def available_urls() -> list:
-        devs = [entry.device for entry in list_ports.comports()]
         return [entry.device for entry in list_ports.comports()]
 
     def monitor(self, frequency: int) -> None:
@@ -342,7 +341,6 @@ class RobotSerial(robot.Robot):
                 # Sending pending packets
                 packet = self.pop_packet()
                 while packet is not None:
-                    self.last_sent_message = time.time()
                     self.last_sent_message = time.time()
                     if self.bt is not None and self.bt.is_open:
                         self.bt.write(packet.to_raw())
