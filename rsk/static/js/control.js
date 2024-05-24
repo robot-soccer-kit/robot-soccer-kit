@@ -12,12 +12,12 @@ function control_initialize(backend) {
                 backend.set_key(team, $(this).val());
             });
 
-            $('.key-'+team).focus(function() {
-                $(this).attr('type', 'text');
-            });
-            $('.key-'+team).blur(function() {
-                $(this).attr('type', 'password');
-            });
+            // $('.key-'+team).focus(function() {
+            //     $(this).attr('type', 'text');
+            // });
+            // $('.key-'+team).blur(function() {
+            //     $(this).attr('type', 'password');
+            // });
         }
 
         $('.emergency').click(function() {
