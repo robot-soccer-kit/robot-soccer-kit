@@ -12,7 +12,7 @@ class APIBackend {
                     let timeout = 3000;
                     if (name == "cameras") {let timeout =  10000}
                     $.get({"url" : url, "data" :{ 'command': name, 'args': JSON.stringify(args)}, 'success':function (result) {
-                        $('.no-backend').css("display", 'None')
+                        $('.no-backend').css("display", 'none')
                         if (result) {
                             if (result[0]) {
                                 if (callback) {
