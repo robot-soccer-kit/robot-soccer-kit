@@ -1,11 +1,13 @@
 #include "alert.h"
-#include "com.h"
+#include "com_bt.h"
+#include "com_wifi.h"
 #include "buzzer.h"
 #include "kicker.h"
 #include "leds.h"
 #include "motors.h"
 #include "voltage.h"
 #include <WiFi.h>
+#include <WiFiUdp.h>
 
 void setup() {
 
@@ -15,7 +17,9 @@ void setup() {
   buzzer_init();
   voltage_init();
   com_init();
-  buzzer_play(MELODY_BOOT);
+  setupWifi();
+  loopWifi();
+  //buzzer_play(MELODY_BOOT);
 }
 
 void loop() {
@@ -24,4 +28,5 @@ void loop() {
   voltage_tick();
   alert_tick();
   com_tick();
+  
 }

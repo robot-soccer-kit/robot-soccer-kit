@@ -1,5 +1,5 @@
 #include "bin_stream.h"
-#include "com.h"
+#include "com_bt.h"
 #include "buzzer.h"
 #include "kicker.h"
 #include "leds.h"
