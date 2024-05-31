@@ -17,6 +17,7 @@
 #define BIN_STREAM_PRINT 0x04
 #define BIN_STREAM_USER 0x05
 #define BIN_STREAM_RESET 0x06
+#define BIN_STREAM_HEARTBEAT 0x07
 
 // Errors
 #define BIN_OK 0
@@ -42,7 +43,7 @@ struct bin_stream_packet {
 };
 
 // Abstraction layer
-void bin_stream_recv(uint8_t c);                           // To call
+bool bin_stream_recv(uint8_t c);                           // To call
 extern void bin_stream_send(uint8_t *packet, size_t size); // To implement
 extern char bin_on_packet(uint8_t type);                   // To implment
 extern void bin_on_monitor();                              // To implement

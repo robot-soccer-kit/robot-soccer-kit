@@ -16,7 +16,7 @@ void setup() {
   buzzer_init();
   voltage_init();
   com_init();
-  //buzzer_play(MELODY_BOOT);
+  buzzer_play(MELODY_BOOT);
 }
 
 void loop() {

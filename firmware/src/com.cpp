@@ -26,6 +26,7 @@
 
 #ifdef COM_WIFI
 WiFiUDP udp;
+IPAddress game_controller;
 #else
 bool do_forward = false;
 bool is_bin = false;
@@ -36,6 +37,7 @@ BluetoothSerial bt;
 const char bin_exit[] = "!bin\r";
 const int bin_exit_len = 5;
 int bin_exit_pos = 0;
+static unsigned long last_packet_timestamp = 0;
 
 char bin_on_packet(uint8_t type) {
   if (type == BIN_STREAM_ROBOT) {
@@ -95,16 +97,17 @@ void bin_on_monitor() {
 
 void bin_stream_send(uint8_t *packet, size_t size) {
 #ifdef COM_WIFI
-
   if (WiFi.status() == WL_CONNECTED) {
-    // udp.beginPacket(WiFi.broadcastIP(), WIFI_UDP_PORT);
-    IPAddress target;
-    target.fromString("192.168.100.1");
+
+    IPAddress target = WiFi.broadcastIP();
+    if (last_packet_timestamp != 0 && millis() - last_packet_timestamp < 3000) {
+      target = game_controller;
+    }
+
     udp.beginPacket(target, WIFI_UDP_PORT);
     udp.write(packet, size);
     udp.endPacket();
   }
-
 #else
   shell_stream()->write(packet, size);
 #endif
@@ -137,8 +140,6 @@ void com_init() {
   shell_init();
 }
 
-static unsigned long last_byte_timestamp = 0;
-
 void com_bin_tick() {
 #ifdef COM_WIFI
   int packet_size = udp.parsePacket();
@@ -147,14 +148,16 @@ void com_bin_tick() {
     udp.read(packet_data, packet_size);
 
     for (int k = 0; k < packet_size; k++) {
-      bin_stream_recv(packet_data[k]);
+      if (bin_stream_recv(packet_data[k])) {
+        last_packet_timestamp = millis();
+        game_controller = udp.remoteIP();
+      }
     }
   }
 #else
   // Get bytes from the binary stream
   while (shell_stream()->available()) {
     uint8_t c = shell_stream()->read();
-    last_byte_timestamp = millis();
     // Checking for binary mode exit sequence
     if (bin_exit[bin_exit_pos] == c) {
       bin_exit_pos++;
@@ -166,15 +169,17 @@ void com_bin_tick() {
     }
 
     // Ticking binary
-    bin_stream_recv(c);
+    if (bin_stream_recv(c)) {
+      last_packet_timestamp = millis();
+    }
   }
 
+#endif
   // Stopping motors if we had no news for 3s
-  if (last_byte_timestamp != 0 && (millis() - last_byte_timestamp) > 3000) {
-    last_byte_timestamp = 0;
+  if (last_packet_timestamp != 0 && (millis() - last_packet_timestamp) > 3000) {
+    last_packet_timestamp = 0;
     motors_set_ik(0., 0., 0.);
   }
-#endif
 
   bin_stream_tick();
 }

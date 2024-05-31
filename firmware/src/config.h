@@ -8,7 +8,7 @@
 #define WIFI_SSID "Wifi_RSK"
 #define WIFI_PASSWORD "26052005"
 
-#define WIFI_IP "192.168.100.101"
+#define WIFI_IP "192.168.100.103"
 #define WIFI_SUBNET "255.255.255.0"
 #define WIFI_GATEWAY "192.168.100.254"
 #define WIFI_DNS WIFI_GATEWAY
@@ -36,7 +36,7 @@
 #define MOTORS_ROTATION_SIGN -1
 
 // Board revision
-#define BOARD_REV2
+// #define BOARD_REV2
 
 // Wheels orientations [deg]
 // In chassis frame, the front axis is the x axis running through the kicker of the robot

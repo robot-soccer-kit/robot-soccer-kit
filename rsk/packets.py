@@ -3,6 +3,7 @@ import numpy as np
 # Constants for binary protocol
 PACKET_ACK = 0
 PACKET_MONITOR = 1
+PACKET_HEARTBEAT = 7
 PACKET_ROBOT = 80
 PACKET_ROBOT_CONTROL = 2
 PACKET_ROBOT_BEEP = 3

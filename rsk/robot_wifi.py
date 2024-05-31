@@ -65,13 +65,14 @@ class RobotWifi(robot.Robot):
             try:
                 data, addr = sock.recvfrom(1024)
                 rcv_ip = addr[0]
-                RobotWifi.lock.acquire()
-                RobotWifi.statuses[rcv_ip] = {"last_message": time.time()}
+                if rcv_ip != RobotWifi.get_ip():
+                    RobotWifi.lock.acquire()
+                    RobotWifi.statuses[rcv_ip] = {"last_message": time.time()}
 
-                if rcv_ip in RobotWifi.robots:
-                    RobotWifi.robots[rcv_ip].process(data)
+                    if rcv_ip in RobotWifi.robots:
+                        RobotWifi.robots[rcv_ip].process(data)
 
-                RobotWifi.lock.release()
+                    RobotWifi.lock.release()
             except Exception as e:
                 time.sleep(0.001)
 
@@ -80,14 +81,31 @@ class RobotWifi(robot.Robot):
                 if time_now > next_broadcast:
                     next_broadcast += broadcast_period
                     if time_now > next_broadcast:
-                        print("WARNING: Current time exceeds next broadcast period, that should be in the future")
+                        print(
+                            "WARNING: Current time exceeds next broadcast period, that should be in the future"
+                        )
                         next_broadcast = time.time() + broadcast_period
 
                     data = b""
                     RobotWifi.lock.acquire()
                     for key in RobotWifi.pending_packets:
-                        data += RobotWifi.pending_packets[key].to_raw()
+                        robot, packet = RobotWifi.pending_packets[key]
+                        data += packet.to_raw()
+                        robot.last_sent_message = time.time()
                     RobotWifi.pending_packets = {}
+
+                    # Ensure the robots get a packet every 1s
+                    for key in RobotWifi.robots:
+                        if (
+                            RobotWifi.robots[key].last_sent_message is None
+                            or time.time() - RobotWifi.robots[key].last_sent_message
+                            > 1.0
+                        ):
+                            RobotWifi.robots[key].last_sent_message = time.time()
+                            packet = Packet(
+                                PACKET_HEARTBEAT, dest=RobotWifi.robots[key].id
+                            )
+                            data += packet.to_raw()
                     RobotWifi.lock.release()
 
                     if len(data):
@@ -109,6 +127,9 @@ class RobotWifi(robot.Robot):
 
         self.packet_reader = PacketReader(dest=0)
         self.id = int(url.split(".")[-1])
+        self.last_sent_message = None
+        self.last_received_message = None
+        self.packet_lock = True
 
         RobotWifi.lock.acquire()
         RobotWifi.robots[url] = self
@@ -120,6 +141,10 @@ class RobotWifi(robot.Robot):
         RobotWifi.lock.release()
 
     def process(self, data: bytes):
+        if self.last_received_message is None or (time.time() - self.last_received_message) > 10.:
+            self.beep(880, 250, lock=False)
+        self.last_received_message = time.time()
+
         for byte in data:
             self.packet_reader.push(byte)
             if self.packet_reader.has_packet():
@@ -130,12 +155,14 @@ class RobotWifi(robot.Robot):
                 self.state["time"] = packet.read_float()
                 self.state["battery"] = [packet.readByte() / 10.0]
 
-    def add_packet(self, id: int, type_: str, packet: Packet):
-        RobotWifi.lock.acquire()
-        RobotWifi.pending_packets[f"{id}/{type_}"] = packet
-        RobotWifi.lock.release()
+    def add_packet(self, id: int, type_: str, packet: Packet, lock: bool = True):
+        if lock:
+            RobotWifi.lock.acquire()
+        RobotWifi.pending_packets[f"{id}/{type_}"] = (self, packet)
+        if lock:
+            RobotWifi.lock.release()
 
-    def kick(self, power: float = 1.0) -> None:
+    def kick(self, power: float = 1.0, lock: bool = True) -> None:
         """
         Kicks
 
@@ -145,9 +172,9 @@ class RobotWifi(robot.Robot):
         packet = Packet(PACKET_ROBOT, dest=self.id)
         packet.append_byte(PACKET_ROBOT_KICK)
         packet.append_byte(int(100 * power))
-        self.add_packet(self.id, "kick", packet)
+        self.add_packet(self.id, "kick", packet, lock)
 
-    def control(self, dx: float, dy: float, dturn: float) -> None:
+    def control(self, dx: float, dy: float, dturn: float, lock: bool = True) -> None:
         """
         Controls the robot velocity
 
@@ -161,9 +188,9 @@ class RobotWifi(robot.Robot):
         packet.append_short(int(1000 * dx))
         packet.append_short(int(1000 * dy))
         packet.append_short(int(np.rad2deg(dturn)))
-        self.add_packet(self.id, "control", packet)
+        self.add_packet(self.id, "control", packet, lock)
 
-    def leds(self, red: int, green: int, blue: int) -> None:
+    def leds(self, red: int, green: int, blue: int, lock: bool = True) -> None:
         """
         Controls the robot LEDs
 
@@ -177,9 +204,9 @@ class RobotWifi(robot.Robot):
         packet.append_byte(red)
         packet.append_byte(green)
         packet.append_byte(blue)
-        self.add_packet(self.id, "leds", packet)
+        self.add_packet(self.id, "leds", packet, lock)
 
-    def beep(self, frequency: int, duration: int) -> None:
+    def beep(self, frequency: int, duration: int, lock: bool = True) -> None:
         """
         Gets the robot beeping
 
@@ -191,7 +218,7 @@ class RobotWifi(robot.Robot):
         packet.append_byte(PACKET_ROBOT_BEEP)
         packet.append_short(frequency)
         packet.append_short(duration)
-        self.add_packet(self.id, "beep", packet)
+        self.add_packet(self.id, "beep", packet, lock)
 
     def blink(self) -> None:
         """

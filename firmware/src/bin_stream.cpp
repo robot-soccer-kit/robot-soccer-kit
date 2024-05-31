@@ -21,12 +21,6 @@ void bin_stream_ack(int code) {
 }
 
 void bin_stream_process() {
-#ifdef COM_WIFI
-  if (in.dest != id) {
-    return;
-  }
-#endif
-
   if (in.type == BIN_STREAM_MONITOR) {
     uint8_t frequency = bin_stream_read_int();
     if (frequency == 0) {
@@ -38,6 +32,8 @@ void bin_stream_process() {
       }
     }
     bin_on_monitor();
+  } else if (in.type == BIN_STREAM_HEARTBEAT) {
+    // This packet type has no effect
   } else {
     // Call user logic
     if (!bin_on_packet(in.type)) {
@@ -63,7 +59,7 @@ void bin_stream_process() {
 #define STATE_CHECKSUM 5
 #endif
 
-void bin_stream_recv(uint8_t c) {
+bool bin_stream_recv(uint8_t c) {
   switch (in.state) {
   case STATE_HEADER1:
     if (c == BIN_STREAM_HEADER1) {
@@ -110,10 +106,20 @@ void bin_stream_recv(uint8_t c) {
     in.state = STATE_HEADER1;
     if (c == in.checksum) {
       in.pointer = 0;
+
+#ifdef COM_WIFI
+      if (in.dest != id) {
+        return false;
+      }
+#endif
+
       bin_stream_process();
+      return true;
     }
     break;
   }
+
+  return false;
 }
 
 void bin_stream_begin(uint8_t type_) {
