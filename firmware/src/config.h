@@ -6,7 +6,7 @@
 
 #ifdef COM_WIFI
 #define WIFI_SSID "Wifi_RSK"
-#define WIFI_PASSWORD "26052005"
+#define WIFI_PASSWORD "pwd"
 
 #define WIFI_IP "192.168.100.103"
 #define WIFI_SUBNET "255.255.255.0"
@@ -16,7 +16,7 @@
 #define WIFI_UDP_PORT 7600
 #else
 // Robot's BT name
-#define ROBOT_NAME "RSK_09"
+#define ROBOT_NAME "ENT_A1"
 #endif
 
 #define KICK_PIN 33
@@ -36,7 +36,7 @@
 #define MOTORS_ROTATION_SIGN -1
 
 // Board revision
-// #define BOARD_REV2
+#define BOARD_REV2
 
 // Wheels orientations [deg]
 // In chassis frame, the front axis is the x axis running through the kicker of the robot
