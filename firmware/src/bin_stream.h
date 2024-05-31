@@ -2,6 +2,7 @@
 #define _RHOCK_STREAM_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 // Packet heades
 #define BIN_STREAM_HEADER1 0xff
@@ -39,10 +40,11 @@ struct bin_stream_packet
 
 // Abstraction layer
 void bin_stream_recv(uint8_t c); // To call
-extern void bin_stream_send(uint8_t c); // To implement
+extern void bin_stream_send(uint8_t *packet, size_t size); // To implement
 extern char bin_on_packet(uint8_t type); // To implment
 extern void bin_on_monitor(); // To implement
 
+void bin_stream_set_monitor_period(uint32_t period);
 void bin_stream_begin(uint8_t type);
 void bin_stream_append(uint8_t c);
 void bin_stream_append_int(int32_t i);

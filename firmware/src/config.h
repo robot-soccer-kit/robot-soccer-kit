@@ -1,7 +1,23 @@
 #pragma once
 
+// The communication mode is WIFI if this line is uncommented
+// else it is Bluetooth
+#define COM_WIFI
+
+#ifdef COM_WIFI
+#define WIFI_SSID "Wifi_RSK"
+#define WIFI_PASSWORD "26052005"
+
+#define WIFI_IP "192.168.100.100"
+#define WIFI_SUBNET "255.255.255.0"
+#define WIFI_GATEWAY "192.168.100.254"
+#define WIFI_DNS WIFI_GATEWAY
+
+#define WIFI_UDP_PORT 7600
+#else
 // Robot's BT name
-#define ROBOT_NAME "RSK_03"
+#define ROBOT_NAME "RSK_09"
+#endif
 
 #define KICK_PIN 33
 
@@ -97,7 +113,7 @@
 #define VOLTAGE_R2  10
 
 // Maximum kick duration (microseconds)
-#define KICK_MAX_DURATION 10000
+#define KICK_MAX_DURATION 20000
 
 // Below this voltage, the robot won't start moving, between USB voltage (see below) and this voltage,
 // the robot will enter alarm mode

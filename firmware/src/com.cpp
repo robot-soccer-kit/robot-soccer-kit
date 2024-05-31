@@ -1,13 +1,19 @@
+#include "com.h"
 #include "bin_stream.h"
-#include "com_bt.h"
 #include "buzzer.h"
+#include "config.h"
 #include "kicker.h"
 #include "leds.h"
 #include "motors.h"
 #include "shell.h"
 #include "voltage.h"
-#include "config.h"
+
+#ifdef COM_WIFI
+#include <WiFi.h>
+#include <WiFiUdp.h>
+#else
 #include <BluetoothSerial.h>
+#endif
 
 #define BIN_STREAM_ROBOT 80
 
@@ -18,10 +24,14 @@
 #define COMMAND_EMERGENCY 11
 #define COMMAND_KICK 12
 
+#ifdef COM_WIFI
+WiFiUDP udp;
+#else
 bool do_forward = false;
 bool is_bin = false;
 bool is_bt = false;
 BluetoothSerial bt;
+#endif
 
 const char bin_exit[] = "!bin\r";
 const int bin_exit_len = 5;
@@ -83,20 +93,56 @@ void bin_on_monitor() {
   bin_stream_end();
 }
 
-void bin_stream_send(uint8_t c) {
-  shell_stream()->write(c);
+void bin_stream_send(uint8_t *packet, size_t size) {
+#ifdef COM_WIFI
+
+  if (WiFi.status() == WL_CONNECTED) {
+    // udp.beginPacket(WiFi.broadcastIP(), WIFI_UDP_PORT);
+    IPAddress target;
+    target.fromString("192.168.100.1");
+    udp.beginPacket(target, WIFI_UDP_PORT);
+    udp.write(packet, size);
+    udp.endPacket();
+  }
+
+#else
+  shell_stream()->write(packet, size);
+#endif
 }
+void bin_stream_send(uint8_t c) { shell_stream()->write(c); }
 
 void com_init() {
+#ifdef COM_WIFI
+  IPAddress ip, gateway, subnet, dns;
+  ip.fromString(WIFI_IP);
+  gateway.fromString(WIFI_GATEWAY);
+  subnet.fromString(WIFI_SUBNET);
+  dns.fromString(WIFI_DNS);
+
+  WiFi.config(ip, gateway, subnet, dns);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.setAutoReconnect(true);
+
+  // Sending monitoring packets at 1Hz by default
+  bin_stream_set_monitor_period(1000);
+
+  udp.begin(WIFI_UDP_PORT);
+#else
   bt.enableSSP();
   bt.setPin("1234");
   bt.begin(ROBOT_NAME);
+#endif
+
   shell_init();
 }
 
 static unsigned long last_byte_timestamp = 0;
 
 void com_bin_tick() {
+#ifdef COM_WIFI
+
+#else
+  // Get bytes from the binary stream
   while (shell_stream()->available()) {
     uint8_t c = shell_stream()->read();
     last_byte_timestamp = millis();
@@ -112,18 +158,23 @@ void com_bin_tick() {
 
     // Ticking binary
     bin_stream_recv(c);
-
   }
+
   // Stopping motors if we had no news for 3s
   if (last_byte_timestamp != 0 && (millis() - last_byte_timestamp) > 3000) {
     last_byte_timestamp = 0;
     motors_set_ik(0., 0., 0.);
   }
+#endif
 
   bin_stream_tick();
 }
 
 void com_tick() {
+#ifdef COM_WIFI
+  com_bin_tick();
+  shell_tick();
+#else
   // In shell mode, testing for the need of switching the stream and tick the
   // shell
   if (!is_bt && bt.available()) {
@@ -145,8 +196,34 @@ void com_tick() {
   } else {
     shell_tick();
   }
+#endif
 }
 
+#ifdef COM_WIFI
+SHELL_COMMAND(wifi, "WiFi status") {
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("Robot is connected");
+    Serial.print("* SSID: ");
+    Serial.println(WIFI_SSID);
+    Serial.print("* IP: ");
+    Serial.println(WiFi.localIP());
+    Serial.print("* Signal strength (RSSI): ");
+    Serial.println(WiFi.RSSI());
+    Serial.print("* MAC address: ");
+    Serial.println(WiFi.macAddress());
+    Serial.print("* Subnet mask: ");
+    Serial.println(WiFi.subnetMask());
+    Serial.print("* Gateway IP: ");
+    Serial.println(WiFi.gatewayIP());
+    Serial.print("* DNS IP: ");
+    Serial.println(WiFi.dnsIP());
+    Serial.print("* Broadcast IP: ");
+    Serial.println(WiFi.broadcastIP());
+  } else {
+    Serial.println("Robot is not connected");
+  }
+}
+#else
 SHELL_COMMAND(forward, "Starts forwarding BT and USB (for debugging)") {
   do_forward = true;
 }
@@ -154,3 +231,4 @@ SHELL_COMMAND(forward, "Starts forwarding BT and USB (for debugging)") {
 SHELL_COMMAND(bin, "Switch to binary mode") { is_bin = true; }
 
 SHELL_COMMAND(rhock, "Switch to binary mode (legacy)") { is_bin = true; }
+#endif

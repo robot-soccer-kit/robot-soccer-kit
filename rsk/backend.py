@@ -4,6 +4,7 @@ from . import (
     video,
     robots,
     robot_serial,
+    robot_wifi,
     control,
     referee,
     detection,
@@ -17,6 +18,7 @@ class Backend:
     def __init__(self, simulated=False, competition=False):
         super().__init__()
         robots.Robots.protocols["serial"] = robot_serial.RobotSerial
+        robots.Robots.protocols["wifi"] = robot_wifi.RobotWifi
 
         self.simulated = simulated
         self.competition = competition

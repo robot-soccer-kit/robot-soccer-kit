@@ -5,95 +5,9 @@ import serial
 from serial.tools import list_ports
 import logging
 from . import robot, robots
-
-# Constants for binary protocol
-PACKET_ACK = 0
-PACKET_MONITOR = 1
-PACKET_HOLO = 80
-PACKET_HOLO_CONTROL = 2
-PACKET_HOLO_BEEP = 3
-PACKET_HOLO_LEDS_CUSTOM = 7
-PACKET_HOLO_LEDS_BREATH = 8
-PACKET_HOLO_KICK = 12
-PACKET_MONITOR_DATA = 5
+from .packets import *
 
 logger: logging.Logger = logging.getLogger("robot")
-
-
-class Packet:
-    """
-    Represents a physical packet that is sent or received (binary protocol)
-    """
-
-    def __init__(self, type_: int, payload=bytearray()):
-        self.type: int = type_
-        self.payload = payload.copy()
-
-    def available(self):
-        return len(self.payload)
-
-    def append_byte(self, char):
-        char = char & 0xFF
-        if type(char) == int:
-            self.payload += bytearray((char,))
-        else:
-            self.payload += bytearray(char)
-
-    def append_short(self, short):
-        b1 = (short >> 8) & 0xFF
-        b2 = short & 0xFF
-
-        self.payload += bytearray((b1, b2))
-
-    def append_int(self, short):
-        b1 = (short >> 24) & 0xFF
-        b2 = (short >> 16) & 0xFF
-        b3 = (short >> 8) & 0xFF
-        b4 = short & 0xFF
-
-        self.payload += bytearray((b1, b2, b3, b4))
-
-    def appendFloat(self, f):
-        self.append_int(f * 1000.0)
-
-    def appendSmallFloat(self, f):
-        self.append_short(f * 10.0)
-
-    def readByte(self):
-        byte = self.payload[0]
-        self.payload = self.payload[1:]
-
-        return byte
-
-    def read_int(self):
-        n = self.readByte() << 24
-        n = n | (self.readByte() << 16)
-        n = n | (self.readByte() << 8)
-        n = n | (self.readByte() << 0)
-
-        return int(np.int32(n))
-
-    def read_short(self):
-        n = (self.readByte() << 8) | self.readByte()
-
-        return int(np.int16(n))
-
-    def read_float(self):
-        return self.read_int() / 1000.0
-
-    def read_small_float(self):
-        return self.read_short() / 10.0
-
-    def to_raw(self):
-        raw = bytearray()
-        raw += bytearray((0xFF, 0xAA, self.type, len(self.payload)))
-        raw += self.payload
-        raw += bytearray((self.checksum(),))
-
-        return raw
-
-    def checksum(self):
-        return sum(self.payload) % 256
 
 
 class RobotSerial(robot.Robot):
@@ -284,6 +198,8 @@ class RobotSerial(robot.Robot):
         """
         Process the main thread
         """
+        packet_reader = PacketReader()
+
         while self.running:
             try:
                 if self.init:
@@ -299,40 +215,16 @@ class RobotSerial(robot.Robot):
                     self.monitor(5)
                     self.control(0, 0, 0)
                     self.beep(880, 250)
+                    packet_reader.reset()
                     self.last_init = time.time()
                     self.last_sent_message = None
-                    state = 0
-                    type_, length, payload = 0, 0, bytearray()
 
                 # Receiving data
                 byte = self.bt.read(1)
                 if len(byte):
-                    byte = ord(byte)
-                    if state == 0:  # First header
-                        if byte == 0xFF:
-                            state += 1
-                        else:
-                            state = 0
-                    elif state == 1:  # Second header
-                        if byte == 0xAA:
-                            state += 1
-                        else:
-                            state = 0
-                    elif state == 2:  # Packet type
-                        type_ = byte
-                        state += 1
-                    elif state == 3:  # Packet length
-                        length = byte
-                        state += 1
-                    elif state == 4:  # Payload
-                        payload += bytearray((byte,))
-                        if len(payload) >= length:
-                            state += 1
-                    elif state == 5:  # Checksum
-                        if sum(payload) % 256 == byte:
-                            self.process(Packet(type_, payload))
-                            type_, length, payload = 0, 0, bytearray()
-                        state = 0
+                    packet_reader.push(ord(byte))
+                    if packet_reader.has_packet():
+                        self.process(packet_reader.pop_packet())
 
                 # Asking periodically for robot monitor status
                 if self.last_sent_message is None or time.time() - self.last_sent_message > 1.0:

@@ -7,6 +7,8 @@ static uint32_t monitor_dt = 0;
 static unsigned long monitor_last = 0;
 static struct bin_stream_packet in = {0}, out = {0};
 
+void bin_stream_set_monitor_period(uint32_t period) { monitor_dt = period; }
+
 void bin_stream_ack(int code) {
   if (code != BIN_NO_ACK) {
     bin_stream_begin(BIN_STREAM_ACK);
@@ -115,15 +117,20 @@ void bin_stream_append_value(uint32_t value) {
 }
 
 void bin_stream_end() {
-  uint8_t k;
-  bin_stream_send(BIN_STREAM_HEADER1);
-  bin_stream_send(BIN_STREAM_HEADER2);
-  bin_stream_send(out.type);
-  bin_stream_send(out.size);
-  for (k = 0; k < out.size; k++) {
-    bin_stream_send(out.buffer[k]);
+  uint8_t packet[out.size + 5];
+  uint8_t i = 0;
+
+  packet[i++] = BIN_STREAM_HEADER1;
+  packet[i++] = BIN_STREAM_HEADER2;
+  packet[i++] = out.type;
+  packet[i++] = out.size;
+
+  for (uint8_t k = 0; k < out.size; k++) {
+    packet[i++] = out.buffer[k];
   }
-  bin_stream_send(out.checksum);
+  packet[i++] = out.checksum;
+
+  bin_stream_send(packet, i);
 }
 
 void bin_stream_tick() {
