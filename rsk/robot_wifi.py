@@ -20,15 +20,8 @@ class RobotWifi(robot.Robot):
     robots: dict = {}
 
     def start_service():
-        RobotWifi.thread_broadcast = Thread(
-            target=lambda: RobotWifi.service_loop(RobotWifi.get_broadcast_ip(), True)
-        )
+        RobotWifi.thread_broadcast = Thread(target=lambda: RobotWifi.service_loop())
         RobotWifi.thread_broadcast.start()
-
-        RobotWifi.thread_local = Thread(
-            target=lambda: RobotWifi.service_loop(RobotWifi.get_ip())
-        )
-        RobotWifi.thread_local.start()
 
     def ip_to_int(ip: str) -> int:
         packedIP = socket.inet_aton(ip)
@@ -51,11 +44,11 @@ class RobotWifi(robot.Robot):
         s.connect((RobotWifi.network, 80))
         return s.getsockname()[0]
 
-    def service_loop(ip: str, broadcast: bool = False):
+    def service_loop():
         # Create UDP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        sock.bind((ip, RobotWifi.udp_port))
+        sock.bind(("", RobotWifi.udp_port))
         sock.setblocking(False)
         next_broadcast = time.time()
         broadcast_period = 1 / RobotWifi.broadcast_frequency
@@ -76,40 +69,38 @@ class RobotWifi(robot.Robot):
             except Exception as e:
                 time.sleep(0.001)
 
-            if broadcast:
-                time_now = time.time()
+            time_now = time.time()
+            if time_now > next_broadcast:
+                next_broadcast += broadcast_period
                 if time_now > next_broadcast:
-                    next_broadcast += broadcast_period
-                    if time_now > next_broadcast:
-                        print(
-                            "WARNING: Current time exceeds next broadcast period, that should be in the future"
-                        )
-                        next_broadcast = time.time() + broadcast_period
+                    print(
+                        "WARNING: Current time exceeds next broadcast period, that should be in the future"
+                    )
+                    next_broadcast = time.time() + broadcast_period
 
-                    data = b""
-                    RobotWifi.lock.acquire()
-                    for key in RobotWifi.pending_packets:
-                        robot, packet = RobotWifi.pending_packets[key]
+                data = b""
+                RobotWifi.lock.acquire()
+                for key in RobotWifi.pending_packets:
+                    robot, packet = RobotWifi.pending_packets[key]
+                    data += packet.to_raw()
+                    robot.last_sent_message = time.time()
+                RobotWifi.pending_packets = {}
+
+                # Ensure the robots get a packet every 1s
+                for key in RobotWifi.robots:
+                    if (
+                        RobotWifi.robots[key].last_sent_message is None
+                        or time.time() - RobotWifi.robots[key].last_sent_message > 1.0
+                    ):
+                        RobotWifi.robots[key].last_sent_message = time.time()
+                        packet = Packet(PACKET_HEARTBEAT, dest=RobotWifi.robots[key].id)
                         data += packet.to_raw()
-                        robot.last_sent_message = time.time()
-                    RobotWifi.pending_packets = {}
+                RobotWifi.lock.release()
 
-                    # Ensure the robots get a packet every 1s
-                    for key in RobotWifi.robots:
-                        if (
-                            RobotWifi.robots[key].last_sent_message is None
-                            or time.time() - RobotWifi.robots[key].last_sent_message
-                            > 1.0
-                        ):
-                            RobotWifi.robots[key].last_sent_message = time.time()
-                            packet = Packet(
-                                PACKET_HEARTBEAT, dest=RobotWifi.robots[key].id
-                            )
-                            data += packet.to_raw()
-                    RobotWifi.lock.release()
-
-                    if len(data):
-                        sock.sendto(data, (ip, RobotWifi.udp_port))
+                if len(data):
+                    sock.sendto(
+                        data, (RobotWifi.get_broadcast_ip(), RobotWifi.udp_port)
+                    )
 
     def available_urls() -> list:
         urls = []
@@ -141,7 +132,10 @@ class RobotWifi(robot.Robot):
         RobotWifi.lock.release()
 
     def process(self, data: bytes):
-        if self.last_received_message is None or (time.time() - self.last_received_message) > 10.:
+        if (
+            self.last_received_message is None
+            or (time.time() - self.last_received_message) > 10.0
+        ):
             self.beep(880, 250, lock=False)
         self.last_received_message = time.time()
 
