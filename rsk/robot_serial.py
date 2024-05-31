@@ -135,8 +135,8 @@ class RobotSerial(robot.Robot):
         :param int frequency: frequency (Hz)
         :param int duration: duration (ms)
         """
-        packet = Packet(PACKET_HOLO)
-        packet.append_byte(PACKET_HOLO_BEEP)
+        packet = Packet(PACKET_ROBOT)
+        packet.append_byte(PACKET_ROBOT_BEEP)
         packet.append_short(frequency)
         packet.append_short(duration)
         self.add_packet("beep", packet)
@@ -147,8 +147,8 @@ class RobotSerial(robot.Robot):
 
         :param float power: kick intensity (0 to 1), defaults to 1.
         """
-        packet = Packet(PACKET_HOLO)
-        packet.append_byte(PACKET_HOLO_KICK)
+        packet = Packet(PACKET_ROBOT)
+        packet.append_byte(PACKET_ROBOT_KICK)
         packet.append_byte(int(100 * power))
         self.add_packet("kick", packet)
 
@@ -160,14 +160,14 @@ class RobotSerial(robot.Robot):
         :param float dy: y speed (m/s)
         :param float dturn: rotational speed (rad/s)
         """
-        packet = Packet(PACKET_HOLO)
-        packet.append_byte(PACKET_HOLO_CONTROL)
+        packet = Packet(PACKET_ROBOT)
+        packet.append_byte(PACKET_ROBOT_CONTROL)
         packet.append_short(int(1000 * dx))
         packet.append_short(int(1000 * dy))
         packet.append_short(int(np.rad2deg(dturn)))
         self.add_packet("control", packet)
 
-    def leds(self, r: int, g: int, b: int) -> None:
+    def leds(self, red: int, green: int, blue: int) -> None:
         """
         Sets the robot LEDs
 
@@ -175,11 +175,11 @@ class RobotSerial(robot.Robot):
         :param int g: G intensity (0-255)
         :param int b: B intensity (0-255)
         """
-        packet = Packet(PACKET_HOLO)
-        packet.append_byte(PACKET_HOLO_LEDS_CUSTOM)
-        packet.append_byte(r)
-        packet.append_byte(g)
-        packet.append_byte(b)
+        packet = Packet(PACKET_ROBOT)
+        packet.append_byte(PACKET_ROBOT_LEDS_CUSTOM)
+        packet.append_byte(red)
+        packet.append_byte(green)
+        packet.append_byte(blue)
         self.add_packet("leds", packet)
 
     def stop(self):

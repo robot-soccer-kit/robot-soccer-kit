@@ -3,9 +3,12 @@
 #include <Arduino.h>
 #include <stdio.h>
 
+static uint8_t id = 255;
 static uint32_t monitor_dt = 0;
 static unsigned long monitor_last = 0;
 static struct bin_stream_packet in = {0}, out = {0};
+
+void bin_stream_set_id(uint8_t id_) { id = id_; }
 
 void bin_stream_set_monitor_period(uint32_t period) { monitor_dt = period; }
 
@@ -18,6 +21,12 @@ void bin_stream_ack(int code) {
 }
 
 void bin_stream_process() {
+#ifdef COM_WIFI
+  if (in.dest != id) {
+    return;
+  }
+#endif
+
   if (in.type == BIN_STREAM_MONITOR) {
     uint8_t frequency = bin_stream_read_int();
     if (frequency == 0) {
@@ -37,25 +46,48 @@ void bin_stream_process() {
   }
 }
 
+#ifdef COM_WIFI
+#define STATE_HEADER1 0
+#define STATE_HEADER2 1
+#define STATE_DEST 2
+#define STATE_TYPE 3
+#define STATE_SIZE 4
+#define STATE_DATA 5
+#define STATE_CHECKSUM 6
+#else
+#define STATE_HEADER1 0
+#define STATE_HEADER2 1
+#define STATE_TYPE 2
+#define STATE_SIZE 3
+#define STATE_DATA 4
+#define STATE_CHECKSUM 5
+#endif
+
 void bin_stream_recv(uint8_t c) {
   switch (in.state) {
-  case 0:
+  case STATE_HEADER1:
     if (c == BIN_STREAM_HEADER1) {
       in.state++;
     }
     break;
-  case 1:
+  case STATE_HEADER2:
     if (c == BIN_STREAM_HEADER2) {
       in.state++;
     } else {
-      in.state = 0;
+      in.state = STATE_HEADER1;
     }
     break;
-  case 2:
+#ifdef COM_WIFI
+  case STATE_DEST:
+    in.dest = c;
+    in.state++;
+    break;
+#endif
+  case STATE_TYPE:
     in.type = c;
     in.state++;
     break;
-  case 3:
+  case STATE_SIZE:
     in.size = c;
     in.state++;
     if (c == 0) {
@@ -64,18 +96,18 @@ void bin_stream_recv(uint8_t c) {
     in.checksum = 0;
     in.pointer = 0;
     if (in.size > BIN_STREAM_BUFFER) {
-      in.state = 0;
+      in.state = STATE_HEADER1;
     }
     break;
-  case 4:
+  case STATE_DATA:
     in.buffer[in.pointer++] = c;
     in.checksum += c;
     if (in.pointer >= in.size) {
       in.state++;
     }
     break;
-  case 5:
-    in.state = 0;
+  case STATE_CHECKSUM:
+    in.state = STATE_HEADER1;
     if (c == in.checksum) {
       in.pointer = 0;
       bin_stream_process();
@@ -117,11 +149,18 @@ void bin_stream_append_value(uint32_t value) {
 }
 
 void bin_stream_end() {
+#ifdef COM_WIFI
+  uint8_t packet[out.size + 6];
+#else
   uint8_t packet[out.size + 5];
+#endif
   uint8_t i = 0;
 
   packet[i++] = BIN_STREAM_HEADER1;
   packet[i++] = BIN_STREAM_HEADER2;
+#ifdef COM_WIFI
+  packet[i++] = 0;
+#endif
   packet[i++] = out.type;
   packet[i++] = out.size;
 

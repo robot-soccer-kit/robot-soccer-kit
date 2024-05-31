@@ -21,6 +21,9 @@ class Robot:
 
     def available_urls() -> list:
         return []
+    
+    def close(self) -> None:
+        pass
 
     def set_marker(self, marker: str) -> None:
         """

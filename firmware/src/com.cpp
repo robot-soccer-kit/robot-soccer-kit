@@ -127,6 +127,7 @@ void com_init() {
   bin_stream_set_monitor_period(1000);
 
   udp.begin(WIFI_UDP_PORT);
+  bin_stream_set_id(ip[3]);
 #else
   bt.enableSSP();
   bt.setPin("1234");
@@ -140,7 +141,15 @@ static unsigned long last_byte_timestamp = 0;
 
 void com_bin_tick() {
 #ifdef COM_WIFI
+  int packet_size = udp.parsePacket();
+  if (packet_size) {
+    uint8_t packet_data[packet_size];
+    udp.read(packet_data, packet_size);
 
+    for (int k = 0; k < packet_size; k++) {
+      bin_stream_recv(packet_data[k]);
+    }
+  }
 #else
   // Get bytes from the binary stream
   while (shell_stream()->available()) {
