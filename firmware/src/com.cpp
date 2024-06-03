@@ -39,8 +39,6 @@ static unsigned long last_packet_timestamp = 0;
 
 char bin_on_packet(uint8_t type) {
   if (type == BIN_STREAM_ROBOT) {
-    had_packet = true;
-
     if (bin_stream_available() >= 1) {
       uint8_t command = bin_stream_read();
 
@@ -164,6 +162,7 @@ void com_bin_tick() {
 
       for (int k = 0; k < packet_size; k++) {
         if (bin_stream_recv(packet_data[k])) {
+          had_packet = true;
           last_packet_timestamp = millis();
           game_controller = udp.remoteIP();
         }
