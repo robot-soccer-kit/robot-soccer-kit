@@ -31,9 +31,7 @@
 #define BIN_STREAM_BUFFER 128
 
 struct bin_stream_packet {
-#ifdef COM_WIFI
   uint8_t dest;
-#endif
   uint8_t state;
   uint8_t buffer[BIN_STREAM_BUFFER];
   uint8_t size;
@@ -65,5 +63,6 @@ uint16_t bin_stream_read_short();
 uint32_t bin_stream_read_int();
 
 void bin_stream_ack(int code);
+void bin_stream_enable_address(uint8_t enable);
 
 #endif

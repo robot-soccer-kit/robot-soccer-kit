@@ -5,8 +5,11 @@
 
 static uint8_t id = 255;
 static uint32_t monitor_dt = 0;
+static uint8_t has_address = 0;
 static unsigned long monitor_last = 0;
 static struct bin_stream_packet in = {0}, out = {0};
+
+void bin_stream_enable_address(uint8_t enable) { has_address = enable; }
 
 void bin_stream_set_id(uint8_t id_) { id = id_; }
 
@@ -42,48 +45,41 @@ void bin_stream_process() {
   }
 }
 
-#ifdef COM_WIFI
-#define STATE_HEADER1 0
-#define STATE_HEADER2 1
-#define STATE_DEST 2
-#define STATE_TYPE 3
-#define STATE_SIZE 4
-#define STATE_DATA 5
-#define STATE_CHECKSUM 6
-#else
-#define STATE_HEADER1 0
-#define STATE_HEADER2 1
-#define STATE_TYPE 2
-#define STATE_SIZE 3
-#define STATE_DATA 4
-#define STATE_CHECKSUM 5
-#endif
-
 bool bin_stream_recv(uint8_t c) {
-  switch (in.state) {
-  case STATE_HEADER1:
+  int STATE_HEADER1 = 0;
+  int STATE_HEADER2 = 1;
+  int STATE_DEST = 2;
+  int STATE_TYPE = 3;
+  int STATE_SIZE = 4;
+  int STATE_DATA = 5;
+  int STATE_CHECKSUM = 6;
+
+  if (!has_address) {
+    // Disabling address reception
+    STATE_DEST = -1;
+    STATE_TYPE -= 1;
+    STATE_SIZE -= 1;
+    STATE_DATA -= 1;
+    STATE_CHECKSUM -= 1;
+  }
+
+  if (in.state == STATE_HEADER1) {
     if (c == BIN_STREAM_HEADER1) {
       in.state++;
     }
-    break;
-  case STATE_HEADER2:
+  } else if (in.state == STATE_HEADER2) {
     if (c == BIN_STREAM_HEADER2) {
       in.state++;
     } else {
       in.state = STATE_HEADER1;
     }
-    break;
-#ifdef COM_WIFI
-  case STATE_DEST:
+  } else if (in.state == STATE_DEST) {
     in.dest = c;
     in.state++;
-    break;
-#endif
-  case STATE_TYPE:
+  } else if (in.state == STATE_TYPE) {
     in.type = c;
     in.state++;
-    break;
-  case STATE_SIZE:
+  } else if (in.state == STATE_SIZE) {
     in.size = c;
     in.state++;
     if (c == 0) {
@@ -94,29 +90,27 @@ bool bin_stream_recv(uint8_t c) {
     if (in.size > BIN_STREAM_BUFFER) {
       in.state = STATE_HEADER1;
     }
-    break;
-  case STATE_DATA:
+  } else if (in.state == STATE_DATA) {
     in.buffer[in.pointer++] = c;
     in.checksum += c;
     if (in.pointer >= in.size) {
       in.state++;
     }
-    break;
-  case STATE_CHECKSUM:
+  } else if (in.state == STATE_CHECKSUM) {
     in.state = STATE_HEADER1;
     if (c == in.checksum) {
       in.pointer = 0;
 
-#ifdef COM_WIFI
-      if (in.dest != id) {
+      if (has_address && in.dest != id) {
         return false;
       }
-#endif
 
       bin_stream_process();
       return true;
     }
-    break;
+  } else {
+    // This is not supposed to happen, go back to initial state
+    in.state = STATE_HEADER1;
   }
 
   return false;
@@ -155,18 +149,14 @@ void bin_stream_append_value(uint32_t value) {
 }
 
 void bin_stream_end() {
-#ifdef COM_WIFI
   uint8_t packet[out.size + 6];
-#else
-  uint8_t packet[out.size + 5];
-#endif
   uint8_t i = 0;
 
   packet[i++] = BIN_STREAM_HEADER1;
   packet[i++] = BIN_STREAM_HEADER2;
-#ifdef COM_WIFI
-  packet[i++] = 0;
-#endif
+  if (has_address) {
+    packet[i++] = 0;
+  }
   packet[i++] = out.type;
   packet[i++] = out.size;
 

@@ -7,13 +7,9 @@
 #include "motors.h"
 #include "shell.h"
 #include "voltage.h"
-
-#ifdef COM_WIFI
+#include <BluetoothSerial.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
-#else
-#include <BluetoothSerial.h>
-#endif
 
 #define BIN_STREAM_ROBOT 80
 
@@ -24,15 +20,17 @@
 #define COMMAND_EMERGENCY 11
 #define COMMAND_KICK 12
 
-#ifdef COM_WIFI
+// Needed when in WiFi mode
+bool is_wifi = true;
+bool robot_has_moved = false;
 WiFiUDP udp;
 IPAddress game_controller;
-#else
+
+// Needed when in BT mode
 bool do_forward = false;
 bool is_bin = false;
 bool is_bt = false;
 BluetoothSerial bt;
-#endif
 
 const char bin_exit[] = "!bin\r";
 const int bin_exit_len = 5;
@@ -48,6 +46,7 @@ char bin_on_packet(uint8_t type) {
         float dx = ((int16_t)bin_stream_read_short()) / 1000.;
         float dy = ((int16_t)bin_stream_read_short()) / 1000.;
         float dt = ((int16_t)bin_stream_read_short()) * M_PI / 180;
+        robot_has_moved = true;
 
         motors_set_ik(dx, dy, dt);
         return 1;
@@ -90,32 +89,34 @@ void bin_on_monitor() {
   // Robot version and timestamp
   bin_stream_append(2);
   bin_stream_append_int((uint32_t)millis());
+
   // Battery voltage, 10th of volts
   bin_stream_append(voltage_value() * 10);
   bin_stream_end();
 }
 
 void bin_stream_send(uint8_t *packet, size_t size) {
-#ifdef COM_WIFI
-  if (WiFi.status() == WL_CONNECTED) {
+  if (is_wifi) {
+    if (WiFi.status() == WL_CONNECTED) {
 
-    IPAddress target = WiFi.broadcastIP();
-    if (last_packet_timestamp != 0 && millis() - last_packet_timestamp < 3000) {
-      target = game_controller;
+      IPAddress target = WiFi.broadcastIP();
+      if (last_packet_timestamp != 0 &&
+          millis() - last_packet_timestamp < 3000) {
+        target = game_controller;
+      }
+
+      udp.beginPacket(target, WIFI_UDP_PORT);
+      udp.write(packet, size);
+      udp.endPacket();
     }
-
-    udp.beginPacket(target, WIFI_UDP_PORT);
-    udp.write(packet, size);
-    udp.endPacket();
+  } else {
+    shell_stream()->write(packet, size);
   }
-#else
-  shell_stream()->write(packet, size);
-#endif
 }
 void bin_stream_send(uint8_t c) { shell_stream()->write(c); }
 
 void com_init() {
-#ifdef COM_WIFI
+
   IPAddress ip, gateway, subnet, dns;
   ip.fromString(WIFI_IP);
   gateway.fromString(WIFI_GATEWAY);
@@ -131,50 +132,62 @@ void com_init() {
 
   udp.begin(WIFI_UDP_PORT);
   bin_stream_set_id(ip[3]);
-#else
-  bt.enableSSP();
-  bt.setPin("1234");
-  bt.begin(ROBOT_NAME);
-#endif
 
   shell_init();
 }
 
+void switch_to_bt() {
+  // LEDs are set to blue, a melody is played
+  leds_set(0, 0, 255);
+  buzzer_play(MELODY_OK);
+
+  // Disabling WiFi
+  is_wifi = false;
+  WiFi.setAutoReconnect(false);
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_OFF);
+
+  // Enabling Bluetooth
+  bt.enableSSP();
+  bt.setPin("1234");
+  bt.begin(ROBOT_NAME);
+}
+
 void com_bin_tick() {
-#ifdef COM_WIFI
-  int packet_size = udp.parsePacket();
-  if (packet_size) {
-    uint8_t packet_data[packet_size];
-    udp.read(packet_data, packet_size);
+  if (is_wifi) {
+    int packet_size = udp.parsePacket();
+    if (packet_size) {
+      uint8_t packet_data[packet_size];
+      udp.read(packet_data, packet_size);
 
-    for (int k = 0; k < packet_size; k++) {
-      if (bin_stream_recv(packet_data[k])) {
+      for (int k = 0; k < packet_size; k++) {
+        if (bin_stream_recv(packet_data[k])) {
+          last_packet_timestamp = millis();
+          game_controller = udp.remoteIP();
+        }
+      }
+    }
+  } else {
+    // Get bytes from the binary stream
+    while (shell_stream()->available()) {
+      uint8_t c = shell_stream()->read();
+      // Checking for binary mode exit sequence
+      if (bin_exit[bin_exit_pos] == c) {
+        bin_exit_pos++;
+        if (bin_exit_pos >= bin_exit_len) {
+          is_bin = false;
+        }
+      } else {
+        bin_exit_pos = 0;
+      }
+
+      // Ticking binary
+      if (bin_stream_recv(c)) {
         last_packet_timestamp = millis();
-        game_controller = udp.remoteIP();
       }
     }
   }
-#else
-  // Get bytes from the binary stream
-  while (shell_stream()->available()) {
-    uint8_t c = shell_stream()->read();
-    // Checking for binary mode exit sequence
-    if (bin_exit[bin_exit_pos] == c) {
-      bin_exit_pos++;
-      if (bin_exit_pos >= bin_exit_len) {
-        is_bin = false;
-      }
-    } else {
-      bin_exit_pos = 0;
-    }
 
-    // Ticking binary
-    if (bin_stream_recv(c)) {
-      last_packet_timestamp = millis();
-    }
-  }
-
-#endif
   // Stopping motors if we had no news for 3s
   if (last_packet_timestamp != 0 && (millis() - last_packet_timestamp) > 3000) {
     last_packet_timestamp = 0;
@@ -185,35 +198,45 @@ void com_bin_tick() {
 }
 
 void com_tick() {
-#ifdef COM_WIFI
-  com_bin_tick();
-  shell_tick();
-#else
-  // In shell mode, testing for the need of switching the stream and tick the
-  // shell
-  if (!is_bt && bt.available()) {
-    is_bt = true;
-    shell_set_stream(&bt);
-  }
-  if (is_bt && Serial.available()) {
-    is_bt = false;
-    shell_set_stream(&Serial);
-  }
-
-  if (do_forward) {
-    while (bt.available())
-      Serial.write(bt.read());
-    while (Serial.available())
-      bt.write(Serial.read());
-  } else if (is_bin) {
+  if (is_wifi) {
     com_bin_tick();
-  } else {
     shell_tick();
+
+    if (!robot_has_moved) {
+      for (int index = 0; index < 3; index++) {
+        int64_t encoder = motors_get_encoder(index);
+        if (encoder > WHEELS_CPR || encoder < -WHEELS_CPR) {
+          // Robot has not moved, and a wheel was rotated by more than a turn
+          // We switch to bluetooth
+          switch_to_bt();
+        }
+      }
+    }
+  } else {
+    // In shell mode, testing for the need of switching the stream and tick the
+    // shell
+    if (!is_bt && bt.available()) {
+      is_bt = true;
+      shell_set_stream(&bt);
+    }
+    if (is_bt && Serial.available()) {
+      is_bt = false;
+      shell_set_stream(&Serial);
+    }
+
+    if (do_forward) {
+      while (bt.available())
+        Serial.write(bt.read());
+      while (Serial.available())
+        bt.write(Serial.read());
+    } else if (is_bin) {
+      com_bin_tick();
+    } else {
+      shell_tick();
+    }
   }
-#endif
 }
 
-#ifdef COM_WIFI
 SHELL_COMMAND(wifi, "WiFi status") {
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("Robot is connected");
@@ -237,7 +260,7 @@ SHELL_COMMAND(wifi, "WiFi status") {
     Serial.println("Robot is not connected");
   }
 }
-#else
+
 SHELL_COMMAND(forward, "Starts forwarding BT and USB (for debugging)") {
   do_forward = true;
 }
@@ -245,4 +268,3 @@ SHELL_COMMAND(forward, "Starts forwarding BT and USB (for debugging)") {
 SHELL_COMMAND(bin, "Switch to binary mode") { is_bin = true; }
 
 SHELL_COMMAND(rhock, "Switch to binary mode (legacy)") { is_bin = true; }
-#endif

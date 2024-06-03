@@ -66,6 +66,10 @@ void _bound_pwm(float *value) {
   }
 }
 
+int64_t motors_get_encoder(int index) {
+  return motors[index].encoder.getCount();
+}
+
 void motors_servo() {
   for (int k = 0; k < 3; k++) {
     int64_t count = motors[k].encoder.getCount();
@@ -182,13 +186,16 @@ void motors_set_speeds(float w1, float w2, float w3) {
 }
 
 void motors_set_ik(float dx, float dy, float dt) {
-  float w1 = MOTORS_ROTATION_SIGN * (motors[0].drive_x * dx + motors[0].drive_y * dy +
+  float w1 = MOTORS_ROTATION_SIGN *
+             (motors[0].drive_x * dx + motors[0].drive_y * dy +
               MODEL_ROBOT_RADIUS * dt) /
              (MODEL_WHEEL_RADIUS);
-  float w2 = MOTORS_ROTATION_SIGN * (motors[1].drive_x * dx + motors[1].drive_y * dy +
+  float w2 = MOTORS_ROTATION_SIGN *
+             (motors[1].drive_x * dx + motors[1].drive_y * dy +
               MODEL_ROBOT_RADIUS * dt) /
              (MODEL_WHEEL_RADIUS);
-  float w3 = MOTORS_ROTATION_SIGN * (motors[2].drive_x * dx + motors[2].drive_y * dy +
+  float w3 = MOTORS_ROTATION_SIGN *
+             (motors[2].drive_x * dx + motors[2].drive_y * dy +
               MODEL_ROBOT_RADIUS * dt) /
              (MODEL_WHEEL_RADIUS);
 
