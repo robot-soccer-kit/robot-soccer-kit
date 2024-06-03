@@ -22,7 +22,7 @@
 
 // Needed when in WiFi mode
 bool is_wifi = true;
-bool robot_has_moved = false;
+bool had_packet = false;
 WiFiUDP udp;
 IPAddress game_controller;
 
@@ -39,6 +39,8 @@ static unsigned long last_packet_timestamp = 0;
 
 char bin_on_packet(uint8_t type) {
   if (type == BIN_STREAM_ROBOT) {
+    had_packet = true;
+
     if (bin_stream_available() >= 1) {
       uint8_t command = bin_stream_read();
 
@@ -46,7 +48,6 @@ char bin_on_packet(uint8_t type) {
         float dx = ((int16_t)bin_stream_read_short()) / 1000.;
         float dy = ((int16_t)bin_stream_read_short()) / 1000.;
         float dt = ((int16_t)bin_stream_read_short()) * M_PI / 180;
-        robot_has_moved = true;
 
         motors_set_ik(dx, dy, dt);
         return 1;
@@ -137,10 +138,6 @@ void com_init() {
 }
 
 void switch_to_bt() {
-  // LEDs are set to blue, a melody is played
-  leds_set(0, 0, 255);
-  buzzer_play(MELODY_OK);
-
   // Disabling WiFi
   is_wifi = false;
   WiFi.setAutoReconnect(false);
@@ -148,9 +145,14 @@ void switch_to_bt() {
   WiFi.mode(WIFI_OFF);
 
   // Enabling Bluetooth
-  bt.enableSSP();
   bt.setPin("1234");
   bt.begin(ROBOT_NAME);
+  bt.enableSSP();
+  bin_stream_enable_address(0);
+
+  // LEDs are set to blue, a melody is played
+  leds_set(0, 0, 255);
+  buzzer_play(MELODY_OK);
 }
 
 void com_bin_tick() {
@@ -202,10 +204,10 @@ void com_tick() {
     com_bin_tick();
     shell_tick();
 
-    if (!robot_has_moved) {
+    if (!had_packet && millis() > 100) {
       for (int index = 0; index < 3; index++) {
-        int64_t encoder = motors_get_encoder(index);
-        if (encoder > WHEELS_CPR || encoder < -WHEELS_CPR) {
+        int32_t encoder = motors_get_encoder(index);
+        if (abs(encoder) > abs(WHEELS_CPR)) {
           // Robot has not moved, and a wheel was rotated by more than a turn
           // We switch to bluetooth
           switch_to_bt();

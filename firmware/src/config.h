@@ -1,7 +1,7 @@
 #pragma once
 
-#define WIFI_SSID "RSK"
-#define WIFI_PASSWORD "wifiRSKgregwar"
+#define WIFI_SSID "RSK_CapMetiers"
+#define WIFI_PASSWORD "RSK_CM_WiFi"
 
 #define WIFI_IP "192.168.100.100"
 #define WIFI_SUBNET "255.255.255.0"

@@ -5,7 +5,7 @@
 
 static uint8_t id = 255;
 static uint32_t monitor_dt = 0;
-static uint8_t has_address = 0;
+static uint8_t has_address = 1;
 static unsigned long monitor_last = 0;
 static struct bin_stream_packet in = {0}, out = {0};
 
