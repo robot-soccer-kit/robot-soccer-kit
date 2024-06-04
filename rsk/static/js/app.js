@@ -10,19 +10,21 @@ class APIBackend {
                     }
 
                     let timeout = 3000;
-                    if (name == "cameras") {let timeout =  10000}
-                    $.get({"url" : url, "data" :{ 'command': name, 'args': JSON.stringify(args)}, 'success':function (result) {
-                        $('.no-backend').css("display", 'none')
-                        if (result) {
-                            if (result[0]) {
-                                if (callback) {
-                                    callback(result[1]);
+                    if (name == "cameras") { timeout = 10000 }
+                    $.get({
+                        "url": url, "data": { 'command': name, 'args': JSON.stringify(args) }, 'success': function (result) {
+                            $('.no-backend').css("display", 'none')
+                            if (result) {
+                                if (result[0]) {
+                                    if (callback) {
+                                        callback(result[1]);
+                                    }
+                                } else {
+                                    console.log('Error: ' + result[1]);
                                 }
-                            } else {
-                                console.log('Error: ' + result[1]);
                             }
-                        }
-                    }, "timeout": timeout}).fail(function(){
+                        }, "timeout": timeout
+                    }).fail(function () {
                         $('.no-backend').css("display", 'inherit')
                     });;
                 }
@@ -40,11 +42,11 @@ $(document).ready(function () {
             console.log("SIMULATION")
             $('.not_show_simulated').css("display", 'none')
             simulator_initialize(backend, true)
-        }else{
-           console.log("REEL")
-           $('.show_simulated').css("display", 'none')
-           video_initialize(backend); 
-           simulator_initialize(backend, false)
+        } else {
+            console.log("REEL")
+            $('.show_simulated').css("display", 'none')
+            video_initialize(backend);
+            simulator_initialize(backend, false)
         }
     })
 
@@ -54,7 +56,7 @@ $(document).ready(function () {
             competition_initialize(backend);
         }
     });
-    
+
     robots_initialize(backend);
     control_initialize(backend);
     referee_initialize(backend);
