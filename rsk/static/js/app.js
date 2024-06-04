@@ -13,7 +13,7 @@ class APIBackend {
                     if (name == "cameras") { timeout = 10000 }
                     $.get({
                         "url": url, "data": { 'command': name, 'args': JSON.stringify(args) }, 'success': function (result) {
-                            $('.no-backend').css("display", 'none')
+                            $('.no-backend').css("opacity", '0')
                             if (result) {
                                 if (result[0]) {
                                     if (callback) {
@@ -25,7 +25,7 @@ class APIBackend {
                             }
                         }, "timeout": timeout
                     }).fail(function () {
-                        $('.no-backend').css("display", 'inherit')
+                        $('.no-backend').css("opacity", '1')
                     });;
                 }
             }
