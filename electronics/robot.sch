@@ -362,25 +362,6 @@ http://www.ftdichip.com/Documents/DataSheets/DS_FT232R_v104.pdf</description>
 <rectangle x1="-3.7529" y1="2.6416" x2="-3.3973" y2="3.937" layer="51"/>
 <rectangle x1="-4.4028" y1="2.6416" x2="-4.0472" y2="3.937" layer="51"/>
 </package>
-<package name="KICKER">
-<wire x1="0" y1="0" x2="0" y2="15" width="0.3048" layer="21"/>
-<wire x1="0" y1="15" x2="30" y2="15" width="0.3048" layer="21"/>
-<wire x1="30" y1="15" x2="30" y2="14" width="0.3048" layer="21"/>
-<wire x1="30" y1="14" x2="30" y2="1" width="0.3048" layer="21"/>
-<wire x1="30" y1="1" x2="30" y2="0" width="0.3048" layer="21"/>
-<wire x1="30" y1="0" x2="0" y2="0" width="0.3048" layer="21"/>
-<wire x1="30" y1="1" x2="51" y2="1" width="0.3048" layer="21"/>
-<wire x1="51" y1="1" x2="51" y2="14" width="0.3048" layer="21"/>
-<wire x1="51" y1="14" x2="30" y2="14" width="0.3048" layer="21"/>
-<hole x="7" y="7.5" drill="3"/>
-<circle x="7" y="7.5" radius="1.4142125" width="1.9304" layer="41"/>
-<circle x="7" y="7.5" radius="1.4142125" width="1.9304" layer="42"/>
-<hole x="22" y="7.5" drill="3"/>
-<circle x="22" y="7.5" radius="1.4142125" width="1.9304" layer="41"/>
-<circle x="22" y="7.5" radius="1.4142125" width="1.9304" layer="42"/>
-<smd name="1" x="14.2" y="18.5" dx="5.08" dy="2.54" layer="1" rot="R90"/>
-<smd name="2" x="17.7" y="18.5" dx="5.08" dy="2.54" layer="1" rot="R90"/>
-</package>
 <package name="SOT223">
 <description>&lt;b&gt;SOT-223&lt;/b&gt;</description>
 <wire x1="3.2766" y1="1.651" x2="3.2766" y2="-1.651" width="0.2032" layer="21"/>
@@ -542,15 +523,6 @@ Source: http://www.st.com/internet/com/TECHNICAL_RESOURCES/TECHNICAL_LITERATURE/
 <pin name="GND@1" x="15.24" y="-22.86" length="short" direction="pwr" rot="R180"/>
 <pin name="TEST" x="15.24" y="-15.24" length="short" direction="in" rot="R180"/>
 <pin name="GND@2" x="15.24" y="-25.4" length="short" direction="pwr" rot="R180"/>
-</symbol>
-<symbol name="CONNEC_1X02">
-<wire x1="-1.27" y1="-2.54" x2="6.35" y2="-2.54" width="0.4064" layer="94"/>
-<wire x1="6.35" y1="-2.54" x2="6.35" y2="5.08" width="0.4064" layer="94"/>
-<wire x1="6.35" y1="5.08" x2="-1.27" y2="5.08" width="0.4064" layer="94"/>
-<wire x1="-1.27" y1="5.08" x2="-1.27" y2="-2.54" width="0.4064" layer="94"/>
-<text x="-1.27" y="5.715" size="1.778" layer="95">&gt;NAME</text>
-<pin name="1" x="2.54" y="2.54" visible="pad" length="short" direction="pas" function="dot"/>
-<pin name="2" x="2.54" y="0" visible="pad" length="short" direction="pas" function="dot"/>
 </symbol>
 <symbol name="REGULATEUR">
 <wire x1="-7.62" y1="2.54" x2="7.62" y2="2.54" width="0.254" layer="94"/>
@@ -754,22 +726,6 @@ Source: http://www.st.com/internet/com/TECHNICAL_RESOURCES/TECHNICAL_LITERATURE/
 <attribute name="OC_FARNELL" value="1146032" constant="no"/>
 <attribute name="OC_NEWARK" value="91K9918" constant="no"/>
 </technology>
-</technologies>
-</device>
-</devices>
-</deviceset>
-<deviceset name="KICKER">
-<gates>
-<gate name="A" symbol="CONNEC_1X02" x="0" y="-2.54"/>
-</gates>
-<devices>
-<device name="" package="KICKER">
-<connects>
-<connect gate="A" pin="1" pad="1"/>
-<connect gate="A" pin="2" pad="2"/>
-</connects>
-<technologies>
-<technology name=""/>
 </technologies>
 </device>
 </devices>
@@ -16336,6 +16292,115 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 </deviceset>
 </devicesets>
 </library>
+<library name="custom">
+<packages>
+<package name="RS1M">
+<smd name="A" x="-2.032" y="0" dx="2.65" dy="1.75" layer="1"/>
+<smd name="K" x="2.268" y="0" dx="2.65" dy="1.75" layer="1"/>
+<wire x1="-3.432" y1="1.4" x2="3.568" y2="1.4" width="0.127" layer="25"/>
+<wire x1="3.568" y1="1.4" x2="3.568" y2="-1.5" width="0.127" layer="25"/>
+<wire x1="3.568" y1="-1.5" x2="-3.432" y2="-1.5" width="0.127" layer="25"/>
+<wire x1="-3.432" y1="-1.5" x2="-3.432" y2="1.4" width="0.127" layer="25"/>
+<text x="-2.932" y="1.7" size="1.27" layer="25" ratio="10">&gt;Name</text>
+<wire x1="-0.432" y1="0" x2="-0.432" y2="1.2" width="0.127" layer="21"/>
+<wire x1="-0.432" y1="1.2" x2="0.568" y2="0" width="0.127" layer="21"/>
+<wire x1="0.568" y1="0" x2="-0.432" y2="-1" width="0.127" layer="21"/>
+<wire x1="-0.432" y1="-1" x2="-0.432" y2="0" width="0.127" layer="21"/>
+<wire x1="-2.032" y1="0" x2="-0.432" y2="0" width="0.127" layer="21"/>
+<wire x1="0.568" y1="1.2" x2="0.568" y2="0" width="0.127" layer="21"/>
+<wire x1="0.568" y1="0" x2="0.568" y2="-1" width="0.127" layer="21"/>
+<wire x1="0.568" y1="0" x2="2.168" y2="0" width="0.127" layer="21"/>
+</package>
+</packages>
+<symbols>
+<symbol name="DIODE">
+<pin name="A" x="0" y="0" visible="off" length="short" direction="pas" swaplevel="1"/>
+<pin name="K" x="10.16" y="0" visible="off" length="short" direction="pas" swaplevel="1" rot="R180"/>
+<wire x1="3.81" y1="1.905" x2="3.81" y2="0" width="0.2032" layer="94"/>
+<wire x1="3.81" y1="0" x2="3.81" y2="-1.905" width="0.2032" layer="94"/>
+<wire x1="2.54" y1="0" x2="3.81" y2="0" width="0.2032" layer="94"/>
+<wire x1="6.35" y1="-1.905" x2="6.35" y2="0" width="0.2032" layer="94"/>
+<wire x1="6.35" y1="0" x2="6.35" y2="1.905" width="0.2032" layer="94"/>
+<wire x1="6.35" y1="0" x2="7.62" y2="0" width="0.2032" layer="94"/>
+<wire x1="6.35" y1="0" x2="3.81" y2="1.905" width="0.2032" layer="94"/>
+<wire x1="3.81" y1="-1.905" x2="6.35" y2="0" width="0.2032" layer="94"/>
+<text x="-3.8862" y="-5.5372" size="3.4798" layer="96" ratio="10" rot="SR0">&gt;Value</text>
+<text x="-2.8194" y="2.6924" size="3.4798" layer="95" ratio="10" rot="SR0">&gt;Name</text>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="RS1M-13-F" prefix="CR">
+<gates>
+<gate name="A" symbol="DIODE" x="0" y="0" swaplevel="1"/>
+</gates>
+<devices>
+<device name="" package="RS1M">
+<connects>
+<connect gate="A" pin="A" pad="A"/>
+<connect gate="A" pin="K" pad="K"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
+<library name="robot">
+<description>Generated from &lt;b&gt;robot.sch&lt;/b&gt;&lt;p&gt;
+by exp-project-lbr.ulp</description>
+<packages>
+<package name="RHOBAN_KICKER">
+<circle x="7" y="7.5" radius="1.4142125" width="1.9304" layer="41"/>
+<circle x="7" y="7.5" radius="1.4142125" width="1.9304" layer="42"/>
+<circle x="22" y="7.5" radius="1.4142125" width="1.9304" layer="41"/>
+<circle x="22" y="7.5" radius="1.4142125" width="1.9304" layer="42"/>
+<wire x1="0" y1="0" x2="0" y2="15" width="0.3048" layer="21"/>
+<wire x1="0" y1="15" x2="30" y2="15" width="0.3048" layer="21"/>
+<wire x1="30" y1="15" x2="30" y2="14" width="0.3048" layer="21"/>
+<wire x1="30" y1="14" x2="30" y2="1" width="0.3048" layer="21"/>
+<wire x1="30" y1="1" x2="30" y2="0" width="0.3048" layer="21"/>
+<wire x1="30" y1="0" x2="0" y2="0" width="0.3048" layer="21"/>
+<wire x1="30" y1="1" x2="51" y2="1" width="0.3048" layer="21"/>
+<wire x1="51" y1="1" x2="51" y2="14" width="0.3048" layer="21"/>
+<wire x1="51" y1="14" x2="30" y2="14" width="0.3048" layer="21"/>
+<smd name="1" x="14.835" y="18.5" dx="5.08" dy="2.54" layer="1" rot="R90"/>
+<smd name="2" x="18.335" y="18.5" dx="5.08" dy="2.54" layer="1" rot="R90"/>
+<hole x="7" y="7.5" drill="3"/>
+<hole x="22" y="7.5" drill="3"/>
+</package>
+</packages>
+<symbols>
+<symbol name="RHOBAN_CONNEC_1X02">
+<wire x1="-1.27" y1="-2.54" x2="6.35" y2="-2.54" width="0.4064" layer="94"/>
+<wire x1="6.35" y1="-2.54" x2="6.35" y2="5.08" width="0.4064" layer="94"/>
+<wire x1="6.35" y1="5.08" x2="-1.27" y2="5.08" width="0.4064" layer="94"/>
+<wire x1="-1.27" y1="5.08" x2="-1.27" y2="-2.54" width="0.4064" layer="94"/>
+<pin name="1" x="2.54" y="2.54" visible="pad" length="short" direction="pas" function="dot"/>
+<pin name="2" x="2.54" y="0" visible="pad" length="short" direction="pas" function="dot"/>
+<text x="-1.27" y="5.715" size="1.778" layer="95">&gt;NAME</text>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="RHOBAN_KICKER">
+<gates>
+<gate name="A" symbol="RHOBAN_CONNEC_1X02" x="0" y="-2.54"/>
+</gates>
+<devices>
+<device name="" package="RHOBAN_KICKER">
+<connects>
+<connect gate="A" pin="1" pad="1"/>
+<connect gate="A" pin="2" pad="2"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
 </libraries>
 <attributes>
 </attributes>
@@ -16462,7 +16527,7 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <part name="U1" library="rhoban" deviceset="FT232" device="L">
 <attribute name="FARNELL" value="1146032"/>
 </part>
-<part name="J6" library="rhoban" deviceset="KICKER" device="">
+<part name="J6" library="robot" deviceset="RHOBAN_KICKER" device="">
 <attribute name="FARNELL" value="JF-0530B"/>
 </part>
 <part name="C19" library="rcl" deviceset="CPOL-EU" device="E5-13" value="3300uF">
@@ -16615,6 +16680,7 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <part name="D2" library="SparkFun-DiscreteSemi" deviceset="DIODE" device="SOD">
 <attribute name="FARNELL" value="8737843RL"/>
 </part>
+<part name="CR1" library="custom" deviceset="RS1M-13-F" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -18160,6 +18226,7 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <attribute name="NAME" x="39.1414" y="-8.89" size="1.778" layer="95" rot="R90"/>
 <attribute name="VALUE" x="43.942" y="-8.89" size="1.778" layer="96" rot="R90"/>
 </instance>
+<instance part="CR1" gate="A" x="119.38" y="-12.7" rot="R90"/>
 </instances>
 <busses>
 </busses>
@@ -18177,6 +18244,10 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <pinref part="C19" gate="G$1" pin="+"/>
 <pinref part="C20" gate="G$1" pin="+"/>
 <pinref part="R14" gate="G$1" pin="1"/>
+<pinref part="CR1" gate="A" pin="K"/>
+<wire x1="119.38" y1="-2.54" x2="119.38" y2="2.54" width="0.1524" layer="91"/>
+<wire x1="119.38" y1="2.54" x2="106.68" y2="2.54" width="0.1524" layer="91"/>
+<wire x1="106.68" y1="2.54" x2="106.68" y2="-7.62" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="GND" class="1">
@@ -18289,6 +18360,10 @@ These are standard reverse protection diodes and small signal diodes. SMA packag
 <wire x1="96.52" y1="-17.78" x2="96.52" y2="-10.16" width="0.1524" layer="91"/>
 <wire x1="96.52" y1="-10.16" x2="106.68" y2="-10.16" width="0.1524" layer="91"/>
 <pinref part="J6" gate="A" pin="2"/>
+<pinref part="CR1" gate="A" pin="A"/>
+<wire x1="119.38" y1="-12.7" x2="119.38" y2="-20.32" width="0.1524" layer="91"/>
+<wire x1="119.38" y1="-20.32" x2="106.68" y2="-20.32" width="0.1524" layer="91"/>
+<wire x1="106.68" y1="-20.32" x2="106.68" y2="-10.16" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
