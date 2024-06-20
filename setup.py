@@ -15,7 +15,7 @@ def package_files(directory):
 
 setuptools.setup(
     name="robot-soccer-kit",
-    version="2.2.1",
+    version="2.2.2",
     author="Rhoban team",
     author_email="team@rhoban.com",
     description="Robot Soccer Kit",
@@ -29,7 +29,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     keywords="robot holonomic omniwheel ssl sct robocup junior soccer standard localized tracking",
-    install_requires=["numpy", "pyzmq", "pyyaml"],
+    install_requires=["numpy<2", "pyzmq", "pyyaml"],
     extras_require={
         "gc": ["pyserial", "flask", "flask-cors", "waitress", 
             "opencv-contrib-python<4.7;platform_system=='Windows'",
