@@ -22,7 +22,7 @@
 
 // Needed when in WiFi mode
 bool is_wifi = true;
-bool had_packet = false;
+bool switch_to_bt_disabled = false;
 WiFiUDP udp;
 IPAddress game_controller;
 
@@ -162,7 +162,7 @@ void com_bin_tick() {
 
       for (int k = 0; k < packet_size; k++) {
         if (bin_stream_recv(packet_data[k])) {
-          had_packet = true;
+          switch_to_bt_disabled = true;
           last_packet_timestamp = millis();
           game_controller = udp.remoteIP();
         }
@@ -203,7 +203,14 @@ void com_tick() {
     com_bin_tick();
     shell_tick();
 
-    if (!had_packet && millis() > 100) {
+    if (!switch_to_bt_disabled && motors_is_moving()) {
+      switch_to_bt_disabled = true;
+    }
+
+    if (!switch_to_bt_disabled && millis() > 100) {
+#ifdef FORCE_BLUETOOTH
+      switch_to_bt();
+#else
       for (int index = 0; index < 3; index++) {
         int32_t encoder = motors_get_encoder(index);
         if (abs(encoder) > abs(WHEELS_CPR)) {
@@ -212,6 +219,7 @@ void com_tick() {
           switch_to_bt();
         }
       }
+#endif
     }
   } else {
     // In shell mode, testing for the need of switching the stream and tick the
@@ -269,3 +277,5 @@ SHELL_COMMAND(forward, "Starts forwarding BT and USB (for debugging)") {
 SHELL_COMMAND(bin, "Switch to binary mode") { is_bin = true; }
 
 SHELL_COMMAND(rhock, "Switch to binary mode (legacy)") { is_bin = true; }
+
+SHELL_COMMAND(bt, "Force the switch to Bluetooth") { switch_to_bt(); }

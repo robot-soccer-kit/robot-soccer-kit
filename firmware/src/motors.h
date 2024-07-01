@@ -17,4 +17,7 @@ void motors_set_ik(float dx, float dy, float dt);
 // Get the current encoder value for a given motor
 int64_t motors_get_encoder(int index);
 
+// Is the robot moving now ?
+bool motors_are_enabled();
+
 void motors_disable();

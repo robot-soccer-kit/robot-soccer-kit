@@ -70,6 +70,10 @@ int64_t motors_get_encoder(int index) {
   return motors[index].encoder.getCount();
 }
 
+bool motors_are_enabled() {
+  return motors[0].enabled || motors[1].enabled || motors[2].enabled;
+}
+
 void motors_servo() {
   for (int k = 0; k < 3; k++) {
     int64_t count = motors[k].encoder.getCount();
