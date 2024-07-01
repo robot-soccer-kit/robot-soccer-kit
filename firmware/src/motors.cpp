@@ -149,20 +149,20 @@ void motors_set_pwm(int index, int16_t pwm) {
 
       if (pwm > 0) {
 #ifdef MOTORS_BRAKE
-        ledcWrite(motors[index].pwm_chan1, 1024);
-        ledcWrite(motors[index].pwm_chan2, 1024 - pwm);
-#else
-        ledcWrite(motors[index].pwm_chan1, pwm);
-        ledcWrite(motors[index].pwm_chan2, 0);
-#endif
-      } else {
-        pwm = -pwm;
-#ifdef MOTORS_BRAKE
         ledcWrite(motors[index].pwm_chan1, 1024 - pwm);
         ledcWrite(motors[index].pwm_chan2, 1024);
 #else
         ledcWrite(motors[index].pwm_chan1, 0);
         ledcWrite(motors[index].pwm_chan2, pwm);
+#endif
+      } else {
+        pwm = -pwm;
+#ifdef MOTORS_BRAKE
+        ledcWrite(motors[index].pwm_chan1, 1024);
+        ledcWrite(motors[index].pwm_chan2, 1024 - pwm);
+#else
+        ledcWrite(motors[index].pwm_chan1, pwm);
+        ledcWrite(motors[index].pwm_chan2, 0);
 #endif
       }
     }

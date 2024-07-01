@@ -22,15 +22,15 @@
 // Cycles per revolution [cycles/turn]
 // The minus sign is here because encoder increments in reverted order with
 // respect to pwm
-#define WHEELS_CPR -(7 * 4 * REDUCTION_RATIO)
+#define WHEELS_CPR (7 * 4 * REDUCTION_RATIO)
 
 // Window size for speed estimation (since we are servoing at 1Khz; this can be
 // considered as the amount of milliseconds used for finite differences speed
 // estimation)
 #define SPEED_WINDOW 5
 
-// Do the motors make the robot rotating positively?
-#define MOTORS_ROTATION_SIGN -1
+// Does the motors (positive) rotation gets the robot rotating positively (counter-clockwise)?
+#define MOTORS_ROTATION_SIGN 1
 
 // Board revision
 #define BOARD_REV2
