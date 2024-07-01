@@ -203,7 +203,7 @@ void com_tick() {
     com_bin_tick();
     shell_tick();
 
-    if (!switch_to_bt_disabled && motors_is_moving()) {
+    if (!switch_to_bt_disabled && motors_are_enabled()) {
       switch_to_bt_disabled = true;
     }
 
