@@ -1,9 +1,9 @@
 #pragma once
 
-#define WIFI_SSID "RSK_CapMetiers"
-#define WIFI_PASSWORD "RSK_CM_WiFi"
+#define WIFI_SSID "RSK_Field_WiFi"
+#define WIFI_PASSWORD "RSK_FIELD_PASSWORD"
 
-#define WIFI_IP "192.168.100.100"
+#define WIFI_IP "192.168.100.101"
 #define WIFI_SUBNET "255.255.255.0"
 #define WIFI_GATEWAY "192.168.100.254"
 #define WIFI_DNS WIFI_GATEWAY
@@ -11,7 +11,8 @@
 #define WIFI_UDP_PORT 7600
 
 // Robot's name when in Bluetooth mode
-#define ROBOT_NAME "ENT_A1"
+#define ROBOT_NAME "RSK"
+// #define FORCE_BLUETOOTH
 
 #define KICK_PIN 33
 
