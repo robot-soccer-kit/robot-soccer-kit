@@ -266,7 +266,17 @@ SHELL_COMMAND(wifi, "WiFi status") {
     Serial.print("* Broadcast IP: ");
     Serial.println(WiFi.broadcastIP());
   } else {
-    Serial.println("Robot is not connected");
+    Serial.println("Robot is not connected, configuration:");
+    Serial.print("* SSID:");
+    Serial.println(WIFI_SSID);
+    Serial.print("* IP:");
+    Serial.println(WIFI_IP);
+    Serial.print("* Subnet mask: ");
+    Serial.println(WIFI_SUBNET);
+    Serial.print("* Gateway IP: ");
+    Serial.println(WIFI_GATEWAY);
+    Serial.print("* DNS IP: ");
+    Serial.println(WIFI_DNS);
   }
 }
 
