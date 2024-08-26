@@ -15,7 +15,7 @@ def package_files(directory):
 
 setuptools.setup(
     name="robot-soccer-kit",
-    version="2.2.2",
+    version="2.2.3",
     author="Rhoban team",
     author_email="team@rhoban.com",
     description="Robot Soccer Kit",
