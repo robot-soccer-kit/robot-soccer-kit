@@ -147,7 +147,6 @@ function simulator_initialize(backend, isView) {
                 }
                 
                 let placementCirclePosition = state["referee"]["wait_ball_position"]
-                console.log(placementCirclePosition)
                 if (placementCirclePosition != null) {
                     drawCircle(transformViewToSim(placementCirclePosition), constants.place_ball_margin * ratio_w, "red", ballCanvas, false, 1)
                 }
