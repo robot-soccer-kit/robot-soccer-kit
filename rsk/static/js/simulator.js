@@ -96,48 +96,47 @@ function simulator_initialize(backend, isView) {
                     update_ratios()
                 }
 
-                // Remove missing Robot
                 let presentMarker = state.markers
-                for (var key in markers) {
-                    if (!(key in presentMarker)) {
-                        canvas = markers[key]["context"].canvas
-                        markers[key]["context"].clearRect(0, 0, canvas.width, canvas.height)
-                        markers[key]["clear"] = true
-                    }
+                let canvas = document.getElementById("robots")
+
+                if (!("offscreenCanvas" in canvas)) {
+                    canvas.offscreenCanvas = document.createElement("canvas")
                 }
+                canvas.offscreenCanvas.width = canvas.width
+                canvas.offscreenCanvas.height = canvas.height
+
+                let context = canvas.offscreenCanvas.getContext("2d")
+                context.resetTransform()
+                context.clearRect(0, 0, canvas.width, canvas.height)
+
                 // Draw present Robot
                 for (var entry in presentMarker) {
-
                     robot = presentMarker[entry]
                     robotPos = transformViewToSim(robot.position, robot.orientation)
 
-                    // Draw present Robot that have changed state
-                    if (isDifferent(markers[entry]["pos"], robotPos) || markers[entry]["clear"] || markers[entry]["pos"] != state["leds"][entry]) {
+                    // Context placement
+                    context.resetTransform()
+                    context.translate(robotPos[0], robotPos[1])
+                    context.rotate(robotPos[2])
 
-                        canvas = markers[key]["context"].canvas
-                        markers[entry]["context"].clearRect(-2 * canvas.width, -2 * canvas.height, 4 * canvas.width, 4 * canvas.height)
-
-                        // Context placement
-                        markers[entry]["context"].rotate(-markers[entry]["pos"][2])
-                        markers[entry]["context"].translate(robotPos[0] - markers[entry]["pos"][0], robotPos[1] - markers[entry]["pos"][1])
-                        markers[entry]["context"].rotate(robotPos[2])
-
-                        // Draw leds
-                        if (Object.keys(state["leds"]).length != 0) {
-                            markers[entry]["leds"] = state["leds"][entry]
-                            for (var i = 0; i < 3; i++) {
-                                markers[entry]["leds"][i] = Math.round(Math.min(255, 50 + Math.log(markers[entry]["leds"][i] + 1) / Math.log(256) * 255))
-                            }
-                            drawLeds(markers[entry]["leds"], markers[entry]["context"])
+                    // Draw leds
+                    if (Object.keys(state["leds"]).length != 0) {
+                        markers[entry]["leds"] = state["leds"][entry]
+                        for (var i = 0; i < 3; i++) {
+                            markers[entry]["leds"][i] = Math.round(Math.min(255, 50 + Math.log(markers[entry]["leds"][i] + 1) / Math.log(256) * 255))
                         }
-
-                        let robotSize = constants["robot_radius"] * 2 * ratio_w
-                        markers[entry]["context"].drawImage(markers[entry]["image"], -robotSize / 2, -robotSize / 2, robotSize, robotSize)
-                        markers[entry]["pos"] = robotPos
-                        markers[entry]["clear"] = false
-
+                        drawLeds(markers[entry]["leds"], context)
                     }
+
+                    let robotSize = constants["robot_radius"] * 2 * ratio_w
+                    context.imageSmoothingEnabled = true
+                    context.drawImage(markers[entry]["image"], -robotSize / 2, -robotSize / 2, robotSize, robotSize)
+                    markers[entry]["pos"] = robotPos
+                    markers[entry]["clear"] = false
                 }
+
+                canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height)
+                canvas.getContext("2d").drawImage(canvas.offscreenCanvas, 0, 0)
 
 
                 //Draw Ball and placement circle 
@@ -195,10 +194,9 @@ function simulator_initialize(backend, isView) {
             }
             for (var key in markers) {
                 markers[key]["image"] = new Image();
-                markers[key]["image"].src = "static/imgs/robot" + key + ".svg"
-                canvas = resizeCanvas(document.getElementById(key))
-                markers[key]["context"] = canvas.getContext('2d')
+                markers[key]["image"].src = "static/imgs/robot" + key + ".png"
             }
+            resizeCanvas(document.getElementById("robots"))
             resizeCanvas(document.getElementById("ball"))
 
             clearInterval(intervalId)
