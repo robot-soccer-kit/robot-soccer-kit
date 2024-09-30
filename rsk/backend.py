@@ -68,7 +68,11 @@ class Backend:
         return values
 
     def get_state(self):
-        return self.state.get_state()
+        state = self.state.get_state()
+        state["referee"] = {
+            "wait_ball_position": self.referee.wait_ball_position,
+        }
+        return state
 
     def resolutions(self):
         return self.video.resolutions()

@@ -32,7 +32,7 @@ class Referee:
         # Set when a goal validation is pending
         self.goal_validated = None
 
-        # Position where we wait for the ball to be before we
+        # Position where we wait for the ball to be
         self.wait_ball_position = None
 
         # Timers to penalize robots staying in te

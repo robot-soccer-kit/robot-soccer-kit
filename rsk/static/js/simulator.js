@@ -138,29 +138,29 @@ function simulator_initialize(backend, isView) {
                 canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height)
                 canvas.getContext("2d").drawImage(canvas.offscreenCanvas, 0, 0)
 
-
                 //Draw Ball and placement circle 
-                backend.get_wait_ball_position(function (placementCirclePosition) {
-                    ballCanvas = document.getElementById("ball")
-                    ballContext = ballCanvas.getContext("2d")
+                ballCanvas = document.getElementById("ball")
+                ballContext = ballCanvas.getContext("2d")
 
-                    if (state.ball != null) {
-                        drawBall(state.ball)
-                    }
-                    if (placementCirclePosition != null) {
-                        drawCircle(transformViewToSim(placementCirclePosition), constants.place_ball_margin * ratio_w, "red", ballCanvas, false, 1)
-                    }
+                if (state.ball != null) {
+                    drawBall(state.ball)
+                }
+                
+                let placementCirclePosition = state["referee"]["wait_ball_position"]
+                console.log(placementCirclePosition)
+                if (placementCirclePosition != null) {
+                    drawCircle(transformViewToSim(placementCirclePosition), constants.place_ball_margin * ratio_w, "red", ballCanvas, false, 1)
+                }
 
-                    if (display_settings["landmark"]["value"]) {
-                        center = [ballCanvas.width / 2, ballCanvas.height / 2]
-                        drawline(center, [center[0], center[1] - 100], ballCanvas, "green")
-                        drawline(center, [center[0] + 100, center[1]], ballCanvas, "red")
-                    }
+                if (display_settings["landmark"]["value"]) {
+                    center = [ballCanvas.width / 2, ballCanvas.height / 2]
+                    drawline(center, [center[0], center[1] - 100], ballCanvas, "green")
+                    drawline(center, [center[0] + 100, center[1]], ballCanvas, "red")
+                }
 
-                    if (display_settings["timed_circle"]["value"]) {
-                        drawCircle(transformViewToSim(state.ball), constants.timed_circle_radius * ratio_w, "red", ballCanvas, false, 1, [10, 10])
-                    }
-                })
+                if (display_settings["timed_circle"]["value"]) {
+                    drawCircle(transformViewToSim(state.ball), constants.timed_circle_radius * ratio_w, "red", ballCanvas, false, 1, [10, 10])
+                }
 
             });
         }
