@@ -262,3 +262,7 @@ div.progress {
         opacity: 0;
     }
 }
+
+#back {
+    object-fit: contain;
+}

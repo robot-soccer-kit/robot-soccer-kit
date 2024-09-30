@@ -306,9 +306,8 @@ function simulator_initialize(backend, isView) {
                     }
 
                     backgroundCanvas = document.getElementById('back')
-                    ratio = 1 / ratio_w
-                    reelPos[0] = (pos[0] - backgroundCanvas.offsetWidth / 2) * ratio
-                    reelPos[1] = -(pos[1] - backgroundCanvas.offsetHeight / 2) * ratio
+                    reelPos[0] = (pos[0] - backgroundCanvas.offsetWidth / 2) / ratio_w
+                    reelPos[1] = -(pos[1] - backgroundCanvas.offsetHeight / 2) / ratio_h
                     reelPos[2] = -(pos[2] - Math.PI / 2)
                     backend.teleport(selectedObjet, reelPos[0], reelPos[1], reelPos[2])
                 }
