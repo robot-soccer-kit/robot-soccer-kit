@@ -2,18 +2,23 @@ function simulator_initialize(backend, isView) {
     backend.constants(function (constants) {
         let ratio_w = null
         let ratio_h = null
+        let back_width = null
+        let back_height = null
 
         function update_ratios() {
-            ratio_w = document.getElementById('back').offsetWidth / constants["carpet_length"]
-            ratio_h = document.getElementById('back').offsetHeight / constants["carpet_width"]
+            back_width = document.getElementById('back').offsetWidth
+            back_height = document.getElementById('back').offsetHeight
+            ratio_w = back_width / constants["carpet_length"]
+            ratio_h = back_height / constants["carpet_width"]
+            ratio_h = Math.min(ratio_w, ratio_h)
         }
         $(window).on("resize", update_ratios)
 
         function transformViewToSim(position, orientation) {
             let simulatorPos = [0.0, 0.0, 0.0]
             let pos = [position[0], position[1], orientation]
-            simulatorPos[0] = ((pos[0] + carpetSize[0] / 2) * ratio_w)
-            simulatorPos[1] = ((-pos[1] + carpetSize[1] / 2) * ratio_h)
+            simulatorPos[0] = ((pos[0]) * ratio_w) + back_width / 2
+            simulatorPos[1] = ((-pos[1]) * ratio_h) + back_height / 2
             simulatorPos[2] = round(-pos[2] + Math.PI / 2)
             return simulatorPos
         }
