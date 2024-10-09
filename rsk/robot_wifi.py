@@ -48,6 +48,7 @@ class RobotWifi(robot.Robot):
         # Create UDP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_TOS, 0x10) # IPTOS_LOWDELAY
         sock.bind(("", RobotWifi.udp_port))
         sock.setblocking(False)
         next_broadcast = time.time()
