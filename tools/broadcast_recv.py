@@ -33,6 +33,6 @@ while True:
         expected_packets = packet_id - first_packet + 1
 
         loss = ((expected_packets - packets) / expected_packets) * 100
-        print("Packets: %d / %d, Loss: %d (pct)" % (packets, expected_packets, loss))
+        print("Packets: %d / %d, Loss: %.2f (pct)" % (packets, expected_packets, loss))
     except Exception as e:
         time.sleep(0.001)
