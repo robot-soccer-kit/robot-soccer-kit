@@ -30,15 +30,6 @@ class RobotWifi(robot.Robot):
     def int_to_ip(ip: int) -> str:
         return socket.inet_ntoa(struct.pack("!L", ip))
 
-    def get_broadcast_ip() -> str:
-        return RobotWifi.int_to_ip(
-            (
-                RobotWifi.ip_to_int(RobotWifi.network)
-                | ~RobotWifi.ip_to_int(RobotWifi.netmask)
-            )
-            & 0xFFFFFFFF
-        )
-
     def get_ip() -> str:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect((RobotWifi.network, 80))
@@ -48,7 +39,7 @@ class RobotWifi(robot.Robot):
         # Create UDP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        sock.setsockopt(socket.IPPROTO_IP, socket.IP_TOS, 0x10) # IPTOS_LOWDELAY
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_TOS, 0x10)  # IPTOS_LOWDELAY
         sock.bind(("", RobotWifi.udp_port))
         sock.setblocking(False)
         next_broadcast = time.time()
@@ -79,39 +70,50 @@ class RobotWifi(robot.Robot):
                     )
                     next_broadcast = time.time() + broadcast_period
 
-                data = b""
+                robots_data = {}
+
+                def append_data(ip: str, data: bytes):
+                    if ip not in robots_data:
+                        robots_data[ip] = b""
+
+                    robots_data[ip] += data
+
                 RobotWifi.lock.acquire()
                 for key in RobotWifi.pending_packets:
-                    robot, packet = RobotWifi.pending_packets[key]
-                    data += packet.to_raw()
+                    robot, ip, packet = RobotWifi.pending_packets[key]
+                    append_data(ip, packet.to_raw())
                     robot.last_sent_message = time.time()
                 RobotWifi.pending_packets = {}
 
                 # Ensure the robots get a packet every 1s
-                for key in RobotWifi.robots:
+                for ip in RobotWifi.robots:
                     if (
-                        RobotWifi.robots[key].last_sent_message is None
-                        or time.time() - RobotWifi.robots[key].last_sent_message > 1.0
+                        RobotWifi.robots[ip].last_sent_message is None
+                        or time.time() - RobotWifi.robots[ip].last_sent_message > 1.0
                     ):
-                        RobotWifi.robots[key].last_sent_message = time.time()
-                        packet = Packet(PACKET_HEARTBEAT, dest=RobotWifi.robots[key].id)
-                        data += packet.to_raw()
+                        RobotWifi.robots[ip].last_sent_message = time.time()
+                        packet = Packet(PACKET_HEARTBEAT, dest=RobotWifi.robots[ip].id)
+                        append_data(ip, packet.to_raw())
                 RobotWifi.lock.release()
 
-                if len(data):
-                    sock.sendto(
-                        data, (RobotWifi.get_broadcast_ip(), RobotWifi.udp_port)
-                    )
+                for ip in robots_data:
+                    try:
+                        sock.sendto(robots_data[ip], (ip, RobotWifi.udp_port))
+                    except Exception:
+                        print(f"WARNING: Can't send unicast to {ip}")
 
     def available_urls() -> list:
-        urls = []
+        return RobotWifi.robots_ips()
+
+    def robots_ips() -> list:
+        ips = []
         RobotWifi.lock.acquire()
         for ip in RobotWifi.statuses:
             if time.time() - RobotWifi.statuses[ip]["last_message"] < 10:
-                urls.append(ip)
+                ips.append(ip)
         RobotWifi.lock.release()
 
-        return urls
+        return ips
 
     def __init__(self, url: str):
         print(f"Adding a robot with url {url}")
@@ -119,6 +121,7 @@ class RobotWifi(robot.Robot):
 
         self.packet_reader = PacketReader(dest=0)
         self.id = int(url.split(".")[-1])
+        self.ip = url
         self.last_sent_message = None
         self.last_received_message = None
         self.packet_lock = True
@@ -150,10 +153,10 @@ class RobotWifi(robot.Robot):
                 self.state["time"] = packet.read_float()
                 self.state["battery"] = [packet.readByte() / 10.0]
 
-    def add_packet(self, id: int, type_: str, packet: Packet, lock: bool = True):
+    def add_packet(self, type_: str, packet: Packet, lock: bool = True):
         if lock:
             RobotWifi.lock.acquire()
-        RobotWifi.pending_packets[f"{id}/{type_}"] = (self, packet)
+        RobotWifi.pending_packets[f"{self.id}/{type_}"] = (self, self.ip, packet)
         if lock:
             RobotWifi.lock.release()
 
@@ -167,7 +170,7 @@ class RobotWifi(robot.Robot):
         packet = Packet(PACKET_ROBOT, dest=self.id)
         packet.append_byte(PACKET_ROBOT_KICK)
         packet.append_byte(int(100 * power))
-        self.add_packet(self.id, "kick", packet, lock)
+        self.add_packet("kick", packet, lock)
 
     def control(self, dx: float, dy: float, dturn: float, lock: bool = True) -> None:
         """
@@ -183,7 +186,7 @@ class RobotWifi(robot.Robot):
         packet.append_short(int(1000 * dx))
         packet.append_short(int(1000 * dy))
         packet.append_short(int(np.rad2deg(dturn)))
-        self.add_packet(self.id, "control", packet, lock)
+        self.add_packet("control", packet, lock)
 
     def leds(self, red: int, green: int, blue: int, lock: bool = True) -> None:
         """
@@ -199,7 +202,7 @@ class RobotWifi(robot.Robot):
         packet.append_byte(red)
         packet.append_byte(green)
         packet.append_byte(blue)
-        self.add_packet(self.id, "leds", packet, lock)
+        self.add_packet("leds", packet, lock)
 
     def beep(self, frequency: int, duration: int, lock: bool = True) -> None:
         """
@@ -213,7 +216,7 @@ class RobotWifi(robot.Robot):
         packet.append_byte(PACKET_ROBOT_BEEP)
         packet.append_short(frequency)
         packet.append_short(duration)
-        self.add_packet(self.id, "beep", packet, lock)
+        self.add_packet("beep", packet, lock)
 
     def blink(self) -> None:
         """
