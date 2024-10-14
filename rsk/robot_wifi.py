@@ -7,8 +7,6 @@ from .packets import *
 
 
 class RobotWifi(robot.Robot):
-    network: str = "192.168.100.0"
-    netmask: str = "255.255.255.0"
     udp_port: int = 7600
     broadcast_frequency: float = 60
 
@@ -30,11 +28,6 @@ class RobotWifi(robot.Robot):
     def int_to_ip(ip: int) -> str:
         return socket.inet_ntoa(struct.pack("!L", ip))
 
-    def get_ip() -> str:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect((RobotWifi.network, 80))
-        return s.getsockname()[0]
-
     def service_loop():
         # Create UDP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -50,14 +43,13 @@ class RobotWifi(robot.Robot):
             try:
                 data, addr = sock.recvfrom(1024)
                 rcv_ip = addr[0]
-                if rcv_ip != RobotWifi.get_ip():
-                    RobotWifi.lock.acquire()
-                    RobotWifi.statuses[rcv_ip] = {"last_message": time.time()}
+                RobotWifi.lock.acquire()
+                RobotWifi.statuses[rcv_ip] = {"last_message": time.time()}
 
-                    if rcv_ip in RobotWifi.robots:
-                        RobotWifi.robots[rcv_ip].process(data)
+                if rcv_ip in RobotWifi.robots:
+                    RobotWifi.robots[rcv_ip].process(data)
 
-                    RobotWifi.lock.release()
+                RobotWifi.lock.release()
             except Exception as e:
                 time.sleep(0.001)
 

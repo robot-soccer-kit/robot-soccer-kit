@@ -22,12 +22,8 @@ parser.add_argument("--port", "-p", type=str, default="7070")
 parser.add_argument("--ip", "-ip", type=str, default="127.0.0.1")
 parser.add_argument("--simulated", "-s", action="store_true")
 parser.add_argument("--competition", "-c", action="store_true")
-parser.add_argument("--wifi-network", "-w", type=str, default="192.168.100.0")
-parser.add_argument("--wifi-subnet", "-ws", type=str, default="255.255.255.0")
 args = parser.parse_args()
 
-robot_wifi.RobotWifi.network = args.wifi_network
-robot_wifi.RobotWifi.netmask = args.wifi_subnet
 robot_wifi.RobotWifi.start_service()
 
 has_client: bool = False
