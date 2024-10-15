@@ -259,10 +259,14 @@ div.progress {
 
 @keyframes blinker {
     50% {
-        opacity: 0;
+        opacity: 0.5;
     }
 }
 
 #back {
     object-fit: contain;
+}
+
+.no-backend {
+    position:relative;
 }
