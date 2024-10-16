@@ -131,6 +131,7 @@ class Video:
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
 
         self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
+        self.capture.set(cv2.CAP_PROP_FPS, 30)
 
         self.favourite_index = index
         self.resolution = resolution
