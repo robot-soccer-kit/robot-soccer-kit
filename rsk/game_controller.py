@@ -9,7 +9,7 @@ import waitress
 from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
 from .backend import Backend
-from . import api, robot_wifi
+from . import api, robot_wifi, config
 
 
 # Setting up the logger
@@ -22,7 +22,11 @@ parser.add_argument("--port", "-p", type=str, default="7070")
 parser.add_argument("--ip", "-ip", type=str, default="127.0.0.1")
 parser.add_argument("--simulated", "-s", action="store_true")
 parser.add_argument("--competition", "-c", action="store_true")
+parser.add_argument("--reset", "-r", action="store_true")
 args = parser.parse_args()
+
+if args.reset:
+    config.reset()
 
 robot_wifi.RobotWifi.start_service()
 

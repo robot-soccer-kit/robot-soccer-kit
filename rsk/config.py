@@ -12,3 +12,9 @@ if os.path.exists(filename):
 def save():
     with open(filename, "w") as file:
         json.dump(config, file)
+
+
+def reset():
+    global config
+    config = {}
+    save()
