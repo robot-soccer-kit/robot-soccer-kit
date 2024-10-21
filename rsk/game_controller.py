@@ -13,16 +13,32 @@ from . import api, robot_wifi, config
 
 
 # Setting up the logger
-logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
+logging.basicConfig(
+    format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO
+)
 logging.getLogger("werkzeug").setLevel(logging.CRITICAL)
 logging.getLogger("robot-soccer-kit").info("Starting robot-soccer-kit Game Controller")
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--port", "-p", type=str, default="7070")
-parser.add_argument("--ip", "-ip", type=str, default="127.0.0.1")
-parser.add_argument("--simulated", "-s", action="store_true")
-parser.add_argument("--competition", "-c", action="store_true")
-parser.add_argument("--reset", "-r", action="store_true")
+parser.add_argument(
+    "--ip",
+    "-ip",
+    type=str,
+    default="127.0.0.1",
+    help="IP address for the server to listen on",
+)
+parser.add_argument(
+    "--port", "-p", type=str, default="7070", help="Port for the server to listen on"
+)
+parser.add_argument(
+    "--simulated", "-s", action="store_true", help="Enables simulation mode"
+)
+parser.add_argument(
+    "--competition", "-c", action="store_true", help="Enables competition mode"
+)
+parser.add_argument(
+    "--reset", "-r", action="store_true", help="Reset the configuration file"
+)
 args = parser.parse_args()
 
 if args.reset:
