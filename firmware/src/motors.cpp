@@ -46,8 +46,8 @@ SHELL_PARAMETER_FLOAT(kp, "Kp", 0.25);
 // Motors constant (N.m/A)
 #define MOTOR_KT 0.37
 // Static frictions (N.m)
-#define FRICTION_IDLE 0.016
-#define FRICTION_MOVING 0.009
+#define FRICTION_IDLE 0.02
+#define FRICTION_MOVING 0.01
 
 #define DEG2RAD(x) (x * M_PI / 180.0)
 
@@ -79,7 +79,17 @@ bool motors_are_enabled() {
   return motors[0].enabled || motors[1].enabled || motors[2].enabled;
 }
 
+static volatile bool to_disable = false;
+
 void motors_servo() {
+  if (to_disable) {
+    for (int k = 0; k < 3; k++) {
+      motors[k].enabled = false;
+    }
+    motors_set_pwms(0, 0, 0);
+    to_disable = false;
+  }
+
   for (int k = 0; k < 3; k++) {
     int64_t count = motors[k].encoder.getCount();
     motors[k].encoder_window_index += 1;
@@ -101,7 +111,7 @@ void motors_servo() {
       float friction =
           exp(-fabs(motors[k].speed) * 5) * (FRICTION_IDLE - FRICTION_MOVING) +
           FRICTION_MOVING;
-      desired_torque += friction * (motors[k].speed > 0 ? 1 : -1);
+      desired_torque += friction * (motors[k].speed_target > 0 ? 1 : -1);
 
       float desired_voltage = (MOTOR_R / MOTOR_KT) * desired_torque +
                               motors[k].speed_target * MOTOR_KT;
@@ -272,11 +282,6 @@ SHELL_COMMAND(joy, "Control with joystick [mm/s] [mm/s] [deg/s]") {
   }
 }
 
-void motors_disable() {
-  for (int k = 0; k < 3; k++) {
-    motors[k].enabled = false;
-  }
-  motors_set_pwms(0, 0, 0);
-}
+void motors_disable() { to_disable = true; }
 
 SHELL_COMMAND(em, "Stop") { motors_disable(); }
