@@ -50,9 +50,9 @@
 #endif
 
 // This define uses BRAKE mode to drive the motors
-// #ifdef BOARD_REV2
-// #define MOTORS_BRAKE
-// #endif
+#ifdef BOARD_REV2
+#define MOTORS_BRAKE
+#endif
 
 // Wheel radius [m]
 #define MODEL_WHEEL_RADIUS 0.035

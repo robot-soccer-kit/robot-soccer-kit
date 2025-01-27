@@ -35,14 +35,19 @@ struct Motor {
   float speed;
   // Current error
   float error;
-  // Error accumulator (for integrator)
-  float error_accumulator;
   // Is the servoing enabled ?
   bool enabled;
 };
 
-SHELL_PARAMETER_FLOAT(kp, "Kp", 1000);
-SHELL_PARAMETER_FLOAT(ki, "Ki", 500);
+SHELL_PARAMETER_FLOAT(kp, "Kp", 0.25);
+
+// Motor's resistance (ohm)
+#define MOTOR_R 16.0
+// Motors constant (N.m/A)
+#define MOTOR_KT 0.37
+// Static frictions (N.m)
+#define FRICTION_IDLE 0.016
+#define FRICTION_MOVING 0.009
 
 #define DEG2RAD(x) (x * M_PI / 180.0)
 
@@ -92,10 +97,16 @@ void motors_servo() {
     motors[k].error = error;
 
     if (motors[k].enabled) {
-      motors[k].error_accumulator += ki * error / 1000.0;
-      _bound_pwm(&motors[k].error_accumulator);
+      float desired_torque = kp * error;
+      float friction =
+          exp(-fabs(motors[k].speed) * 5) * (FRICTION_IDLE - FRICTION_MOVING) +
+          FRICTION_MOVING;
+      desired_torque += friction * (motors[k].speed > 0 ? 1 : -1);
 
-      float pwm = kp * error + motors[k].error_accumulator;
+      float desired_voltage = (MOTOR_R / MOTOR_KT) * desired_torque +
+                              motors[k].speed_target * MOTOR_KT;
+      float pwm = desired_voltage * 1024 / voltage_value();
+
       _bound_pwm(&pwm);
 
       if (fabs(motors[k].speed_target) < 1e-3) {
@@ -103,8 +114,6 @@ void motors_servo() {
       }
 
       motors_set_pwm(k, pwm);
-    } else {
-      motors[k].error_accumulator = 0;
     }
   }
   n += 1;
@@ -131,7 +140,6 @@ void motors_init() {
     motors[k].speed = 0;
     motors[k].error = 0;
     motors[k].speed_target = 0;
-    motors[k].error_accumulator = 0;
     motors[k].enabled = false;
   }
 
@@ -226,8 +234,6 @@ SHELL_COMMAND(motors, "Motors status") {
     shell_stream()->println(motors[k].speed);
     shell_stream()->print("- Error: ");
     shell_stream()->println(motors[k].error);
-    shell_stream()->print("- Error accumulator: ");
-    shell_stream()->println(motors[k].error_accumulator);
   }
 }
 
