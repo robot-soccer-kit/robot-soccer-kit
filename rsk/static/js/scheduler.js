@@ -73,8 +73,16 @@ function scheduler_initialize(backend, url) {
                         let game_html = team_template
                         date = new Date(game.timeSlot.begin);
                         game_html = game_html.replace('{time}', date.toLocaleString());
-                        game_html = game_html.replace('{teamBlue}', game.teamBlue.name);
-                        game_html = game_html.replace('{teamGreen}', game.teamGreen.name);
+                        if (game.teamBlue) {
+                            game_html = game_html.replace('{teamBlue}', game.teamBlue.name);
+                        } else {
+                            game_html = game_html.replace('{teamBlue}', '?')
+                        }
+                        if (game.teamGreen) {
+                            game_html = game_html.replace('{teamGreen}', game.teamGreen.name);
+                        } else {
+                            game_html = game_html.replace('{teamGreen}', '?')
+                        }
                         game_html = game_html.replace('{comment}', game.comment);
                         game_html = game_html.replace(/{id}/g, game.id);
 
