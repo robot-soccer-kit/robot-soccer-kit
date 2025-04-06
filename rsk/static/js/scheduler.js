@@ -10,8 +10,12 @@ function scheduler_initialize(backend, url) {
             for (let game of games) {
                 if (game.id == gameId) {
                     $('.scheduler-game-row-'+gameId).addClass('scheduler-game-row-selected');
-                    setTeam('blue', game.teamBlue.name, game.teamBlue.token);
-                    setTeam('green', game.teamGreen.name, game.teamGreen.token);
+                    if (game.teamBlue) {
+                        setTeam('blue', game.teamBlue.name, game.teamBlue.token);
+                    }
+                    if (game.teamGreen) {
+                        setTeam('green', game.teamGreen.name, game.teamGreen.token);
+                    }
                     currentGame = game;
                     updateScores()
                 }
