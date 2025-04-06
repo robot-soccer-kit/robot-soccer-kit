@@ -36,7 +36,7 @@ class APIBackend {
 
 $(document).ready(function () {
     // Backend initialization
-    var backend = new APIBackend('http://'+document.location.host+'/api');
+    var backend = new APIBackend('http://' + document.location.host + '/api');
     backend.is_simulated(function (simulated) {
         if (simulated) {
             console.log("SIMULATION")
@@ -54,6 +54,13 @@ $(document).ready(function () {
         if (competition) {
             $('.competition-mode').show();
             competition_initialize(backend);
+        }
+    });
+
+    backend.scheduler_url(function (url) {
+        if (url) {
+            $('.scheduler-mode').show();
+            scheduler_initialize(backend, url);
         }
     });
 

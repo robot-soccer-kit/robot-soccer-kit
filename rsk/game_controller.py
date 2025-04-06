@@ -37,6 +37,9 @@ parser.add_argument(
     "--competition", "-c", action="store_true", help="Enables competition mode"
 )
 parser.add_argument(
+    "--scheduler", "-S", type=str, default="", help="Game scheduler URL"
+)
+parser.add_argument(
     "--reset", "-r", action="store_true", help="Reset the configuration file"
 )
 args = parser.parse_args()
@@ -47,7 +50,7 @@ if args.reset:
 robot_wifi.RobotWifi.start_service()
 
 has_client: bool = False
-backend: Backend = Backend(args.simulated, args.competition)
+backend: Backend = Backend(args.simulated, args.competition, args.scheduler)
 api.register(backend)
 
 # Starting a Flask app serving API requests and files of static/ directory

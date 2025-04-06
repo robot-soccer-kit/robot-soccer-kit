@@ -1,0 +1,29 @@
+<tr class="scheduler-game-row scheduler-game-row-{id}">
+    <td>
+        {time}
+    </td>
+    <td>
+        <span class="text-green">{teamGreen}</span>
+    </td>
+    <td>
+        <div class="form-inline">
+            <div class="form-group">
+                <span class="text-green scheduler-score-green-{id}" type="text">?</span>
+                -
+                <span class="text-blue scheduler-score-blue-{id}" type="text">?</span>
+            </div>
+        </div>
+    </td>
+    <td>
+        <span class="text-blue">{teamBlue}</span>
+    </td>
+    <td>
+        <small><em>{comment}</em></small>
+    </td>
+    <td>
+        <span class="scheduler-actions-{id}">
+        <a data-game-id="{id}" class="btn btn-primary scheduler-load-game" href="#">Set active</a>
+        <a data-game-id="{id}" class="btn btn-success scheduler-publish-game" href="#">Publish</a>
+        </span>
+    </td>
+</tr>

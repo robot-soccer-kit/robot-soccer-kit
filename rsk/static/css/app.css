@@ -205,7 +205,13 @@ body {
     margin-right: auto;
 }
 
+.text-blue {
+    color: rgb(3, 102, 184);
+}
 
+.text-green {
+    color: rgba(10, 148, 0);
+}
 
 .bg-head-blue {
     background-color: rgb(3, 102, 184);
@@ -270,3 +276,6 @@ div.progress {
 .no-backend {
     position:relative;
 }
+
+.scheduler-game-row-selected, .scheduler-game-row-selected tr {
+    background-color: rgba(255, 200, 0, 0.206);

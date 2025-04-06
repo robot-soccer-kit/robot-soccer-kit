@@ -13,6 +13,7 @@
 <script type="text/javascript" src="static/js/referee.js"></script>
 <script type="text/javascript" src="static/js/simulator.js"></script>
 <script type="text/javascript" src="static/js/competition.js"></script>
+<script type="text/javascript" src="static/js/scheduler.js"></script>
 <script type="text/javascript" src="static/js/control.js"></script>
 <script type="text/javascript" src="static/js/tabs.js"></script>
 <script type="text/javascript" src="static/js/app.js"></script>
@@ -71,6 +72,12 @@
                 <a class="nav-link" href="#">
                     <i class="bi bi-award"></i>&nbsp;
                     Competition
+                </a>
+            </li>
+            <li class="nav-item rounded nav-tab scheduler-mode" rel="scheduler">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-calendar-date"></i>&nbsp;
+                    Scheduler
                 </a>
             </li>
         </ul>
@@ -650,6 +657,29 @@
                 Team password: <input class="form-control add-team-password" type="password" />
                 <hr/>
                 <input type="submit" class="form-control btn btn-success add-team">
+            </div>
+        </div>
+    </div>
+
+    <div class="page page-scheduler scheduler-mode">
+        <div class="card">
+            <div class="card-header text-center">
+                <a href="#" class="scheduler-refresh-games btn btn-primary">Refresh games</a>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <tr>
+                        <th>Time</th>
+                        <th>Blue team</th>
+                        <th>Result</th>
+                        <th>Green team</th>
+                        <th>Comment</th>
+                        <th>Action</th>
+                    </tr>
+                    
+                    <tbody class="scheduler-teams">
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

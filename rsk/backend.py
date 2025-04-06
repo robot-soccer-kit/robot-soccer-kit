@@ -15,13 +15,14 @@ from . import (
 
 
 class Backend:
-    def __init__(self, simulated=False, competition=False):
+    def __init__(self, simulated=False, competition=False, scheduler=""):
         super().__init__()
         robots.Robots.protocols["serial"] = robot_serial.RobotSerial
         robots.Robots.protocols["wifi"] = robot_wifi.RobotWifi
 
         self.simulated = simulated
         self.competition = competition
+        self.scheduler = scheduler
 
         self.state: state.State = state.State(30, self.simulated)
         self.state.start_pub()
@@ -46,6 +47,9 @@ class Backend:
 
     def is_competition(self):
         return self.competition
+    
+    def scheduler_url(self):
+        return self.scheduler
 
     def is_simulated(self):
         return self.simulated
