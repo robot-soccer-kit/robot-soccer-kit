@@ -42,6 +42,7 @@ function scheduler_initialize(backend, url) {
             $('.scheduler-load-game').click(function () {
                 let gameId = $(this).attr('data-game-id');
                 setCurrentGame(gameId);
+                return false;
             });
 
             $('.scheduler-publish-game').click(function() {
@@ -62,6 +63,7 @@ function scheduler_initialize(backend, url) {
                         }
                     });
                 }
+                return false;
             });
         }
 
@@ -100,6 +102,8 @@ function scheduler_initialize(backend, url) {
                     $('.scheduler-teams').html('No games scheduled');
                 }
             });
+
+            return false;
         }
 
         refreshGames()
