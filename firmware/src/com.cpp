@@ -25,6 +25,7 @@ bool is_wifi = true;
 bool switch_to_bt_disabled = false;
 WiFiUDP udp;
 IPAddress game_controller;
+IPAddress robot_ip;
 
 // Needed when in BT mode
 bool do_forward = false;
@@ -36,6 +37,12 @@ const char bin_exit[] = "!bin\r";
 const int bin_exit_len = 5;
 int bin_exit_pos = 0;
 static unsigned long last_packet_timestamp = 0;
+
+static bool has_game_controller() {
+  // We received a packet in the last 30s
+  return last_packet_timestamp != 0 &&
+         (millis() - last_packet_timestamp) < 30000;
+}
 
 char bin_on_packet(uint8_t type) {
   if (type == BIN_STREAM_ROBOT) {
@@ -99,8 +106,7 @@ void bin_stream_send(uint8_t *packet, size_t size) {
     if (WiFi.status() == WL_CONNECTED) {
 
       IPAddress target = WiFi.broadcastIP();
-      if (last_packet_timestamp != 0 &&
-          millis() - last_packet_timestamp < 3000) {
+      if (has_game_controller()) {
         target = game_controller;
       }
 
@@ -116,13 +122,13 @@ void bin_stream_send(uint8_t c) { shell_stream()->write(c); }
 
 void com_init() {
 
-  IPAddress ip, gateway, subnet, dns;
-  ip.fromString(WIFI_IP);
+  IPAddress gateway, subnet, dns;
+  robot_ip.fromString(WIFI_IP);
   gateway.fromString(WIFI_GATEWAY);
   subnet.fromString(WIFI_SUBNET);
   dns.fromString(WIFI_DNS);
 
-  WiFi.config(ip, gateway, subnet, dns);
+  WiFi.config(robot_ip, gateway, subnet, dns);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   WiFi.setAutoReconnect(true);
 
@@ -130,7 +136,7 @@ void com_init() {
   bin_stream_set_monitor_period(1000);
 
   udp.begin(WIFI_UDP_PORT);
-  bin_stream_set_id(ip[3]);
+  bin_stream_set_id(robot_ip[3]);
 
   shell_init();
 }
@@ -157,14 +163,19 @@ void com_bin_tick() {
   if (is_wifi) {
     int packet_size = udp.parsePacket();
     if (packet_size) {
-      uint8_t packet_data[packet_size];
-      udp.read(packet_data, packet_size);
+      // Ignoring packets from other hosts than the game controller or for
+      // ourself
+      if ((!has_game_controller() || udp.remoteIP() == game_controller) &&
+          udp.remoteIP() != robot_ip) {
+        uint8_t packet_data[packet_size];
+        udp.read(packet_data, packet_size);
 
-      for (int k = 0; k < packet_size; k++) {
-        if (bin_stream_recv(packet_data[k])) {
-          switch_to_bt_disabled = true;
-          last_packet_timestamp = millis();
-          game_controller = udp.remoteIP();
+        for (int k = 0; k < packet_size; k++) {
+          if (bin_stream_recv(packet_data[k])) {
+            switch_to_bt_disabled = true;
+            last_packet_timestamp = millis();
+            game_controller = udp.remoteIP();
+          }
         }
       }
     }
