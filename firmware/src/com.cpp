@@ -26,6 +26,7 @@ bool switch_to_bt_disabled = false;
 WiFiUDP udp;
 IPAddress game_controller;
 IPAddress robot_ip;
+static unsigned long last_game_controller_timestamp = 0;
 
 // Needed when in BT mode
 bool do_forward = false;
@@ -39,9 +40,8 @@ int bin_exit_pos = 0;
 static unsigned long last_packet_timestamp = 0;
 
 static bool has_game_controller() {
-  // We received a packet in the last 30s
-  return last_packet_timestamp != 0 &&
-         (millis() - last_packet_timestamp) < 30000;
+  return last_game_controller_timestamp != 0 &&
+         (millis() - last_game_controller_timestamp) < 30000;
 }
 
 char bin_on_packet(uint8_t type) {
@@ -163,16 +163,18 @@ void com_bin_tick() {
   if (is_wifi) {
     int packet_size = udp.parsePacket();
     if (packet_size) {
+      uint8_t packet_data[packet_size];
+      udp.read(packet_data, packet_size);
+
       // Ignoring packets from other hosts than the game controller or for
       // ourself
       if ((!has_game_controller() || udp.remoteIP() == game_controller) &&
           udp.remoteIP() != robot_ip) {
-        uint8_t packet_data[packet_size];
-        udp.read(packet_data, packet_size);
 
         for (int k = 0; k < packet_size; k++) {
           if (bin_stream_recv(packet_data[k])) {
             switch_to_bt_disabled = true;
+            last_game_controller_timestamp = millis();
             last_packet_timestamp = millis();
             game_controller = udp.remoteIP();
           }
