@@ -259,6 +259,10 @@ div.progress {
     display: none;
 }
 
+.scheduler-mode {
+    display: none;
+}
+
 .blinking {
     animation: blinker 1s linear infinite;
 }
