@@ -41,7 +41,7 @@ class PathFinding(astar.AStar):
 
         return path
     
-    def find_target(self, start: int, goal: int, min_distance: float = 0.25) -> list:
+    def find_target(self, start: int, goal: int, target_distance: float = 0.25) -> list:
         path = self.astar(start, goal)
         if path is None:
             return None
@@ -49,10 +49,16 @@ class PathFinding(astar.AStar):
         distance = 0.0
         k = 0
 
-        while distance < min_distance and k < len(path) - 1:
+        while distance < target_distance and k < len(path) - 1:
             current_target = path[k]
             new_target = path[k+1]
-            distance += np.linalg.norm(current_target - new_target)
+            segment_length = np.linalg.norm(new_target - current_target)
+            if distance + segment_length > target_distance:
+                remaining = target_distance - distance
+                ratio = remaining / segment_length
+                return current_target + ratio * (new_target - current_target)
+            else:
+                distance += segment_length
             k += 1
 
         return path[k]

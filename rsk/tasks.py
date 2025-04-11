@@ -101,7 +101,7 @@ class GoToConfigurationTask(ControlTask):
         return list(self.targets.keys())
 
     def tick(self, robot: client.ClientRobot):
-        robot.goto(self.targets[(robot.team, robot.number)], False, skip_old=self.skip_old, avoid_opponents=True)
+        robot.goto(self.targets[(robot.team, robot.number)], False, skip_old=self.skip_old, avoid_obstacles=True)
 
     def finished(self, client: client.Client, available_robots: list) -> bool:
         if self.forever:

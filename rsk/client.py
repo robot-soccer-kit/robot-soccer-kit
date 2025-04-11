@@ -160,7 +160,7 @@ class ClientRobot(ClientTracked):
         """
         return self.client.command(self.color, self.number, "leds", [r, g, b])
 
-    def goto_compute_order(self, target, skip_old=True, avoid_opponents=False):
+    def goto_compute_order(self, target, skip_old=True, avoid_obstacles=False):
         """
         Compute the order to send to the robot to go to the given target.
         :param target: The target to go to. Can be a tuple (x, y, orientation) or a function returning such a tuple.
@@ -172,8 +172,8 @@ class ClientRobot(ClientTracked):
         if callable(target):
             target = target()
 
-        if avoid_opponents:
-            path_finder = PathFinding(discretization=8, avoid_margin=constants.robot_radius*2)
+        if avoid_obstacles:
+            path_finder = PathFinding(discretization=8, avoid_margin=constants.robot_radius*3)
             start_node = path_finder.add_node(self.position[0], self.position[1])
             target_node = path_finder.add_node(target[0], target[1])
             for color in self.client.robots:
@@ -184,7 +184,7 @@ class ClientRobot(ClientTracked):
                     if robot.has_position(True):
                         path_finder.add_obstacle(robot.position[0], robot.position[1], constants.robot_radius*2)
 
-            intermediary_target = path_finder.find_target(start_node, target_node, 0.1)
+            intermediary_target = path_finder.find_target(start_node, target_node, 0.4)
             if intermediary_target is not None:
                 target = [*intermediary_target, target[2]]
 
@@ -203,7 +203,7 @@ class ClientRobot(ClientTracked):
 
         return arrived, order
 
-    def goto(self, target, wait=True, skip_old=True, avoid_opponents=False):
+    def goto(self, target, wait=True, skip_old=True, avoid_obstacles=False):
         """
         Go to the given target.
         :param target: The target to go to. Can be a tuple (x, y, orientation) or a function returning such a tuple.
@@ -211,12 +211,12 @@ class ClientRobot(ClientTracked):
         :param skip_old: If True, returns False if the position is older than 1 second.
         """
         if wait:
-            while not self.goto(target, wait=False, avoid_opponents=avoid_opponents):
+            while not self.goto(target, wait=False, avoid_obstacles=avoid_obstacles):
                 time.sleep(0.05)
             self.control(0, 0, 0)
             return True
 
-        arrived, order = self.goto_compute_order(target, skip_old, avoid_opponents)
+        arrived, order = self.goto_compute_order(target, skip_old, avoid_obstacles)
         self.control(*order)
 
         return arrived
@@ -406,7 +406,7 @@ class Client:
             elif self.error_management == "print":
                 self.logger.warning('Command "' + name + '" failed: ' + message)
 
-    def goto_configuration(self, configuration_name="side", wait=False, avoid_opponents=True):
+    def goto_configuration(self, configuration_name="side", wait=False, avoid_obstacles=True):
         """
         Go to the given configuration.
         :param configuration_name: The name of the configuration to go to.
@@ -420,7 +420,7 @@ class Client:
             for color, index, target in targets:
                 robot = self.robots[color][index]
                 try:
-                    arrived = robot.goto(target, wait=wait, avoid_opponents=avoid_opponents) and arrived
+                    arrived = robot.goto(target, wait=wait, avoid_obstacles=avoid_obstacles) and arrived
                 except ClientError:
                     pass
 
