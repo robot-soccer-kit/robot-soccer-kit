@@ -29,7 +29,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     keywords="robot holonomic omniwheel ssl sct robocup junior soccer standard localized tracking",
-    install_requires=["numpy<2", "pyzmq", "pyyaml"],
+    install_requires=["numpy<2", "pyzmq", "pyyaml", "astar"],
     extras_require={
         "gc": ["pyserial", "flask", "flask-cors", "waitress", 
             "opencv-contrib-python<4.7;platform_system=='Windows'",
