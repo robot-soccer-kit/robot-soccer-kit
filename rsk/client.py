@@ -90,6 +90,7 @@ class ClientRobot(ClientTracked):
         self.x_min = -self.x_max
         self.y_max = constants.carpet_width / 2 - constants.robot_radius
         self.y_min = -self.y_max
+        self.last_velocity = np.array([0, 0, 0])
 
     def ball(self):
         """
@@ -132,6 +133,7 @@ class ClientRobot(ClientTracked):
         :param dturn: The speed of rotation, in rad.s^-1
         """
         self.moved = True
+        self.last_velocity = np.array([dx, dy, dturn])
         return self.client.command(self.color, self.number, "control", [dx, dy, dturn])
 
     def teleport(self, x, y, turn):
@@ -174,6 +176,7 @@ class ClientRobot(ClientTracked):
 
         if avoid_obstacles:
             # Avoid other robots
+            foresee = 0.3 # seconds
             path_finder = PathFinder(discretization=8, avoid_margin=constants.robot_radius*3)
             start_node = path_finder.add_node(self.position[0], self.position[1])
             target_node = path_finder.add_node(target[0], target[1])
@@ -183,7 +186,11 @@ class ClientRobot(ClientTracked):
                     if robot.color == self.color and robot.number == self.number:
                         continue
                     if robot.has_position(True):
-                        path_finder.add_obstacle(robot.position[0], robot.position[1], constants.robot_radius*2)
+                        T = utils.robot_frame(robot)[:2, :2]
+                        dx, dy = T @ robot.last_velocity[:2]
+                        x = robot.position[0] + foresee * dx
+                        y = robot.position[1] + foresee * dy
+                        path_finder.add_obstacle(x, y, constants.robot_radius*2)
 
             intermediate_target = path_finder.find_target(start_node, target_node, 0.4)
             if intermediate_target is not None:
