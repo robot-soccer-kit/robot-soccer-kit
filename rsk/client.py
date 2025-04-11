@@ -5,7 +5,7 @@ import sys
 import threading
 import logging
 import time
-from .path_finding import PathFinding
+from .path_finder import PathFinder
 from . import constants, utils
 
 configurations = {
@@ -173,7 +173,8 @@ class ClientRobot(ClientTracked):
             target = target()
 
         if avoid_obstacles:
-            path_finder = PathFinding(discretization=8, avoid_margin=constants.robot_radius*3)
+            # Avoid other robots
+            path_finder = PathFinder(discretization=8, avoid_margin=constants.robot_radius*3)
             start_node = path_finder.add_node(self.position[0], self.position[1])
             target_node = path_finder.add_node(target[0], target[1])
             for color in self.client.robots:
@@ -184,9 +185,9 @@ class ClientRobot(ClientTracked):
                     if robot.has_position(True):
                         path_finder.add_obstacle(robot.position[0], robot.position[1], constants.robot_radius*2)
 
-            intermediary_target = path_finder.find_target(start_node, target_node, 0.4)
-            if intermediary_target is not None:
-                target = [*intermediary_target, target[2]]
+            intermediate_target = path_finder.find_target(start_node, target_node, 0.4)
+            if intermediate_target is not None:
+                target = [*intermediate_target, target[2]]
 
         x, y, orientation = target
         x = min(self.x_max, max(self.x_min, x))
