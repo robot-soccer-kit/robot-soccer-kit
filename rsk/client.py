@@ -160,7 +160,7 @@ class ClientRobot(ClientTracked):
         """
         return self.client.command(self.color, self.number, "leds", [r, g, b])
 
-    def goto_compute_order(self, target, skip_old=True, avoid_opponents=False):
+    def goto_compute_order(self, target, skip_old=True, avoid_obstacles=False):
         """
         Compute the order to send to the robot to go to the given target.
         :param target: The target to go to. Can be a tuple (x, y, orientation) or a function returning such a tuple.
@@ -172,38 +172,63 @@ class ClientRobot(ClientTracked):
         if callable(target):
             target = target()
 
-        if avoid_opponents:
-            path_finder = PathFinding(discretization=8, avoid_margin=constants.robot_radius*2)
-            start_node = path_finder.add_node(self.position[0], self.position[1])
-            target_node = path_finder.add_node(target[0], target[1])
+        # if avoid_obstacles:
+        #     path_finder = PathFinding(avoid_margin=constants.robot_radius*2)
+        #     start_node = path_finder.add_node(self.position[0], self.position[1])
+        #     target_node = path_finder.add_node(target[0], target[1])
+        #     for color in self.client.robots:
+        #         for number in self.client.robots[color]:
+        #             robot = self.client.robots[color][number]
+        #             if robot.color == self.color and robot.number == self.number:
+        #                 continue
+        #             if robot.has_position(True):
+        #                 path_finder.add_obstacle(robot.position[0], robot.position[1], constants.robot_radius*2)
+
+        #     intermediary_target = path_finder.find_target(start_node, target_node, 0.2)
+        #     if intermediary_target is not None:
+        #         target = [*intermediary_target, target[2]]
+
+        x, y, orientation = target
+        x = min(self.x_max, max(self.x_min, x))
+        y = min(self.y_max, max(self.y_min, y))
+
+        error_x_world = x - self.position[0]
+        error_y_world = y - self.position[1]
+        error_orientation = utils.angle_wrap(orientation - self.orientation)
+
+        arrived = np.linalg.norm([error_x_world, error_y_world, error_orientation]) < 0.05
+        order_world = 1.5 * error_x_world, 1.5 * error_y_world, 1.5 * error_orientation
+
+        if avoid_obstacles:
+            margin = constants.robot_radius * 3
+            go_away_velocity = 0.
+            vel_x, vel_y = order_world[0], order_world[1]
             for color in self.client.robots:
                 for number in self.client.robots[color]:
                     robot = self.client.robots[color][number]
                     if robot.color == self.color and robot.number == self.number:
                         continue
                     if robot.has_position(True):
-                        path_finder.add_obstacle(robot.position[0], robot.position[1], constants.robot_radius*2)
+                        obstacle_to_robot = np.array(self.position) - np.array(robot.position)
+                        if np.linalg.norm(obstacle_to_robot) < margin:
+                            external = obstacle_to_robot / np.linalg.norm(obstacle_to_robot)
+                            tangntial = np.array([-external[1], external[0]])
+                            vel_external = np.dot([vel_x, vel_y], external)
+                            vel_tangential = np.dot([vel_x, vel_y], tangntial)
+                            vel_external = max(vel_external, go_away_velocity)
+                            vel_x, vel_y = vel_external * external + vel_tangential * tangntial
+                            
 
-            intermediary_target = path_finder.find_target(start_node, target_node, 0.1)
-            if intermediary_target is not None:
-                target = [*intermediary_target, target[2]]
+            order_world = vel_x, vel_y, order_world[2]
 
-        x, y, orientation = target
-        x = min(self.x_max, max(self.x_min, x))
-        y = min(self.y_max, max(self.y_min, y))
         Ti = utils.frame_inv(utils.robot_frame(self))
-        target_in_robot = Ti @ np.array([x, y, 1])
-
-        error_x = target_in_robot[0]
-        error_y = target_in_robot[1]
-        error_orientation = utils.angle_wrap(orientation - self.orientation)
-
-        arrived = np.linalg.norm([error_x, error_y, error_orientation]) < 0.05
-        order = 1.5 * error_x, 1.5 * error_y, 1.5 * error_orientation
+        vel_robot = Ti @ np.array([order_world[0], order_world[1], 0])
+        rot_robot = order_world[2]
+        order = vel_robot[0], vel_robot[1], rot_robot
 
         return arrived, order
 
-    def goto(self, target, wait=True, skip_old=True, avoid_opponents=False):
+    def goto(self, target, wait=True, skip_old=True, avoid_obstacles=False):
         """
         Go to the given target.
         :param target: The target to go to. Can be a tuple (x, y, orientation) or a function returning such a tuple.
@@ -211,12 +236,12 @@ class ClientRobot(ClientTracked):
         :param skip_old: If True, returns False if the position is older than 1 second.
         """
         if wait:
-            while not self.goto(target, wait=False, avoid_opponents=avoid_opponents):
+            while not self.goto(target, wait=False, avoid_obstacles=avoid_obstacles):
                 time.sleep(0.05)
             self.control(0, 0, 0)
             return True
 
-        arrived, order = self.goto_compute_order(target, skip_old, avoid_opponents)
+        arrived, order = self.goto_compute_order(target, skip_old, avoid_obstacles)
         self.control(*order)
 
         return arrived
@@ -406,7 +431,7 @@ class Client:
             elif self.error_management == "print":
                 self.logger.warning('Command "' + name + '" failed: ' + message)
 
-    def goto_configuration(self, configuration_name="side", wait=False, avoid_opponents=True):
+    def goto_configuration(self, configuration_name="side", wait=False, avoid_obstacles=True):
         """
         Go to the given configuration.
         :param configuration_name: The name of the configuration to go to.
@@ -420,7 +445,7 @@ class Client:
             for color, index, target in targets:
                 robot = self.robots[color][index]
                 try:
-                    arrived = robot.goto(target, wait=wait, avoid_opponents=avoid_opponents) and arrived
+                    arrived = robot.goto(target, wait=wait, avoid_obstacles=avoid_obstacles) and arrived
                 except ClientError:
                     pass
 

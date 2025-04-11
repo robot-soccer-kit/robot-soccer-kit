@@ -3,8 +3,7 @@ import astar
 from . import constants
 
 class PathFinding(astar.AStar):
-    def __init__(self, discretization: int = 8, avoid_margin = 0.1):
-        self.discretization: int = discretization
+    def __init__(self, avoid_margin = 0.1):
         self.avoid_margin: float = avoid_margin
         self.reset()
 
@@ -13,27 +12,34 @@ class PathFinding(astar.AStar):
         self.obstacles = []
         self.nodes = []
 
-    def angles(self):
-        return [k*(2*np.pi/self.discretization) for k in range(self.discretization)]
-
     def add_obstacle(self, x: float, y: float, radius: float):
         # Storing all obstacles
         self.obstacles.append([x, y, radius])
-        for k in self.angles():
-            # Storing all nodes
-            self.add_node(x + (radius + self.avoid_margin)*np.cos(k), y + (radius + self.avoid_margin)*np.sin(k))
 
     def add_node(self, x:float, y: float) -> int:
         # Nodes can only be on the field
         x = np.clip(x, -constants.carpet_length/2, constants.carpet_length/2)
         y = np.clip(y, -constants.carpet_width/2, constants.carpet_width/2)
 
-        node = [x, y]
+        node = np.array([x, y])
         self.nodes.append(node)
         return len(self.nodes) - 1
     
+    def add_avoid_points(self, position: np.ndarray):
+        for obstacle in self.obstacles:
+            start_obstacle = obstacle[:2] - position
+            n = start_obstacle / np.linalg.norm(start_obstacle)
+            n = np.array([-n[1], n[0]])
+            avoid_left = n * (obstacle[2] + self.avoid_margin)
+            avoid_right = -n * (obstacle[2] + self.avoid_margin)
+            self.add_node(obstacle[0] + avoid_left[0], obstacle[1] + avoid_left[1])
+            self.add_node(obstacle[0] + avoid_right[0], obstacle[1] + avoid_right[1])
+    
     def astar(self, start: int, goal: int) -> list:
         self.obstacles = np.array(self.obstacles)
+        self.add_avoid_points(self.nodes[start])
+        self.add_avoid_points(self.nodes[goal])
+
         path = list(super().astar(start, goal))
 
         for k, node_idx in enumerate(path):
@@ -70,7 +76,7 @@ class PathFinding(astar.AStar):
             for obstacle in self.obstacles:
                 segment_dx = node2_xy[0] - node1_xy[0]
                 segment_dy = node2_xy[1] - node1_xy[1]
-                a = segment_dx**2 + segment_dy**2
+                a = segment_dx**2 + segment_dy**2            
                 x_ca = node1_xy[0] - obstacle[0]
                 y_ca = node1_xy[1] - obstacle[1]
                 b = 2*(x_ca*segment_dx + y_ca*segment_dy)
@@ -78,7 +84,7 @@ class PathFinding(astar.AStar):
                 d = b**2 - 4*a*c 
                 if d > 0:
                     d = np.sqrt(d)
-                    t1 = np.clip((-b - d) / (2*a), 0, 1)
+                    t1 = np.clip((-b - d) / (2*a), 0, 1)                              
                     t2 = np.clip((-b + d) / (2*a), 0, 1)
                     intersect_ratio = max(intersect_ratio, np.abs(t2 - t1))
                 
