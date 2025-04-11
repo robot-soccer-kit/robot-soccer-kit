@@ -200,7 +200,7 @@ class ClientRobot(ClientTracked):
         order_world = 1.5 * error_x_world, 1.5 * error_y_world, 1.5 * error_orientation
 
         if avoid_obstacles:
-            margin = constants.robot_radius * 3
+            margin = constants.robot_radius * 4
             go_away_velocity = 0.
             vel_x, vel_y = order_world[0], order_world[1]
             for color in self.client.robots:
@@ -216,7 +216,13 @@ class ClientRobot(ClientTracked):
                             vel_external = np.dot([vel_x, vel_y], external)
                             vel_tangential = np.dot([vel_x, vel_y], tangntial)
                             vel_external = max(vel_external, go_away_velocity)
+                            old_norm = np.linalg.norm([vel_x, vel_y])
                             vel_x, vel_y = vel_external * external + vel_tangential * tangntial
+                            new_norm = np.linalg.norm([vel_x, vel_y])
+                            if new_norm > 0:
+                                vel_x *= old_norm / new_norm
+                                vel_y *= old_norm / new_norm
+
                             
 
             order_world = vel_x, vel_y, order_world[2]
