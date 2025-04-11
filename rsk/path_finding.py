@@ -66,7 +66,7 @@ class PathFinding(astar.AStar):
         distance = np.linalg.norm(np.array(node1_xy) - np.array(node2_xy))
 
         if len(self.obstacles):
-            has_intersection = False
+            intersect_ratio = 0
             for obstacle in self.obstacles:
                 segment_dx = node2_xy[0] - node1_xy[0]
                 segment_dy = node2_xy[1] - node1_xy[1]
@@ -78,14 +78,11 @@ class PathFinding(astar.AStar):
                 d = b**2 - 4*a*c 
                 if d > 0:
                     d = np.sqrt(d)
-                    t1 = (-b - d) / (2*a)
-                    t2 = (-b + d) / (2*a)
-                    if (0 <= t1 <= 1) or (0 <= t2 <= 1):
-                        has_intersection = True
-                        break
+                    t1 = np.clip((-b - d) / (2*a), 0, 1)
+                    t2 = np.clip((-b + d) / (2*a), 0, 1)
+                    intersect_ratio = max(intersect_ratio, np.abs(t2 - t1))
                 
-            if has_intersection:
-                distance *= 100
+            distance += 10*intersect_ratio*distance
                 
         return distance
     

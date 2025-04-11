@@ -86,9 +86,9 @@ class ClientRobot(ClientTracked):
         self.number = number
         self.client = client
 
-        self.x_max = constants.field_length / 2 + constants.border_size / 2.0
+        self.x_max = constants.carpet_length / 2 - constants.robot_radius
         self.x_min = -self.x_max
-        self.y_max = constants.field_width / 2 + constants.border_size / 2.0
+        self.y_max = constants.carpet_width / 2 - constants.robot_radius
         self.y_min = -self.y_max
 
     def ball(self):
