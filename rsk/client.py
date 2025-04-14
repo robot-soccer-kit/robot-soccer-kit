@@ -176,7 +176,7 @@ class ClientRobot(ClientTracked):
 
         if avoid_obstacles:
             # Avoid other robots
-            foresee = 0.3 # seconds
+            foresee = 0.2 # seconds
             path_finder = PathFinder(discretization=8, avoid_margin=constants.robot_radius*3)
             start_node = path_finder.add_node(self.position[0], self.position[1])
             target_node = path_finder.add_node(target[0], target[1])
