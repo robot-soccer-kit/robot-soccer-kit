@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robot_soccer_kit"
+version = "2.4.3"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Rhoban team", email = "team@rhoban.com" }]
+keywords = ["robot", "holonomic", "omniwheel", "ssl", "sct", "robocup", "junior", "soccer", "standard", "localized", "tracking"]
+dependencies = ["numpy", "pyzmq", "pyyaml", "astar"]
+description = "Robot Soccer Kit"
+
+[project.optional-dependencies]
+gc = ["pyserial", "flask", "flask-cors", "waitress", "opencv-contrib-python"]
+
+[project.urls]
+Homepage = "https://robot-soccer-kit.github.io/"
+Repository = "https://github.com/rhoban/robot-soccer-kit/"
+
+[tool.setuptools.packages.find]
+include = ["rsk"]
+namespaces = false

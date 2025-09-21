@@ -8,4 +8,3 @@ dist
 **.swp
 **.*#*
 .vscode
-pyproject.toml
