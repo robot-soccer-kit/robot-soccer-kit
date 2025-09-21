@@ -19,6 +19,12 @@ gc = ["pyserial", "flask", "flask-cors", "waitress", "opencv-contrib-python"]
 Homepage = "https://robot-soccer-kit.github.io/"
 Repository = "https://github.com/rhoban/robot-soccer-kit/"
 
+[tool.setuptools]
+include-package-data = false
+
 [tool.setuptools.packages.find]
 include = ["rsk"]
 namespaces = false
+
+[tool.setuptools.package-data]
+rsk = ["static/**"]
