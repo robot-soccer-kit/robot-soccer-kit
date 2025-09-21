@@ -1,4 +1,6 @@
 from concurrent.futures import thread
+import numpy as np
+import math
 import copy
 from multiprocessing.dummy.connection import Client
 import zmq
@@ -8,6 +10,27 @@ import threading
 import logging
 from . import robots, utils, client, constants, tasks
 from .robot import RobotError
+
+
+def number_in_range(number, number_type: type, min, max):
+    """
+    Converts the number to target type (e.g int or float)
+    Ensure the number is not NaN and is within provided range (min and max)
+    """
+    value = number_type(number)
+
+    if math.isnan(value):
+        raise ValueError(f"Received a NaN value")
+
+    return number_type(np.clip(number, min, max))
+
+
+def float_in_range(number, min: float, max: float):
+    return number_in_range(number, float, min, max)
+
+
+def int_in_range(number, min: int, max: int):
+    return number_in_range(number, int, min, max)
 
 
 class Control:
@@ -40,7 +63,10 @@ class Control:
         self.tasks: dict = {}
         self.robots_color: dict = {}
 
-        self.teams = {team: {"allow_control": True, "key": "", "packets": 0} for team in utils.robot_teams()}
+        self.teams = {
+            team: {"allow_control": True, "key": "", "packets": 0}
+            for team in utils.robot_teams()
+        }
 
     def available_robots(self) -> list:
         """
@@ -89,17 +115,29 @@ class Control:
                     robot = self.robots.robots_by_marker[marker]
 
                     if command[0] == "kick" and len(command) == 2:
-                        robot.kick(float(command[1]))
+                        robot.kick(float_in_range(command[1], 0.0, 1.0))
                         response = [True, "ok"]
                     elif command[0] == "control" and len(command) == 4:
-                        robot.control(float(command[1]), float(command[2]), float(command[3]))
+                        robot.control(
+                            float_in_range(command[1], -10, 10),
+                            float_in_range(command[2], -10, 10),
+                            float_in_range(command[3], -50, 50),
+                        )
                         response = [True, "ok"]
                     elif command[0] == "teleport" and len(command) == 4:
-                        robot.teleport(float(command[1]), float(command[2]), float(command[3]))
+                        robot.teleport(
+                            float_in_range(command[1], -10, 10),
+                            float_in_range(command[2], -10, 10),
+                            float_in_range(command[3], -np.pi, np.pi),
+                        )
                         response = [True, "ok"]
                     elif command[0] == "leds" and len(command) == 4:
                         if is_master or self.allow_extra_features:
-                            robot.leds(int(command[1]), int(command[2]), int(command[3]))
+                            robot.leds(
+                                int_in_range(command[1], 0, 255),
+                                int_in_range(command[2], 0, 255),
+                                int_in_range(command[3], 0, 255),
+                            )
                             response = [True, "ok"]
                         else:
                             response[0] = 2
@@ -107,7 +145,10 @@ class Control:
 
                     elif command[0] == "beep" and len(command) == 3:
                         if is_master or self.allow_extra_features:
-                            robot.beep(int(command[1]), int(command[2]))
+                            robot.beep(
+                                int_in_range(command[1], 0, 22000),
+                                int_in_range(command[2], 0, 5000),
+                            )
                             response = [True, "ok"]
                         else:
                             response[0] = 2
@@ -116,15 +157,18 @@ class Control:
                         response[0] = 2
                         response[1] = "Unknown command"
             elif marker == "ball":
-                self.robots.ball.teleport(float(command[1]), float(command[2]), float(command[3]))
+                self.robots.ball.teleport(
+                    int_in_range(command[1], -10, 10),
+                    int_in_range(command[2], -10, 10),
+                    int_in_range(command[3], -np.pi, np.pi),
+                )
                 response = [True, "ok"]
             else:
                 response[1] = f"Unknown robot: {marker}"
         except RobotError as e:
             response = [False, str(e)]
         except (TypeError, ValueError) as e:
-            response = [False, "ArgumentError: "+str(e)]
-
+            response = [False, "ArgumentError: " + str(e)]
 
         return response
 
@@ -145,18 +189,24 @@ class Control:
                         is_master = key == self.master_key
 
                         if not is_master:
-                            tasks = [task.name for task in self.robot_tasks(team, number)]
+                            tasks = [
+                                task.name for task in self.robot_tasks(team, number)
+                            ]
                             if self.teams[team]["key"] != key:
                                 response[1] = f"Bad key for team {team}"
                                 allow_control = False
                             elif not self.teams[team]["allow_control"]:
                                 response[0] = 2
-                                response[1] = f"You are not allowed to control the robots of team {team}"
+                                response[1] = (
+                                    f"You are not allowed to control the robots of team {team}"
+                                )
                                 allow_control = False
                             elif len(tasks):
                                 reasons = str(tasks)
                                 response[0] = 2
-                                response[1] = f"Robot {number} of team {team} is preempted: {reasons}"
+                                response[1] = (
+                                    f"Robot {number} of team {team} is preempted: {reasons}"
+                                )
                                 allow_control = False
 
                         if allow_control:
@@ -215,7 +265,9 @@ class Control:
         state = copy.deepcopy(self.teams)
 
         for team in utils.robot_teams():
-            state[team]["preemption_reasons"] = {number: [] for number in utils.robot_numbers()}
+            state[team]["preemption_reasons"] = {
+                number: [] for number in utils.robot_numbers()
+            }
 
         for task in self.tasks.values():
             for team, number in task.robots():
@@ -269,7 +321,9 @@ class Control:
         for team, number in utils.all_robots():
             robot = self.client.robots[team][number]
             if robot.position is not None:
-                out_of_field = not utils.in_rectangle(robot.position, limit_down_left, limit_up_right)
+                out_of_field = not utils.in_rectangle(
+                    robot.position, limit_down_left, limit_up_right
+                )
                 task_name = "out-of-game-%s" % utils.robot_list2str(team, number)
 
                 if out_of_field:
@@ -286,7 +340,9 @@ class Control:
                 else:
                     # If the robot is recovered, creating a one-time task to make it stop moving
                     if self.has_task(task_name):
-                        task = tasks.StopTask(task_name, team, number, forever=False, priority=100)
+                        task = tasks.StopTask(
+                            task_name, team, number, forever=False, priority=100
+                        )
                         self.add_task(task)
 
     def tick_tasks(self) -> set:
@@ -308,7 +364,9 @@ class Control:
         # Ticking all the tasks
         for task in tasks_to_tick:
             for team, number in task.robots():
-                if (team, number) not in robots_ticked and utils.robot_list2str(team, number) in available_robots:
+                if (team, number) not in robots_ticked and utils.robot_list2str(
+                    team, number
+                ) in available_robots:
                     # Robot was not ticked yet by an higher-priority task
                     robots_ticked.add((team, number))
 
@@ -346,7 +404,9 @@ class Control:
                     or self.robots_color[robot] != color
                     or self.robots.should_restore_leds(robot_id)
                 ):
-                    self.client.robots[robot[0]][robot[1]].leds(*utils.robot_leds_color(color))
+                    self.client.robots[robot[0]][robot[1]].leds(
+                        *utils.robot_leds_color(color)
+                    )
                 new_robots_color[robot] = color
 
             self.robots_color = new_robots_color
