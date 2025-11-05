@@ -125,7 +125,7 @@ function simulator_initialize(backend, isView) {
                     context.rotate(robotPos[2])
 
                     // Draw leds
-                    if (Object.keys(state["leds"]).length != 0) {
+                    if (Object.keys(state["leds"]).length != 0 && state["leds"][entry].length == 3) {
                         markers[entry]["leds"] = state["leds"][entry]
                         for (var i = 0; i < 3; i++) {
                             markers[entry]["leds"][i] = Math.round(Math.min(255, 50 + Math.log(markers[entry]["leds"][i] + 1) / Math.log(256) * 255))
@@ -150,7 +150,7 @@ function simulator_initialize(backend, isView) {
                 if (state.ball != null) {
                     drawBall(state.ball)
                 }
-                
+
                 let placementCirclePosition = state["referee"]["wait_ball_position"]
                 if (placementCirclePosition != null) {
                     drawCircle(transformViewToSim(placementCirclePosition), constants.place_ball_margin * ratio_w, "red", ballCanvas, false, 1)
