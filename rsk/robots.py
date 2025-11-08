@@ -3,7 +3,7 @@ import time
 import copy
 import math
 import logging
-from . import config, control, robot, utils, state
+from . import config, utils
 
 
 class Robots:

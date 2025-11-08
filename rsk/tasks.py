@@ -1,4 +1,4 @@
-from . import control, client, utils
+from . import client, utils
 
 
 class ControlTask:

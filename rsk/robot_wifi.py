@@ -1,4 +1,4 @@
-from . import robot, robots
+from . import robot
 from threading import Thread, Lock
 import time
 import socket
@@ -50,7 +50,7 @@ class RobotWifi(robot.Robot):
                     RobotWifi.robots[rcv_ip].process(data)
 
                 RobotWifi.lock.release()
-            except Exception as e:
+            except Exception:
                 time.sleep(0.001)
 
             time_now = time.time()

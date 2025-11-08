@@ -3,8 +3,7 @@ import copy
 import numpy as np
 import threading
 import logging
-from . import constants, utils, config, control, tasks, state
-from .field import Field
+from . import constants, utils, control, tasks, state
 import time
 
 

@@ -1,10 +1,8 @@
-import time
 import numpy as np
 import cv2
 import logging
 from . import constants
 import os
-from . import utils
 
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 

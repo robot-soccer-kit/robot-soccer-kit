@@ -1,8 +1,6 @@
-from concurrent.futures import thread
 import numpy as np
 import math
 import copy
-from multiprocessing.dummy.connection import Client
 import zmq
 import time
 import uuid
@@ -20,7 +18,7 @@ def number_in_range(number, number_type: type, min, max):
     value = number_type(number)
 
     if math.isnan(value):
-        raise ValueError(f"Received a NaN value")
+        raise ValueError("Received a NaN value")
 
     return number_type(np.clip(number, min, max))
 

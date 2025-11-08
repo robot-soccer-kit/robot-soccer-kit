@@ -1,6 +1,5 @@
 import argparse
 import rsk
-import numpy as np
 
 
 parser = argparse.ArgumentParser()

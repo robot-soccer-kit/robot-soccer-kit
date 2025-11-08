@@ -4,7 +4,7 @@ import time
 import serial
 from serial.tools import list_ports
 import logging
-from . import robot, robots
+from . import robot
 from .packets import *
 
 logger: logging.Logger = logging.getLogger("robot")
