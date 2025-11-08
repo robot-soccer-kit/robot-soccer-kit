@@ -96,8 +96,14 @@ def run_browser():
         webbrowser.open(f"http://{args.ip}:{args.port}")
 
 
-thread = threading.Thread(target=run_browser, daemon=True, name="BrowserThread")
-thread.start()
+def start_and_serve():
+    # Starting browser thread
+    thread = threading.Thread(target=run_browser, daemon=True, name="BrowserThread")
+    thread.start()
 
-# Serving forever
-waitress.serve(app, listen="%s:%s" % (args.ip, args.port), threads=8)
+    # Serving forever
+    waitress.serve(app, listen="%s:%s" % (args.ip, args.port), threads=8)
+
+
+if __name__ == "__main__":
+    start_and_serve()

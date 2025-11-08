@@ -32,3 +32,6 @@ rsk = ["static/**"]
 [tool.ruff]
 src = ["src"]  # Helpful for recognizing first-party imports.
 indent-width = 4
+
+[project.scripts]
+game_controller = "rsk.game_controller:start_and_serve"
