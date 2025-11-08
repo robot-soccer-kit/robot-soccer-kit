@@ -231,8 +231,8 @@ class Simulator:
         object.sim = self
 
     def add_robot_objects(self) -> None:
-        for robot in self.robots.robots_by_marker.values():
-            self.add_object(robot.object)
+        for rob in self.robots.robots_by_marker.values():
+            self.add_object(rob.object)
 
     def thread(self) -> None:
         last_time = time.time()
