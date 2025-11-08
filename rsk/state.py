@@ -48,7 +48,9 @@ class State:
             function(self, *args, **kwargs)
 
             if self.context is not None:
-                if self.last_time is None or (time.time() - self.last_time) > (1 / self.frequency_pub):
+                if self.last_time is None or (time.time() - self.last_time) > (
+                    1 / self.frequency_pub
+                ):
                     self.last_time = time.time()
                     self.publish()
 
