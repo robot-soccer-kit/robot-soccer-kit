@@ -145,7 +145,7 @@ def robot_str2list(robot: str) -> list:
     :param str robot: string robot name (eg: 'blue1')
     :return list: robot id (eg: ['blue', 1])
     """
-    matches = re.match("([^\d]+)([0-9]+)", robot)
+    matches = re.match(r"([^\d]+)([0-9]+)", robot)
 
     return matches[1], int(matches[2])
 
