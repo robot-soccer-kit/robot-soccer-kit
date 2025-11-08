@@ -30,7 +30,7 @@ defense_area_length = 0.3  # [m]
 
 # Timed circle radius and maximum time before being penalized
 timed_circle_radius: float = 0.25  # [m]
-timed_circle_time: float = 3 # [s]
+timed_circle_time: float = 3  # [s]
 
 # Margin for ball re-placement (on the center or on dots)
 place_ball_margin: float = 0.05  # [m]
@@ -91,7 +91,12 @@ def goal_posts(x_positive: bool = True) -> np.ndarray:
     """
     sign = 1 if x_positive else -1
 
-    return np.array([[sign * field_length / 2, -goal_width / 2.0], [sign * field_length / 2, goal_width / 2]])
+    return np.array(
+        [
+            [sign * field_length / 2, -goal_width / 2.0],
+            [sign * field_length / 2, goal_width / 2],
+        ]
+    )
 
 
 def field_corners(margin: float = 0) -> np.ndarray:
@@ -101,7 +106,12 @@ def field_corners(margin: float = 0) -> np.ndarray:
     :return: The coordinates of the field corners
     """
     return [
-        np.array([sign1 * ((field_length / 2.0) + margin), sign2 * ((field_width / 2.0) + margin)])
+        np.array(
+            [
+                sign1 * ((field_length / 2.0) + margin),
+                sign2 * ((field_width / 2.0) + margin),
+            ]
+        )
         for sign1, sign2 in [[1, 1], [1, -1], [-1, -1], [-1, 1]]
     ]
 

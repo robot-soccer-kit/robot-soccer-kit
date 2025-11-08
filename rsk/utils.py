@@ -43,13 +43,18 @@ def angle_wrap(alpha):
     return (alpha + np.pi) % (2 * np.pi) - np.pi
 
 
-def update_limit_variation(current_value: np.ndarray, target_value: np.ndarray, max_variation: float):
+def update_limit_variation(
+    current_value: np.ndarray, target_value: np.ndarray, max_variation: float
+):
     variation = np.linalg.norm(target_value - current_value)
 
     if variation > 0:
         accepted_variation = min(variation, max_variation)
 
-        return current_value + (target_value - current_value) * accepted_variation / variation
+        return (
+            current_value
+            + (target_value - current_value) * accepted_variation / variation
+        )
     else:
         return target_value
 
@@ -168,4 +173,6 @@ def in_rectangle(point: list, bottom_left: list, top_right: list) -> bool:
     :param list top_right point
     :return bool: True if the point is in the rectangle
     """
-    return (np.array(point) >= np.array(bottom_left)).all() and (np.array(point) <= np.array(top_right)).all()
+    return (np.array(point) >= np.array(bottom_left)).all() and (
+        np.array(point) <= np.array(top_right)
+    ).all()

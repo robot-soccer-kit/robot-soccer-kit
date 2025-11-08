@@ -28,3 +28,7 @@ namespaces = false
 
 [tool.setuptools.package-data]
 rsk = ["static/**"]
+
+[tool.ruff]
+src = ["src"]  # Helpful for recognizing first-party imports.
+indent-width = 4

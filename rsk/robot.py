@@ -1,5 +1,4 @@
-class RobotError(Exception):
-    ...
+class RobotError(Exception): ...
 
 
 class Robot:
@@ -21,7 +20,7 @@ class Robot:
 
     def available_urls() -> list:
         return []
-    
+
     def close(self) -> None:
         pass
 

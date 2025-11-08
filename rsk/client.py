@@ -151,7 +151,9 @@ class ClientRobot(ClientTracked):
         :param frequency: The frequency of the noize, in Hz.
         :param duration: The duration of the noize, in ms.
         """
-        return self.client.command(self.color, self.number, "beep", [frequency, duration])
+        return self.client.command(
+            self.color, self.number, "beep", [frequency, duration]
+        )
 
     def leds(self, r, g, b):
         """
@@ -176,8 +178,10 @@ class ClientRobot(ClientTracked):
 
         if avoid_obstacles:
             # Avoid other robots
-            foresee = 0.2 # seconds
-            path_finder = PathFinder(discretization=8, avoid_margin=constants.robot_radius*3)
+            foresee = 0.2  # seconds
+            path_finder = PathFinder(
+                discretization=8, avoid_margin=constants.robot_radius * 3
+            )
             start_node = path_finder.add_node(self.position[0], self.position[1])
             target_node = path_finder.add_node(target[0], target[1])
             for color in self.client.robots:
@@ -190,7 +194,7 @@ class ClientRobot(ClientTracked):
                         dx, dy = T @ robot.last_velocity[:2]
                         x = robot.position[0] + foresee * dx
                         y = robot.position[1] + foresee * dy
-                        path_finder.add_obstacle(x, y, constants.robot_radius*2)
+                        path_finder.add_obstacle(x, y, constants.robot_radius * 2)
 
             intermediate_target = path_finder.find_target(start_node, target_node, 0.4)
             if intermediate_target is not None:
@@ -236,7 +240,10 @@ class Client:
     """
 
     def __init__(self, host="127.0.0.1", key="", wait_ready=True):
-        logging.basicConfig(format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", level=logging.INFO)
+        logging.basicConfig(
+            format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s",
+            level=logging.INFO,
+        )
         self.logger: logging.Logger = logging.getLogger("client")
 
         self.error_management = "raise"  # "ignore", "print", "raise"
@@ -275,7 +282,9 @@ class Client:
         self.sub.subscribe("")
         self.on_update = None
         self.sub_packets = 0
-        self.sub_thread = threading.Thread(target=lambda: self.sub_process())
+        self.sub_thread = threading.Thread(
+            target=lambda: self.sub_process(), daemon=True, name="Client-SubThread"
+        )
         self.sub_thread.start()
 
         # Informations from referee
@@ -299,7 +308,9 @@ class Client:
             if t > 3 and not warning_showed:
                 warning_showed = True
                 self.logger.warning("Still no message from vision after 3s")
-                self.logger.warning("if you want to operate without vision, pass wait_ready=False to the client")
+                self.logger.warning(
+                    "if you want to operate without vision, pass wait_ready=False to the client"
+                )
 
     def sigint(self, signal_received, frame):
         self.stop()
@@ -348,9 +359,13 @@ class Client:
                         number = int(entry[-1])
 
                         if team == "obj":
-                            self.update_position(self.objs[number], json["markers"][entry])
+                            self.update_position(
+                                self.objs[number], json["markers"][entry]
+                            )
                         else:
-                            self.update_position(self.robots[team][number], json["markers"][entry])
+                            self.update_position(
+                                self.robots[team][number], json["markers"][entry]
+                            )
 
                 if "referee" in json:
                     self.referee = json["referee"]
@@ -414,7 +429,9 @@ class Client:
             elif self.error_management == "print":
                 self.logger.warning('Command "' + name + '" failed: ' + message)
 
-    def goto_configuration(self, configuration_name="side", wait=False, avoid_obstacles=True):
+    def goto_configuration(
+        self, configuration_name="side", wait=False, avoid_obstacles=True
+    ):
         """
         Go to the given configuration.
         :param configuration_name: The name of the configuration to go to.
@@ -428,7 +445,10 @@ class Client:
             for color, index, target in targets:
                 robot = self.robots[color][index]
                 try:
-                    arrived = robot.goto(target, wait=wait, avoid_obstacles=avoid_obstacles) and arrived
+                    arrived = (
+                        robot.goto(target, wait=wait, avoid_obstacles=avoid_obstacles)
+                        and arrived
+                    )
                 except ClientError:
                     pass
 

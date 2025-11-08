@@ -61,7 +61,9 @@ class Detection:
 
         if "display_settings" in config.config:
             for entry in config.config["display_settings"]:
-                self.displaySettings[entry]["value"] = config.config["display_settings"][entry]
+                self.displaySettings[entry]["value"] = config.config[
+                    "display_settings"
+                ][entry]
 
         self.arucoItems = {
             # Corners
@@ -122,7 +124,9 @@ class Detection:
 
     def reset_display_settings(self):
         for entry in self.displaySettings:
-            self.displaySettings[entry]["value"] = self.displaySettings[entry]["default"]
+            self.displaySettings[entry]["value"] = self.displaySettings[entry][
+                "default"
+            ]
 
     def get_display_settings(self, reset=False):
         if reset:
@@ -131,14 +135,18 @@ class Detection:
         return self.displaySettings
 
     def save_display_settings(self):
-        config.config["display_settings"] = {key: self.displaySettings[key]["value"] for key in self.displaySettings}
+        config.config["display_settings"] = {
+            key: self.displaySettings[key]["value"] for key in self.displaySettings
+        }
         config.save()
 
     def calibrate_camera(self):
         self.field.should_calibrate = True
         self.field.is_calibrated = False
 
-    def draw_point2square(self, image, center: list, margin: int, color: tuple, thickness: int):
+    def draw_point2square(
+        self, image, center: list, margin: int, color: tuple, thickness: int
+    ):
         """
         Helper to draw a square on the image
         """
@@ -188,7 +196,11 @@ class Detection:
         Draw extra annotations (lines, circles etc.) to check visually that the informations are matching
         the real images
         """
-        if self.field.calibrated() and (image_debug is not None) and (self.referee is not None):
+        if (
+            self.field.calibrated()
+            and (image_debug is not None)
+            and (self.referee is not None)
+        ):
             if self.should_display("sideline"):
                 [
                     field_UpRight,
@@ -297,7 +309,10 @@ class Detection:
                     color = (0, 255, 0)
                     if penalty_spot["robot"] is not None:
                         color = (0, 0, 255)
-                    elif time.time() - penalty_spot["last_use"] < constants.penalty_spot_lock_time:
+                    elif (
+                        time.time() - penalty_spot["last_use"]
+                        < constants.penalty_spot_lock_time
+                    ):
                         color = (0, 128, 255)
                     self.draw_point2square(
                         image_debug,
@@ -324,7 +339,9 @@ class Detection:
         if self.is_new_aruco_api():
             (corners, ids, rejected) = self.detector.detectMarkers(image)
         else:
-            (corners, ids, rejected) = cv2.aruco.detectMarkers(image, self.arucoDict, parameters=self.arucoParams)
+            (corners, ids, rejected) = cv2.aruco.detectMarkers(
+                image, self.arucoDict, parameters=self.arucoParams
+            )
 
         new_markers = {}
 
@@ -471,7 +488,9 @@ class Detection:
                     "markers": self.markers,
                     "calibrated": self.field.calibrated(),
                     "see_whole_field": self.field.see_whole_field,
-                    "referee": None if self.referee is None else self.referee.get_game_state(full=False),
+                    "referee": None
+                    if self.referee is None
+                    else self.referee.get_game_state(full=False),
                 }
             except Exception as err:
                 print("Thread init error : ", err)

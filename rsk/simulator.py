@@ -10,7 +10,14 @@ from collections.abc import Callable
 
 
 class SimulatedObject:
-    def __init__(self, marker: str, position: np.ndarray, radius: int, deceleration: float = 0, mass: float = 1) -> None:
+    def __init__(
+        self,
+        marker: str,
+        position: np.ndarray,
+        radius: int,
+        deceleration: float = 0,
+        mass: float = 1,
+    ) -> None:
         self.marker: str = marker
         self.radius: int = radius
 
@@ -33,7 +40,9 @@ class SimulatedObject:
         self.velocity = np.array([0.0, 0.0, 0.0])
 
     def update_velocity(self, dt) -> None:
-        self.velocity[:2] = utils.update_limit_variation(self.velocity[:2], np.array([0.0, 0.0]), self.deceleration * dt)
+        self.velocity[:2] = utils.update_limit_variation(
+            self.velocity[:2], np.array([0.0, 0.0]), self.deceleration * dt
+        )
 
     def collision_R(self, obj):
         """
@@ -67,8 +76,12 @@ class SimulatedObject:
         if u2 - u1 > 0:
             return
 
-        self_velocity_collision[0] = (m1 * u1 + m2 * u2 + m2 * Cr * (u2 - u1)) / (m1 + m2)
-        obj_velocity_collision[0] = (m1 * u1 + m2 * u2 + m1 * Cr * (u1 - u2)) / (m1 + m2)
+        self_velocity_collision[0] = (m1 * u1 + m2 * u2 + m2 * Cr * (u2 - u1)) / (
+            m1 + m2
+        )
+        obj_velocity_collision[0] = (m1 * u1 + m2 * u2 + m1 * Cr * (u1 - u2)) / (
+            m1 + m2
+        )
 
         # Velocities back in the world frame
         self.velocity[:2] = R_collision_world.T @ self_velocity_collision
@@ -77,7 +90,9 @@ class SimulatedObject:
 
 class SimulatedRobot(SimulatedObject):
     def __init__(self, name: str, position: np.ndarray) -> None:
-        super().__init__(name, position, constants.robot_radius, 0, constants.robot_mass)
+        super().__init__(
+            name, position, constants.robot_radius, 0, constants.robot_mass
+        )
         self.control_cmd: np.ndarray = np.array([0.0, 0.0, 0.0])
         self.leds = None  # [R,G,B] (0-255) None for off
 
@@ -90,13 +105,21 @@ class SimulatedRobot(SimulatedObject):
 
         if utils.in_rectangle(
             ball_robot,
-            [self.radius + constants.ball_radius - constants.kicker_x_tolerance, -constants.kicker_y_tolerance],
-            [self.radius + constants.ball_radius + constants.kicker_x_tolerance, constants.kicker_y_tolerance],
+            [
+                self.radius + constants.ball_radius - constants.kicker_x_tolerance,
+                -constants.kicker_y_tolerance,
+            ],
+            [
+                self.radius + constants.ball_radius + constants.kicker_x_tolerance,
+                constants.kicker_y_tolerance,
+            ],
         ):
             # TODO: Move the ball kicking velocity to constants
             # TODO: We should not set the ball velocity to 0 in the y direction but keep its velocity
             ball_speed_robot = [np.clip(power, 0, 1) * np.random.normal(0.8, 0.1), 0]
-            self.sim.objects["ball"].velocity[:2] = T_world_robot[:2, :2] @ ball_speed_robot
+            self.sim.objects["ball"].velocity[:2] = (
+                T_world_robot[:2, :2] @ ball_speed_robot
+            )
 
     def update_velocity(self, dt: float) -> None:
         target_velocity_robot = self.control_cmd
@@ -105,10 +128,14 @@ class SimulatedRobot(SimulatedObject):
         target_velocity_world = T_world_robot[:2, :2] @ target_velocity_robot[:2]
 
         self.velocity[:2] = utils.update_limit_variation(
-            self.velocity[:2], target_velocity_world, constants.max_linear_acceleration * dt
+            self.velocity[:2],
+            target_velocity_world,
+            constants.max_linear_acceleration * dt,
         )
         self.velocity[2:] = utils.update_limit_variation(
-            self.velocity[2:], target_velocity_robot[2:], constants.max_angular_acceleration * dt
+            self.velocity[2:],
+            target_velocity_robot[2:],
+            constants.max_angular_acceleration * dt,
         )
 
     def control_leds(self, r: int, g: int, b: int) -> None:
@@ -136,7 +163,9 @@ class RobotSim(robot.Robot):
         self.object.teleport(x, y, turn)
 
     def control(self, dx: float, dy: float, dturn: float) -> None:
-        self.object.control_cmd = kinematics.clip_target_order(np.array([dx, dy, dturn]))
+        self.object.control_cmd = kinematics.clip_target_order(
+            np.array([dx, dy, dturn])
+        )
 
     def kick(self, power: float = 1.0) -> None:
         self.object.pending_actions.append(lambda: self.object.compute_kick(power))
@@ -149,17 +178,23 @@ class RobotSim(robot.Robot):
         :param int green: green brightness (0-255)
         :param int blue: blue brightness (0-255)
         """
-        self.object.pending_actions.append(lambda: self.object.control_leds(red, green, blue))
+        self.object.pending_actions.append(
+            lambda: self.object.control_leds(red, green, blue)
+        )
 
 
 class Simulator:
-    def __init__(self, robots: robots.Robots, state: state.State = None, run_thread=True):
+    def __init__(
+        self, robots: robots.Robots, state: state.State = None, run_thread=True
+    ):
         self.state: state.State = state
         self.robots: robots.Robots = robots
 
         # Creating the robots
         for configuration in client.configurations["game_green_positive"]:
-            robot: RobotSim = self.robots.add_robot(f"sim://{utils.robot_list2str(*configuration[:2])}")
+            robot: RobotSim = self.robots.add_robot(
+                f"sim://{utils.robot_list2str(*configuration[:2])}"
+            )
             robot.initialize(configuration[2])
 
         self.robots.update()
@@ -168,7 +203,13 @@ class Simulator:
 
         # Creating the ball
         self.add_object(
-            SimulatedObject("ball", [0, 0, 0], constants.ball_radius, constants.ball_deceleration, constants.ball_mass)
+            SimulatedObject(
+                "ball",
+                [0, 0, 0],
+                constants.ball_radius,
+                constants.ball_deceleration,
+                constants.ball_mass,
+            )
         )
         self.add_robot_objects()
         self.robots.ball = self.objects["ball"]
@@ -180,7 +221,9 @@ class Simulator:
 
     def run_thread(self):
         self.run = True
-        self.simu_thread: threading.Thread = threading.Thread(target=lambda: self.thread())
+        self.simu_thread: threading.Thread = threading.Thread(
+            target=lambda: self.thread(), daemon=True, name="SimulatorThread"
+        )
         self.simu_thread.start()
         self.lock: threading.Lock = threading.Lock()
 
@@ -198,7 +241,9 @@ class Simulator:
             self.dt = -last_time + (last_time := time.time())
             self.loop(self.dt)
 
-            while (self.fps_limit is not None) and (time.time() - last_time < 1 / self.fps_limit):
+            while (self.fps_limit is not None) and (
+                time.time() - last_time < 1 / self.fps_limit
+            ):
                 time.sleep(1e-3)
 
     def loop(self, dt):
@@ -222,7 +267,9 @@ class Simulator:
                 for marker in self.objects:
                     if marker != obj.marker:
                         check_obj = self.objects[marker]
-                        if dist(future_pos[:2], check_obj.position[:2]) < (obj.radius + check_obj.radius):
+                        if dist(future_pos[:2], check_obj.position[:2]) < (
+                            obj.radius + check_obj.radius
+                        ):
                             obj.collision(check_obj)
 
         for obj in self.objects.values():
@@ -232,7 +279,9 @@ class Simulator:
                     check_obj = self.objects[marker]
                     future_pos = obj.position + obj.velocity * dt
 
-                    if dist(future_pos[:2], check_obj.position[:2]) < (obj.radius + check_obj.radius):
+                    if dist(future_pos[:2], check_obj.position[:2]) < (
+                        obj.radius + check_obj.radius
+                    ):
                         R_collision_world = obj.collision_R(check_obj)
                         velocity_collision = R_collision_world @ obj.velocity[:2]
                         velocity_collision[0] = min(0, velocity_collision[0])

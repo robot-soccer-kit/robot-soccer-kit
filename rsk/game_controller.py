@@ -96,7 +96,7 @@ def run_browser():
         webbrowser.open(f"http://{args.ip}:{args.port}")
 
 
-thread = threading.Thread(target=run_browser)
+thread = threading.Thread(target=run_browser, daemon=True, name="BrowserThread")
 thread.start()
 
 # Serving forever

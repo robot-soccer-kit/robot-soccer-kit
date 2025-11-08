@@ -228,10 +228,14 @@ class Control:
         """
         self.running = True
 
-        control_thread = threading.Thread(target=lambda: self.thread())
+        control_thread = threading.Thread(
+            target=lambda: self.thread(), daemon=True, name="ControlThread"
+        )
         control_thread.start()
 
-        client_thread = threading.Thread(target=lambda: self.client_thread())
+        client_thread = threading.Thread(
+            target=lambda: self.client_thread(), daemon=True, name="ClientThread"
+        )
         client_thread.start()
 
     def stop(self):

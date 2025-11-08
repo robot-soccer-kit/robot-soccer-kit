@@ -14,7 +14,9 @@ max_wheel_rpm: float = 150
 wheel_alphas: list = [-90, 30, 150]
 
 # Wheel drive vectors
-drive_vectors = np.array([[np.cos(np.deg2rad(alpha)), np.sin(np.deg2rad(alpha))] for alpha in wheel_alphas])
+drive_vectors = np.array(
+    [[np.cos(np.deg2rad(alpha)), np.sin(np.deg2rad(alpha))] for alpha in wheel_alphas]
+)
 
 # Inverse Kinematics matrix
 IK: np.ndarray = (1 / constants.wheel_radius) * np.hstack(

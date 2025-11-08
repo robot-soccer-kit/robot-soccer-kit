@@ -72,7 +72,9 @@ class Video:
 
         # Starting the video processing thread
         self.running = True
-        self.video_thread = threading.Thread(target=lambda: self.thread())
+        self.video_thread = threading.Thread(
+            target=lambda: self.thread(), daemon=True, name="VideoThread"
+        )
         self.video_thread.start()
 
     def cameras(self) -> list:
@@ -130,7 +132,9 @@ class Video:
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, w)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
 
-        self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
+        self.capture.set(
+            cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G")
+        )
         self.capture.set(cv2.CAP_PROP_FPS, 30)
 
         self.favourite_index = index
@@ -171,7 +175,11 @@ class Video:
 
             if self.resolution is not None:
                 w, h = resolutions[self.resolution]
-                self.detection.field.focal = self.settings["focal"] * (h / 1080) * (self.settings["rescale"] / 100.0)
+                self.detection.field.focal = (
+                    self.settings["focal"]
+                    * (h / 1080)
+                    * (self.settings["rescale"] / 100.0)
+                )
 
     def set_camera_settings(self, settings: dict):
         """
@@ -201,18 +209,34 @@ class Video:
                         height, width, channels = image_captured.shape
                         frame_size = np.array([width, height])
                         if "crop_x" in self.settings and "crop_y" in self.settings:
-                            if self.settings["crop_x"] < 100 or self.settings["crop_y"] < 100:
-                                frame_size[0] = round(frame_size[0] * self.settings["crop_x"] / 100.0)
-                                frame_size[1] = round(frame_size[1] * self.settings["crop_y"] / 100.0)
+                            if (
+                                self.settings["crop_x"] < 100
+                                or self.settings["crop_y"] < 100
+                            ):
+                                frame_size[0] = round(
+                                    frame_size[0] * self.settings["crop_x"] / 100.0
+                                )
+                                frame_size[1] = round(
+                                    frame_size[1] * self.settings["crop_y"] / 100.0
+                                )
                                 x_offset = round((width - frame_size[0]) / 2.0)
                                 y_offset = round((height - frame_size[1]) / 2.0)
                                 image_captured = image_captured[
-                                    y_offset : y_offset + frame_size[1], x_offset : x_offset + frame_size[0]
+                                    y_offset : y_offset + frame_size[1],
+                                    x_offset : x_offset + frame_size[0],
                                 ]
 
-                        if "rescale" in self.settings and self.settings["rescale"] < 100 and self.settings["rescale"] > 0:
+                        if (
+                            "rescale" in self.settings
+                            and self.settings["rescale"] < 100
+                            and self.settings["rescale"] > 0
+                        ):
                             new_size = frame_size * self.settings["rescale"] / 100.0
-                            image_captured = cv2.resize(image_captured, (int(new_size[0]), int(new_size[1])), cv2.INTER_LINEAR)
+                            image_captured = cv2.resize(
+                                image_captured,
+                                (int(new_size[0]), int(new_size[1])),
+                                cv2.INTER_LINEAR,
+                            )
 
                         # Process the image
                         if self.debug:
@@ -232,7 +256,9 @@ class Video:
                     else:
                         self.period = self.period * 0.9 + current_period * 0.1
 
-                    self.image = image_debug if image_debug is not None else image_captured
+                    self.image = (
+                        image_debug if image_debug is not None else image_captured
+                    )
 
                     if self.should_stop_capture:
                         self.should_stop_capture = False

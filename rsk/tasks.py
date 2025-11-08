@@ -27,7 +27,16 @@ class SpeedTask:
     Gets the robot rotating
     """
 
-    def __init__(self, name: str, team: str, number: int, dx: float = 0, dy: float = 0, dturn: float = 0, **kwargs):
+    def __init__(
+        self,
+        name: str,
+        team: str,
+        number: int,
+        dx: float = 0,
+        dy: float = 0,
+        dturn: float = 0,
+        **kwargs,
+    ):
         super().__init__(name, **kwargs)
         self.team: str = team
         self.number: int = number
@@ -84,7 +93,14 @@ class GoToConfigurationTask(ControlTask):
     """
 
     def __init__(
-        self, name: str, configuration=None, skip_old=True, robots_filter=None, forever=False, end_buzz=False, **kwargs
+        self,
+        name: str,
+        configuration=None,
+        skip_old=True,
+        robots_filter=None,
+        forever=False,
+        end_buzz=False,
+        **kwargs,
     ):
         super().__init__(name, **kwargs)
         self.targets = {}
@@ -101,7 +117,12 @@ class GoToConfigurationTask(ControlTask):
         return list(self.targets.keys())
 
     def tick(self, robot: client.ClientRobot):
-        robot.goto(self.targets[(robot.team, robot.number)], False, skip_old=self.skip_old, avoid_obstacles=True)
+        robot.goto(
+            self.targets[(robot.team, robot.number)],
+            False,
+            skip_old=self.skip_old,
+            avoid_obstacles=True,
+        )
 
     def finished(self, client: client.Client, available_robots: list) -> bool:
         if self.forever:
@@ -137,6 +158,8 @@ class GoToTask(GoToConfigurationTask):
     Send one robot to a position
     """
 
-    def __init__(self, name: str, team: str, number: int, target, skip_old=True, **kwargs):
+    def __init__(
+        self, name: str, team: str, number: int, target, skip_old=True, **kwargs
+    ):
         super().__init__(name, **kwargs)
         self.targets[(team, number)] = target

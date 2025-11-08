@@ -33,7 +33,9 @@ class Backend:
 
         if simulated:
             robots.Robots.protocols["sim"] = simulator.RobotSim
-            self.simulator: simulator.Simulator = simulator.Simulator(self.robots, self.state)
+            self.simulator: simulator.Simulator = simulator.Simulator(
+                self.robots, self.state
+            )
         else:
             self.robots.load_config()
             self.video: video.Video = video.Video()
@@ -47,7 +49,7 @@ class Backend:
 
     def is_competition(self):
         return self.competition
-    
+
     def scheduler_url(self):
         return self.scheduler
 

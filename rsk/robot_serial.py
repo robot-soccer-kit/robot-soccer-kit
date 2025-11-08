@@ -32,7 +32,9 @@ class RobotSerial(robot.Robot):
         self.state = {}
 
         # Starting the threads
-        self.thread = threading.Thread(target=lambda: self.run_thread())
+        self.thread = threading.Thread(
+            target=lambda: self.run_thread(), daemon=True, name="RobotSerialThread"
+        )
         self.thread.start()
 
         # Pending packets queued
@@ -227,7 +229,10 @@ class RobotSerial(robot.Robot):
                         self.process(packet_reader.pop_packet())
 
                 # Asking periodically for robot monitor status
-                if self.last_sent_message is None or time.time() - self.last_sent_message > 1.0:
+                if (
+                    self.last_sent_message is None
+                    or time.time() - self.last_sent_message > 1.0
+                ):
                     self.monitor(1)
 
                 # Sending pending packets
@@ -248,7 +253,9 @@ class RobotSerial(robot.Robot):
                 self.init = True
 
             # If we didn't receive a message for more than 5s, we re-init the connection
-            no_message = (self.last_message is None) or (time.time() - self.last_message > 5)
+            no_message = (self.last_message is None) or (
+                time.time() - self.last_message > 5
+            )
 
             if self.last_init is None:
                 old_init = False

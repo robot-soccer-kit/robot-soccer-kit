@@ -22,9 +22,17 @@ class Field:
         self.should_calibrate: bool = True
 
         self.corner_field_positions = {}
-        for (c, sx, sy) in (["c1", 1, 1], ["c2", 1, -1], ["c3", -1, 1], ["c4", -1, -1]):
-            cX = sx * (constants.field_length / 2 + (constants.corner_tag_size / 2) + constants.corner_tag_border)
-            cY = sy * (constants.field_width / 2 + (constants.corner_tag_size / 2) + constants.corner_tag_border)
+        for c, sx, sy in (["c1", 1, 1], ["c2", 1, -1], ["c3", -1, 1], ["c4", -1, -1]):
+            cX = sx * (
+                constants.field_length / 2
+                + (constants.corner_tag_size / 2)
+                + constants.corner_tag_border
+            )
+            cY = sy * (
+                constants.field_width / 2
+                + (constants.corner_tag_size / 2)
+                + constants.corner_tag_border
+            )
 
             self.corner_field_positions[c] = [
                 # Top left
@@ -109,13 +117,19 @@ class Field:
 
         :param image: the (OpenCV) image used for calibration
         """
-        if len(self.corner_gfx_positions) >= 4 and self.should_calibrate and self.focal is not None:
+        if (
+            len(self.corner_gfx_positions) >= 4
+            and self.should_calibrate
+            and self.focal is not None
+        ):
             # Computing point-to-point correspondance
             object_points = []
             graphics_positions = []
             for key in self.corner_gfx_positions:
                 k = 0
-                for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
+                for gfx, real in zip(
+                    self.corner_gfx_positions[key], self.corner_field_positions[key]
+                ):
                     graphics_positions.append(gfx)
                     object_points.append([*real, 0.0])
 
@@ -130,11 +144,21 @@ class Field:
             ]
 
             # Calibrating camera
-            flags = cv2.CALIB_USE_INTRINSIC_GUESS + cv2.CALIB_FIX_FOCAL_LENGTH + cv2.CALIB_FIX_PRINCIPAL_POINT
+            flags = (
+                cv2.CALIB_USE_INTRINSIC_GUESS
+                + cv2.CALIB_FIX_FOCAL_LENGTH
+                + cv2.CALIB_FIX_PRINCIPAL_POINT
+            )
 
             # No distortion
             flags += cv2.CALIB_FIX_TANGENT_DIST
-            flags += cv2.CALIB_FIX_K1 + cv2.CALIB_FIX_K2 + cv2.CALIB_FIX_K3 + cv2.CALIB_FIX_K4 + cv2.CALIB_FIX_K5
+            flags += (
+                cv2.CALIB_FIX_K1
+                + cv2.CALIB_FIX_K2
+                + cv2.CALIB_FIX_K3
+                + cv2.CALIB_FIX_K4
+                + cv2.CALIB_FIX_K5
+            )
 
             ret, self.intrinsic, self.distortion, rvecs, tvecs = cv2.calibrateCamera(
                 [object_points],
@@ -169,7 +193,12 @@ class Field:
                 img = self.position_to_pixel([x, y, 0.0])
                 image_points.append((int(img[0]), int(img[1])))
 
-                if img[0] < 0 or img[0] > image_width or img[1] < 0 or img[1] > image_height:
+                if (
+                    img[0] < 0
+                    or img[0] > image_width
+                    or img[1] < 0
+                    or img[1] > image_height
+                ):
                     self.see_whole_field = False
 
         # We check that calibration is consistent, this can happen be done with only a few corners
@@ -178,9 +207,13 @@ class Field:
             if self.is_calibrated:
                 has_error = False
                 for key in self.corner_gfx_positions:
-                    for gfx, real in zip(self.corner_gfx_positions[key], self.corner_field_positions[key]):
+                    for gfx, real in zip(
+                        self.corner_gfx_positions[key], self.corner_field_positions[key]
+                    ):
                         projected_position = self.pixel_to_position(gfx)
-                        reprojection_distance = np.linalg.norm(np.array(real) - np.array(projected_position))
+                        reprojection_distance = np.linalg.norm(
+                            np.array(real) - np.array(projected_position)
+                        )
                         if reprojection_distance > 0.025:
                             has_error = True
 
@@ -222,7 +255,9 @@ class Field:
         """
 
         # Computing the point position in camera frame
-        point_position_camera = cv2.undistortPoints(np.array(pixel), self.intrinsic, self.distortion)[0][0]
+        point_position_camera = cv2.undistortPoints(
+            np.array(pixel), self.intrinsic, self.distortion
+        )[0][0]
 
         # Computing the point position in the field frame and solving for given z
         point_position_field = self.camera_to_field([*point_position_camera, 1.0])
@@ -263,12 +298,18 @@ class Field:
         :return dict|None: a dict with position and orientation or None if not calibrated
         """
         if self.calibrated():
-            center = self.pixel_to_position(self.tag_position(corners), constants.robot_height)
-            front = self.pixel_to_position(self.tag_position(corners, front=True), constants.robot_height)
+            center = self.pixel_to_position(
+                self.tag_position(corners), constants.robot_height
+            )
+            front = self.pixel_to_position(
+                self.tag_position(corners, front=True), constants.robot_height
+            )
 
             return {
                 "position": center,
-                "orientation": float(np.arctan2(front[1] - center[1], front[0] - center[0])),
+                "orientation": float(
+                    np.arctan2(front[1] - center[1], front[0] - center[0])
+                ),
             }
         else:
             return None

@@ -61,18 +61,26 @@ class Referee:
             {
                 "robot": None,
                 "last_use": 0,
-                "pos": (x, side * (constants.field_width / 2 + constants.robot_radius), side * np.pi / 2),
+                "pos": (
+                    x,
+                    side * (constants.field_width / 2 + constants.robot_radius),
+                    side * np.pi / 2,
+                ),
             }
-            for x in np.linspace(-constants.field_length / 2, constants.field_length / 2, constants.penalty_spots // 2 + 2)[
-                1:-1
-            ]
+            for x in np.linspace(
+                -constants.field_length / 2,
+                constants.field_length / 2,
+                constants.penalty_spots // 2 + 2,
+            )[1:-1]
             for side in (-1, 1)
         ]
         self.reset_penalties()
 
         # Starting the Referee thread
         self.lock = threading.Lock()
-        self.referee_thread = threading.Thread(target=lambda: self.thread())
+        self.referee_thread = threading.Thread(
+            target=lambda: self.thread(), daemon=True, name="RefereeThread"
+        )
         self.referee_thread.start()
 
     def set_state_info(self, info: dict) -> None:
@@ -102,7 +110,9 @@ class Referee:
             robot_id = utils.robot_list2str(team, number)
             robot_state["penalized"] = self.penalties[robot_id]["remaining"] is not None
             if robot_state["penalized"]:
-                robot_state["penalized_remaining"] = math.ceil(self.penalties[robot_id]["remaining"])
+                robot_state["penalized_remaining"] = math.ceil(
+                    self.penalties[robot_id]["remaining"]
+                )
             else:
                 robot_state["penalized_remaining"] = None
             robot_state["penalized_reason"] = self.penalties[robot_id]["reason"]
@@ -116,7 +126,9 @@ class Referee:
             game_state["teams"][team]["robots"][number] = robot_state
 
         if full:
-            game_state["referee_history_sliced"] = self.referee_history[-constants.referee_history_size :]
+            game_state["referee_history_sliced"] = self.referee_history[
+                -constants.referee_history_size :
+            ]
         else:
             del game_state["game_state_msg"]
 
@@ -243,7 +255,9 @@ class Referee:
 
         :param str configuration: the name of the target configuration
         """
-        task = tasks.GoToConfigurationTask("force-place", configuration, priority=50, **kwargs)
+        task = tasks.GoToConfigurationTask(
+            "force-place", configuration, priority=50, **kwargs
+        )
         self.control.add_task(task)
 
     def place_game(self, configuration: str, **kwargs):
@@ -305,7 +319,9 @@ class Referee:
         for robot_id in utils.all_robots_id():
             self.cancel_penalty(robot_id)
 
-    def add_penalty(self, duration: float, robot: str, reason: str = "manually_penalized"):
+    def add_penalty(
+        self, duration: float, robot: str, reason: str = "manually_penalized"
+    ):
         """
         Adds some penalty to a r obot
 
@@ -332,13 +348,17 @@ class Referee:
                     for marker in markers:
                         if (
                             marker != robot
-                            and math.dist(markers[marker]["position"], penalty_spot["pos"][:2]) < constants.robot_radius * 1.3
+                            and math.dist(
+                                markers[marker]["position"], penalty_spot["pos"][:2]
+                            )
+                            < constants.robot_radius * 1.3
                         ):
                             distance = math.inf
 
                     if (
                         penalty_spot["robot"] is not None
-                        or time.time() - penalty_spot["last_use"] < constants.penalty_spot_lock_time
+                        or time.time() - penalty_spot["last_use"]
+                        < constants.penalty_spot_lock_time
                     ):
                         distance = math.inf
                     distances.append(distance)
@@ -364,7 +384,11 @@ class Referee:
 
         :param str robot: the robot
         """
-        self.penalties[robot] = {"remaining": None, "reason": None, "grace": constants.grace_time}
+        self.penalties[robot] = {
+            "remaining": None,
+            "reason": None,
+            "grace": constants.grace_time,
+        }
 
         penalty_spot = [spot for spot in self.penalty_spot if spot["robot"] == robot]
         if penalty_spot != []:
@@ -405,7 +429,11 @@ class Referee:
         """
         tasks = self.control.robot_tasks(*utils.robot_str2list(robot))
 
-        return len(tasks) == 0 and (self.penalties[robot]["remaining"] is None) and (self.penalties[robot]["grace"] is None)
+        return (
+            len(tasks) == 0
+            and (self.penalties[robot]["remaining"] is None)
+            and (self.penalties[robot]["grace"] is None)
+        )
 
     def set_team_name(self, team: str, name: str):
         self.game_state["teams"][team]["name"] = name
@@ -416,7 +444,9 @@ class Referee:
         positive x axis of field)
         """
         for team in self.game_state["teams"]:
-            self.game_state["teams"][team]["x_positive"] = not self.game_state["teams"][team]["x_positive"]
+            self.game_state["teams"][team]["x_positive"] = not self.game_state["teams"][
+                team
+            ]["x_positive"]
 
     def validate_goal(self, yes_no: bool):
         """
@@ -446,18 +476,29 @@ class Referee:
         """
         [x_pos_goals_low, x_pos_goals_high] = constants.goal_posts(x_positive=True)
         [x_neg_goals_high, x_neg_goals_low] = constants.goal_posts(x_positive=False)
-        [field_UpRight_in, _, field_DownLeft_in, _] = constants.field_corners(margin=constants.field_in_margin)
-        [field_UpRight_out, field_DownRight_out, field_DownLeft_out, field_UpLeft_out] = constants.field_corners(
-            margin=constants.field_out_margin
+        [field_UpRight_in, _, field_DownLeft_in, _] = constants.field_corners(
+            margin=constants.field_in_margin
         )
+        [
+            field_UpRight_out,
+            field_DownRight_out,
+            field_DownLeft_out,
+            field_UpLeft_out,
+        ] = constants.field_corners(margin=constants.field_out_margin)
 
         # Goals and ball trajectory intersection (Goal detection)
-        intersect_x_neg_goal, _ = utils.intersect(ball_coord_old, ball_coord, x_neg_goals_low, x_neg_goals_high)
-        intersect_x_pos_goal, _ = utils.intersect(ball_coord_old, ball_coord, x_pos_goals_low, x_pos_goals_high)
+        intersect_x_neg_goal, _ = utils.intersect(
+            ball_coord_old, ball_coord, x_neg_goals_low, x_neg_goals_high
+        )
+        intersect_x_pos_goal, _ = utils.intersect(
+            ball_coord_old, ball_coord, x_pos_goals_low, x_pos_goals_high
+        )
         intersect_goal = intersect_x_neg_goal or intersect_x_pos_goal
 
         if intersect_goal and not self.ball_out_field:
-            goal_team = self.positive_team if intersect_x_neg_goal else self.negative_team
+            goal_team = (
+                self.positive_team if intersect_x_neg_goal else self.negative_team
+            )
             self.logger.info(f"Goal for team {goal_team}")
 
             self.ball_out_field = True
@@ -468,10 +509,18 @@ class Referee:
             self.game_state["game_state_msg"] = "Waiting for Goal Validation"
 
         # Sideline (field+margin) and ball trajectory intersection (Sideline fool detection)
-        intersect_field_Upline_out = utils.intersect(ball_coord_old, ball_coord, field_UpLeft_out, field_UpRight_out)
-        intersect_field_DownLine_out = utils.intersect(ball_coord_old, ball_coord, field_DownLeft_out, field_DownRight_out)
-        intersect_field_LeftLine_out = utils.intersect(ball_coord_old, ball_coord, field_UpLeft_out, field_DownLeft_out)
-        intersect_field_RightLine_out = utils.intersect(ball_coord_old, ball_coord, field_UpRight_out, field_DownRight_out)
+        intersect_field_Upline_out = utils.intersect(
+            ball_coord_old, ball_coord, field_UpLeft_out, field_UpRight_out
+        )
+        intersect_field_DownLine_out = utils.intersect(
+            ball_coord_old, ball_coord, field_DownLeft_out, field_DownRight_out
+        )
+        intersect_field_LeftLine_out = utils.intersect(
+            ball_coord_old, ball_coord, field_UpLeft_out, field_DownLeft_out
+        )
+        intersect_field_RightLine_out = utils.intersect(
+            ball_coord_old, ball_coord, field_UpRight_out, field_DownRight_out
+        )
 
         intersect_field_out = bool(
             intersect_field_Upline_out[0]
@@ -499,7 +548,9 @@ class Referee:
             self.pause_game("sideline-crossed")
 
         # Verification that the ball has been inside a smaller field (field-10cm margin) at least once before a new goal or a sideline foul is detected
-        if self.ball_out_field and utils.in_rectangle(ball_coord, field_DownLeft_in, field_UpRight_in):
+        if self.ball_out_field and utils.in_rectangle(
+            ball_coord, field_DownLeft_in, field_UpRight_in
+        ):
             self.ball_out_field = False
 
     def penalize_fools(self, elapsed: float):
@@ -518,7 +569,9 @@ class Referee:
                 robot = (team, number)
 
                 # Penalizing robots that are staying close to the ball
-                if self.state_info["ball"] is not None and self.can_be_penalized(marker):
+                if self.state_info["ball"] is not None and self.can_be_penalized(
+                    marker
+                ):
                     ball_position = np.array(self.state_info["ball"])
                     distance = np.linalg.norm(ball_position - robot_position)
 
@@ -528,8 +581,13 @@ class Referee:
                         else:
                             self.timed_circle_timers[robot] += elapsed
 
-                            if self.timed_circle_timers[robot] > constants.timed_circle_time:
-                                self.add_penalty(constants.default_penalty, marker, "ball_abuse")
+                            if (
+                                self.timed_circle_timers[robot]
+                                > constants.timed_circle_time
+                            ):
+                                self.add_penalty(
+                                    constants.default_penalty, marker, "ball_abuse"
+                                )
                     else:
                         self.timed_circle_timers[(team, number)] = None
                 else:
@@ -538,11 +596,15 @@ class Referee:
                 # Penalizing extra robots that are entering the defense area
                 if self.can_be_penalized(marker):
                     my_defense_area = constants.defense_area(self.positive_team == team)
-                    opponent_defense_area = constants.defense_area(self.positive_team != team)
+                    opponent_defense_area = constants.defense_area(
+                        self.positive_team != team
+                    )
 
                     # This is penalizing robots for abusive attack (suspended)
                     if utils.in_rectangle(robot_position, *opponent_defense_area):
-                        self.add_penalty(constants.default_penalty, marker, "abusive_attack")
+                        self.add_penalty(
+                            constants.default_penalty, marker, "abusive_attack"
+                        )
 
                     if utils.in_rectangle(robot_position, *my_defense_area):
                         if team in defender:
@@ -552,7 +614,11 @@ class Referee:
                             if abs(other_robot_position[0]) < abs(robot_position[0]):
                                 robot_to_penalize = other_robot
 
-                            self.add_penalty(constants.default_penalty, robot_to_penalize, "abusive_defense")
+                            self.add_penalty(
+                                constants.default_penalty,
+                                robot_to_penalize,
+                                "abusive_defense",
+                            )
                         else:
                             defender[team] = [marker, robot_position]
 
@@ -605,7 +671,10 @@ class Referee:
                     and (self.state_info is not None)
                     and (self.state_info["ball"] is not None)
                 ):
-                    distance = np.linalg.norm(np.array(self.wait_ball_position) - np.array(self.state_info["ball"]))
+                    distance = np.linalg.norm(
+                        np.array(self.wait_ball_position)
+                        - np.array(self.state_info["ball"])
+                    )
 
                     if distance < constants.place_ball_margin:
                         if wait_ball_timestamp is None:
