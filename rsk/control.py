@@ -109,7 +109,7 @@ class Control:
 
         try:
             if marker in self.robots.robots_by_marker:
-                if type(command) == list:
+                if type(command) is list:
                     robot = self.robots.robots_by_marker[marker]
 
                     if command[0] == "kick" and len(command) == 2:
@@ -179,7 +179,7 @@ class Control:
                 json = self.socket.recv_json()
                 response = [False, "Unknown error"]
 
-                if type(json) == list and len(json) == 4:
+                if type(json) is list and len(json) == 4:
                     key, team, number, command = json
 
                     if team in self.teams:
