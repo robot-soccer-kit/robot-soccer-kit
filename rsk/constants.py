@@ -67,7 +67,7 @@ referee_history_size: int = 3
 # For simulation
 robot_mass: float = 0.710  # [kg]
 max_linear_acceleration: float = 3  # [m.s^-2]
-max_angular_accceleration: float = 50  # [rad.s^-2]
+max_angular_acceleration: float = 50  # [rad.s^-2]
 ball_mass: float = 0.008  # [kg]
 ball_deceleration: float = 0.3  # [m.s^-2]
 kicker_x_tolerance: float = 0.03  # [m]

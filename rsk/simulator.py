@@ -108,7 +108,7 @@ class SimulatedRobot(SimulatedObject):
             self.velocity[:2], target_velocity_world, constants.max_linear_acceleration * dt
         )
         self.velocity[2:] = utils.update_limit_variation(
-            self.velocity[2:], target_velocity_robot[2:], constants.max_angular_accceleration * dt
+            self.velocity[2:], target_velocity_robot[2:], constants.max_angular_acceleration * dt
         )
 
     def control_leds(self, r: int, g: int, b: int) -> None:
