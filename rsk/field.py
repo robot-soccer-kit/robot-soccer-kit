@@ -124,7 +124,6 @@ class Field:
             object_points = []
             graphics_positions = []
             for key in self.corner_gfx_positions:
-                k = 0
                 for gfx, real in zip(
                     self.corner_gfx_positions[key], self.corner_field_positions[key]
                 ):
@@ -261,9 +260,9 @@ class Field:
         point_position_field = self.camera_to_field([*point_position_camera, 1.0])
         camera_center_field = self.camera_to_field(np.array([0.0, 0.0, 0.0]))
         delta = point_position_field - camera_center_field
-        l = (z - camera_center_field[2]) / delta[2]
+        _lambda = (z - camera_center_field[2]) / delta[2]
 
-        return list(camera_center_field + l * delta)[:2]
+        return list(camera_center_field + _lambda * delta)[:2]
 
     def position_to_pixel(self, pos: list) -> list:
         """
