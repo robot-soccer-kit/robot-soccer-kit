@@ -5,7 +5,17 @@ import serial
 from serial.tools import list_ports
 import logging
 from . import robot
-from .packets import *
+from .packets import (
+    Packet,
+    PacketReader,
+    PACKET_ROBOT,
+    PACKET_ROBOT_CONTROL,
+    PACKET_ROBOT_BEEP,
+    PACKET_ROBOT_LEDS_CUSTOM,
+    PACKET_ROBOT_KICK,
+    PACKET_MONITOR_DATA,
+    PACKET_MONITOR
+)
 
 logger: logging.Logger = logging.getLogger("robot")
 

@@ -3,7 +3,17 @@ from threading import Thread, Lock
 import time
 import socket
 import struct
-from .packets import *
+from .packets import (
+    Packet,
+    PacketReader,
+    PACKET_HEARTBEAT,
+    PACKET_ROBOT,
+    PACKET_ROBOT_CONTROL,
+    PACKET_ROBOT_BEEP,
+    PACKET_ROBOT_LEDS_CUSTOM,
+    PACKET_ROBOT_KICK,
+)
+import numpy as np
 
 
 class RobotWifi(robot.Robot):
@@ -141,7 +151,7 @@ class RobotWifi(robot.Robot):
                 packet = self.packet_reader.pop_packet()
                 self.last_message = time.time()
 
-                version = packet.readByte()
+                _ = packet.readByte()
                 self.state["time"] = packet.read_float()
                 self.state["battery"] = [packet.readByte() / 10.0]
 
