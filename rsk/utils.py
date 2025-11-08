@@ -115,7 +115,7 @@ def robot_leds_color(name: str) -> list:
     elif name == "green":
         return [0, 50, 0]
     else:
-        raise NotImplemented(f"Unknown color: {name}")
+        raise NotImplementedError(f"Unknown color: {name}")
 
 
 def all_robots() -> list:

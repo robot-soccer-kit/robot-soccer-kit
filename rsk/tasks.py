@@ -16,7 +16,7 @@ class ControlTask:
         return []
 
     def tick(self, robot: client.ClientRobot) -> None:
-        raise NotImplemented("Task not implemented")
+        raise NotImplementedError("Task not implemented")
 
     def finished(self, client: client.Client, available_robots: list) -> bool:
         return False
