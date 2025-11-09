@@ -50,7 +50,8 @@ args = parser.parse_args()
 if args.reset:
     config.reset()
 
-robot_wifi.RobotWifi.start_service()
+if not args.dry:
+    robot_wifi.RobotWifi.start_service()
 
 has_client: bool = False
 backend: Backend = Backend(args.simulated, args.competition, args.scheduler)
