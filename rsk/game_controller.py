@@ -42,6 +42,9 @@ parser.add_argument(
 parser.add_argument(
     "--reset", "-r", action="store_true", help="Reset the configuration file"
 )
+parser.add_argument(
+    "--dry", "-d", action="store_true", help="Dry run without starting the server"
+)
 args = parser.parse_args()
 
 if args.reset:
@@ -106,4 +109,5 @@ def start_and_serve():
 
 
 if __name__ == "__main__":
-    start_and_serve()
+    if not args.dry:
+        start_and_serve()
