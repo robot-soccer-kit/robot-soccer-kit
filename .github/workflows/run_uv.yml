@@ -1,0 +1,23 @@
+name: UV run
+
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  run_with_uv:
+    name: Run with UV
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Syncing UV
+        run: uv sync
+
+      - name: Executing a dry run of the Game Controller
+        run: uv run -m rsk.game_controller -s -d
