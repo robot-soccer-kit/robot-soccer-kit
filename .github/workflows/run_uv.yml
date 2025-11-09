@@ -17,7 +17,7 @@ jobs:
         uses: astral-sh/setup-uv@v6
 
       - name: Syncing UV
-        run: uv sync
+        run: uv sync --extra gc
 
       - name: Executing a dry run of the Game Controller
         run: uv run -m rsk.game_controller -s -d
