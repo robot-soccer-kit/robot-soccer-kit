@@ -50,7 +50,7 @@ args = parser.parse_args()
 if args.reset:
     config.reset()
 
-if not args.dry:
+if (not args.dry) and (not args.simulated):
     robot_wifi.RobotWifi.start_service()
 
 has_client: bool = False
