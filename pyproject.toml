@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "robot_soccer_kit"
-version = "2.4.8"
+version = "2.4.9"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "Rhoban team", email = "team@rhoban.com" }]
