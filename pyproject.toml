@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "robot_soccer_kit"
-version = "2.4.9"
+version = "2.4.10"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "Rhoban team", email = "team@rhoban.com" }]
@@ -17,7 +17,7 @@ gc = ["pyserial", "flask>=2", "flask-cors", "waitress", "opencv-contrib-python"]
 
 [project.urls]
 Homepage = "https://robot-soccer-kit.github.io/"
-Repository = "https://github.com/rhoban/robot-soccer-kit/"
+Repository = "https://github.com/robot-soccer-kit/robot-soccer-kit/"
 
 [tool.setuptools]
 include-package-data = false
