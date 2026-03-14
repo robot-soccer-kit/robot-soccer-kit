@@ -33,7 +33,8 @@ function scheduler_initialize(backend, url) {
         setInterval(updateScores, 1000)
 
         function setTeam(color, name, key) {
-            $(".team-name[rel=" + color + "]").val(name)
+            $(".team-name[rel=" + color + "]").val(name);
+            $(".team-name[rel=" + color + "]").change();
             $(".key-" + color).val(key);
             $(".key-" + color).change();
         }
