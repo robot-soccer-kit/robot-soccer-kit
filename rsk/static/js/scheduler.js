@@ -2,6 +2,7 @@ function scheduler_initialize(backend, url) {
     $.get('static/scheduler_team.html', function (team_template) {
         let games = {};
         let currentGame = null;
+        let currentPublished = false;
 
         function setCurrentGame(gameId) {
             currentGame = null
@@ -17,13 +18,14 @@ function scheduler_initialize(backend, url) {
                         setTeam('green', game.teamGreen.name, game.teamGreen.token);
                     }
                     currentGame = game;
+                    currentPublished = false;
                     updateScores()
                 }
             }
         }
 
         function updateScores() {
-            if (currentGame) {
+            if (currentGame && !currentPublished) {
                 backend.get_game_state(function(game_state) {
                     $('.scheduler-score-blue-'+currentGame.id).text(game_state.teams.blue.score)
                     $('.scheduler-score-green-'+currentGame.id).text(game_state.teams.green.score)
@@ -61,6 +63,7 @@ function scheduler_initialize(backend, url) {
                             if (currentGame == gameId) {
                                 setCurrentGame(null)
                             }
+                            currentPublished = true;
                         }
                     });
                 }
