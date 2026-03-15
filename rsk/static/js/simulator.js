@@ -287,11 +287,12 @@ function simulator_initialize(backend, isView) {
             setTimeout(runView, 1000)
             runView()
         }
-        window.onresize = runView
 
         $('#ViewChange').click(switchView)
 
         backend.is_simulated(function (isSimulated) {
+            window.onresize = runView
+            
             if (isSimulated) {
                 $('body').addClass('vision-running')
                 const canvas = document.getElementById("ball")
