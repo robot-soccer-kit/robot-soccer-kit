@@ -244,6 +244,7 @@ class Video:
                         self.detection.detect_markers(image_captured, image_debug)
                         self.detection.detect_ball(image_captured, image_debug)
                         self.detection.draw_annotations(image_debug)
+                        self.detection.state.publish()
 
                     # Computing time
                     current_period = time.time() - t0

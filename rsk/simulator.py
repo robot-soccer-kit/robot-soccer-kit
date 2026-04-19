@@ -188,6 +188,8 @@ class Simulator:
     ):
         self.state: state.State = state
         self.robots: robots.Robots = robots
+        self.last_publish = time.time()
+        self.publish_period = 1 / 30.0
 
         # Creating the robots
         for configuration in client.configurations["game_green_positive"]:
@@ -307,3 +309,8 @@ class Simulator:
                 else:
                     self.state.set_marker(marker, pos[:2].tolist(), pos[2])
                     self.state.set_leds(marker, self.objects[marker].leds)
+
+        # Simulating the fact that state is published at a fixed frequency
+        if time.time() - self.last_publish > self.publish_period:
+            self.state.publish()
+            self.last_publish = time.time()

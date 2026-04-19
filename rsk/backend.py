@@ -23,7 +23,7 @@ class Backend:
         self.competition = competition
         self.scheduler = scheduler
 
-        self.state: state.State = state.State(30, self.simulated)
+        self.state: state.State = state.State(self.simulated)
         self.state.start_pub()
 
         self.referee: referee.Referee = referee.Referee(self.state)
