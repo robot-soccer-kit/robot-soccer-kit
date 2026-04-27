@@ -1,5 +1,3 @@
-#pragma once
-
 #include "kicker.h"
 #include "utils.h"
 #include "config.h"
