@@ -61,7 +61,9 @@ char bin_on_packet(uint8_t type) {
         float dt = ((int16_t)bin_stream_read_short()) * M_PI / 180;
 
         motors_set_ik(dx, dy, dt);
+#ifdef DISABLE_WIFI_POWER_SAVING
         last_motor_command_timestamp = millis();
+#endif
         return 1;
       } else if (command == COMMAND_BEEP) { // Beep
         short freq = bin_stream_read_short();
