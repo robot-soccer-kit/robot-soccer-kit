@@ -118,3 +118,6 @@
 
 // Below this voltage, the robot is considered operated with USB
 #define VOLTAGE_USB 5.0
+
+// Set to disable WiFi power saving mode (which can cause latency issues)
+// #define DISABLE_WIFI_POWER_SAVING

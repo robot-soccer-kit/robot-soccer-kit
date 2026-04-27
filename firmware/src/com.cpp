@@ -10,6 +10,7 @@
 #include <BluetoothSerial.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include <esp_wifi.h>
 
 #define BIN_STREAM_ROBOT 80
 
@@ -27,6 +28,11 @@ WiFiUDP udp;
 IPAddress game_controller;
 IPAddress robot_ip;
 static unsigned long last_game_controller_timestamp = 0;
+
+#ifdef DISABLE_WIFI_POWER_SAVING
+static unsigned long last_motor_command_timestamp = 0;
+static bool is_power_saving = true;
+#endif
 
 // Needed when in BT mode
 bool do_forward = false;
@@ -55,6 +61,7 @@ char bin_on_packet(uint8_t type) {
         float dt = ((int16_t)bin_stream_read_short()) * M_PI / 180;
 
         motors_set_ik(dx, dy, dt);
+        last_motor_command_timestamp = millis();
         return 1;
       } else if (command == COMMAND_BEEP) { // Beep
         short freq = bin_stream_read_short();
@@ -109,6 +116,22 @@ void bin_stream_send(uint8_t *packet, size_t size) {
       if (has_game_controller()) {
         target = game_controller;
       }
+
+#ifdef DISABLE_WIFI_POWER_SAVING
+      if (is_power_saving && millis() - last_motor_command_timestamp < 500) {
+        // If we are in power saving mode, we only send packets when we had a
+        // motor command in the last 500ms
+        is_power_saving = false;
+        esp_wifi_set_ps(WIFI_PS_NONE);
+      } else if (!is_power_saving &&
+                 millis() - last_motor_command_timestamp >= 500) {
+        // If we are not in power saving mode, but we had no motor command for
+        // more than 500ms, we switch to power saving mode and stop sending
+        // packets
+        is_power_saving = true;
+        esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
+      }
+#endif
 
       udp.beginPacket(target, WIFI_UDP_PORT);
       udp.write(packet, size);
