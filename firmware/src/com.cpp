@@ -20,6 +20,7 @@
 #define COMMAND_LEDS_DEFAULT 8
 #define COMMAND_EMERGENCY 11
 #define COMMAND_KICK 12
+#define COMMAND_POWER_SAVING 13
 
 // Needed when in WiFi mode
 bool is_wifi = true;
@@ -28,11 +29,8 @@ WiFiUDP udp;
 IPAddress game_controller;
 IPAddress robot_ip;
 static unsigned long last_game_controller_timestamp = 0;
-
-#ifdef DISABLE_WIFI_POWER_SAVING
-static unsigned long last_motor_command_timestamp = 0;
 static bool is_power_saving = true;
-#endif
+static bool should_power_save = true;
 
 // Needed when in BT mode
 bool do_forward = false;
@@ -61,9 +59,6 @@ char bin_on_packet(uint8_t type) {
         float dt = ((int16_t)bin_stream_read_short()) * M_PI / 180;
 
         motors_set_ik(dx, dy, dt);
-#ifdef DISABLE_WIFI_POWER_SAVING
-        last_motor_command_timestamp = millis();
-#endif
         return 1;
       } else if (command == COMMAND_BEEP) { // Beep
         short freq = bin_stream_read_short();
@@ -90,6 +85,16 @@ char bin_on_packet(uint8_t type) {
       } else if (command == COMMAND_KICK) { // Kick
         if (bin_stream_available() == 1) {
           kicker_kick(bin_stream_read() / 100.);
+        }
+        return 1;
+      } else if (command == COMMAND_POWER_SAVING) { // Power saving mode
+        if (bin_stream_available() == 1) {
+          bool enabled = bin_stream_read() != 0;
+          if (enabled) {
+            should_power_save = true;
+          } else {
+            should_power_save = false;
+          }
         }
         return 1;
       }
@@ -119,25 +124,18 @@ void bin_stream_send(uint8_t *packet, size_t size) {
         target = game_controller;
       }
 
-#ifdef DISABLE_WIFI_POWER_SAVING
-      if (is_power_saving && millis() - last_motor_command_timestamp < 500) {
-        // If we are in power saving mode, we only send packets when we had a
-        // motor command in the last 500ms
-        is_power_saving = false;
-        esp_wifi_set_ps(WIFI_PS_NONE);
-      } else if (!is_power_saving &&
-                 millis() - last_motor_command_timestamp >= 500) {
-        // If we are not in power saving mode, but we had no motor command for
-        // more than 500ms, we switch to power saving mode and stop sending
-        // packets
-        is_power_saving = true;
-        esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
-      }
-#endif
-
       udp.beginPacket(target, WIFI_UDP_PORT);
       udp.write(packet, size);
       udp.endPacket();
+
+      if (should_power_save != is_power_saving) {
+        is_power_saving = should_power_save;
+        if (is_power_saving) {
+          esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
+        } else {
+          esp_wifi_set_ps(WIFI_PS_NONE);
+        }
+      }
     }
   } else {
     shell_stream()->write(packet, size);
