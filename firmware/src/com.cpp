@@ -20,7 +20,6 @@
 #define COMMAND_LEDS_DEFAULT 8
 #define COMMAND_EMERGENCY 11
 #define COMMAND_KICK 12
-#define COMMAND_POWER_SAVING 13
 
 // Needed when in WiFi mode
 bool is_wifi = true;
@@ -29,6 +28,8 @@ WiFiUDP udp;
 IPAddress game_controller;
 IPAddress robot_ip;
 static unsigned long last_game_controller_timestamp = 0;
+
+static unsigned long last_command_timestamp = 0;
 static bool is_power_saving = true;
 static bool should_power_save = true;
 
@@ -59,11 +60,15 @@ char bin_on_packet(uint8_t type) {
         float dt = ((int16_t)bin_stream_read_short()) * M_PI / 180;
 
         motors_set_ik(dx, dy, dt);
+
+        last_command_timestamp = millis();
         return 1;
       } else if (command == COMMAND_BEEP) { // Beep
         short freq = bin_stream_read_short();
         short duration = bin_stream_read_short();
         buzzer_beep(freq, duration);
+
+        last_command_timestamp = millis();
         return 1;
       } else if (command == COMMAND_SET_LEDS) { // Set boards leds
         if (bin_stream_available() == 3) {
@@ -74,28 +79,24 @@ char bin_on_packet(uint8_t type) {
           leds_set(red, green, blue);
         }
 
+        last_command_timestamp = millis();
         return 1;
       } else if (command == COMMAND_LEDS_DEFAULT) { // Default LEDs
         leds_default();
 
+        last_command_timestamp = millis();
         return 1;
       } else if (command == COMMAND_EMERGENCY) { // Emergency stop
         motors_disable();
+
+        last_command_timestamp = millis();
         return 1;
       } else if (command == COMMAND_KICK) { // Kick
         if (bin_stream_available() == 1) {
           kicker_kick(bin_stream_read() / 100.);
         }
-        return 1;
-      } else if (command == COMMAND_POWER_SAVING) { // Power saving mode
-        if (bin_stream_available() == 1) {
-          bool enabled = bin_stream_read() != 0;
-          if (enabled) {
-            should_power_save = true;
-          } else {
-            should_power_save = false;
-          }
-        }
+
+        last_command_timestamp = millis();
         return 1;
       }
     }
@@ -127,15 +128,6 @@ void bin_stream_send(uint8_t *packet, size_t size) {
       udp.beginPacket(target, WIFI_UDP_PORT);
       udp.write(packet, size);
       udp.endPacket();
-
-      if (should_power_save != is_power_saving) {
-        is_power_saving = should_power_save;
-        if (is_power_saving) {
-          esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
-        } else {
-          esp_wifi_set_ps(WIFI_PS_NONE);
-        }
-      }
     }
   } else {
     shell_stream()->write(packet, size);
@@ -202,6 +194,18 @@ void com_bin_tick() {
             game_controller = udp.remoteIP();
           }
         }
+      }
+    }
+
+    should_power_save =
+        !has_game_controller() || (millis() - last_command_timestamp) > 10000;
+
+    if (should_power_save != is_power_saving) {
+      is_power_saving = should_power_save;
+      if (is_power_saving) {
+        esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
+      } else {
+        esp_wifi_set_ps(WIFI_PS_NONE);
       }
     }
   } else {
