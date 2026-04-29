@@ -1,6 +1,6 @@
 import zmq
 import time
-
+from . import replay_logger
 
 class State:
     def __init__(self, simulated=False):
@@ -42,6 +42,8 @@ class State:
         """
         self.last_time = time.time()
         info = self.get_state()
+        replay_logger.register_infos(["ball"], info)
+        replay_logger.register_infos(info["markers"].keys(), info["markers"])
         self.socket.send_json(info, flags=zmq.NOBLOCK)
 
     def set_markers(self, markers):

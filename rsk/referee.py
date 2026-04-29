@@ -3,9 +3,8 @@ import copy
 import numpy as np
 import threading
 import logging
-from . import constants, utils, control, tasks, state
+from . import constants, utils, control, tasks, state, replay_logger
 import time
-
 
 class Referee:
     """
@@ -633,8 +632,15 @@ class Referee:
         self.game_state["game_state_msg"] = "Game is ready to start"
         last_tick = time.time()
 
+        replay_logger.recording = self.game_state["game_is_running"]
+
         while True:
             self.state_info = copy.deepcopy(self.state.get_state())
+
+            if replay_logger.recording != self.game_state["game_is_running"]:
+                replay_logger.toggle_recording()
+            replay_logger.register_infos(self.state_info["referee"].keys(), self.state_info["referee"])
+            
             self.state.set_referee(self.get_game_state())
             self.control.allow_extra_features = not self.game_state["game_is_running"]
 

@@ -6,7 +6,7 @@ import threading
 import logging
 import time
 from .path_finder import PathFinder
-from . import constants, utils
+from . import constants, utils, replay_logger
 
 configurations = {
     "dots": [
@@ -230,6 +230,7 @@ class ClientRobot(ClientTracked):
 
         arrived, order = self.goto_compute_order(target, skip_old, avoid_obstacles)
         self.control(*order)
+        # replay_logger.register_info("command_goto", {"target" : target, "skip_old" : skip_old, "avoid_obstacle" : avoid_obstacles })
 
         return arrived
 
@@ -413,6 +414,9 @@ class Client:
         if threading.current_thread() is threading.main_thread():
             sigint_handler = signal.getsignal(signal.SIGINT)
             signal.signal(signal.SIGINT, signal.SIG_IGN)
+        # if name == "kick" or name == "leds":
+        #     print(name)
+        # replay_logger.register_info("client_command", {"color" : color, "number" : number, "command" : [name, *parameters]})
         self.lock.acquire()
         self.req.send_json([self.key, color, number, [name, *parameters]])
         success, message = self.req.recv_json()
