@@ -126,7 +126,7 @@ class Robots:
             if len(result) == 2:
                 protocol, url = result
                 if protocol in self.protocols:
-                    self.robots[full_url] = self.protocols[protocol](url)
+                    self.robots[full_url] = self.protocols[protocol](self, url)
                     self.save_config()
                     return self.robots[full_url]
                 else:

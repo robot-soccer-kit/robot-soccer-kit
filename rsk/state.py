@@ -42,8 +42,10 @@ class State:
         """
         self.last_time = time.time()
         info = self.get_state()
-        replay_logger.register_infos(["ball"], info)
-        replay_logger.register_infos(info["markers"].keys(), info["markers"])
+
+        replay_logger.register_infos(["ball"], info, "positions")
+        replay_logger.register_infos(info["markers"].keys(), info["markers"], "positions")
+        replay_logger.register_infos(info["leds"].keys(), info["leds"], "leds_state")
         self.socket.send_json(info, flags=zmq.NOBLOCK)
 
     def set_markers(self, markers):

@@ -14,7 +14,7 @@ from .packets import (
     PACKET_ROBOT_KICK,
 )
 import numpy as np
-
+from .robots import Robots
 
 class RobotWifi(robot.Robot):
     udp_port: int = 7600
@@ -117,9 +117,9 @@ class RobotWifi(robot.Robot):
 
         return ips
 
-    def __init__(self, url: str):
+    def __init__(self, robot: Robots, url: str):
         print(f"Adding a robot with url {url}")
-        super().__init__(url)
+        super().__init__(robot, url)
 
         self.packet_reader = PacketReader(dest=0)
         self.id = int(url.split(".")[-1])
@@ -199,6 +199,8 @@ class RobotWifi(robot.Robot):
         :param int blue: blue brightness (0-255)
         :raises RobotError: if the operation is not supported
         """
+        super().leds(red, green, blue)
+
         packet = Packet(PACKET_ROBOT, dest=self.id)
         packet.append_byte(PACKET_ROBOT_LEDS_CUSTOM)
         packet.append_byte(red)

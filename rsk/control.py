@@ -168,7 +168,8 @@ class Control:
         except (TypeError, ValueError) as e:
             response = [False, "ArgumentError: " + str(e)]
 
-        replay_logger.register_info("command_received", {marker : command, "response" : response, "master" : is_master})
+        # replay_logger.register_info("command_received", {marker : command, "response" : response, "master" : is_master})
+        replay_logger.register_info(marker, {"received" : command, "response" : response, "master" : is_master}, "command_received")
         return response
 
     def thread(self):

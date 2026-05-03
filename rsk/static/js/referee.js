@@ -90,7 +90,7 @@ function referee_initialize(backend)
                 $(".GameState").html(game_state["game_state_msg"]);
 
                 if (!game_state["game_is_running"]){
-                    $('.start-game').removeClass('d-none');
+                    $('.start-game-grp').removeClass('d-none');
                     $('.pause-game-grp').addClass('d-none');
                     $('.resume-game-grp').addClass('d-none');
 
@@ -107,7 +107,7 @@ function referee_initialize(backend)
                 }
 
                 else if (game_state["game_is_running"]){
-                    $('.start-game').addClass('d-none');
+                    $('.start-game-grp').addClass('d-none');
                     $('.pause-game-grp').removeClass('d-none'); 
 
                     // Enable buttons when referee is running
@@ -189,6 +189,15 @@ function referee_initialize(backend)
     // Game Start&Stop
     $('.start-game').click(function() {
         backend.start_game();
+        backend.set_ready_to_record(false);
+        displayed_toast_nb = 0;
+        $("#RefereeHistory").html('');
+        $("#NoHistory").html('<h6 class="text-muted">No History</h6>');
+    });
+
+    $('.start-rec-game').click(function() {
+        backend.start_game();
+        backend.set_ready_to_record(true);
         displayed_toast_nb = 0;
         $("#RefereeHistory").html('');
         $("#NoHistory").html('<h6 class="text-muted">No History</h6>');

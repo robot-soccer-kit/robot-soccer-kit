@@ -638,8 +638,8 @@ class Referee:
             self.state_info = copy.deepcopy(self.state.get_state())
 
             if replay_logger.recording != self.game_state["game_is_running"]:
-                replay_logger.toggle_recording()
-            replay_logger.register_infos(self.state_info["referee"].keys(), self.state_info["referee"])
+                replay_logger.set_recording(self.game_state["game_is_running"])
+            replay_logger.register_infos(self.state_info["referee"].keys(), self.state_info["referee"], "referee")
             
             self.state.set_referee(self.get_game_state())
             self.control.allow_extra_features = not self.game_state["game_is_running"]

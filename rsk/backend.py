@@ -10,6 +10,7 @@ from . import (
     utils,
     constants,
     simulator,
+    replay_logger,
 )
 
 
@@ -209,3 +210,6 @@ class Backend:
 
     def validate_goal(self, yes_no: bool):
         self.referee.validate_goal(yes_no)
+
+    def set_ready_to_record(self, ready:bool):
+        replay_logger.set_ready_to_record(ready)
