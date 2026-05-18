@@ -66,6 +66,7 @@ body {
     position: absolute;
     z-index: 0;
     opacity: 100;
+    /* opacity: 100; */
 }
 
 .style_fps {
@@ -263,6 +264,51 @@ div.progress {
     display: none;
 }
 
+.replay-mode {
+    display: none;
+}
+
+.recording-settings {
+    display: none;
+}
+
+.commands-view table, .detection-view table {
+    font-size: 17px;
+}
+
+.commands-view td,
+.commands-view th {
+    padding: 0 4px !important;
+    line-height: 1;
+    text-align: center;
+}
+
+.commands-tab td {
+    font-variant-numeric: tabular-nums;
+    min-width: 17px;
+}
+
+.detection-tab th,
+.detection-tab td {
+    text-align: center;
+}
+
+/* .detection-tab table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.detection-table th,
+.detection-table td {
+    width: 10%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: center;
+} */
+
+
+
 .blinking {
     animation: blinker 1s linear infinite;
 }
@@ -275,7 +321,7 @@ div.progress {
 
 #back {
     object-fit: contain;
-}
+} 
 
 .no-backend {
     position:relative;
@@ -283,3 +329,4 @@ div.progress {
 
 .scheduler-game-row-selected, .scheduler-game-row-selected tr {
     background-color: rgba(255, 200, 0, 0.206);
+}

@@ -6,7 +6,7 @@ import time
 import logging
 import threading
 import waitress
-from flask import Flask, send_from_directory, jsonify, request
+from flask import Flask, send_from_directory, jsonify, request, make_response
 from flask_cors import CORS
 from .backend import Backend
 from . import api, robot_wifi, config
@@ -45,16 +45,20 @@ parser.add_argument(
 parser.add_argument(
     "--dry", "-d", action="store_true", help="Dry run without starting the server"
 )
+parser.add_argument(
+    "--replay", "-R", type=str, default="", help="Enable replay mode"
+)
 args = parser.parse_args()
 
 if args.reset:
     config.reset()
 
-if (not args.dry) and (not args.simulated):
+if (not args.dry) and (not args.simulated) and (args.replay == ""):
     robot_wifi.RobotWifi.start_service()
 
+
 has_client: bool = False
-backend: Backend = Backend(args.simulated, args.competition, args.scheduler)
+backend: Backend = Backend(args.simulated, args.competition, args.scheduler, args.replay)
 api.register(backend)
 
 # Starting a Flask app serving API requests and files of static/ directory
@@ -62,6 +66,17 @@ static = os.path.dirname(__file__) + "/static/"
 app = Flask("Game controller", static_folder=static)
 CORS(app)
 
+if backend.replay_file() != "":
+    if not os.path.isfile(backend.replay_file()):
+        logging.error("replay file not found")
+    else:
+        @app.route("/api/replay_data", methods=["GET"])
+        def get_replay_data():
+            directory = os.path.dirname(os.path.abspath(backend.replay_file()))
+            filename = os.path.basename(backend.replay_file())
+            response = make_response(send_from_directory(directory, filename, mimetype='application/json'))
+            response.headers['Content-Encoding'] = 'gzip'
+            return response
 
 @app.route("/api", methods=["GET"])
 def handle_api():

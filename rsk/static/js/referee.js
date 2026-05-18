@@ -104,6 +104,9 @@ function referee_initialize(backend)
                         $(this).find('.unpenalize').prop("disabled", true);
                         $(this).find('.penalize').prop("disabled", true);
                     });
+
+                    // Enable recorder settings changes
+                    $('.enable-rec-settings input').prop("disabled", false)
                 }
 
                 else if (game_state["game_is_running"]){
@@ -128,6 +131,9 @@ function referee_initialize(backend)
                         $('.pause-game-grp').removeClass('d-none');
                         $('.resume-game-grp').addClass('d-none');
                     }
+
+                    // Disable recorder settings changes
+                    $('.enable-rec-settings input').prop("disabled", true)
                 }
     
                 //Disable Pause Button if a Goal is waiting for Validation
@@ -189,19 +195,19 @@ function referee_initialize(backend)
     // Game Start&Stop
     $('.start-game').click(function() {
         backend.start_game();
-        backend.set_ready_to_record(false);
+        // backend.set_ready_to_record(false);
         displayed_toast_nb = 0;
         $("#RefereeHistory").html('');
         $("#NoHistory").html('<h6 class="text-muted">No History</h6>');
     });
 
-    $('.start-rec-game').click(function() {
-        backend.start_game();
-        backend.set_ready_to_record(true);
-        displayed_toast_nb = 0;
-        $("#RefereeHistory").html('');
-        $("#NoHistory").html('<h6 class="text-muted">No History</h6>');
-    });
+    // $('.start-rec-game').click(function() {
+    //     backend.start_game();
+    //     backend.set_ready_to_record(true);
+    //     displayed_toast_nb = 0;
+    //     $("#RefereeHistory").html('');
+    //     $("#NoHistory").html('<h6 class="text-muted">No History</h6>');
+    // });
 
     $('.pause-game').click(function() {
         backend.pause_game();

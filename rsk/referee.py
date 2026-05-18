@@ -452,6 +452,9 @@ class Referee:
 
         :param bool yes_no: whether the goal is validated or canceller
         """
+
+        replay_logger.register_info("validate_goal", yes_no, "referee", allow_repeat=True)
+
         if yes_no:
             if self.game_state["teams"]["blue"]["x_positive"]:
                 self.force_place("game_blue_positive", end_buzz=True)

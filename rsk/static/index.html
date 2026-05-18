@@ -16,7 +16,10 @@
 <script type="text/javascript" src="static/js/scheduler.js"></script>
 <script type="text/javascript" src="static/js/control.js"></script>
 <script type="text/javascript" src="static/js/tabs.js"></script>
+<script type="text/javascript" src="static/js/replay.js"></script>
+<script type="text/javascript" src="static/js/field_renderer.js"></script>
 <script type="text/javascript" src="static/js/app.js"></script>
+<script src="static/js/recorder.js"></script>
 <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon">
 <title>Robot Soccer Kit</title>
 </head>
@@ -55,7 +58,7 @@
                     <i class="text-warning bi bi-exclamation-circle robots-show-warning"></i>
                 </a>
             </li>
-            <li class="nav-item rounded nav-tab" rel="control">
+            <li class="nav-item rounded nav-tab replay-hide" rel="control">
                 <a class="nav-link" href="#">
                     <i class="bi bi-arrows-move"></i>&nbsp;
                     Control
@@ -83,8 +86,13 @@
         </ul>
 
         <ul class="navbar-nav p-2">
-            <li class="style_fps rounded">
+            <li class="style_fps rounded replay-hide">
                 <span class="navbar-text p-2 fps">
+                </span>
+            </li>
+            <li class="replay-mode">
+                <span class="badge rounded-pill text-bg-info" style="font-size:50%">
+                    Replay Mode
                 </span>
             </li>
         </ul>
@@ -223,7 +231,7 @@
     <div class="page page-referee">
         <div class="referee"></div>
 
-        <div class="vision-hide-running">
+        <div class="vision-hide-running replay-hide">
             <div class="alert alert-warning d-flex align-items-center" role="alert">
                 <div>
                     <i class="bi bi-exclamation-triangle-fill"></i>&nbsp;
@@ -235,6 +243,12 @@
 
         <div class="row">
             <div id="first-col" class="col-7">
+                <div class="alert alert-warning align-items-center d-flex no-file-replay d-none" role="alert">
+                    <div>
+                        <i class="bi bi-exclamation-triangle-fill"></i>&nbsp;
+                        Invalid replay file
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-12">
                         <div class="vision-show-running">
@@ -247,7 +261,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row">
+                <div class="row replay-hide">
                     <div class="col-12 py-2 text-center">
                         <button id="MidTimeChange" class="btn btn-warning btn-sm" data-bs-toggle="modal"
                             data-bs-target="#staticBackdrop" disabled>
@@ -259,7 +273,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="row d-flex robot-penalize-tab">
+                <div class="row d-flex robot-penalize-tab replay-hide">
                     <div id="XnegPenalty" class="col-6">
                         <div class="card text-center border-blue">
                             <div class="card-header bg-head-blue text-light">
@@ -270,7 +284,7 @@
                                     <div class="col-2">
                                         <img src="static/imgs/robotblue1.svg" alt="Robot Blue 1" height="50px" />
                                     </div>
-                                    <div class="col-7">
+                                    <div class="col-7 replay-hide">
                                         <div class="row">
                                             <div class="col-12 robot-state">
                                                 <h6>Blue 1 State</h6>
@@ -285,11 +299,19 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- <div class="col-4 replay-mode">
+                                        <h6>Blue 1</h6>
+                                    </div> -->
                                     <div class="col-1 p-0 m-0">
                                         <button class="btn btn-primary btn-sm penalize" disabled>
                                             5s
                                         </button>
                                     </div>
+                                    <!-- <div class="col-4 replay-mode detection-value" style="font-size: 70%;">
+                                        <span class="bg-body-grey card m-0">
+                                            ...
+                                        </span>
+                                    </div> -->
                                     <div class="col-1 p-2 m-0">
                                         <button class="btn btn-danger btn-sm unpenalize" disabled>
                                             <i class="bi bi-x-circle"></i>
@@ -300,7 +322,7 @@
                                     <div class="col-2">
                                         <img src="static/imgs/robotblue2.svg" alt="Robot Blue 2" height="50px" />
                                     </div>
-                                    <div class="col-7">
+                                    <div class="col-7 replay-hide">
                                         <div class="row">
                                             <div class="col-12 robot-state">
                                                 <h6>Blue 2 State</h6>
@@ -315,6 +337,9 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- <div class="col-4 replay-mode">
+                                        <h6>Blue 2</h6>
+                                    </div> -->
                                     <div class="col-1 p-0 m-0">
                                         <button class="btn btn-primary btn-sm penalize" disabled>
                                             5s
@@ -325,6 +350,11 @@
                                             <i class="bi bi-x-circle"></i>
                                         </button>
                                     </div>
+                                    <!-- <div class="col-4 replay-mode detection-value" style="font-size: 70%;">
+                                        <span class="bg-body-grey card m-0">
+                                            ...
+                                        </span>
+                                    </div> -->
                                 </div>
                             </div>
                         </div>
@@ -339,7 +369,7 @@
                                     <div class="col-2">
                                         <img src="static/imgs/robotgreen1.svg" alt="Robot Green 1" height="50" />
                                     </div>
-                                    <div class="col-7">
+                                    <div class="col-7 replay-hide">
                                         <div class="row">
                                             <div class="col-12 robot-state">
                                                 <h6>Green 1 State</h6>
@@ -354,6 +384,9 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- <div class="col-4 replay-mode">
+                                        <h6>Green 1</h6>
+                                    </div> -->
                                     <div class="col-1 p-0 m-0">
                                         <button class="btn btn-success btn-sm penalize" disabled>
                                             5s
@@ -364,12 +397,17 @@
                                             <i class="bi bi-x-circle"></i>
                                         </button>
                                     </div>
+                                    <!-- <div class="col-4 replay-mode detection-value" style="font-size: 70%;">
+                                        <span class="bg-body-grey card m-0">
+                                            ...
+                                        </span>
+                                    </div> -->
                                 </div>
                                 <div class="row vert-align mb-1 robot-penalty" rel="green2">
                                     <div class="col-2">
                                         <img src="static/imgs/robotgreen2.svg" alt="Robot Green 2" height="50px" />
                                     </div>
-                                    <div class="col-7">
+                                    <div class="col-7 replay-hide">
                                         <div class="row">
                                             <div class="col-12 robot-state">
                                                 <h6>Green 2 State</h6>
@@ -384,6 +422,9 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- <div class="col-4 replay-mode">
+                                        <h6>Green 2</h6>
+                                    </div> -->
                                     <div class="col-1 p-0 m-0">
                                         <button class="btn btn-success btn-sm penalize" disabled>
                                             5s
@@ -394,24 +435,120 @@
                                             <i class="bi bi-x-circle"></i>
                                         </button>
                                     </div>
+                                    <!-- <div class="col-4 replay-mode detection-value" style="font-size: 70%;">
+                                        <span class="bg-body-grey card m-0">
+                                            ...
+                                        </span>
+                                    </div> -->
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div class="card replay-mode detection-view">
+
+                    <div class="card-body p-1">
+
+                        <table class="table table-sm mb-0 align-middle detection-tab">
+
+                            <colgroup>
+                                <col span="11" style="width: 11.1%">
+                            </colgroup>
+
+                            <thead>
+                                <tr>
+                                    <th>markers</th>
+                                    <td>green1</td>
+                                    <td>green2</td>
+                                    <td>blue1</td>
+                                    <td>blue2</td>
+                                    <td>c1</td>
+                                    <td>c2</td>
+                                    <td>c3</td>
+                                    <td>c4</td>
+                                </tr>
+                            </thead>
+
+                            <tbody class="detection-tab">
+
+                                <tr class="detected">
+                                    <th>detected</th>
+                                    <td rel="green1">...</td>
+                                    <td rel="green2">...</td>
+                                    <td rel="blue1">...</td>
+                                    <td rel="blue2">...</td>
+                                    <td rel="c1">...</td>
+                                    <td rel="c2">...</td>
+                                    <td rel="c3">...</td>
+                                    <td rel="c4">...</td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+                <div class="card replay-mode commands-view">
+
+                    <div class="card-body p-1">
+
+                        <table class="table table-sm mb-0 align-middle">
+
+                            <thead>
+                                <tr class="bg-body-grey">
+                                    <th>Robot</th>
+                                    <th style="width: 50%;">Last Command</th>
+                                    <th>Response</th>
+                                    <th>Age</th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="commands-tab">
+
+                                <tr>
+                                    <td>blue1</td>
+                                    <td class="command" rel="blue1">...</td>
+                                    <td class="response" rel="blue1">...</td>
+                                    <td class="age" rel="blue1">...</td>
+                                </tr>
+
+                                <tr>
+                                    <td>blue2</td>
+                                    <td class="command" rel="blue2">...</td>
+                                    <td class="response" rel="blue2">...</td>
+                                    <td class="age" rel="blue2">...</td>
+                                </tr>
+
+                                <tr>
+                                    <td>green1</td>
+                                    <td class="command" rel="green1">...</td>
+                                    <td class="response" rel="green1">...</td>
+                                    <td class="age" rel="green1">...</td>
+                                </tr>
+
+                                <tr>
+                                    <td>green2</td>
+                                    <td class="command" rel="green2">...</td>
+                                    <td class="response" rel="green2">...</td>
+                                    <td class="age" rel="green2">...</td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
             </div>
             <div class="col-5">
                 <div class="row">
-                    <div class="col-12">
-                        <span class="mb-2 btn-group start-game-grp d-flex d-none" role="group">
-                            <span class="mb-2 btn btn-success w-100 start-game">
-                                <i class="bi bi-play-fill"></i>&nbsp;
-                                Start Game
-                            </span>
-                            <span class="mb-2 btn btn-success w-100 start-rec-game">
-                                <i class="bi bi-play-fill"></i>&nbsp;
-                                Start and Rec
-                            </span>
+                     <div class="col-12 replay-hide">
+                        <span class="mb-2 btn btn-success w-100 start-game start-game-grp">
+                            <i class="bi bi-play-fill"></i>&nbsp;
+                            Start Game
                         </span>
                         <span class="mb-2 btn-group pause-game-grp d-flex d-none" role="group">
                             <span class="btn btn-warning pause-game w-100">
@@ -431,6 +568,32 @@
                             <span class="btn btn-danger stop-game w-100">
                                 <i class="bi bi-stop-fill"></i>&nbsp;
                                 End Game
+                            </span>
+                        </span>
+                    </div>
+                    <div class="col-12 replay-mode">
+                        <span class="mb-2 btn btn-success w-100 start-replay start-replay-grp">
+                            <i class="bi bi-play-fill"></i>&nbsp;
+                            Start replay
+                        </span>
+                        <span class="mb-2 btn-group d-flex d-none pause-replay-grp" role="group">
+                            <span class="btn btn-warning w-100 pause-replay">
+                                <i class="bi bi-pause-fill"></i>&nbsp;
+                                Pause
+                            </span>
+                            <span class="btn btn-danger w-100 stop-replay">
+                                <i class="bi bi-stop-fill"></i>&nbsp;
+                                Stop
+                            </span>
+                        </span>
+                        <span class="mb-2 btn-group d-flex d-none resume-replay-grp" role="group">
+                            <button class="btn btn-success w-100 start-replay">
+                                <i class="bi bi-play-fill"></i>&nbsp;
+                                Resume
+                            </button>
+                            <span class="btn btn-danger stop-game w-100 stop-replay">
+                                <i class="bi bi-stop-fill"></i>&nbsp;
+                                Stop
                             </span>
                         </span>
                     </div>
@@ -454,7 +617,7 @@
                                         <div class="row">
                                             <div class="col-12">
                                                 <button
-                                                    class="btn rounded-circle btn-success btn-sm up-score bg-head-green"
+                                                    class="btn rounded-circle btn-success btn-sm up-score bg-head-green replay-hide"
                                                     disabled>
                                                     <i class="bi bi-caret-up-fill"></i>
                                                 </button>
@@ -463,7 +626,7 @@
                                         <div class="row">
                                             <div class="col-12">
                                                 <button
-                                                    class="btn rounded-circle btn-success btn-sm down-score bg-head-green"
+                                                    class="btn rounded-circle btn-success btn-sm down-score bg-head-green replay-hide"
                                                     disabled>
                                                     <i class="bi bi-caret-down-fill"></i>
                                                 </button>
@@ -484,7 +647,7 @@
                                         <div class="row">
                                             <div class="col-12">
                                                 <button
-                                                    class="btn rounded-circle btn-primary btn-sm up-score bg-head-blue"
+                                                    class="btn rounded-circle btn-primary btn-sm up-score bg-head-blue replay-hide"
                                                     disabled>
                                                     <i class="bi bi-caret-up-fill"></i>
                                                 </button>
@@ -493,7 +656,7 @@
                                         <div class="row">
                                             <div class="col-12">
                                                 <button
-                                                    class="btn rounded-circle btn-primary btn-sm down-score bg-head-blue"
+                                                    class="btn rounded-circle btn-primary btn-sm down-score bg-head-blue replay-hide"
                                                     disabled>
                                                     <i class="bi bi-caret-down-fill"></i>
                                                 </button>
@@ -521,7 +684,7 @@
                                     </div>
                                 </div>
 
-                                <div class="row">
+                                <div class="row replay-hide">
                                     <h6 class="mt-3 mb-0 text-center">
                                         Set Robots Configuration
                                     </h6>
@@ -606,7 +769,7 @@
                     </span>
                     <button id="Next_MidTimeIdentify" type="button" class="btn btn-success d-none">Continue</button>
                 </div>
-                <div class="SecondHalfTime modal-footer d-flex justify-content-center d-none">
+                <div class="SecondHalfTime modal-footer d-flex justify-content-center d-none replay-hide">
                     <button id="BtnSecondHalfTime" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Start
                         Second Half-Time</button>
                 </div>
@@ -621,17 +784,55 @@
             <h4 class="offcanvas-title" id="offcanvasSettingsLabel">Settings</h4>
             <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-        <div class="offcanvas-body pt-0">
-            <div class="pb-4">
+        <div class="m-3 btn-group btn-group-sm d-flex replay-hide" role="group">
+            <button class="btn btn-secondary w-100 show-general-settings">
+                General
+            </button>
+            <button class="btn btn-outline-secondary w-100 show-rec-settings">
+                Recording
+            </button>
+        </div>
+        <div class="offcanvas-body pt-0 general-settings">
+            <div class="pb-4 replay-hide">
                 Here, you can change what is drawn on the camera image (disabling drawings can improve performances for
                 slow computers)
             </div>
             <div class="display-settings"></div>
-            <div class="btn-group pt-4" role="group" aria-label="Basic mixed styles example">
+            <div class="btn-group pt-4 replay-hide" role="group" aria-label="Basic mixed styles example">
                 <button type="button" id="default-settings" class="btn btn-outline-warning">
                     Default
                     <i class="bi bi-arrow-counterclockwise"></i>
                 </button>
+            </div>
+        </div>
+        <div class="offcanvas-body pt-0 recording-settings">
+            <div class="pb-4">
+                Here, you can enable the recorder to save the logs of the game, allowing you to review them
+                in replay mode <br>
+                Logs are saved in /rsk/recorder
+            </div>
+            <div class="enable-rec-settings">
+                <div class="form-check form-switch mb-4">
+                    <input class="form-check-input" type="checkbox" role="switch" id="activate-rec">
+                    <label class="form-check-label" for="flexSwitchCheckDefault">Enable Recording</label>
+                </div>
+                <div class="display-rec-settings d-none not_show_simulated">
+                    <h6 class="mb-2">More options for debugging during replay</h6>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" rel="rec-commands">
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Record command flow</label>
+                    </div>
+                    <div class="mb-1" style="font-size: 60%;">
+                        Record the commands received by the robots
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" rel="rec-detection">
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Record detection info</label>
+                    </div>
+                    <div class="mb-1" style="font-size: 60%;">
+                        Record the detection informations from the camera
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -690,7 +891,33 @@
         </div>
     </div>
 
-    <div class="emergency-button p-2">
+    <!-- temporary -->
+    <!-- <div class="page page-replay replay-hide">
+        <div class="card">
+            <div class="card-header text-center">
+                Record settings
+            </div>
+            <div class="enable-rec-settings">
+                <div class="m-4 form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="activate-rec">
+                    <label class="form-check-label" for="flexSwitchCheckDefault">Enable Recording</label>
+                </div>
+                <div class="display-rec-settings m-4 d-none not_show_simulated">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" rel="rec-commands">
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Record command flow</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" rel="rec-detection">
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Record detection info</label>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+    <div class="emergency-button p-2 replay-hide">
         <span class="btn emergency btn-danger">
             <i class="bi bi-slash-circle"></i>
             Emergency
