@@ -195,19 +195,10 @@ function referee_initialize(backend)
     // Game Start&Stop
     $('.start-game').click(function() {
         backend.start_game();
-        // backend.set_ready_to_record(false);
         displayed_toast_nb = 0;
         $("#RefereeHistory").html('');
         $("#NoHistory").html('<h6 class="text-muted">No History</h6>');
     });
-
-    // $('.start-rec-game').click(function() {
-    //     backend.start_game();
-    //     backend.set_ready_to_record(true);
-    //     displayed_toast_nb = 0;
-    //     $("#RefereeHistory").html('');
-    //     $("#NoHistory").html('<h6 class="text-muted">No History</h6>');
-    // });
 
     $('.pause-game').click(function() {
         backend.pause_game();

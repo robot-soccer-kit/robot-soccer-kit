@@ -120,7 +120,6 @@ function createFieldRenderer(constants) {
             drawBall(state.ball)
         }
 
-        // let placementCirclePosition = state["referee"]["wait_ball_position"]
         const placementCirclePosition = state.referee?.wait_ball_position ?? null
         if (placementCirclePosition != null) {
             drawCircle(transformViewToSim(placementCirclePosition), constants.place_ball_margin * ratio_w, "red", ballCanvas, false, 1)
@@ -147,7 +146,6 @@ function createFieldRenderer(constants) {
         }
     }
 
-    // dans createFieldRenderer, à ajouter à l'API publique :
     function screenToWorld(screenX, screenY) {
         const back = document.getElementById('back')
         return [

@@ -261,8 +261,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="row replay-hide">
-                    <div class="col-12 py-2 text-center">
+                <div class="row">
+                    <div class="col-12 py-2 text-center replay-hide">
                         <button id="MidTimeChange" class="btn btn-warning btn-sm" data-bs-toggle="modal"
                             data-bs-target="#staticBackdrop" disabled>
                             <i class="bi bi-arrow-repeat"></i> Half time Change
@@ -271,6 +271,35 @@
                         <button id="ViewChange" class="btn btn-secondary btn-sm not_show_simulated" z-index="0">
                             <i class="bi bi-camera"></i> Simulated View
                         </button>
+                    </div>
+                    <div class="d-flex d-none align-items-center gap-2 my-2 replay-progress-grp replay-mode">
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-outline-secondary replay-btn" id="prev-speed" disabled>
+                                <i class="bi bi-chevron-double-left"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary replay-btn d-none reset-speed" id="reset-spe-back" disabled>
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary replay-btn frame-stepper" id="prev-frame" disabled>
+                                <i class="bi bi-chevron-bar-left"></i>
+                            </button>
+                        </div>
+
+                        <div class="replay-progress flex-grow-1">
+                            <div class="replay-progress-bar"></div>
+                        </div>
+
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-outline-secondary replay-btn frame-stepper" id="next-frame" disabled>
+                                <i class="bi bi-chevron-bar-right"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary replay-btn" id="next-speed" disabled>
+                                <i class="bi bi-chevron-double-right"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary replay-btn d-none reset-speed" id="reset-spe-forward" disabled>
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="row d-flex robot-penalize-tab replay-hide">
@@ -299,19 +328,11 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- <div class="col-4 replay-mode">
-                                        <h6>Blue 1</h6>
-                                    </div> -->
                                     <div class="col-1 p-0 m-0">
                                         <button class="btn btn-primary btn-sm penalize" disabled>
                                             5s
                                         </button>
                                     </div>
-                                    <!-- <div class="col-4 replay-mode detection-value" style="font-size: 70%;">
-                                        <span class="bg-body-grey card m-0">
-                                            ...
-                                        </span>
-                                    </div> -->
                                     <div class="col-1 p-2 m-0">
                                         <button class="btn btn-danger btn-sm unpenalize" disabled>
                                             <i class="bi bi-x-circle"></i>
@@ -337,9 +358,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- <div class="col-4 replay-mode">
-                                        <h6>Blue 2</h6>
-                                    </div> -->
                                     <div class="col-1 p-0 m-0">
                                         <button class="btn btn-primary btn-sm penalize" disabled>
                                             5s
@@ -350,11 +368,6 @@
                                             <i class="bi bi-x-circle"></i>
                                         </button>
                                     </div>
-                                    <!-- <div class="col-4 replay-mode detection-value" style="font-size: 70%;">
-                                        <span class="bg-body-grey card m-0">
-                                            ...
-                                        </span>
-                                    </div> -->
                                 </div>
                             </div>
                         </div>
@@ -384,9 +397,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- <div class="col-4 replay-mode">
-                                        <h6>Green 1</h6>
-                                    </div> -->
                                     <div class="col-1 p-0 m-0">
                                         <button class="btn btn-success btn-sm penalize" disabled>
                                             5s
@@ -397,11 +407,6 @@
                                             <i class="bi bi-x-circle"></i>
                                         </button>
                                     </div>
-                                    <!-- <div class="col-4 replay-mode detection-value" style="font-size: 70%;">
-                                        <span class="bg-body-grey card m-0">
-                                            ...
-                                        </span>
-                                    </div> -->
                                 </div>
                                 <div class="row vert-align mb-1 robot-penalty" rel="green2">
                                     <div class="col-2">
@@ -422,9 +427,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- <div class="col-4 replay-mode">
-                                        <h6>Green 2</h6>
-                                    </div> -->
                                     <div class="col-1 p-0 m-0">
                                         <button class="btn btn-success btn-sm penalize" disabled>
                                             5s
@@ -435,11 +437,6 @@
                                             <i class="bi bi-x-circle"></i>
                                         </button>
                                     </div>
-                                    <!-- <div class="col-4 replay-mode detection-value" style="font-size: 70%;">
-                                        <span class="bg-body-grey card m-0">
-                                            ...
-                                        </span>
-                                    </div> -->
                                 </div>
                             </div>
                         </div>
@@ -639,9 +636,6 @@
                                                 <h2 class="TimerMinutes mb-1"></h2>
                                             </div>
                                         </div>
-                                        <!-- <span class="btn btn-danger reset-score">
-                          Reset
-                        </span> -->
                                     </div>
                                     <div class="col-1 p-0 score-zone" rel="blue">
                                         <div class="row">
@@ -890,32 +884,6 @@
             </div>
         </div>
     </div>
-
-    <!-- temporary -->
-    <!-- <div class="page page-replay replay-hide">
-        <div class="card">
-            <div class="card-header text-center">
-                Record settings
-            </div>
-            <div class="enable-rec-settings">
-                <div class="m-4 form-check form-switch">
-                    <input class="form-check-input" type="checkbox" role="switch" id="activate-rec">
-                    <label class="form-check-label" for="flexSwitchCheckDefault">Enable Recording</label>
-                </div>
-                <div class="display-rec-settings m-4 d-none not_show_simulated">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" rel="rec-commands">
-                        <label class="form-check-label" for="flexSwitchCheckDefault">Record command flow</label>
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" rel="rec-detection">
-                        <label class="form-check-label" for="flexSwitchCheckDefault">Record detection info</label>
-                    </div>
-                    
-                </div>
-            </div>
-        </div>
-    </div> -->
 
     <div class="emergency-button p-2 replay-hide">
         <span class="btn emergency btn-danger">

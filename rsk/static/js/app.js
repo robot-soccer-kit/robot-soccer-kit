@@ -39,6 +39,7 @@ $(document).ready(function () {
     var backend = new APIBackend('http://' + document.location.host + '/api');
     backend.replay_file(function (file) {
         if (file !== "") {
+            console.log("REPLAY MODE")
             $('.replay-hide').removeClass("d-flex").css("display", 'none')
             $('.not_show_simulated').css("display", 'none')
             $('.replay-mode').show();

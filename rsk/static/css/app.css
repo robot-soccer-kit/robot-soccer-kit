@@ -293,21 +293,20 @@ div.progress {
     text-align: center;
 }
 
-/* .detection-tab table {
-    table-layout: fixed;
+.replay-progress {
     width: 100%;
+    height: 6px;
+    background: #ccc;
+    cursor: pointer;
+    position: relative;
 }
 
-.detection-table th,
-.detection-table td {
-    width: 10%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    text-align: center;
-} */
-
-
+.replay-progress-bar {
+    height: 100%;
+    background: blue;
+    width: 0%;
+    pointer-events: none;
+}
 
 .blinking {
     animation: blinker 1s linear infinite;

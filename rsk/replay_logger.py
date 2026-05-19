@@ -45,39 +45,37 @@ def log_data() -> None:
 
     if not os.path.exists(path):
         os.makedirs(path)
-    filepath = path + "match_logs" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S") + ".json.gz"
+    filepath = path + "match_logs" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")[:-3] + ".json.gz"
 
     with gzip.open(filepath, 'w') as fout:
         fout.write(json_bytes)
 
 
-def register_info(key:str, data, key_prec:str = "", allow_repeat=False) -> None:
+def register_info(key:str, data, prev_key:str = "", allow_repeat=False) -> None:
     if recording and key != "constants":
         lock.acquire()
 
-        if key_prec != "":
-            if key_prec not in datas_to_log.keys():
-                datas_to_log[key_prec] = {key : []}
-            elif key not in datas_to_log[key_prec].keys():
-                datas_to_log[key_prec][key] = []
+        if prev_key != "":
+            if prev_key not in datas_to_log.keys():
+                datas_to_log[prev_key] = {key : []}
+            elif key not in datas_to_log[prev_key].keys():
+                datas_to_log[prev_key][key] = []
 
-            if len(datas_to_log[key_prec][key]) == 0 or datas_to_log[key_prec][key][-1]["data"] != data or allow_repeat:
-                datas_to_log[key_prec][key].append({"data" : copy.deepcopy(data), "timestamp" : time.perf_counter()})
+            if len(datas_to_log[prev_key][key]) == 0 or datas_to_log[prev_key][key][-1]["data"] != data or allow_repeat:
+                datas_to_log[prev_key][key].append({"data" : copy.deepcopy(data), "timestamp" : time.perf_counter()})
         else:
             if key not in datas_to_log.keys():
                 datas_to_log[key] = []
                 
             if len(datas_to_log[key]) == 0 or datas_to_log[key][-1]["data"] != data or allow_repeat:
                 datas_to_log[key].append({"data" : copy.deepcopy(data), "timestamp" : time.perf_counter()})
-        
-        # if len(datas_to_log[key]) == 0 or datas_to_log[key][-1][0] != data or "command" in key:
-        #     datas_to_log[key].append([copy.deepcopy(data),time.perf_counter()])
+
         lock.release()
 
-def register_infos(keys:list[str], datas:dict, key_prec:str="", exclude:list[str] = [], allow_repeat=False) -> None:
+def register_infos(keys:list[str], datas:dict, prev_key:str="", exclude:list[str] = [], allow_repeat=False) -> None:
     for k in keys:
         if k in datas.keys() and k not in exclude:
-            register_info(k, datas[k], key_prec, allow_repeat)
+            register_info(k, datas[k], prev_key, allow_repeat)
 
 def register_detection_info(aruco_ids):
     if record_detection:
@@ -87,9 +85,9 @@ def register_detection_info(aruco_ids):
         except TypeError:
             pass
         
-def register_command_info(key:str, data, key_prec:str = "", allow_repeat=False):
+def register_command_info(key:str, data, prev_key:str = "", allow_repeat=False):
     if record_commands :
-        register_info(key, data, key_prec, allow_repeat)
+        register_info(key, data, prev_key, allow_repeat)
 
 def set_ready_to_record(ready:bool) -> None :
     global ready_to_record
