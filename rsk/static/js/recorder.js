@@ -23,12 +23,6 @@ function recorder_initialize(backend) {
                 backend.set_record_commands(false)
             }
 
-        } else if (rel === "rec-detection") {
-            if (checked) {
-                backend.set_record_detection(true)
-            } else {
-                backend.set_record_detection(false)
-            }
         }
     });
 

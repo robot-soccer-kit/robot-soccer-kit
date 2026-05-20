@@ -2,11 +2,6 @@ function simulator_initialize(backend, isView) {
     backend.constants(function (constants) {
         const renderer = createFieldRenderer(constants)
 
-        // let ratio_w = null
-        // let ratio_h = null
-        // let back_width = null
-        // let back_height = null
-
         $(window).on("resize", renderer.updateRatios)
 
         function isDifferent(lastPos, position) {
@@ -44,15 +39,6 @@ function simulator_initialize(backend, isView) {
             $('#back').removeClass('d-none')
             $('.sim_vim').css('opacity', '100')
 
-            // // Draw Background
-            // var background = new Image()
-            // background.src = "static/imgs/field.svg"
-            // background.onload = function () {
-            //     let context = document.getElementsByTagName('canvas')[0].getContext('2d')
-            //     context.canvas.width = this.naturalWidth
-            //     context.canvas.height = this.naturalHeight
-            //     context.drawImage(background, 0, 0)
-            // }
             renderer.drawBg()
 
             markers = { "blue1": NaN, "blue2": NaN, "green1": NaN, "green2": NaN }

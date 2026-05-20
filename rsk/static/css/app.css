@@ -272,7 +272,7 @@ div.progress {
     display: none;
 }
 
-.commands-view table, .detection-view table {
+.commands-view table, .penalized-replay-view table {
     font-size: 17px;
 }
 
@@ -288,9 +288,10 @@ div.progress {
     min-width: 17px;
 }
 
-.detection-tab th,
-.detection-tab td {
+.penalized-replay-tab th,
+.penalized-replay-tab td {
     text-align: center;
+    padding: 0 4px !important;
 }
 
 .replay-progress {

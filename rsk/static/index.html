@@ -442,7 +442,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card replay-mode detection-view">
+                <!-- <div class="card replay-mode detection-view">
 
                     <div class="card-body p-1">
 
@@ -478,6 +478,59 @@
                                     <td rel="c2">...</td>
                                     <td rel="c3">...</td>
                                     <td rel="c4">...</td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div> -->
+                <div class="card replay-mode penalized-replay-view">
+
+                    <div class="card-body p-1">
+
+                        <table class="table table-sm mb-0 align-middle penalized-replay-tab">
+
+                            <colgroup>
+                                <col span="11" style="width: 20%">
+                            </colgroup>
+
+                            <thead>
+                                <tr>
+                                    <th>markers</th>
+                                    <td>green1</td>
+                                    <td>green2</td>
+                                    <td>blue1</td>
+                                    <td>blue2</td>
+                                </tr>
+                            </thead>
+
+                            <tbody class="">
+
+                                <tr class="penalized-replay">
+                                    <th>penalized</th>
+                                    <td rel="green1">...</td>
+                                    <td rel="green2">...</td>
+                                    <td rel="blue1">...</td>
+                                    <td rel="blue2">...</td>
+                                </tr>
+
+                                <tr class="remaining-time-replay">
+                                    <th>remaining time</th>
+                                    <td rel="green1">...</td>
+                                    <td rel="green2">...</td>
+                                    <td rel="blue1">...</td>
+                                    <td rel="blue2">...</td>
+                                </tr>
+
+                                <tr class="penalized-reason-replay">
+                                    <th>penalized-reason</th>
+                                    <td rel="green1">...</td>
+                                    <td rel="green2">...</td>
+                                    <td rel="blue1">...</td>
+                                    <td rel="blue2">...</td>
                                 </tr>
 
                             </tbody>
@@ -803,7 +856,7 @@
             <div class="pb-4">
                 Here, you can enable the recorder to save the logs of the game, allowing you to review them
                 in replay mode <br>
-                Logs are saved in /rsk/recorder
+                Logs are saved in <span class="fw-bold">rsk_recorder/</span> (it will be created if it doesn't exist)
             </div>
             <div class="enable-rec-settings">
                 <div class="form-check form-switch mb-4">
@@ -817,15 +870,15 @@
                         <label class="form-check-label" for="flexSwitchCheckDefault">Record command flow</label>
                     </div>
                     <div class="mb-1" style="font-size: 60%;">
-                        Record the commands received by the robots
+                        Record the commands received by the robots (may increase the replay's file size)
                     </div>
-                    <div class="form-check form-switch">
+                    <!-- <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" rel="rec-detection">
                         <label class="form-check-label" for="flexSwitchCheckDefault">Record detection info</label>
                     </div>
                     <div class="mb-1" style="font-size: 60%;">
                         Record the detection informations from the camera
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>

@@ -32,9 +32,9 @@ ARUCO_MARKERS_IDS = ["c1", "c2", "c3", "c4", "green1", "green2", "blue1", "blue2
 
 datas_to_log = {"constants" : USEFUL_CANVAS_CONSTANTS}
 ready_to_record = False
-record_detection = False
+# record_detection = False
 record_commands = False
-path = "rsk/recorder/"
+path = os.path.join(os.getcwd(), "rsk_recorder", "")
 lock = threading.Lock()
 
 recording = False
@@ -77,13 +77,41 @@ def register_infos(keys:list[str], datas:dict, prev_key:str="", exclude:list[str
         if k in datas.keys() and k not in exclude:
             register_info(k, datas[k], prev_key, allow_repeat)
 
+def register_position_frame(markers: dict, ball) -> None:
+    """
+    Register a complete position frame with all detected markers and ball.
+    
+    Args:
+        markers: dict of detected markers {name: {position, orientation}}
+        ball: ball position [x, y, z] or None
+    """
+    if recording:
+        lock.acquire()
+        
+        if "positions" not in datas_to_log:
+            datas_to_log["positions"] = []
+        
+        # Build frame entry
+        frame_entry = {
+            "timestamp": time.perf_counter(),
+            "markers": copy.deepcopy(markers)
+        }
+        
+        # Only include ball if detected (not None)
+        if ball is not None:
+            frame_entry["ball"] = copy.deepcopy(ball)
+        
+        datas_to_log["positions"].append(frame_entry)
+        
+        lock.release()
+
 def register_detection_info(aruco_ids):
-    if record_detection:
-        try:
-            for i in range(len(ARUCO_MARKERS_IDS)):
-                register_info(ARUCO_MARKERS_IDS[i], i in aruco_ids, "detection_markers")
-        except TypeError:
-            pass
+    # if record_detection:
+    try:
+        for i in range(len(ARUCO_MARKERS_IDS)):
+            register_info(ARUCO_MARKERS_IDS[i], i in aruco_ids, "detection_markers")
+    except TypeError:
+        pass
         
 def register_command_info(key:str, data, prev_key:str = "", allow_repeat=False):
     if record_commands :
@@ -99,9 +127,9 @@ def set_record_commands(yes_no:bool):
     global record_commands
     record_commands = yes_no
 
-def set_record_detection(yes_no:bool):
-    global record_detection
-    record_detection = yes_no
+# def set_record_detection(yes_no:bool):
+#     global record_detection
+#     record_detection = yes_no
 
 def set_recording(rec:bool) -> None:
     lock.acquire()

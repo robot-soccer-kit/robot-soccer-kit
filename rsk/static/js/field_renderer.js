@@ -105,6 +105,24 @@ function createFieldRenderer(constants) {
             let robotSize = constants["robot_radius"] * 2 * ratio_w
             context.imageSmoothingEnabled = true
             context.drawImage(markers[entry]["image"], -robotSize / 2, -robotSize / 2, robotSize, robotSize)
+            
+            // If robot is stale (not detected in current frame), draw a red X
+            if (robot._is_stale) {
+                context.strokeStyle = "red"
+                context.lineWidth = 3
+                context.globalAlpha = 0.7
+                const crossSize = robotSize / 3
+                context.beginPath()
+                context.moveTo(-crossSize, -crossSize)
+                context.lineTo(crossSize, crossSize)
+                context.stroke()
+                context.beginPath()
+                context.moveTo(crossSize, -crossSize)
+                context.lineTo(-crossSize, crossSize)
+                context.stroke()
+                context.globalAlpha = 1.0
+            }
+            
             markers[entry]["pos"] = robotPos
             markers[entry]["clear"] = false
         }

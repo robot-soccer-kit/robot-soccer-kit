@@ -31,18 +31,26 @@ function replay_initialize(backend) {
                     markers[key].image.src = "static/imgs/robot" + key + ".png"
                 }
 
-                const positionIndexes = { ball: 0, green1: 0, green2: 0, blue1: 0, blue2: 0 }
+                // Single index for the unified positions timeline
+                let positionIndex = 0
+                
+                // Cache of last known positions for robots (for rendering stale positions)
+                const lastKnownPositions = {
+                    green1: null,
+                    green2: null,
+                    blue1: null,
+                    blue2: null
+                }
+                
                 const ledsIndexes = { green1: 0, green2: 0, blue1: 0, blue2: 0 }
                 const refereeIndexes = { game_is_running: 0, game_paused: 0, timer: 0, game_state_msg: 0, teams: 0, referee_history_sliced: 0, validate_goal: 0 }
                 const detectionIndexes = { green1: 0, green2: 0, blue1: 0, blue2: 0, c1: 0, c2: 0, c3: 0, c4: 0 }
                 const commandsIndexes = { green1: 0, green2: 0, blue1: 0, blue2: 0 }
 
-                const allSeries = [
-                    logs.positions?.ball, logs.positions?.green1, logs.positions?.green2,
-                    logs.positions?.blue1, logs.positions?.blue2
-                ].filter(Boolean)
-                const startTimestamp = allSeries.reduce((min, s) => Math.min(min, s[0].timestamp), Infinity)
-                const endTimestamp = allSeries.reduce((max, s) => Math.max(max, s.at(-1).timestamp), 0)
+                // Calculate start and end timestamps from the unified positions array
+                const positionsArray = logs.positions || []
+                const startTimestamp = positionsArray.length > 0 ? positionsArray[0].timestamp : 0
+                const endTimestamp = positionsArray.length > 0 ? positionsArray[positionsArray.length - 1].timestamp : 0
 
                 let isRunning = false
                 let frameId = null
@@ -93,21 +101,57 @@ function replay_initialize(backend) {
                 })
 
                 function buildState(t) {
+                    // Find the position frame at or before time t
+                    let frameMarkers = {}
+                    let frameBall = null
+                    
+                    // Search for the frame at time t
+                    while (positionIndex + 1 < positionsArray.length && 
+                           positionsArray[positionIndex + 1].timestamp <= t) {
+                        positionIndex++
+                    }
+                    
+                    // If we're at a valid frame and it's before/at time t, use its data
+                    if (positionIndex < positionsArray.length && 
+                        positionsArray[positionIndex].timestamp <= t) {
+                        const frame = positionsArray[positionIndex]
+                        frameMarkers = frame.markers || {}
+                        frameBall = frame.ball ?? null
+                        
+                        // Update last known positions for detected markers
+                        for (const [key, data] of Object.entries(frameMarkers)) {
+                            lastKnownPositions[key] = {
+                                position: data.position,
+                                orientation: data.orientation,
+                                detected: true,
+                                timestamp: frame.timestamp
+                            }
+                        }
+                    }
+                    
+                    // Build state with detected markers and their cache status
+                    const stateMarkers = {}
+                    for (const robotKey of ["green1", "green2", "blue1", "blue2"]) {
+                        if (frameMarkers[robotKey]) {
+                            // Robot detected in current frame
+                            stateMarkers[robotKey] = frameMarkers[robotKey]
+                            if (lastKnownPositions[robotKey]) {
+                                lastKnownPositions[robotKey].detected = true
+                            }
+                        } else if (lastKnownPositions[robotKey]) {
+                            // Robot not detected in current frame, use cache
+                            stateMarkers[robotKey] = {
+                                position: lastKnownPositions[robotKey].position,
+                                orientation: lastKnownPositions[robotKey].orientation,
+                                _is_stale: true  // Mark as stale for rendering
+                            }
+                            lastKnownPositions[robotKey].detected = false
+                        }
+                    }
 
                     const state = {
-                        markers: {
-                            green1: advance(logs.positions?.green1, positionIndexes, "green1", t),
-                            green2: advance(logs.positions?.green2, positionIndexes, "green2", t),
-                            blue1: advance(logs.positions?.blue1, positionIndexes, "blue1", t),
-                            blue2: advance(logs.positions?.blue2, positionIndexes, "blue2", t),
-                        },
-
-                        ball: advance(
-                            logs.positions?.ball,
-                            positionIndexes,
-                            "ball",
-                            t
-                        ),
+                        markers: stateMarkers,
+                        ball: frameBall,
 
                         leds: {
                             green1: advance(logs.leds_state?.green1, ledsIndexes, "green1", t),
@@ -208,6 +252,8 @@ function replay_initialize(backend) {
                     $('.PlayerName[rel="green"]').val(referee_state.teams["green"]["name"]);
                     $('.PlayerName[rel="blue"]').val(referee_state.teams["blue"]["name"]);
 
+                    updatePenalizedReplayView(referee_state)
+
                     // Referee history
                     for (let history_entry of referee_state["referee_history_sliced"]) {
                         [num, time, team, referee_event] = history_entry
@@ -246,17 +292,34 @@ function replay_initialize(backend) {
 
                 }
 
-                function updateDetection(detection_state) {
-                    for (const [key, is_detected] of Object.entries(detection_state)) {
-                        if (is_detected) {
-                            $('.detection-tab td[rel="' + key + '"]').removeClass("text-bg-danger").addClass("bg-success")
-                                .html("OK")
-                        } else {
-                            $('.detection-tab td[rel="' + key + '"]').removeClass("bg-success").addClass("text-bg-danger")
-                                .html("Not det.")
+                function updatePenalizedReplayView(referee_state) {
+                    for (const [team, team_infos] of Object.entries(referee_state.teams)) {
+                        for (const [key, value] of Object.entries(team_infos.robots)) {
+                            if(value?.penalized) {
+                                $('.penalized-replay td[rel="' + team + key + '"]').html("true").addClass("text-bg-danger").removeClass("text-bg-success");
+                                $('.remaining-time-replay td[rel="' + team + key + '"]').html(value.penalized_remaining).addClass("text-bg-warning");
+                                $('.penalized-reason-replay td[rel="' + team + key + '"]').html(value.penalized_reason).addClass("text-bg-warning");
+                            } else {
+                                $('.penalized-replay td[rel="' + team + key + '"]').html("false").removeClass("text-bg-danger").addClass("text-bg-success");
+                                $('.remaining-time-replay td[rel="' + team + key + '"]').html('...').removeClass("text-bg-warning");
+                                $('.penalized-reason-replay td[rel="' + team + key + '"]').html('...').removeClass("text-bg-warning");
+                            }
+                            
                         }
                     }
                 }
+
+                // function updateDetection(detection_state) {
+                //     for (const [key, is_detected] of Object.entries(detection_state)) {
+                //         if (is_detected) {
+                //             $('.detection-tab td[rel="' + key + '"]').removeClass("text-bg-danger").addClass("bg-success")
+                //                 .html("OK")
+                //         } else {
+                //             $('.detection-tab td[rel="' + key + '"]').removeClass("bg-success").addClass("text-bg-danger")
+                //                 .html("Not det.")
+                //         }
+                //     }
+                // }
 
                 function updateCommands(current_commands, t) {
                     for (const [key, value] of Object.entries(current_commands)) {
@@ -317,9 +380,9 @@ function replay_initialize(backend) {
                         current_commands,
                     } = buildState(t)
 
-                    if (detection_state !== null) {
-                        updateDetection(detection_state)
-                    }
+                    // if (detection_state !== null) {
+                    //     updateDetection(detection_state)
+                    // }
                     if (current_commands !== null) {
                         updateCommands(current_commands, t)
                     }
@@ -335,23 +398,16 @@ function replay_initialize(backend) {
                 }
 
                 function getNextPositionTimestamp(t, direction = 1) {
-                    const allEntries = [
-                        ...logs.positions?.ball ?? [],
-                        ...logs.positions?.green1 ?? [],
-                        ...logs.positions?.green2 ?? [],
-                        ...logs.positions?.blue1 ?? [],
-                        ...logs.positions?.blue2 ?? [],
-                    ]
+                    // New structure: positions is a single array with unified timestamps
+                    const timestamps = positionsArray.map(frame => frame.timestamp)
 
                     if (direction > 0) {
-                        const next = allEntries
-                            .map(e => e.timestamp)
+                        const next = timestamps
                             .filter(ts => ts > t)
                             .sort((a, b) => a - b)[0]
                         return next ?? endTimestamp
                     } else {
-                        const prev = allEntries
-                            .map(e => e.timestamp)
+                        const prev = timestamps
                             .filter(ts => ts < t)
                             .sort((a, b) => b - a)[0]
                         return prev ?? startTimestamp
@@ -382,9 +438,9 @@ function replay_initialize(backend) {
 
                     renderer.renderFrame(state, markers, {})
 
-                    if (detection_state !== null) {
-                        updateDetection(detection_state)
-                    }
+                    // if (detection_state !== null) {
+                    //     updateDetection(detection_state)
+                    // }
 
                     if (current_commands !== null) {
                         updateCommands(current_commands, targetTimestamp)
@@ -412,7 +468,14 @@ function replay_initialize(backend) {
                 }
 
                 function seekIndexes(t) {
-                    seekSeriesIndexes(positionIndexes, key => logs.positions?.[key], t)
+                    // Seek position index in the unified positions array
+                    positionIndex = 0
+                    while (positionIndex + 1 < positionsArray.length && 
+                           positionsArray[positionIndex + 1].timestamp <= t) {
+                        positionIndex++
+                    }
+                    
+                    // Seek other indexes as before
                     seekSeriesIndexes(ledsIndexes, key => logs.leds_state?.[key], t)
                     seekSeriesIndexes(refereeIndexes, key => logs.referee?.[key], t)
                     seekSeriesIndexes(detectionIndexes, key => logs.detection_markers?.[key], t)
@@ -458,7 +521,7 @@ function replay_initialize(backend) {
                     lockProgressBar = true
                     cancelAnimationFrame(frameId)
                     currentTimestamp = 0
-                    Object.keys(positionIndexes).forEach(k => positionIndexes[k] = 0)
+                    positionIndex = 0
                     Object.keys(ledsIndexes).forEach(k => ledsIndexes[k] = 0)
                     Object.keys(refereeIndexes).forEach(k => refereeIndexes[k] = 0)
                     Object.keys(detectionIndexes).forEach(k => detectionIndexes[k] = 0)
@@ -520,11 +583,11 @@ function replay_initialize(backend) {
                         const checked = $(this).is(':checked')
                         display_settings[rel]["value"] = checked
 
-                        if (rel === "detection") {
+                        if (rel === "penalized-tab") {
                             if (checked) {
-                                $('.detection-view').removeClass('d-none').addClass('d-flex')
+                                $('.penalized-replay-view').removeClass('d-none').addClass('d-flex')
                             } else {
-                                $('.detection-view').removeClass('d-flex').addClass('d-none')
+                                $('.penalized-replay-view').removeClass('d-flex').addClass('d-none')
                             }
                         }
                         else if (rel === "commands") {
@@ -544,8 +607,9 @@ function replay_initialize(backend) {
                 });
 
                 const display_settings = {
-                    "detection": { "label": "Show detection view", "default": false },
+                    // "detection": { "label": "Show detection view", "default": false },
                     "commands": { "label": "Show commands view", "default": false },
+                    "penalized-tab": { "label": "Show penalized robots", "default": true },
                 }
                 for (const setting_name in display_settings) {
                     display_settings[setting_name]["value"] = display_settings[setting_name]["default"]

@@ -224,5 +224,5 @@ class Backend:
     def set_record_commands(self, yes_no:bool):
         replay_logger.set_record_commands(yes_no)
 
-    def set_record_detection(self, yes_no:bool):
-        replay_logger.set_record_detection(yes_no)
+    # def set_record_detection(self, yes_no:bool):
+    #     replay_logger.set_record_detection(yes_no)
