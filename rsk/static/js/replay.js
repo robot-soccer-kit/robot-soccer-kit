@@ -213,34 +213,59 @@ function replay_initialize(backend) {
                 }
 
                 function validationGoal(current_history, t) {
-                    last_index_validation = refereeIndexes.validate_goal
-                    serie_validate_goal = logs.referee?.validate_goal
-                    if (!serie_validate_goal?.length) return null
 
-                    if (last_index_validation < serie_validate_goal.length
-                        && serie_validate_goal[last_index_validation].timestamp <= t
+                    let last_index_validation = refereeIndexes.validate_goal
+                    let serie_validate_goal = logs.referee?.validate_goal
+
+                    if (!serie_validate_goal?.length) return
+
+                    if (
+                        last_index_validation < serie_validate_goal.length &&
+                        serie_validate_goal[last_index_validation].timestamp <= t
                     ) {
-                        is_validated = serie_validate_goal[last_index_validation].data
 
-                        last_referee_item = current_history.length - 1
-                        id_last_referee_item = String(last_referee_item)
-                        $('#toast-' + id_last_referee_item + ' .toast-body').show()
+                        const is_validated = serie_validate_goal[last_index_validation].data
+
+                        // dernier event réel
+                        const lastEvent = current_history[current_history.length - 1]
+
+                        if (!lastEvent) return
+
+                        const [num] = lastEvent
+
+                        $('#toast-' + num + ' .toast-body').show()
+
                         if (is_validated) {
-                            $("#toast-" + id_last_referee_item).find('.icon').removeClass('bi-circle-fill')
-                            $("#toast-" + id_last_referee_item).find('.icon').addClass('bi-check2-circle')
-                            $("#toast-" + id_last_referee_item).find('.toast-body').addClass('text-success')
-                            $("#toast-" + id_last_referee_item).find('.toast-body').html('<h5 class="m-0">Goal Validated</h5>')
+
+                            $("#toast-" + num)
+                                .find('.icon')
+                                .removeClass('bi-circle-fill')
+                                .addClass('bi-check2-circle')
+
+                            $("#toast-" + num)
+                                .find('.toast-body')
+                                .addClass('text-success')
+                                .removeClass('text-danger')
+                                .html('<h5 class="m-0">Goal Validated</h5>')
+
+                        } else {
+
+                            $("#toast-" + num)
+                                .find('.icon')
+                                .removeClass('bi-circle-fill')
+                                .addClass('bi-x-circle')
+
+                            $("#toast-" + num)
+                                .find('.toast-body')
+                                .addClass('text-danger')
+                                .removeClass('text-success')
+                                .html('<h5 class="m-0">Goal Disallowed</h5>')
                         }
-                        else {
-                            $("#toast-" + id_last_referee_item).find('.icon').removeClass('bi-circle-fill')
-                            $("#toast-" + id_last_referee_item).find('.icon').addClass('bi-x-circle')
-                            $("#toast-" + id_last_referee_item).find('.toast-body').addClass('text-danger')
-                            $("#toast-" + id_last_referee_item).find('.toast-body').html('<h5 class="m-0">Goal Disallowed</h5>')
-                        }
+
                         refereeIndexes.validate_goal++
                     }
-
                 }
+
 
                 function updateReferee(referee_state) {
                     $('.GameState').html(referee_state.game_state_msg)
@@ -253,43 +278,42 @@ function replay_initialize(backend) {
                     $('.PlayerName[rel="blue"]').val(referee_state.teams["blue"]["name"]);
 
                     updatePenalizedReplayView(referee_state)
+                }
 
-                    // Referee history
-                    for (let history_entry of referee_state["referee_history_sliced"]) {
-                        [num, time, team, referee_event] = history_entry
+                function updateRefereeHistory(history) {
+
+                    for (const history_entry of history) {
+
+                        const [num, time, team, referee_event] = history_entry
                         $("#NoHistory").html('')
 
                         if (num >= displayed_toast_nb) {
-                            let html = '';
 
-                            let vars = {
-                                'id': displayed_toast_nb,
-                                'team': team,
-                                'title': referee_event,
-                                'timestamp': formatTimer(time),
-                                'event': referee_event
-                            };
-
-                            if (team === 'neutral') {
-                                html = event_neutral_tpl
-                            } else {
-                                html = event_team_tpl
+                            let html = ''
+                            const vars = {
+                                id: num,
+                                team,
+                                title: referee_event,
+                                timestamp: formatTimer(time),
+                                event: referee_event
                             }
 
-                            for (let key in vars) {
+                            html = team === 'neutral'
+                                ? event_neutral_tpl
+                                : event_team_tpl
+
+                            for (const key in vars) {
                                 html = html.replaceAll('{' + key + '}', vars[key])
                             }
 
-                            $("#RefereeHistory").append(html);
-                            $('#toast-' + displayed_toast_nb + ' .toast-body').css("display", 'none')
-                            $('#toast-' + displayed_toast_nb).toast('show');
-                            $("#tchat").scrollTop($("#tchat")[0].scrollHeight);
+                            $("#RefereeHistory").append(html)
+                            $('#toast-' + num + ' .toast-body').hide()
+                            $('#toast-' + num).toast('show')
+                            $("#tchat").scrollTop($("#tchat")[0].scrollHeight)
 
-                            displayed_toast_nb = displayed_toast_nb + 1;
-
+                            displayed_toast_nb = num + 1
                         }
                     }
-
                 }
 
                 function updatePenalizedReplayView(referee_state) {
@@ -308,18 +332,6 @@ function replay_initialize(backend) {
                         }
                     }
                 }
-
-                // function updateDetection(detection_state) {
-                //     for (const [key, is_detected] of Object.entries(detection_state)) {
-                //         if (is_detected) {
-                //             $('.detection-tab td[rel="' + key + '"]').removeClass("text-bg-danger").addClass("bg-success")
-                //                 .html("OK")
-                //         } else {
-                //             $('.detection-tab td[rel="' + key + '"]').removeClass("bg-success").addClass("text-bg-danger")
-                //                 .html("Not det.")
-                //         }
-                //     }
-                // }
 
                 function updateCommands(current_commands, t) {
                     for (const [key, value] of Object.entries(current_commands)) {
@@ -380,14 +392,14 @@ function replay_initialize(backend) {
                         current_commands,
                     } = buildState(t)
 
-                    // if (detection_state !== null) {
-                    //     updateDetection(detection_state)
-                    // }
                     if (current_commands !== null) {
                         updateCommands(current_commands, t)
                     }
+
+                    const history = getHistoryUpTo(t)
+                    updateRefereeHistory(history)
+                    validationGoal(history, t)
                     updateReferee(referee_state)
-                    validationGoal(referee_state.referee_history_sliced, t)
 
                     updateProgressBar()
 
@@ -397,22 +409,51 @@ function replay_initialize(backend) {
 
                 }
 
-                function getNextPositionTimestamp(t, direction = 1) {
-                    // New structure: positions is a single array with unified timestamps
-                    const timestamps = positionsArray.map(frame => frame.timestamp)
+                function getHistoryUpTo(t) {
+                    const series = logs.referee?.referee_history_sliced
+                    if (!series?.length) return []
 
-                    if (direction > 0) {
-                        const next = timestamps
-                            .filter(ts => ts > t)
-                            .sort((a, b) => a - b)[0]
-                        return next ?? endTimestamp
-                    } else {
-                        const prev = timestamps
-                            .filter(ts => ts < t)
-                            .sort((a, b) => b - a)[0]
-                        return prev ?? startTimestamp
+                    const result = []
+
+                    for (const entry of series) {
+                        if (entry.timestamp > t) break
+
+                        if (entry.data?.length) {
+                            result.push(...entry.data)
+                        }
                     }
+
+                    return result
                 }
+
+                function rebuildHistory(t) {
+
+                    displayed_toast_nb = 0
+
+                    $('.toast').remove()
+
+                    $("#RefereeHistory").html('')
+
+                    $("#NoHistory").html('<h6 class="text-muted">No History</h6>')
+
+                    const history = getHistoryUpTo(t)
+
+                    updateRefereeHistory(history)
+                }
+
+                function getNextPositionTimestamp(t, direction = 1) {
+                if (direction > 0) {
+                    for (let i = positionIndex + 1; i < positionsArray.length; i++) {
+                        if (positionsArray[i].timestamp > t) return positionsArray[i].timestamp
+                    }
+                    return endTimestamp
+                } else {
+                    for (let i = positionIndex - 1; i >= 0; i--) {
+                        if (positionsArray[i].timestamp < t) return positionsArray[i].timestamp
+                    }
+                    return startTimestamp
+                }
+            }
 
                 $('#next-frame').click(function () {
                     const target = getNextPositionTimestamp(currentTimestamp, 1)
@@ -429,6 +470,11 @@ function replay_initialize(backend) {
                     logStart = targetTimestamp
                     seekIndexes(targetTimestamp)
 
+                    displayed_toast_nb = 0
+                    $('.toast').remove()
+                    $("#RefereeHistory").html('')
+                    $("#NoHistory").html('<h6 class="text-muted">No History</h6>')
+
                     const {
                         state,
                         referee_state,
@@ -438,16 +484,13 @@ function replay_initialize(backend) {
 
                     renderer.renderFrame(state, markers, {})
 
-                    // if (detection_state !== null) {
-                    //     updateDetection(detection_state)
-                    // }
-
                     if (current_commands !== null) {
                         updateCommands(current_commands, targetTimestamp)
                     }
 
+                    rebuildHistory(targetTimestamp)
+
                     updateReferee(referee_state)
-                    validationGoal(referee_state.referee_history_sliced, targetTimestamp)
                     updateProgressBar()
                 }
 
@@ -480,6 +523,15 @@ function replay_initialize(backend) {
                     seekSeriesIndexes(refereeIndexes, key => logs.referee?.[key], t)
                     seekSeriesIndexes(detectionIndexes, key => logs.detection_markers?.[key], t)
                     seekSeriesIndexes(commandsIndexes, key => logs.command_received?.[key], t)
+
+                    refereeIndexes.validate_goal = 0
+                    const serieValidation = logs.referee?.validate_goal
+                    if (serieValidation?.length) {
+                        while (refereeIndexes.validate_goal + 1 < serieValidation.length && 
+                            serieValidation[refereeIndexes.validate_goal + 1].timestamp <= t) {
+                            refereeIndexes.validate_goal++
+                        }
+                    }
                 }
 
                 let lockProgressBar = true
@@ -607,7 +659,6 @@ function replay_initialize(backend) {
                 });
 
                 const display_settings = {
-                    // "detection": { "label": "Show detection view", "default": false },
                     "commands": { "label": "Show commands view", "default": false },
                     "penalized-tab": { "label": "Show penalized robots", "default": true },
                 }

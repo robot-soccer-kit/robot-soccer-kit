@@ -642,7 +642,11 @@ class Referee:
 
             if replay_logger.recording != self.game_state["game_is_running"]:
                 replay_logger.set_recording(self.game_state["game_is_running"])
-            replay_logger.register_infos(self.state_info["referee"].keys(), self.state_info["referee"], "referee")
+            # Log referee state but keep only the last referee_history_sliced element to avoid duplicates
+            referee_state_to_log = dict(self.state_info["referee"])
+            if "referee_history_sliced" in referee_state_to_log and referee_state_to_log["referee_history_sliced"]:
+                referee_state_to_log["referee_history_sliced"] = referee_state_to_log["referee_history_sliced"][-1:]
+            replay_logger.register_infos(referee_state_to_log.keys(), referee_state_to_log, "referee")
             
             self.state.set_referee(self.get_game_state())
             self.control.allow_extra_features = not self.game_state["game_is_running"]
