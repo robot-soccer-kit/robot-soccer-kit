@@ -32,7 +32,6 @@ ARUCO_MARKERS_IDS = ["c1", "c2", "c3", "c4", "green1", "green2", "blue1", "blue2
 
 datas_to_log = {"constants" : USEFUL_CANVAS_CONSTANTS}
 ready_to_record = False
-# record_detection = False
 record_commands = False
 path = os.path.join(os.getcwd(), "rsk_recorder", "")
 lock = threading.Lock()
@@ -106,7 +105,6 @@ def register_position_frame(markers: dict, ball) -> None:
         lock.release()
 
 def register_detection_info(aruco_ids):
-    # if record_detection:
     try:
         for i in range(len(ARUCO_MARKERS_IDS)):
             register_info(ARUCO_MARKERS_IDS[i], i in aruco_ids, "detection_markers")
@@ -126,10 +124,6 @@ def set_ready_to_record(ready:bool) -> None :
 def set_record_commands(yes_no:bool):
     global record_commands
     record_commands = yes_no
-
-# def set_record_detection(yes_no:bool):
-#     global record_detection
-#     record_detection = yes_no
 
 def set_recording(rec:bool) -> None:
     lock.acquire()

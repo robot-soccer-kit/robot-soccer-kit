@@ -43,7 +43,7 @@ function replay_initialize(backend) {
                 }
                 
                 const ledsIndexes = { green1: 0, green2: 0, blue1: 0, blue2: 0 }
-                const refereeIndexes = { game_is_running: 0, game_paused: 0, timer: 0, game_state_msg: 0, teams: 0, referee_history_sliced: 0, validate_goal: 0 }
+                const refereeIndexes = { game_is_running: 0, game_paused: 0, timer: 0, game_state_msg: 0, teams: 0, validate_goal: 0 }
                 const detectionIndexes = { green1: 0, green2: 0, blue1: 0, blue2: 0, c1: 0, c2: 0, c3: 0, c4: 0 }
                 const commandsIndexes = { green1: 0, green2: 0, blue1: 0, blue2: 0 }
 
@@ -59,6 +59,11 @@ function replay_initialize(backend) {
                 let currentTimestamp = 0
 
                 let speed = 1
+
+                //clean up referee_history_sliced
+                while(logs.referee?.referee_history_sliced[0]?.data?.length !== 0) {
+                    logs.referee.referee_history_sliced.shift()
+                }
 
                 $('.replay-progress-grp').removeClass("d-none")
 
@@ -123,7 +128,6 @@ function replay_initialize(backend) {
                             lastKnownPositions[key] = {
                                 position: data.position,
                                 orientation: data.orientation,
-                                detected: true,
                                 timestamp: frame.timestamp
                             }
                         }
@@ -135,9 +139,6 @@ function replay_initialize(backend) {
                         if (frameMarkers[robotKey]) {
                             // Robot detected in current frame
                             stateMarkers[robotKey] = frameMarkers[robotKey]
-                            if (lastKnownPositions[robotKey]) {
-                                lastKnownPositions[robotKey].detected = true
-                            }
                         } else if (lastKnownPositions[robotKey]) {
                             // Robot not detected in current frame, use cache
                             stateMarkers[robotKey] = {
@@ -145,7 +146,6 @@ function replay_initialize(backend) {
                                 orientation: lastKnownPositions[robotKey].orientation,
                                 _is_stale: true  // Mark as stale for rendering
                             }
-                            lastKnownPositions[robotKey].detected = false
                         }
                     }
 
@@ -171,21 +171,7 @@ function replay_initialize(backend) {
                         timer: advance(logs.referee?.timer, refereeIndexes, "timer", t),
                         game_state_msg: advance(logs.referee?.game_state_msg, refereeIndexes, "game_state_msg", t),
                         teams: advance(logs.referee?.teams, refereeIndexes, "teams", t),
-                        referee_history_sliced: advance(logs.referee?.referee_history_sliced, refereeIndexes, "referee_history_sliced", t),
                     }
-
-                    const detection_state = logs.hasOwnProperty("detection_markers")
-                        ? {
-                            green1: advance(logs.detection_markers?.green1, detectionIndexes, "green1", t),
-                            green2: advance(logs.detection_markers?.green2, detectionIndexes, "green2", t),
-                            blue1: advance(logs.detection_markers?.blue1, detectionIndexes, "blue1", t),
-                            blue2: advance(logs.detection_markers?.blue2, detectionIndexes, "blue2", t),
-                            c1: advance(logs.detection_markers?.c1, detectionIndexes, "c1", t),
-                            c2: advance(logs.detection_markers?.c2, detectionIndexes, "c2", t),
-                            c3: advance(logs.detection_markers?.c3, detectionIndexes, "c3", t),
-                            c4: advance(logs.detection_markers?.c4, detectionIndexes, "c4", t),
-                        }
-                        : null
 
                     const current_commands = logs.hasOwnProperty("command_received")
                         ? {
@@ -199,7 +185,6 @@ function replay_initialize(backend) {
                     return {
                         state,
                         referee_state,
-                        detection_state,
                         current_commands,
                     }
                 }
@@ -226,7 +211,6 @@ function replay_initialize(backend) {
 
                         const is_validated = serie_validate_goal[last_index_validation].data
 
-                        // dernier event réel
                         const lastEvent = current_history[current_history.length - 1]
 
                         if (!lastEvent) return
@@ -388,7 +372,6 @@ function replay_initialize(backend) {
                     const {
                         state,
                         referee_state,
-                        detection_state,
                         current_commands,
                     } = buildState(t)
 
@@ -424,21 +407,6 @@ function replay_initialize(backend) {
                     }
 
                     return result
-                }
-
-                function rebuildHistory(t) {
-
-                    displayed_toast_nb = 0
-
-                    $('.toast').remove()
-
-                    $("#RefereeHistory").html('')
-
-                    $("#NoHistory").html('<h6 class="text-muted">No History</h6>')
-
-                    const history = getHistoryUpTo(t)
-
-                    updateRefereeHistory(history)
                 }
 
                 function getNextPositionTimestamp(t, direction = 1) {
@@ -478,7 +446,6 @@ function replay_initialize(backend) {
                     const {
                         state,
                         referee_state,
-                        detection_state,
                         current_commands,
                     } = buildState(targetTimestamp)
 
@@ -488,7 +455,8 @@ function replay_initialize(backend) {
                         updateCommands(current_commands, targetTimestamp)
                     }
 
-                    rebuildHistory(targetTimestamp)
+                    const history = getHistoryUpTo(targetTimestamp)
+                    updateRefereeHistory(history)
 
                     updateReferee(referee_state)
                     updateProgressBar()
@@ -534,8 +502,6 @@ function replay_initialize(backend) {
                     }
                 }
 
-                let lockProgressBar = true
-
                 function play() {
                     if (isRunning) return
 
@@ -549,7 +515,6 @@ function replay_initialize(backend) {
                     if (currentTimestamp == 0) $('.toast').remove()
 
                     isRunning = true
-                    lockProgressBar = false
                     wallStart = performance.now()
                     logStart = currentTimestamp > 0 ? currentTimestamp : startTimestamp
                     frameId = requestAnimationFrame(loop)
@@ -570,7 +535,6 @@ function replay_initialize(backend) {
                     $('.replay-btn').prop('disabled', true)
 
                     isRunning = false
-                    lockProgressBar = true
                     cancelAnimationFrame(frameId)
                     currentTimestamp = 0
                     positionIndex = 0
@@ -607,7 +571,7 @@ function replay_initialize(backend) {
                 }
   
                 $('.replay-progress').click(function (e) {
-                    if (!lockProgressBar) {
+                    if (currentTimestamp !== 0 || isRunning) {
                         const ratio = e.offsetX / $(this).width()
                         const targetTimestamp = startTimestamp + ratio * (endTimestamp - startTimestamp)
                         seekTo(targetTimestamp)
