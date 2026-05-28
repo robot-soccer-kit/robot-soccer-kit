@@ -6,6 +6,7 @@ import logging
 from . import constants, utils, control, tasks, state, replay_logger
 import time
 
+
 class Referee:
     """
     Handles the referee
@@ -453,7 +454,9 @@ class Referee:
         :param bool yes_no: whether the goal is validated or canceller
         """
 
-        replay_logger.register_info("validate_goal", yes_no, "referee", allow_repeat=True)
+        replay_logger.register_info(
+            "validate_goal", yes_no, "referee", allow_repeat=True
+        )
 
         if yes_no:
             if self.game_state["teams"]["blue"]["x_positive"]:
@@ -644,10 +647,17 @@ class Referee:
                 replay_logger.set_recording(self.game_state["game_is_running"])
             # Log referee state but keep only the last referee_history_sliced element to avoid duplicates
             referee_state_to_log = dict(self.state_info["referee"])
-            if "referee_history_sliced" in referee_state_to_log and referee_state_to_log["referee_history_sliced"]:
-                referee_state_to_log["referee_history_sliced"] = referee_state_to_log["referee_history_sliced"][-1:]
-            replay_logger.register_infos(referee_state_to_log.keys(), referee_state_to_log, "referee")
-            
+            if (
+                "referee_history_sliced" in referee_state_to_log
+                and referee_state_to_log["referee_history_sliced"]
+            ):
+                referee_state_to_log["referee_history_sliced"] = referee_state_to_log[
+                    "referee_history_sliced"
+                ][-1:]
+            replay_logger.register_infos(
+                referee_state_to_log.keys(), referee_state_to_log, "referee"
+            )
+
             self.state.set_referee(self.get_game_state())
             self.control.allow_extra_features = not self.game_state["game_is_running"]
 

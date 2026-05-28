@@ -14,7 +14,7 @@ from .packets import (
     PACKET_ROBOT_LEDS_CUSTOM,
     PACKET_ROBOT_KICK,
     PACKET_MONITOR_DATA,
-    PACKET_MONITOR
+    PACKET_MONITOR,
 )
 from .robots import Robots
 
@@ -189,7 +189,7 @@ class RobotSerial(robot.Robot):
         :param int b: B intensity (0-255)
         """
         super().leds(red, green, blue)
-        
+
         packet = Packet(PACKET_ROBOT)
         packet.append_byte(PACKET_ROBOT_LEDS_CUSTOM)
         packet.append_byte(red)

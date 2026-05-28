@@ -16,6 +16,7 @@ from .packets import (
 import numpy as np
 from .robots import Robots
 
+
 class RobotWifi(robot.Robot):
     udp_port: int = 7600
     broadcast_frequency: float = 60

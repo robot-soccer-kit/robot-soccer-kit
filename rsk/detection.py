@@ -494,7 +494,12 @@ class Detection:
                     if self.referee is None
                     else self.referee.get_game_state(full=False),
                 }
-                replay_logger.register_infos(det_info.keys(), det_info, "detection_info", ["markers", "referee", "ball"])
+                replay_logger.register_infos(
+                    det_info.keys(),
+                    det_info,
+                    "detection_info",
+                    ["markers", "referee", "ball"],
+                )
                 return det_info
             except Exception as err:
                 print("Thread init error : ", err)

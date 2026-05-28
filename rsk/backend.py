@@ -25,7 +25,6 @@ class Backend:
         self.scheduler = scheduler
         self.replay = replay
 
-        
         self.state: state.State = state.State(self.simulated)
         self.state.start_pub()
 
@@ -54,7 +53,7 @@ class Backend:
 
     def replay_mode_file(self):
         return self.replay
-    
+
     def scheduler_url(self):
         return self.scheduler
 
@@ -216,10 +215,10 @@ class Backend:
     def validate_goal(self, yes_no: bool):
         self.referee.validate_goal(yes_no)
 
-    def set_ready_to_record(self, ready:bool):
+    def set_ready_to_record(self, ready: bool):
         replay_logger.set_ready_to_record(ready)
 
-    def set_record_commands(self, yes_no:bool):
+    def set_record_commands(self, yes_no: bool):
         replay_logger.set_record_commands(yes_no)
 
     def get_record_filepath(self) -> str:

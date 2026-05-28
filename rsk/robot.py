@@ -1,5 +1,8 @@
 class RobotError(Exception): ...
+
+
 from .robots import Robots
+
 
 class Robot:
     def __init__(self, robots: Robots, url: str):
