@@ -1,5 +1,6 @@
 import zmq
 import time
+from . import replay_logger
 
 
 class State:
@@ -42,6 +43,14 @@ class State:
         """
         self.last_time = time.time()
         info = self.get_state()
+
+        # Log position frame with unified timestamp and detected markers/ball
+        replay_logger.register_position_frame(info["markers"], info["ball"])
+
+        # Log LED states (separate from positions)
+        replay_logger.register_infos(info["leds"].keys(), info["leds"], "leds_state")
+
+        # Publish to ZMQ
         self.socket.send_json(info, flags=zmq.NOBLOCK)
 
     def set_markers(self, markers):

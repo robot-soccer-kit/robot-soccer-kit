@@ -90,7 +90,7 @@ function referee_initialize(backend)
                 $(".GameState").html(game_state["game_state_msg"]);
 
                 if (!game_state["game_is_running"]){
-                    $('.start-game').removeClass('d-none');
+                    $('.start-game-grp').removeClass('d-none');
                     $('.pause-game-grp').addClass('d-none');
                     $('.resume-game-grp').addClass('d-none');
 
@@ -104,10 +104,13 @@ function referee_initialize(backend)
                         $(this).find('.unpenalize').prop("disabled", true);
                         $(this).find('.penalize').prop("disabled", true);
                     });
+
+                    // Enable recorder settings changes
+                    $('.enable-rec-settings input').prop("disabled", false)
                 }
 
                 else if (game_state["game_is_running"]){
-                    $('.start-game').addClass('d-none');
+                    $('.start-game-grp').addClass('d-none');
                     $('.pause-game-grp').removeClass('d-none'); 
 
                     // Enable buttons when referee is running
@@ -128,6 +131,9 @@ function referee_initialize(backend)
                         $('.pause-game-grp').removeClass('d-none');
                         $('.resume-game-grp').addClass('d-none');
                     }
+
+                    // Disable recorder settings changes
+                    $('.enable-rec-settings input').prop("disabled", true)
                 }
     
                 //Disable Pause Button if a Goal is waiting for Validation

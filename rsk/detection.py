@@ -3,7 +3,7 @@ import cv2
 import zmq
 import time
 from .field import Field
-from . import constants, config
+from . import constants, config, replay_logger
 import os
 
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
@@ -338,10 +338,12 @@ class Detection:
         """
         if self.is_new_aruco_api():
             (corners, ids, rejected) = self.detector.detectMarkers(image)
+            replay_logger.register_detection_info(ids)
         else:
             (corners, ids, rejected) = cv2.aruco.detectMarkers(
                 image, self.arucoDict, parameters=self.arucoParams
             )
+            replay_logger.register_detection_info(ids)
 
         new_markers = {}
 
@@ -483,7 +485,7 @@ class Detection:
     def get_detection(self, foo=None):
         while True:
             try:
-                return {
+                det_info = {
                     "ball": self.ball,
                     "markers": self.markers,
                     "calibrated": self.field.calibrated(),
@@ -492,5 +494,12 @@ class Detection:
                     if self.referee is None
                     else self.referee.get_game_state(full=False),
                 }
+                replay_logger.register_infos(
+                    det_info.keys(),
+                    det_info,
+                    "detection_info",
+                    ["markers", "referee", "ball"],
+                )
+                return det_info
             except Exception as err:
                 print("Thread init error : ", err)

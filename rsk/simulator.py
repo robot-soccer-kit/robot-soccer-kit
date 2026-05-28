@@ -4,6 +4,7 @@ import numpy as np
 from numpy.linalg import norm
 from math import dist
 from . import kinematics, utils, constants, state, robot, robots, client
+from .robots import Robots
 
 from collections.abc import Callable
 
@@ -142,8 +143,8 @@ class SimulatedRobot(SimulatedObject):
 
 
 class RobotSim(robot.Robot):
-    def __init__(self, url: str):
-        super().__init__(url)
+    def __init__(self, robots: Robots, url: str):
+        super().__init__(robots, url)
         self.set_marker(url)
 
         self.object: SimulatedRobot = None
@@ -177,6 +178,8 @@ class RobotSim(robot.Robot):
         :param int green: green brightness (0-255)
         :param int blue: blue brightness (0-255)
         """
+        super().leds(red, green, blue)
+
         self.object.pending_actions.append(
             lambda: self.object.control_leds(red, green, blue)
         )
@@ -308,7 +311,6 @@ class Simulator:
                     self.state.set_ball(pos[:2].tolist())
                 else:
                     self.state.set_marker(marker, pos[:2].tolist(), pos[2])
-                    self.state.set_leds(marker, self.objects[marker].leds)
 
         # Simulating the fact that state is published at a fixed frequency
         if time.time() - self.last_publish > self.publish_period:

@@ -3,7 +3,7 @@ import copy
 import numpy as np
 import threading
 import logging
-from . import constants, utils, control, tasks, state
+from . import constants, utils, control, tasks, state, replay_logger
 import time
 
 
@@ -161,6 +161,8 @@ class Referee:
         self.chrono_is_running = False
         self.wait_for_ball_placement()
 
+        replay_logger.set_recording(True)
+
     def pause_game(self, reason: str = "manually-paused"):
         """
         Pause the game
@@ -215,6 +217,8 @@ class Referee:
         self.control.remove_task("game-start")
         self.control.remove_task("force-place")
         self.control.remove_task("half-time")
+
+        replay_logger.set_recording(False)
 
         self.game_state["game_state_msg"] = "Game is ready to start"
 
@@ -453,6 +457,11 @@ class Referee:
 
         :param bool yes_no: whether the goal is validated or canceller
         """
+
+        replay_logger.register_info(
+            "validate_goal", yes_no, "referee", allow_repeat=True
+        )
+
         if yes_no:
             if self.game_state["teams"]["blue"]["x_positive"]:
                 self.force_place("game_blue_positive", end_buzz=True)
@@ -635,6 +644,20 @@ class Referee:
 
         while True:
             self.state_info = copy.deepcopy(self.state.get_state())
+
+            # Log referee state but keep only the last referee_history_sliced element to avoid duplicates
+            referee_state_to_log = dict(self.state_info["referee"])
+            if (
+                "referee_history_sliced" in referee_state_to_log
+                and referee_state_to_log["referee_history_sliced"]
+            ):
+                referee_state_to_log["referee_history_sliced"] = referee_state_to_log[
+                    "referee_history_sliced"
+                ][-1:]
+            replay_logger.register_infos(
+                referee_state_to_log.keys(), referee_state_to_log, "referee"
+            )
+
             self.state.set_referee(self.get_game_state())
             self.control.allow_extra_features = not self.game_state["game_is_running"]
 

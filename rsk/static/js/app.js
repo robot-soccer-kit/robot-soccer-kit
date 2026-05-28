@@ -37,18 +37,32 @@ class APIBackend {
 $(document).ready(function () {
     // Backend initialization
     var backend = new APIBackend('http://' + document.location.host + '/api');
-    backend.is_simulated(function (simulated) {
-        if (simulated) {
-            console.log("SIMULATION")
+    backend.replay_mode_file(function (file) {
+        if (file !== "") {
+            console.log("REPLAY MODE")
+            $('.replay-hide').removeClass("d-flex").css("display", 'none')
             $('.not_show_simulated').css("display", 'none')
-            simulator_initialize(backend, true)
-        } else {
-            console.log("REEL")
-            $('.show_simulated').css("display", 'none')
-            video_initialize(backend);
-            simulator_initialize(backend, false)
+            $('.replay-mode').show();
+            replay_initialize(backend);
+        }
+        else {
+            referee_initialize(backend);
+            backend.is_simulated(function (simulated) {
+                if (simulated) {
+                    console.log("SIMULATION")
+                    $('.not_show_simulated').css("display", 'none')
+                    simulator_initialize(backend, true)
+                } else {
+                    console.log("REEL")
+                    $('.show_simulated').css("display", 'none')
+                    video_initialize(backend);
+                    simulator_initialize(backend, false)
+                }
+            })
+            recorder_initialize(backend)
         }
     })
+    
 
     backend.is_competition(function (competition) {
         if (competition) {
@@ -66,7 +80,6 @@ $(document).ready(function () {
 
     robots_initialize(backend);
     control_initialize(backend);
-    referee_initialize(backend);
 
     // (dev) Reload the window
     $('.reload').click(function () {

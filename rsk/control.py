@@ -6,7 +6,7 @@ import time
 import uuid
 import threading
 import logging
-from . import robots, utils, client, constants, tasks
+from . import robots, utils, client, constants, tasks, replay_logger
 from .robot import RobotError
 
 
@@ -168,6 +168,12 @@ class Control:
         except (TypeError, ValueError) as e:
             response = [False, "ArgumentError: " + str(e)]
 
+        replay_logger.register_command_info(
+            marker,
+            {"received": command, "response": response, "master": is_master},
+            "command_received",
+            allow_repeat=True,
+        )
         return response
 
     def thread(self):
@@ -178,7 +184,6 @@ class Control:
             try:
                 json = self.socket.recv_json()
                 response = [False, "Unknown error"]
-
                 if type(json) is list and len(json) == 4:
                     key, team, number, command = json
 
@@ -215,7 +220,6 @@ class Control:
                     if team == "ball":
                         is_master = key == self.master_key
                         response = self.process_command("ball", command, is_master)
-
                 self.socket.send_json(response)
             except zmq.error.Again:
                 pass

@@ -10,11 +10,12 @@ from . import (
     utils,
     constants,
     simulator,
+    replay_logger,
 )
 
 
 class Backend:
-    def __init__(self, simulated=False, competition=False, scheduler=""):
+    def __init__(self, simulated=False, competition=False, scheduler="", replay=""):
         super().__init__()
         robots.Robots.protocols["serial"] = robot_serial.RobotSerial
         robots.Robots.protocols["wifi"] = robot_wifi.RobotWifi
@@ -22,6 +23,7 @@ class Backend:
         self.simulated = simulated
         self.competition = competition
         self.scheduler = scheduler
+        self.replay = replay
 
         self.state: state.State = state.State(self.simulated)
         self.state.start_pub()
@@ -30,7 +32,7 @@ class Backend:
         self.control: control.Control = self.referee.control
         self.robots: robots.Robots = robots.Robots(self.state)
 
-        if simulated:
+        if simulated or replay != "":
             robots.Robots.protocols["sim"] = simulator.RobotSim
             self.simulator: simulator.Simulator = simulator.Simulator(
                 self.robots, self.state
@@ -48,6 +50,9 @@ class Backend:
 
     def is_competition(self):
         return self.competition
+
+    def replay_mode_file(self):
+        return self.replay
 
     def scheduler_url(self):
         return self.scheduler
@@ -209,3 +214,12 @@ class Backend:
 
     def validate_goal(self, yes_no: bool):
         self.referee.validate_goal(yes_no)
+
+    def set_ready_to_record(self, ready: bool):
+        replay_logger.set_ready_to_record(ready)
+
+    def set_record_commands(self, yes_no: bool):
+        replay_logger.set_record_commands(yes_no)
+
+    def get_record_filepath(self) -> str:
+        return replay_logger.filepath

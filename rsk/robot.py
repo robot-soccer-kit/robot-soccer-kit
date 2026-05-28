@@ -1,8 +1,14 @@
 class RobotError(Exception): ...
 
 
+from .robots import Robots
+
+
 class Robot:
-    def __init__(self, url: str):
+    def __init__(self, robots: Robots, url: str):
+        # Robots manager
+        self.robots = robots
+
         # Port name
         self.url: str = url
 
@@ -61,7 +67,8 @@ class Robot:
         :param int blue: blue brightness (0-255)
         :raises RobotError: if the operation is not supported
         """
-        ...
+        if self.marker is not None:
+            self.robots.state.set_leds(self.marker, (red, green, blue))
 
     def beep(self, frequency: int, duration: int) -> None:
         """

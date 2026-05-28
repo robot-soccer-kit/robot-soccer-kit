@@ -6,7 +6,7 @@ import time
 import logging
 import threading
 import waitress
-from flask import Flask, send_from_directory, jsonify, request
+from flask import Flask, send_from_directory, jsonify, request, make_response
 from flask_cors import CORS
 from .backend import Backend
 from . import api, robot_wifi, config
@@ -45,22 +45,57 @@ parser.add_argument(
 parser.add_argument(
     "--dry", "-d", action="store_true", help="Dry run without starting the server"
 )
+parser.add_argument("--replay", "-R", type=str, default="", help="Enable replay mode")
 args = parser.parse_args()
 
 if args.reset:
     config.reset()
 
-if (not args.dry) and (not args.simulated):
+if (not args.dry) and (not args.simulated) and (args.replay == ""):
     robot_wifi.RobotWifi.start_service()
 
+
 has_client: bool = False
-backend: Backend = Backend(args.simulated, args.competition, args.scheduler)
+backend: Backend = Backend(
+    args.simulated, args.competition, args.scheduler, args.replay
+)
 api.register(backend)
 
 # Starting a Flask app serving API requests and files of static/ directory
 static = os.path.dirname(__file__) + "/static/"
 app = Flask("Game controller", static_folder=static)
 CORS(app)
+
+
+def send_file_response(filepath, mimetype, gzip=False):
+    directory = os.path.dirname(os.path.abspath(filepath))
+    filename = os.path.basename(filepath)
+    response = make_response(
+        send_from_directory(directory, filename, mimetype=mimetype)
+    )
+    if gzip:
+        response.headers["Content-Encoding"] = "gzip"
+    return response
+
+
+@app.route("/api/recorded_data", methods=["GET"])
+def get_recorded_data():
+    fp = backend.get_record_filepath()
+    logging.info(f"get_record_filepath: '{fp}'")
+    if fp == "" or not os.path.isfile(fp):
+        return jsonify({"error": "No record file available"}), 404
+    return send_file_response(fp, mimetype="application/octet-stream")
+
+
+if backend.replay_mode_file() != "":
+    if not os.path.isfile(backend.replay_mode_file()):
+        logging.error("replay file not found")
+    else:
+
+        @app.route("/api/replay_data", methods=["GET"])
+        def get_replay_data():
+            fp = backend.replay_mode_file()
+            return send_file_response(fp, mimetype="application/json", gzip=True)
 
 
 @app.route("/api", methods=["GET"])

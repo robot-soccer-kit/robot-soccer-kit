@@ -14,8 +14,9 @@ from .packets import (
     PACKET_ROBOT_LEDS_CUSTOM,
     PACKET_ROBOT_KICK,
     PACKET_MONITOR_DATA,
-    PACKET_MONITOR
+    PACKET_MONITOR,
 )
+from .robots import Robots
 
 logger: logging.Logger = logging.getLogger("robot")
 
@@ -25,8 +26,8 @@ class RobotSerial(robot.Robot):
     Connection with a physical robot
     """
 
-    def __init__(self, url: str):
-        super().__init__(url)
+    def __init__(self, robots: Robots, url: str):
+        super().__init__(robots, url)
 
         # Instance of serial connection
         self.bt = None
@@ -187,6 +188,8 @@ class RobotSerial(robot.Robot):
         :param int g: G intensity (0-255)
         :param int b: B intensity (0-255)
         """
+        super().leds(red, green, blue)
+
         packet = Packet(PACKET_ROBOT)
         packet.append_byte(PACKET_ROBOT_LEDS_CUSTOM)
         packet.append_byte(red)
