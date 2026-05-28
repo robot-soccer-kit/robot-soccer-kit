@@ -9,17 +9,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "Rhoban team", email = "team@rhoban.com" }]
 keywords = ["robot", "holonomic", "omniwheel", "ssl", "sct", "robocup", "junior", "soccer", "standard", "localized", "tracking"]
-dependencies = [
-    "numpy",
-    "pyzmq",
-    "pyyaml",
-    "astar",
-    "waitress>=3.0.2",
-    "flask>=3.1.3",
-    "flask-cors>=6.0.2",
-    "opencv-contrib-python>=4.13.0.92",
-    "pyserial>=3.5",
-]
+dependencies = ["numpy", "pyzmq", "pyyaml", "astar"]
 description = "Robot Soccer Kit"
 
 [project.optional-dependencies]
