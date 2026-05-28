@@ -33,8 +33,6 @@ class Backend:
         self.control: control.Control = self.referee.control
         self.robots: robots.Robots = robots.Robots(self.state)
 
-        # if replay != "":
-        #     pass
         if simulated or replay != "":
             robots.Robots.protocols["sim"] = simulator.RobotSim
             self.simulator: simulator.Simulator = simulator.Simulator(
