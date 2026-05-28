@@ -54,7 +54,7 @@ class Backend:
     def is_competition(self):
         return self.competition
 
-    def replay_file(self):
+    def replay_mode_file(self):
         return self.replay
     
     def scheduler_url(self):
@@ -224,5 +224,5 @@ class Backend:
     def set_record_commands(self, yes_no:bool):
         replay_logger.set_record_commands(yes_no)
 
-    # def set_record_detection(self, yes_no:bool):
-    #     replay_logger.set_record_detection(yes_no)
+    def get_record_filepath(self) -> str:
+        return replay_logger.filepath

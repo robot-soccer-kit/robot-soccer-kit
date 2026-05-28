@@ -20,6 +20,11 @@ function replay_initialize(backend) {
         .then(response => response.json())
         .then(logs => {
 
+            // Check that the logs contain the necessary data
+            if (!logs.positions || !logs.referee) {
+                throw new Error("Invalid replay file: missing positions or referee")
+            }
+
             backend.constants(function (constants) {
                 const renderer = createFieldRenderer(constants)
                 $(window).on("resize", renderer.resizeCanvases)
@@ -31,7 +36,6 @@ function replay_initialize(backend) {
                     markers[key].image.src = "static/imgs/robot" + key + ".png"
                 }
 
-                // Single index for the unified positions timeline
                 let positionIndex = 0
                 
                 // Cache of last known positions for robots (for rendering stale positions)
@@ -60,7 +64,7 @@ function replay_initialize(backend) {
 
                 let speed = 1
 
-                //clean up referee_history_sliced
+                // Clean up referee_history_sliced
                 while(logs.referee?.referee_history_sliced[0]?.data?.length !== 0) {
                     logs.referee.referee_history_sliced.shift()
                 }
@@ -643,5 +647,6 @@ function replay_initialize(backend) {
         })
         .catch(() => {
             $('.no-file-replay').removeClass('d-none')
+            $('.penalized-replay-view').addClass('d-none')
         })
 }

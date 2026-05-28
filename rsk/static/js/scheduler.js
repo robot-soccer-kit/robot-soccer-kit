@@ -41,6 +41,41 @@ function scheduler_initialize(backend, url) {
             $(".key-" + color).change();
         }
 
+        function uploadReplay(gameId) {
+            function tryFetch(retries = 10) {
+                fetch('http://' + document.location.host + '/api/recorded_data')
+                    .then(response => {
+                        if (!response.ok) {
+                            if (retries > 0) {
+                                setTimeout(() => tryFetch(retries - 1), 200)
+                            } else {
+                                console.error('No recorded data available after retries')
+                            }
+                            return
+                        }
+                        return response.blob()//.then(blob => new Blob([blob], { type: 'application/octet-stream' }))
+                    })
+                    .then(blob => {
+                        if (!blob) return
+                        const formData = new FormData()
+                        formData.append('replay', blob, 'replay.json.gz')
+                        return $.ajax({
+                            url: url + '/upload-replay/' + gameId,
+                            method: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false
+                        })
+                    })
+                    .then(data => {
+                        if (data === true) console.log('Replay uploaded')
+                    })
+                    .catch(error => console.error('Error uploading replay:', error))
+            }
+            
+            setTimeout(() => tryFetch(), 500)  // attendre 500ms avant le premier essai
+        }
+
         function setupListeners() {
             $('.scheduler-load-game').click(function () {
                 let gameId = $(this).attr('data-game-id');
@@ -59,7 +94,9 @@ function scheduler_initialize(backend, url) {
                 } else {
                     $.get(url + '/publish/'+gameId+'/'+scoreBlue+'/'+scoreGreen, function (data) {
                         if (data === true) {
+                            backend.stop_game()
                             $('.scheduler-actions-'+gameId).text('Published!');
+                            uploadReplay(gameId);
                             if (currentGame == gameId) {
                                 setCurrentGame(null)
                             }

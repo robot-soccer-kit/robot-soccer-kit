@@ -37,7 +37,7 @@ class APIBackend {
 $(document).ready(function () {
     // Backend initialization
     var backend = new APIBackend('http://' + document.location.host + '/api');
-    backend.replay_file(function (file) {
+    backend.replay_mode_file(function (file) {
         if (file !== "") {
             console.log("REPLAY MODE")
             $('.replay-hide').removeClass("d-flex").css("display", 'none')
@@ -71,15 +71,6 @@ $(document).ready(function () {
         }
     });
 
-    // backend.replay_file(function (file) {
-    //     if (file ==! "") {
-    //         $('.replay-mode').show();
-    //         $('.replay-hide').css("display", 'none')
-    //         $('.not_show_simulated').css("display", 'none')
-    //         replay_initialize(backend);
-    //     }
-    // });
-
     backend.scheduler_url(function (url) {
         if (url) {
             $('.scheduler-mode').show();
@@ -89,7 +80,6 @@ $(document).ready(function () {
 
     robots_initialize(backend);
     control_initialize(backend);
-    // referee_initialize(backend);
 
     // (dev) Reload the window
     $('.reload').click(function () {

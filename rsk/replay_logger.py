@@ -34,6 +34,7 @@ datas_to_log = {"constants" : USEFUL_CANVAS_CONSTANTS}
 ready_to_record = False
 record_commands = False
 path = os.path.join(os.getcwd(), "rsk_recorder", "")
+filepath = ""
 lock = threading.Lock()
 
 recording = False
@@ -44,7 +45,10 @@ def log_data() -> None:
 
     if not os.path.exists(path):
         os.makedirs(path)
-    filepath = path + "match_logs" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")[:-3] + ".json.gz"
+    filename = "match_logs" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")[:-3] + ".json.gz"
+    global filepath
+    filepath = os.path.join(path, filename)
+    print(f"Logging data to {filepath}")
 
     with gzip.open(filepath, 'w') as fout:
         fout.write(json_bytes)
@@ -131,6 +135,8 @@ def set_recording(rec:bool) -> None:
     was_recording = recording
     recording = rec and ready_to_record
     lock.release()
+    if recording:
+        reset_filename()
     if not recording and was_recording:
         log_data()
         reset_record_data()
@@ -139,4 +145,10 @@ def reset_record_data() -> None:
     global datas_to_log
     lock.acquire()
     datas_to_log = {"constants" : USEFUL_CANVAS_CONSTANTS}
+    lock.release()
+
+def reset_filename() -> None:
+    global filepath
+    lock.acquire()
+    filepath = ""
     lock.release()

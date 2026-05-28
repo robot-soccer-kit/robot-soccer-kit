@@ -66,14 +66,27 @@ static = os.path.dirname(__file__) + "/static/"
 app = Flask("Game controller", static_folder=static)
 CORS(app)
 
-if backend.replay_file() != "":
-    if not os.path.isfile(backend.replay_file()):
+
+@app.route("/api/recorded_data", methods=["GET"])
+def get_recorded_data():
+    fp = backend.get_record_filepath()
+    logging.info(f"get_record_filepath: '{fp}'")
+    if fp == "" or not os.path.isfile(fp):
+        return jsonify({'error': 'No record file available'}), 404
+    directory = os.path.dirname(os.path.abspath(fp))
+    filename = os.path.basename(fp)
+    response = make_response(send_from_directory(directory, filename, mimetype='application/octet-stream'))
+    return response
+
+if backend.replay_mode_file() != "":
+    if not os.path.isfile(backend.replay_mode_file()):
         logging.error("replay file not found")
     else:
         @app.route("/api/replay_data", methods=["GET"])
         def get_replay_data():
-            directory = os.path.dirname(os.path.abspath(backend.replay_file()))
-            filename = os.path.basename(backend.replay_file())
+            directory = os.path.dirname(os.path.abspath(backend.replay_mode_file()))
+            filename = os.path.basename(backend.replay_mode_file())
+            print(filename, directory)
             response = make_response(send_from_directory(directory, filename, mimetype='application/json'))
             response.headers['Content-Encoding'] = 'gzip'
             return response
