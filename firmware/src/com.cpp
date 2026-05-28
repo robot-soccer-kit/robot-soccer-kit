@@ -10,6 +10,7 @@
 #include <BluetoothSerial.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include <esp_wifi.h>
 
 #define BIN_STREAM_ROBOT 80
 
@@ -27,6 +28,10 @@ WiFiUDP udp;
 IPAddress game_controller;
 IPAddress robot_ip;
 static unsigned long last_game_controller_timestamp = 0;
+
+static unsigned long last_command_timestamp = 0;
+static bool is_power_saving = true;
+static bool should_power_save = true;
 
 // Needed when in BT mode
 bool do_forward = false;
@@ -55,11 +60,15 @@ char bin_on_packet(uint8_t type) {
         float dt = ((int16_t)bin_stream_read_short()) * M_PI / 180;
 
         motors_set_ik(dx, dy, dt);
+
+        last_command_timestamp = millis();
         return 1;
       } else if (command == COMMAND_BEEP) { // Beep
         short freq = bin_stream_read_short();
         short duration = bin_stream_read_short();
         buzzer_beep(freq, duration);
+
+        last_command_timestamp = millis();
         return 1;
       } else if (command == COMMAND_SET_LEDS) { // Set boards leds
         if (bin_stream_available() == 3) {
@@ -70,18 +79,24 @@ char bin_on_packet(uint8_t type) {
           leds_set(red, green, blue);
         }
 
+        last_command_timestamp = millis();
         return 1;
       } else if (command == COMMAND_LEDS_DEFAULT) { // Default LEDs
         leds_default();
 
+        last_command_timestamp = millis();
         return 1;
       } else if (command == COMMAND_EMERGENCY) { // Emergency stop
         motors_disable();
+
+        last_command_timestamp = millis();
         return 1;
       } else if (command == COMMAND_KICK) { // Kick
         if (bin_stream_available() == 1) {
           kicker_kick(bin_stream_read() / 100.);
         }
+
+        last_command_timestamp = millis();
         return 1;
       }
     }
@@ -179,6 +194,18 @@ void com_bin_tick() {
             game_controller = udp.remoteIP();
           }
         }
+      }
+    }
+
+    should_power_save =
+        !has_game_controller() || (millis() - last_command_timestamp) > 10000;
+
+    if (should_power_save != is_power_saving) {
+      is_power_saving = should_power_save;
+      if (is_power_saving) {
+        esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
+      } else {
+        esp_wifi_set_ps(WIFI_PS_NONE);
       }
     }
   } else {
