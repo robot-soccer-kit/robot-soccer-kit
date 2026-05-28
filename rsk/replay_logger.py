@@ -5,6 +5,7 @@ from . import constants
 import json
 import gzip
 import threading
+import logging
 
 import copy
 
@@ -33,6 +34,7 @@ record_commands = False
 path = os.path.join(os.getcwd(), "rsk_recorder", "")
 filepath = ""
 lock = threading.Lock()
+logger: logging.Logger = logging.getLogger("replay_logger")
 
 recording = False
 
@@ -48,7 +50,7 @@ def log_data() -> None:
     )
     global filepath
     filepath = os.path.join(path, filename)
-    print(f"Logging data to {filepath}")
+    logger.info(f"Logging data to {filepath}")
 
     with gzip.open(filepath, "w") as fout:
         fout.write(json_bytes)
