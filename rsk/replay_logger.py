@@ -48,12 +48,16 @@ def log_data() -> None:
     filename = (
         "match_logs" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")[:-3] + ".json.gz"
     )
-    global filepath
-    filepath = os.path.join(path, filename)
-    logger.info(f"Logging data to {filepath}")
+    temp_filepath = os.path.join(path, filename)
+    logger.info(f"Logging data to {temp_filepath}")
 
-    with gzip.open(filepath, "w") as fout:
+    with gzip.open(temp_filepath, "w") as fout:
         fout.write(json_bytes)
+
+    # Only expose the filepath after the file is fully written,
+    # so that concurrent readers never see an incomplete file.
+    global filepath
+    filepath = temp_filepath
 
 
 def register_info(key: str, data, prev_key: str = "", allow_repeat=False) -> None:
