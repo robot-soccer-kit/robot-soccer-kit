@@ -96,6 +96,10 @@ if backend.replay_mode_file() != "":
         def get_replay_data():
             fp = backend.replay_mode_file()
             return send_file_response(fp, mimetype="application/json", gzip=True)
+else :
+    @app.route("/api/rec_settings_state", methods=["GET"])
+    def get_recording_settings_state():
+        return jsonify(backend.get_recording_settings_state())
 
 
 @app.route("/api", methods=["GET"])

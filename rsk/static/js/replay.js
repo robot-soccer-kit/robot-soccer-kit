@@ -56,6 +56,58 @@ function replay_initialize(backend) {
                 const startTimestamp = positionsArray.length > 0 ? positionsArray[0].timestamp : 0
                 const endTimestamp = positionsArray.length > 0 ? positionsArray[positionsArray.length - 1].timestamp : 0
                 
+                // Find the timestamp of first "Place the ball on the dot" message
+                let firstPlaceBallTimestamp = startTimestamp
+                if (logs.referee?.game_state_msg?.length > 0) {
+                    for (const entry of logs.referee.game_state_msg) {
+                        if (entry.data === "Place the ball on the dot") {
+                            firstPlaceBallTimestamp = entry.timestamp
+                            break
+                        }
+                    }
+                }
+
+                // Clean up referee_history_sliced
+                while(logs.referee?.referee_history_sliced[0]?.data?.length !== 0) {
+                    logs.referee.referee_history_sliced.shift()
+
+                    // If we end up with an empty array, break to avoid infinite loop
+                    if (logs.referee.referee_history_sliced.length === 0) break;
+                }
+
+                // Clean up referee data before first "Place the ball on the dot"
+                if (logs.referee && firstPlaceBallTimestamp > startTimestamp) {
+                    const trimRefereeSeries = (array, keepInitialValue = false) => {
+                        if (!array?.length) return
+                        // Find first index where timestamp >= firstPlaceBallTimestamp
+                        let left = 0, right = array.length - 1
+                        while (left < right) {
+                            const mid = Math.floor((left + right) / 2)
+                            if (array[mid].timestamp < firstPlaceBallTimestamp) {
+                                left = mid + 1
+                            } else {
+                                right = mid
+                            }
+                        }
+                        
+                        // If keepInitialValue is true and we have an element before the cutoff,
+                        // keep that element to preserve initial value
+                        if (keepInitialValue && left > 0) {
+                            array.splice(0, left - 1)
+                        } else if (array[left].timestamp >= firstPlaceBallTimestamp) {
+                            array.splice(0, left)
+                        }
+                    }
+
+                    trimRefereeSeries(logs.referee.game_is_running)
+                    trimRefereeSeries(logs.referee.game_paused)
+                    trimRefereeSeries(logs.referee.timer, true)  // Keep initial value
+                    trimRefereeSeries(logs.referee.game_state_msg)
+                    trimRefereeSeries(logs.referee.teams, true)  // Keep initial value
+                    trimRefereeSeries(logs.referee.validate_goal)
+                    trimRefereeSeries(logs.referee.referee_history_sliced)
+                }
+                
                 // Calculate non-running periods once at initialization
                 const nonRunningPeriods = (() => {
                     const series = logs.referee?.game_state_msg
@@ -161,14 +213,6 @@ function replay_initialize(backend) {
                 let currentTimestamp = 0
 
                 let speed = 1
-
-                // Clean up referee_history_sliced
-                while(logs.referee?.referee_history_sliced[0]?.data?.length !== 0) {
-                    logs.referee.referee_history_sliced.shift()
-
-                    // If we end up with an empty array, break to avoid infinite loop
-                    if (logs.referee.referee_history_sliced.length === 0) break;
-                }
 
                 $('.replay-progress-grp').removeClass("d-none")
 
@@ -496,6 +540,17 @@ function replay_initialize(backend) {
                     renderer.renderFrame(state, markers, {})
                     frameId = requestAnimationFrame(loop)
 
+                    if(first_run) {
+                        if (currentTimestamp < firstPlaceBallTimestamp) {
+                            // Continue running until we reach the first "Place the ball on the dot"
+                            return
+                        } else {
+                            // We've reached the target, pause now
+                            first_run = false
+                            pause()
+                        }
+                    }
+
                 }
 
                 function getHistoryUpTo(t) {
@@ -789,6 +844,9 @@ function replay_initialize(backend) {
                 $('.start-replay').click(play)
                 $('.pause-replay').click(pause)
                 $('.stop-replay').click(stop)
+
+                first_run = true
+                play()
             })
         })
         .catch(() => {
