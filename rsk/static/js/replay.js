@@ -55,6 +55,104 @@ function replay_initialize(backend) {
                 const positionsArray = logs.positions || []
                 const startTimestamp = positionsArray.length > 0 ? positionsArray[0].timestamp : 0
                 const endTimestamp = positionsArray.length > 0 ? positionsArray[positionsArray.length - 1].timestamp : 0
+                
+                // Calculate non-running periods once at initialization
+                const nonRunningPeriods = (() => {
+                    const series = logs.referee?.game_state_msg
+                    if (!series?.length) return []
+                    
+                    const periods = []
+                    for (let i = 0; i < series.length; i++) {
+                        if (series[i].data !== "Game is running...") {
+                            const startTime = series[i].timestamp
+                            let endTime = endTimestamp
+                            for (let j = i + 1; j < series.length; j++) {
+                                if (series[j].data === "Game is running...") {
+                                    endTime = series[j].timestamp
+                                    break
+                                }
+                            }
+                            periods.push({ start: startTime, end: endTime })
+                            while (i < series.length - 1 && series[i + 1].timestamp < endTime) {
+                                i++
+                            }
+                        }
+                    }
+                    return periods
+                })()
+
+                // Setup progress bar with track background
+                const totalDuration = endTimestamp - startTimestamp
+                $('.replay-progress').css({'position': 'relative', 'background': 'transparent', 'overflow': 'hidden'})
+                $('.replay-progress-bar').css({'position': 'absolute', 'z-index': '10', 'top': '0', 'height': '100%'})
+                
+                // Create background segments showing running vs non-running periods
+                const createProgressSegments = () => {
+                    // Clear only background segments, keep the progress bar element
+                    $('.replay-progress > div:not(.replay-progress-bar)').remove()
+                    
+                    const series = logs.referee?.game_state_msg
+                    if (!series?.length) {
+                        // If no game state data, just show a single grey bar
+                        $('<div>').css({
+                            'position': 'absolute', 'left': '0', 'top': '0', 'width': '100%', 'height': '100%',
+                            'background': '#d8d8d8', 'z-index': '1', 'pointer-events': 'none'
+                        }).appendTo('.replay-progress')
+                        return
+                    }
+                    
+                    // Find the initial state in effect at startTimestamp
+                    let initialState = "Not running"  // Default if no data before start
+                    for (let i = series.length - 1; i >= 0; i--) {
+                        if (series[i].timestamp <= startTimestamp) {
+                            initialState = series[i].data
+                            break
+                        }
+                    }
+                    
+                    let currentTime = startTimestamp
+                    let currentState = initialState
+                    
+                    // Create segments between state changes
+                    for (let i = 0; i < series.length; i++) {
+                        const stateTime = series[i].timestamp
+                        
+                        if (stateTime > currentTime && stateTime <= endTimestamp) {
+                            // Create segment from currentTime to stateTime using currentState
+                            const segmentDuration = stateTime - currentTime
+                            const percentage = (segmentDuration / totalDuration) * 100
+                            const offsetPercentage = ((currentTime - startTimestamp) / totalDuration) * 100
+                            const isRunning = currentState === "Game is running..."
+                            const bgColor = isRunning ? '#88aaff' : '#d8d8d8'
+                            
+                            $('<div>').css({
+                                'position': 'absolute', 'left': offsetPercentage + '%', 'top': '0',
+                                'width': percentage + '%', 'height': '100%', 'background': bgColor, 'z-index': '1',
+                                'pointer-events': 'none'
+                            }).appendTo('.replay-progress')
+                            
+                            currentTime = stateTime
+                            currentState = series[i].data
+                        }
+                    }
+                    
+                    // Handle final segment from currentTime to end
+                    if (currentTime < endTimestamp) {
+                        const segmentDuration = endTimestamp - currentTime
+                        const percentage = (segmentDuration / totalDuration) * 100
+                        const offsetPercentage = ((currentTime - startTimestamp) / totalDuration) * 100
+                        const isRunning = currentState === "Game is running..."
+                        const bgColor = isRunning ? '#3399ff' : '#d8d8d8'
+                        
+                        $('<div>').css({
+                            'position': 'absolute', 'left': offsetPercentage + '%', 'top': '0',
+                            'width': percentage + '%', 'height': '100%', 'background': bgColor, 'z-index': '1',
+                            'pointer-events': 'none'
+                        }).appendTo('.replay-progress')
+                    }
+                }
+                
+                createProgressSegments()
 
                 let isRunning = false
                 let frameId = null
@@ -67,6 +165,9 @@ function replay_initialize(backend) {
                 // Clean up referee_history_sliced
                 while(logs.referee?.referee_history_sliced[0]?.data?.length !== 0) {
                     logs.referee.referee_history_sliced.shift()
+
+                    // If we end up with an empty array, break to avoid infinite loop
+                    if (logs.referee.referee_history_sliced.length === 0) break;
                 }
 
                 $('.replay-progress-grp').removeClass("d-none")
@@ -256,6 +357,7 @@ function replay_initialize(backend) {
 
 
                 function updateReferee(referee_state) {
+                    if (referee_state.game_state_msg == null) return
                     $('.GameState').html(referee_state.game_state_msg)
                     $('#GreenScore').html(referee_state.teams["green"]["score"])
                     $('#BlueScore').html(referee_state.teams["blue"]["score"])
@@ -367,7 +469,7 @@ function replay_initialize(backend) {
                     const elapsed = (performance.now() - wallStart) / 1000 * speed
                     const t = logStart + elapsed
 
-                    if (t >= endTimestamp) { pause(); return }
+                    if (t >= endTimestamp || t < startTimestamp) { pause(); return }
 
                     if (t < currentTimestamp) {
                         seekIndexes(t)
@@ -434,6 +536,12 @@ function replay_initialize(backend) {
                 $('#prev-frame').click(function () {
                     const target = getNextPositionTimestamp(currentTimestamp, -1)
                     seekTo(target)
+                })
+                $('#next-game-running').click(function () {
+                    const target = getNextGameRunningTime(currentTimestamp)
+                    if (target !== null) {
+                        seekTo(target)
+                    }
                 })
 
                 function seekTo(targetTimestamp) {
@@ -569,9 +677,47 @@ function replay_initialize(backend) {
                         .removeClass("text-bg-danger").removeClass("text-bg-success")
                 }
 
+                function isCurrentlyInNonRunningPeriod(t) {
+                    const series = logs.referee?.game_state_msg
+                    if (!series?.length) return false
+                    
+                    // Find the most recent entry at or before time t
+                    let lastEntry = null
+                    for (let i = series.length - 1; i >= 0; i--) {
+                        if (series[i].timestamp <= t) {
+                            lastEntry = series[i]
+                            break
+                        }
+                    }
+                    
+                    return lastEntry && lastEntry.data !== "Game is running..."
+                }
+
+                function getNextGameRunningTime(fromTime) {
+                    const series = logs.referee?.game_state_msg
+                    if (!series?.length) return null
+                    
+                    for (const entry of series) {
+                        if (entry.timestamp > fromTime && entry.data === "Game is running...") {
+                            return entry.timestamp
+                        }
+                    }
+                    return null
+                }
+
                 function updateProgressBar() {
                     const progress = (currentTimestamp - startTimestamp) / (endTimestamp - startTimestamp) * 100
                     $('.replay-progress-bar').css('width', progress + '%')
+                    
+                    // Show/hide next game running button
+                    const inNonRunning = isCurrentlyInNonRunningPeriod(currentTimestamp)
+                    const hasNextRunning = getNextGameRunningTime(currentTimestamp) !== null
+                    
+                    if (inNonRunning && hasNextRunning) {
+                        $('#next-game-running').removeClass('d-none').prop('disabled', false)
+                    } else {
+                        $('#next-game-running').addClass('d-none').prop('disabled', true)
+                    }
                 }
   
                 $('.replay-progress').click(function (e) {
