@@ -310,15 +310,11 @@ div.progress {
     opacity: 1;
 }
 
-/* .next-game-running-grp {
-    
-} */
-
 #next-game-running {
     width: 100%;
     max-width: 200px;
 }
-    
+
 
 .blinking {
     animation: blinker 1s linear infinite;
