@@ -99,6 +99,9 @@ function simulator_initialize(backend, isView) {
                 display_settings[$(this).attr('rel')]["value"] = $(this).is(':checked')
             });
 
+            // //give the backend the state of the recording settings
+            // backend.set_ready_to_record($('.enable-rec-settings input').is(':checked'))
+
             document.querySelector(".range .form-range").addEventListener('input', function (aa) {
                 fps_limit = this.value
                 clearInterval(intervalId)

@@ -215,6 +215,9 @@ class Backend:
     def validate_goal(self, yes_no: bool):
         self.referee.validate_goal(yes_no)
 
+    def get_ready_to_record(self) -> bool:
+        return replay_logger.ready_to_record
+
     def set_ready_to_record(self, ready: bool):
         replay_logger.set_ready_to_record(ready)
 
