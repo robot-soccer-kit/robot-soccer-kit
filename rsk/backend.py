@@ -221,5 +221,11 @@ class Backend:
     def set_record_commands(self, yes_no: bool):
         replay_logger.set_record_commands(yes_no)
 
+    def get_ready_to_record(self) -> bool:
+        return replay_logger.ready_to_record
+    
+    def get_record_commands(self) -> bool:
+        return replay_logger.record_commands
+
     def get_record_filepath(self) -> str:
         return replay_logger.filepath

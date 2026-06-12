@@ -99,6 +99,28 @@ function simulator_initialize(backend, isView) {
                 display_settings[$(this).attr('rel')]["value"] = $(this).is(':checked')
             });
 
+        let backendAlive = true
+
+        function syncRecordingState() { 
+            backend.set_ready_to_record($('#activate-rec').is(':checked'))
+            backend.set_record_commands($('display-rec-settings input[rel="rec-commands"]').is(':checked'))
+        }
+
+        function checkBackend() {
+            fetch('http://' + document.location.host + '/api')
+                .then(() => {
+                    if (!backendAlive) {
+                        backendAlive = true
+                        syncRecordingState()
+                    }
+                })
+                .catch(() => {
+                    backendAlive = false
+                })
+        }
+
+        setInterval(checkBackend, 2000)
+
             document.querySelector(".range .form-range").addEventListener('input', function (aa) {
                 fps_limit = this.value
                 clearInterval(intervalId)
@@ -109,6 +131,14 @@ function simulator_initialize(backend, isView) {
                     intervalId = setInterval(UpdateView, 1000 / fps_limit)
                     $('.form-label').text("FPS Limit : " + fps_limit)
                 }
+            })
+
+
+            backend.get_ready_to_record(function (ready_to_record) {
+                 $('#activate-rec').prop('checked', ready_to_record)
+            })
+            backend.get_record_commands(function (record_commands) {
+                $('display-rec-settings input[rel="rec-commands"]').prop('checked', record_commands)
             })
 
         }

@@ -262,17 +262,19 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-12 py-2 text-center replay-hide">
-                        <button id="MidTimeChange" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                    <div class="col-12 py-2 text-center">
+                        <button id="MidTimeChange" class="replay-hide btn btn-warning btn-sm" data-bs-toggle="modal"
                             data-bs-target="#staticBackdrop" disabled>
                             <i class="bi bi-arrow-repeat"></i> Half time Change
                         </button>
 
-                        <button id="ViewChange" class="btn btn-secondary btn-sm not_show_simulated" z-index="0">
+                        <button id="ViewChange" class="replay-hide btn btn-secondary btn-sm not_show_simulated" z-index="0">
                             <i class="bi bi-camera"></i> Simulated View
                         </button>
+
+                        
                     </div>
-                    <div class="d-flex d-none align-items-center gap-2 my-2 replay-progress-grp replay-mode">
+                    <div class="d-flex d-none align-items-center gap-2 mt-2 replay-progress-grp replay-mode">
                         <div class="d-flex gap-1">
                             <button class="btn btn-outline-secondary replay-btn" id="prev-speed" disabled>
                                 <i class="bi bi-chevron-double-left"></i>
@@ -289,6 +291,8 @@
                             <div class="replay-progress-bar"></div>
                         </div>
 
+                        
+
                         <div class="d-flex gap-1">
                             <button class="btn btn-outline-secondary replay-btn frame-stepper" id="next-frame" disabled>
                                 <i class="bi bi-chevron-bar-right"></i>
@@ -301,6 +305,12 @@
                             </button>
                         </div>
                     </div>
+                </div>
+                <div class="row d-flex justify-content-center replay-mode mb-2 next-game-running-grp">
+                    <button class="btn btn-outline-secondary replay-btn d-none" id="next-game-running" disabled title="Skip to next game running">
+                            <i class="bi bi-skip-end-fill"></i>
+                            Next action
+                    </button>
                 </div>
                 <div class="row d-flex robot-penalize-tab replay-hide">
                     <div id="XnegPenalty" class="col-6">
@@ -487,7 +497,7 @@
                     </div>
 
                 </div> -->
-                <div class="card replay-mode penalized-replay-view">
+                <div class="card replay-mode penalized-replay-view mt-2">
 
                     <div class="card-body p-1">
 
@@ -863,7 +873,7 @@
                     <input class="form-check-input" type="checkbox" role="switch" id="activate-rec">
                     <label class="form-check-label" for="flexSwitchCheckDefault">Enable Recording</label>
                 </div>
-                <div class="display-rec-settings d-none not_show_simulated">
+                <div class="display-rec-settings d-none">
                     <h6 class="mb-2">More options for debugging during replay</h6>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" rel="rec-commands">
