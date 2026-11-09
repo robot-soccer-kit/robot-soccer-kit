@@ -12,3 +12,6 @@ dist
 
 # uv lock file (dependencies are only declared in pyproject.toml)
 uv.lock
+
+# Match recordings (default location when running from the repository)
+rsk_recorder/

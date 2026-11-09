@@ -23,6 +23,10 @@ class Robots:
         # Robots (indexed by marker strings)
         self.robots_by_marker: dict = {}
 
+        # Should the robots list be saved in the configuration? (simulated robots are not saved,
+        # so they don't replace the real robots configuration)
+        self.save_robots: bool = True
+
     def load_config(self) -> None:
         # Loading robots from the configuration
         if "robots" in config.config:
@@ -110,6 +114,9 @@ class Robots:
         """
         Save the configuration file
         """
+        if not self.save_robots:
+            return
+
         config.config["robots"] = []
         for url in self.robots:
             config.config["robots"].append([url, self.robots[url].marker])

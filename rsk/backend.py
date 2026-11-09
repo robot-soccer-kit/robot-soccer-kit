@@ -34,6 +34,7 @@ class Backend:
 
         if simulated or replay != "":
             robots.Robots.protocols["sim"] = simulator.RobotSim
+            self.robots.save_robots = False
             self.simulator: simulator.Simulator = simulator.Simulator(
                 self.robots, self.state
             )

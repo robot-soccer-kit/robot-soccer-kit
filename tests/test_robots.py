@@ -55,3 +55,17 @@ def test_detection_returns_detected_markers():
     detection.state.set_markers(markers)
 
     assert detection.get_detection()["markers"] == markers
+
+
+def test_simulation_does_not_overwrite_saved_robots(backend, isolated_config):
+    """
+    Running the simulation should not replace the real robots in the configuration
+    """
+    real_robots = [["wifi://192.168.100.101", "green1"]]
+    isolated_config.config["robots"] = real_robots
+
+    backend.add_robot("sim://green1")
+    backend.set_marker("sim://green1", "green1")
+
+    assert isolated_config.config["robots"] == real_robots
+    del isolated_config.config["robots"]
