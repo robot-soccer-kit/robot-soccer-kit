@@ -635,77 +635,84 @@ class Referee:
         Referee thread
         """
         self.ball_out_field = False
-        wait_ball_timestamp = None
-
-        ball_coord_old = np.array([0, 0])
-
+        self.wait_ball_timestamp = None
+        self.ball_coord_old = np.array([0, 0])
         self.game_state["game_state_msg"] = "Game is ready to start"
-        last_tick = time.time()
+        self.last_tick = time.time()
 
         while True:
-            self.state_info = copy.deepcopy(self.state.get_state())
-
-            # Log referee state but keep only the last referee_history_sliced element to avoid duplicates
-            referee_state_to_log = dict(self.state_info["referee"])
-            if (
-                "referee_history_sliced" in referee_state_to_log
-                and referee_state_to_log["referee_history_sliced"]
-            ):
-                referee_state_to_log["referee_history_sliced"] = referee_state_to_log[
-                    "referee_history_sliced"
-                ][-1:]
-            replay_logger.register_infos(
-                referee_state_to_log.keys(), referee_state_to_log, "referee"
-            )
-
-            self.state.set_referee(self.get_game_state())
-            self.control.allow_extra_features = not self.game_state["game_is_running"]
-
-            elapsed = time.time() - last_tick
-            if self.chrono_is_running:
-                self.game_state["timer"] -= elapsed
-
-            last_tick = time.time()
-
-            # Updating positive and negative teams
-            all_teams = utils.robot_teams()
-
-            if self.game_state["teams"][all_teams[0]]["x_positive"]:
-                self.positive_team, self.negative_team = all_teams
-            else:
-                self.negative_team, self.positive_team = all_teams
-
-            if not self.game_state["game_paused"]:
-                if self.state_info is not None:
-                    if self.state_info["ball"] is not None:
-                        ball_coord = np.array(self.state_info["ball"])
-                        if (ball_coord != ball_coord_old).any():
-                            self.check_line_crosses(ball_coord, ball_coord_old)
-                            ball_coord_old = ball_coord
-
-                    self.penalize_fools(elapsed)
-
-                self.tick_penalties(elapsed)
-            else:
-                # Waiting for the ball to be at a specific position to resume the game
-                if (
-                    (self.wait_ball_position is not None)
-                    and (self.state_info is not None)
-                    and (self.state_info["ball"] is not None)
-                ):
-                    distance = np.linalg.norm(
-                        np.array(self.wait_ball_position)
-                        - np.array(self.state_info["ball"])
-                    )
-
-                    if distance < constants.place_ball_margin:
-                        if wait_ball_timestamp is None:
-                            wait_ball_timestamp = time.time()
-                        elif time.time() - wait_ball_timestamp >= 1:
-                            self.game_state["game_state_msg"] = "Game is running..."
-                            self.goal_validated = None
-                            self.resume_game()
-                    else:
-                        wait_ball_timestamp = None
-
+            # An unexpected error should never stop the referee: we log it and keep ticking
+            try:
+                self.tick()
+            except Exception:
+                self.logger.exception("Error in referee tick")
             time.sleep(0.1)
+
+    def tick(self):
+        """
+        One referee tick (called periodically by the referee thread)
+        """
+        self.state_info = copy.deepcopy(self.state.get_state())
+
+        # Log referee state but keep only the last referee_history_sliced element to avoid duplicates
+        referee_state_to_log = dict(self.state_info["referee"])
+        if (
+            "referee_history_sliced" in referee_state_to_log
+            and referee_state_to_log["referee_history_sliced"]
+        ):
+            referee_state_to_log["referee_history_sliced"] = referee_state_to_log[
+                "referee_history_sliced"
+            ][-1:]
+        replay_logger.register_infos(
+            referee_state_to_log.keys(), referee_state_to_log, "referee"
+        )
+
+        self.state.set_referee(self.get_game_state())
+        self.control.allow_extra_features = not self.game_state["game_is_running"]
+
+        elapsed = time.time() - self.last_tick
+        if self.chrono_is_running:
+            self.game_state["timer"] -= elapsed
+
+        self.last_tick = time.time()
+
+        # Updating positive and negative teams
+        all_teams = utils.robot_teams()
+
+        if self.game_state["teams"][all_teams[0]]["x_positive"]:
+            self.positive_team, self.negative_team = all_teams
+        else:
+            self.negative_team, self.positive_team = all_teams
+
+        if not self.game_state["game_paused"]:
+            if self.state_info is not None:
+                if self.state_info["ball"] is not None:
+                    ball_coord = np.array(self.state_info["ball"])
+                    if (ball_coord != self.ball_coord_old).any():
+                        self.check_line_crosses(ball_coord, self.ball_coord_old)
+                        self.ball_coord_old = ball_coord
+
+                self.penalize_fools(elapsed)
+
+            self.tick_penalties(elapsed)
+        else:
+            # Waiting for the ball to be at a specific position to resume the game
+            if (
+                (self.wait_ball_position is not None)
+                and (self.state_info is not None)
+                and (self.state_info["ball"] is not None)
+            ):
+                distance = np.linalg.norm(
+                    np.array(self.wait_ball_position)
+                    - np.array(self.state_info["ball"])
+                )
+
+                if distance < constants.place_ball_margin:
+                    if self.wait_ball_timestamp is None:
+                        self.wait_ball_timestamp = time.time()
+                    elif time.time() - self.wait_ball_timestamp >= 1:
+                        self.game_state["game_state_msg"] = "Game is running..."
+                        self.goal_validated = None
+                        self.resume_game()
+                else:
+                    self.wait_ball_timestamp = None

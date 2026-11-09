@@ -1,4 +1,5 @@
 import numpy as np
+import json as jsonlib
 import math
 import copy
 import zmq
@@ -80,9 +81,8 @@ class Control:
 
         :param tasks.ControlTask task: the task
         """
-        self.lock.acquire()
-        self.tasks[task.name] = task
-        self.lock.release()
+        with self.lock:
+            self.tasks[task.name] = task
 
     def has_task(self, task_name: str) -> bool:
         """
@@ -91,7 +91,8 @@ class Control:
         :param str task_name: the task name
         :return bool: True if the tasks exists
         """
-        return task_name in self.tasks
+        with self.lock:
+            return task_name in self.tasks
 
     def remove_task(self, name: str) -> None:
         """
@@ -99,10 +100,18 @@ class Control:
 
         :param str name: the task name
         """
-        self.lock.acquire()
-        if name in self.tasks:
-            del self.tasks[name]
-        self.lock.release()
+        with self.lock:
+            self.tasks.pop(name, None)
+
+    def tasks_snapshot(self) -> list:
+        """
+        Returns a copy of the current tasks list. Tasks are added and removed from several threads
+        (API, referee, control client), so they should never be iterated directly.
+
+        :return list: list of current tasks
+        """
+        with self.lock:
+            return list(self.tasks.values())
 
     def process_command(self, marker: str, command: list, is_master: bool) -> list:
         response: list = [False, "Unknown error"]
@@ -155,6 +164,10 @@ class Control:
                         response[0] = 2
                         response[1] = "Unknown command"
             elif marker == "ball":
+                if getattr(self.robots, "ball", None) is None:
+                    raise RobotError("The ball can only be teleported in simulation")
+                if type(command) is not list or len(command) != 4:
+                    raise ValueError('expected ["teleport", x, y, turn]')
                 self.robots.ball.teleport(
                     int_in_range(command[1], -10, 10),
                     int_in_range(command[2], -10, 10),
@@ -182,47 +195,80 @@ class Control:
         """
         while self.running:
             try:
-                json = self.socket.recv_json()
-                response = [False, "Unknown error"]
-                if type(json) is list and len(json) == 4:
-                    key, team, number, command = json
-
-                    if team in self.teams:
-                        allow_control = True
-                        is_master = key == self.master_key
-
-                        if not is_master:
-                            tasks = [
-                                task.name for task in self.robot_tasks(team, number)
-                            ]
-                            if self.teams[team]["key"] != key:
-                                response[1] = f"Bad key for team {team}"
-                                allow_control = False
-                            elif not self.teams[team]["allow_control"]:
-                                response[0] = 2
-                                response[1] = (
-                                    f"You are not allowed to control the robots of team {team}"
-                                )
-                                allow_control = False
-                            elif len(tasks):
-                                reasons = str(tasks)
-                                response[0] = 2
-                                response[1] = (
-                                    f"Robot {number} of team {team} is preempted: {reasons}"
-                                )
-                                allow_control = False
-
-                        if allow_control:
-                            marker = utils.robot_list2str(team, number)
-                            response = self.process_command(marker, command, is_master)
-                        self.teams[team]["packets"] += 1
-
-                    if team == "ball":
-                        is_master = key == self.master_key
-                        response = self.process_command("ball", command, is_master)
-                self.socket.send_json(response)
+                message = self.socket.recv()
             except zmq.error.Again:
-                pass
+                continue
+
+            # A REP socket must answer every request, otherwise it is stuck forever. Any error
+            # while handling a request is thus turned into an error response.
+            try:
+                response = self.handle_request(message)
+            except Exception as e:
+                self.logger.exception("Error while processing a control request")
+                response = [False, f"Internal error: {e}"]
+
+            try:
+                self.socket.send_json(response)
+            except Exception:
+                self.logger.exception("Error while sending a control response")
+
+    def handle_request(self, message: bytes) -> list:
+        """
+        Handles a raw request received on the control socket
+
+        :param bytes message: the raw request
+        :return list: the response to send back
+        """
+        try:
+            request = jsonlib.loads(message)
+        except ValueError:
+            return [False, "Malformed request: invalid JSON"]
+
+        if type(request) is not list or len(request) != 4:
+            return [False, "Malformed request: expected [key, team, number, command]"]
+
+        key, team, number, command = request
+        is_master = key == self.master_key
+
+        if team == "ball":
+            return self.process_command("ball", command, is_master)
+
+        if team not in self.teams:
+            return [False, f"Unknown team: {team}"]
+
+        # bool is a subclass of int, but is not a valid robot number
+        if type(number) is not int or number not in utils.robot_numbers():
+            return [False, f"Unknown robot number: {number}"]
+
+        if type(command) is not list or len(command) == 0:
+            return [False, "Malformed command: expected a non-empty list"]
+
+        response = [False, "Unknown error"]
+        allow_control = True
+
+        if not is_master:
+            tasks = [task.name for task in self.robot_tasks(team, number)]
+            if self.teams[team]["key"] != key:
+                response[1] = f"Bad key for team {team}"
+                allow_control = False
+            elif not self.teams[team]["allow_control"]:
+                response[0] = 2
+                response[1] = (
+                    f"You are not allowed to control the robots of team {team}"
+                )
+                allow_control = False
+            elif len(tasks):
+                reasons = str(tasks)
+                response[0] = 2
+                response[1] = f"Robot {number} of team {team} is preempted: {reasons}"
+                allow_control = False
+
+        if allow_control:
+            marker = utils.robot_list2str(team, number)
+            response = self.process_command(marker, command, is_master)
+        self.teams[team]["packets"] += 1
+
+        return response
 
     def start(self):
         """
@@ -255,7 +301,7 @@ class Control:
         :return list: list of tasks concerning this robot
         """
         tasks = []
-        for task in self.tasks.values():
+        for task in self.tasks_snapshot():
             for task_team, task_number in task.robots():
                 if (team, number) == (task_team, task_number):
                     tasks.append(task)
@@ -275,7 +321,7 @@ class Control:
                 number: [] for number in utils.robot_numbers()
             }
 
-        for task in self.tasks.values():
+        for task in self.tasks_snapshot():
             for team, number in task.robots():
                 state[team]["preemption_reasons"][number].append(task.name)
 
@@ -297,8 +343,10 @@ class Control:
         # Clearing all the tasks, and creating a one-time stop all task. This can prevent
         # races conditions when the client thread is actually ticking tasks and might send
         # orders to the robots anyway.
-        self.tasks.clear()
-        self.add_task(tasks.StopAllTask("emergency", forever=False))
+        stop_all = tasks.StopAllTask("emergency", forever=False)
+        with self.lock:
+            self.tasks.clear()
+            self.tasks[stop_all.name] = stop_all
 
         # Disallowing teams to control robots
         for team in utils.robot_teams():
@@ -357,12 +405,8 @@ class Control:
 
         :return set: the robots that were updated during this tick
         """
-        self.lock.acquire()
-        tasks_to_tick = list(self.tasks.values()).copy()
-        self.lock.release()
-
         # Sorting tasks by priority
-        tasks_to_tick = sorted(tasks_to_tick, key=lambda task: -task.priority)
+        tasks_to_tick = sorted(self.tasks_snapshot(), key=lambda task: -task.priority)
         robots_ticked = set()
         to_delete = []
         available_robots = self.available_robots()
@@ -382,14 +426,14 @@ class Control:
                         self.logger.error(f"Error in control's client: {e}")
 
             if task.finished(self.client, available_robots):
-                to_delete.append(task.name)
+                to_delete.append(task)
 
-        # Removing finished tasks
-        self.lock.acquire()
-        for task_name in to_delete:
-            if task_name in self.tasks:
-                del self.tasks[task_name]
-        self.lock.release()
+        # Removing finished tasks (unless they were replaced by a new task with the same name
+        # in the meantime)
+        with self.lock:
+            for task in to_delete:
+                if self.tasks.get(task.name) is task:
+                    del self.tasks[task.name]
 
         return robots_ticked
 
