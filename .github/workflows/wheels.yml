@@ -6,22 +6,22 @@ on:
       - published
 
 jobs:
-  build_sdist:
-    name: Build source distribution
+  build:
+    name: Build source distribution and wheel
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build sdist
-        run: pipx run build --sdist
+      - name: Build sdist and wheel
+        run: pipx run build
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-sdist
-          path: dist/*.tar.gz
+          name: cibw-dist
+          path: dist/*
 
   upload_pypi:
-    needs: [build_sdist]
+    needs: [build]
     runs-on: ubuntu-latest
     environment: pypi
     permissions:

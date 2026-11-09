@@ -1,9 +1,12 @@
 all:
 	@rm -rf dist/*
-	python3 setup.py sdist bdist_wheel
+	python3 -m build
 
 format:
-	black -l 127 rsk/
+	ruff format rsk/ tests/
+
+test:
+	python3 -m pytest tests/
 
 upload:
 	python3 -m twine upload --repository pypi dist/*

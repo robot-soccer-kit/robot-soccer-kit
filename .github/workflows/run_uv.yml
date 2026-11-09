@@ -4,25 +4,32 @@ on:
   push:
     branches:
       - "master"
+  pull_request:
 
 jobs:
   run_with_uv:
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, windows-latest]
-        pyver: [cp38, cp39, cp310, cp311, cp312, cp313, cp314]
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
 
-    name: Wheel ${{ matrix.os }}, ${{ matrix.pyver }}
+    name: ${{ matrix.os }}, Python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
 
       - name: Syncing UV
         run: uv sync --extra gc
 
       - name: Executing a dry run of the Game Controller
         run: uv run -m rsk.game_controller -s -d
+
+      - name: Running tests
+        run: uv run pytest tests

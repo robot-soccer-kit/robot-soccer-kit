@@ -17,5 +17,5 @@ start "" "https://www.python.org/ftp/python/3.10.9/python-3.10.9-amd64.exe"
 goto :EOF
 
 :PYTHON_DOES_EXIST
-py -m install -U robot-soccer-kit
+py -m pip install -U "robot-soccer-kit[gc]"
 py -m rsk.game_controller
