@@ -39,7 +39,7 @@ function createRefereeView(constants) {
         let html = '<div class="card-header d-flex align-items-center">'
             + '<span class="team-robots-name">' + capitalize(team) + '</span>'
             + '<span class="ms-auto small fw-normal opacity-75 team-robots-side"></span></div>'
-            + '<div class="card-body py-1">';
+            + '<div class="card-body py-1 robot-rows">';
         for (let number of numbers) {
             let robot = team + number;
             html += '<div class="robot-row robot-penalty" rel="' + robot + '">'
