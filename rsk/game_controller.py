@@ -109,6 +109,20 @@ def create_app(backend: Backend) -> Flask:
 
         return jsonify(api.call(command, args))
 
+    @app.route("/api/calibration_board.png", methods=["GET"])
+    def get_calibration_board():
+        # Imported here: the lens calibration needs OpenCV (only for the real vision)
+        import cv2
+        from . import lens_calibration
+
+        _, data = cv2.imencode(".png", lens_calibration.board_image())
+        response = make_response(data.tobytes())
+        response.headers["Content-Type"] = "image/png"
+        response.headers["Content-Disposition"] = (
+            'attachment; filename="calibration_board.png"'
+        )
+        return response
+
     @app.route("/", methods=["GET"])
     def main():
         return send_from_directory(static, "index.html")

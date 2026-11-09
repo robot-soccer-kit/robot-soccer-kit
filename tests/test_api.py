@@ -143,3 +143,31 @@ def test_fuzz_api(http, backend, command, args):
         start = time.time()
         while backend.control.tasks_snapshot() and time.time() - start < 1:
             time.sleep(0.01)
+
+
+def test_calibration_board_download(backend):
+    import cv2
+    import numpy as np
+
+    from rsk import lens_calibration
+
+    app = create_app(backend)
+    response = app.test_client().get("/api/calibration_board.png")
+
+    assert response.status_code == 200
+    assert response.headers["Content-Type"] == "image/png"
+    image = cv2.imdecode(np.frombuffer(response.data, np.uint8), cv2.IMREAD_GRAYSCALE)
+    board = lens_calibration.make_board()
+    object_points, _ = lens_calibration.detect_board(
+        image, cv2.aruco.CharucoDetector(board), board
+    )
+    squares_x, squares_y = lens_calibration.BOARD_SQUARES
+    assert len(object_points) == (squares_x - 1) * (squares_y - 1)
+
+
+def test_lens_calibration_needs_a_camera(http):
+    assert http("lens_calibration_status", "[]") == [
+        0,
+        "No camera in simulation or replay mode",
+    ]
+    assert http("start_lens_calibration", "[]")[0] == 0

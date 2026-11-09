@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import synthetic
 
-from rsk import calibrate_camera
+from rsk import calibrate_camera, lens_calibration
 
 # A camera with a wide angle lens (barrel distortion) and an off-center principal point
 CAMERA = synthetic.Camera(
@@ -20,14 +20,14 @@ def board_images():
     """
     Synthetic images of the calibration board seen by CAMERA
     """
-    board = calibrate_camera.make_board()
+    board = lens_calibration.make_board()
     detector = cv2.aruco.CharucoDetector(board)
     rng = np.random.default_rng(0)
 
     images = []
     while len(images) < 18:
         image = synthetic.degrade(synthetic.board_view(CAMERA, board, rng), rng)
-        if calibrate_camera.detect_board(image, detector, board) is not None:
+        if lens_calibration.detect_board(image, detector, board) is not None:
             images.append(image)
     return images
 
@@ -52,23 +52,23 @@ def test_generated_board_is_detected(tmp_path):
     calibrate_camera.generate_board(filename)
 
     image = cv2.imread(filename)
-    board = calibrate_camera.make_board()
-    object_points, _ = calibrate_camera.detect_board(
+    board = lens_calibration.make_board()
+    object_points, _ = lens_calibration.detect_board(
         image, cv2.aruco.CharucoDetector(board), board
     )
 
-    squares_x, squares_y = calibrate_camera.BOARD_SQUARES
+    squares_x, squares_y = lens_calibration.BOARD_SQUARES
     assert len(object_points) == (squares_x - 1) * (squares_y - 1)
 
 
 def test_calibration_recovers_the_camera(board_images):
-    board = calibrate_camera.make_board()
+    board = lens_calibration.make_board()
     detector = cv2.aruco.CharucoDetector(board)
     views = [
-        calibrate_camera.detect_board(image, detector, board) for image in board_images
+        lens_calibration.detect_board(image, detector, board) for image in board_images
     ]
 
-    result = calibrate_camera.calibrate(views, (synthetic.WIDTH, synthetic.HEIGHT))
+    result = lens_calibration.calibrate(views, (synthetic.WIDTH, synthetic.HEIGHT))
 
     assert result["rms_reprojection_error_px"] < 0.5
     assert result["focal_px"] == pytest.approx([CAMERA.focal] * 2, rel=0.01)

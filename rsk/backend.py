@@ -118,6 +118,30 @@ class Backend:
     def enableVideoDebug(self, enable=True) -> bool:
         self._video().debug = enable
 
+    def lens_calibration_status(self) -> dict:
+        return self._video().lens_calibration_status()
+
+    def start_lens_calibration(self):
+        self._lens_call("start_lens_calibration")
+
+    def cancel_lens_calibration(self):
+        self._lens_call("cancel_lens_calibration")
+
+    def compute_lens_calibration(self):
+        self._lens_call("compute_lens_calibration")
+
+    def apply_lens_calibration(self):
+        self._lens_call("apply_lens_calibration")
+
+    def remove_lens_calibration(self):
+        self._lens_call("remove_lens_calibration")
+
+    def _lens_call(self, method: str):
+        try:
+            getattr(self._video(), method)()
+        except RuntimeError as e:
+            raise api.APIError(str(e))
+
     def cameraSettings(self, settings):
         self._video().set_camera_settings(settings)
         return True

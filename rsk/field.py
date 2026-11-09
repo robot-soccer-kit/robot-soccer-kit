@@ -16,6 +16,11 @@ class Field:
         self.logger: logging.Logger = logging.getLogger("field")
         self.focal = None
 
+        # Measured intrinsic parameters of the camera (intrinsic matrix, distortion) for the
+        # processed image, from a lens calibration (see lens_calibration.py). When None, the focal
+        # is used and the lens is assumed to have no distortion.
+        self.lens_intrinsics = None
+
         # Should we (re-)calibrate the field ?
         self.should_calibrate: bool = True
 
@@ -122,7 +127,7 @@ class Field:
         if (
             len(self.corner_gfx_positions) >= 4
             and self.should_calibrate
-            and self.focal is not None
+            and (self.focal is not None or self.lens_intrinsics is not None)
         ):
             # Computing point-to-point correspondance
             object_points = []
@@ -137,44 +142,36 @@ class Field:
             object_points = np.array(object_points, dtype=np.float32)
             graphics_positions = np.array(graphics_positions, dtype=np.float32)
 
-            # Intrinsic parameters are fixed
-            intrinsic = [
-                [self.focal, 0, image.shape[1] / 2],
-                [0, self.focal, image.shape[0] / 2],
-                [0, 0, 1],
-            ]
-
-            # Calibrating camera
-            flags = (
-                cv2.CALIB_USE_INTRINSIC_GUESS
-                + cv2.CALIB_FIX_FOCAL_LENGTH
-                + cv2.CALIB_FIX_PRINCIPAL_POINT
-            )
-
-            # No distortion
-            flags += cv2.CALIB_FIX_TANGENT_DIST
-            flags += (
-                cv2.CALIB_FIX_K1
-                + cv2.CALIB_FIX_K2
-                + cv2.CALIB_FIX_K3
-                + cv2.CALIB_FIX_K4
-                + cv2.CALIB_FIX_K5
-            )
-
-            ret, self.intrinsic, self.distortion, rvecs, tvecs = cv2.calibrateCamera(
-                [object_points],
-                [graphics_positions],
-                image.shape[:2][::-1],
-                np.array(intrinsic, dtype=np.float32),
-                None,
-                flags=flags,
-            )
+            if self.lens_intrinsics is not None:
+                # The camera intrinsics (focal, principal point, distortion) are known: only its
+                # pose is estimated
+                self.intrinsic, self.distortion = self.lens_intrinsics
+                # IPPE is made for planar targets, the solution is then refined
+                _, rvec, tvec = cv2.solvePnP(
+                    object_points,
+                    graphics_positions,
+                    self.intrinsic,
+                    self.distortion,
+                    flags=cv2.SOLVEPNP_IPPE,
+                )
+                rvec, tvec = cv2.solvePnPRefineLM(
+                    object_points,
+                    graphics_positions,
+                    self.intrinsic,
+                    self.distortion,
+                    rvec,
+                    tvec,
+                )
+                rvecs, tvecs = [rvec], [tvec]
+            else:
+                rvecs, tvecs = self.calibrate_with_focal(
+                    object_points, graphics_positions, image
+                )
 
             # Computing extrinsic matrices
             transformation = np.eye(4)
             transformation[:3, :3], _ = cv2.Rodrigues(rvecs[0])
             transformation[:3, 3] = tvecs[0].T
-            # transformation[:3, 3] = [0, 0, 2]
             self.extrinsic = transformation
             self.extrinsic_inv = np.linalg.inv(self.extrinsic)
 
@@ -227,6 +224,48 @@ class Field:
                         self.should_calibrate = True
 
         self.corner_gfx_positions = {}
+
+    def calibrate_with_focal(self, object_points, graphics_positions, image):
+        """
+        Estimates the camera pose with the focal setting, the principal point at the image center
+        and no lens distortion
+
+        :return: (rvecs, tvecs) of the field in the camera frame
+        """
+        # Intrinsic parameters are fixed
+        intrinsic = [
+            [self.focal, 0, image.shape[1] / 2],
+            [0, self.focal, image.shape[0] / 2],
+            [0, 0, 1],
+        ]
+
+        # Calibrating camera
+        flags = (
+            cv2.CALIB_USE_INTRINSIC_GUESS
+            + cv2.CALIB_FIX_FOCAL_LENGTH
+            + cv2.CALIB_FIX_PRINCIPAL_POINT
+        )
+
+        # No distortion
+        flags += cv2.CALIB_FIX_TANGENT_DIST
+        flags += (
+            cv2.CALIB_FIX_K1
+            + cv2.CALIB_FIX_K2
+            + cv2.CALIB_FIX_K3
+            + cv2.CALIB_FIX_K4
+            + cv2.CALIB_FIX_K5
+        )
+
+        ret, self.intrinsic, self.distortion, rvecs, tvecs = cv2.calibrateCamera(
+            [object_points],
+            [graphics_positions],
+            image.shape[:2][::-1],
+            np.array(intrinsic, dtype=np.float32),
+            None,
+            flags=flags,
+        )
+
+        return rvecs, tvecs
 
     def field_to_camera(self, point: list) -> np.ndarray:
         """

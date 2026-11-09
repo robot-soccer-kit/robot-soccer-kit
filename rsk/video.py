@@ -5,7 +5,7 @@ import os
 import base64
 import threading
 import logging
-from . import detection, config
+from . import detection, config, lens_calibration
 
 resolutions = [
     (320, 240),
@@ -71,11 +71,27 @@ class Video:
         self.favourite_index = None
         self.resolution = len(resolutions) - 1
 
+        # Lens calibration applied (see lens_calibration.py), None if the lens is not calibrated
+        self.lens_calibration = None
+        # Raw size of the captured images, and the key of the lens intrinsics currently used
+        self.raw_size = None
+        self.lens_intrinsics_key = None
+
+        # Lens calibration in progress
+        self.lens_capture_interval = 0.7  # Minimum time between two captured views [s]
+        self.lens_lock = threading.Lock()
+        self.lens_collector = None
+        self.lens_state = "idle"
+        self.lens_result = None
+        self.lens_error = None
+
         if "camera" in config.config:
             if "favourite_index" in config.config["camera"]:
                 self.favourite_index = config.config["camera"]["favourite_index"]
             if "resolution" in config.config["camera"]:
                 self.resolution = config.config["camera"]["resolution"]
+            if "lens_calibration" in config.config["camera"]:
+                self.lens_calibration = config.config["camera"]["lens_calibration"]
             for entry in config.config["camera"]["settings"]:
                 self.settings[entry] = config.config["camera"]["settings"][entry]
 
@@ -132,6 +148,7 @@ class Video:
             "favourite_index": self.favourite_index,
             "resolution": self.resolution,
             "settings": self.settings,
+            "lens_calibration": self.lens_calibration,
         }
         config.save()
 
@@ -222,8 +239,14 @@ class Video:
                     grabbed, image_captured = self.capture.read()
                     image_debug = None
 
-                    if image_captured is not None:
+                    if image_captured is not None and self.lens_collector is not None:
+                        # Lens calibration in progress: the raw image is used
+                        image_debug = self.process_lens_calibration_frame(
+                            image_captured
+                        )
+                    elif image_captured is not None:
                         height, width, channels = image_captured.shape
+                        self.update_lens_intrinsics((width, height))
                         frame_size = np.array([width, height])
                         if "crop_x" in self.settings and "crop_y" in self.settings:
                             if (
@@ -284,11 +307,169 @@ class Video:
                         del self.capture
                         self.capture = None
                         self.image = None
-                except cv2.error as e:
-                    print("OpenCV error")
-                    print(e)
+                except Exception:
+                    # An error should never stop the video
+                    logger.exception("Error in video processing")
+                    time.sleep(0.1)
             else:
                 time.sleep(0.1)
+
+    def update_lens_intrinsics(self, raw_size: tuple) -> None:
+        """
+        Gives the lens intrinsics to the field calibration, adapted to the processed image (crop,
+        rescale). The field is re-calibrated when they change.
+
+        :param tuple raw_size: size of the image captured by the camera (width, height)
+        """
+        self.raw_size = raw_size
+        key = None
+        if self.lens_calibration is not None:
+            key = (
+                self.lens_calibration.get("date"),
+                tuple(self.lens_calibration["image_size"]),
+                tuple(raw_size),
+                self.settings.get("crop_x", 100),
+                self.settings.get("crop_y", 100),
+                self.settings.get("rescale", 100),
+            )
+
+        if key != self.lens_intrinsics_key:
+            self.lens_intrinsics_key = key
+            intrinsics = None
+            if self.lens_calibration is not None:
+                intrinsics = lens_calibration.intrinsics_for_image(
+                    self.lens_calibration,
+                    raw_size,
+                    self.settings.get("crop_x", 100),
+                    self.settings.get("crop_y", 100),
+                    self.settings.get("rescale", 100),
+                )
+                if intrinsics is None:
+                    logger.warning(
+                        "The lens calibration was done with a resolution of %dx%d, it can't be "
+                        "used with the current resolution (%dx%d)"
+                        % (*self.lens_calibration["image_size"], *raw_size)
+                    )
+            self.detection.field.lens_intrinsics = intrinsics
+            self.detection.calibrate_camera()
+
+    def process_lens_calibration_frame(self, frame):
+        """
+        Processes a frame during the lens calibration
+
+        :return: the image to display (detected board, coverage)
+        """
+        with self.lens_lock:
+            collector = self.lens_collector
+            if collector is None:
+                return frame
+            captured = collector.process(frame)
+            display = frame.copy()
+            collector.draw(display, captured)
+        return display
+
+    def start_lens_calibration(self) -> None:
+        """
+        Starts collecting views of the calibration board
+        """
+        if not lens_calibration.is_supported():
+            raise RuntimeError(
+                f"OpenCV {cv2.__version__} is too old for the lens calibration (4.7 or newer is "
+                "needed)"
+            )
+        with self.lens_lock:
+            self.lens_collector = lens_calibration.ViewCollector(
+                self.lens_capture_interval
+            )
+            self.lens_state = "collecting"
+            self.lens_result = None
+            self.lens_error = None
+
+    def cancel_lens_calibration(self) -> None:
+        """
+        Cancels the lens calibration in progress (the applied calibration is kept)
+        """
+        with self.lens_lock:
+            self.lens_collector = None
+            self.lens_state = "idle"
+            self.lens_result = None
+            self.lens_error = None
+
+    def compute_lens_calibration(self) -> None:
+        """
+        Stops collecting views and computes the calibration (in the background, see
+        lens_calibration_status)
+        """
+        with self.lens_lock:
+            collector = self.lens_collector
+            if collector is None or self.lens_state != "collecting":
+                raise RuntimeError("No lens calibration in progress")
+            if len(collector.views) < lens_calibration.MIN_VIEWS:
+                raise RuntimeError(
+                    f"At least {lens_calibration.MIN_VIEWS} views are needed, got "
+                    f"{len(collector.views)}"
+                )
+            self.lens_collector = None
+            self.lens_state = "computing"
+
+        def compute():
+            try:
+                result = collector.calibrate()
+                with self.lens_lock:
+                    self.lens_result, self.lens_state = result, "done"
+            except Exception as e:
+                logger.exception("Lens calibration failed")
+                with self.lens_lock:
+                    self.lens_error, self.lens_state = str(e), "error"
+
+        threading.Thread(target=compute, daemon=True, name="LensCalibration").start()
+
+    def apply_lens_calibration(self) -> None:
+        """
+        Uses the computed calibration for the vision (saved in the configuration)
+        """
+        with self.lens_lock:
+            if self.lens_state != "done":
+                raise RuntimeError("No lens calibration to apply")
+            self.lens_calibration = self.lens_result
+            self.lens_state, self.lens_result = "idle", None
+        self.save_config()
+
+    def remove_lens_calibration(self) -> None:
+        """
+        Stops using the lens calibration (the focal setting is used again)
+        """
+        self.lens_calibration = None
+        self.save_config()
+
+    def lens_calibration_status(self) -> dict:
+        """
+        Status of the lens calibration
+
+        :return dict: status
+        """
+        with self.lens_lock:
+            collector = self.lens_collector
+            status = {
+                "supported": lens_calibration.is_supported(),
+                "state": self.lens_state,
+                "min_views": lens_calibration.MIN_VIEWS,
+                "views": len(collector.views) if collector is not None else 0,
+                "coverage": collector.coverage() if collector is not None else None,
+                "coverage_good": lens_calibration.COVERAGE_GOOD,
+                "board_visible": collector is not None
+                and collector.last_detection is not None,
+                "result": self.lens_result,
+                "error": self.lens_error,
+            }
+
+        status["current"] = self.lens_calibration
+        status["current_used"] = (
+            self.lens_calibration is not None
+            and self.detection.field.lens_intrinsics is not None
+        )
+        status["raw_size"] = list(self.raw_size) if self.raw_size is not None else None
+        return status
 
     def get_image(self) -> str:
         """
