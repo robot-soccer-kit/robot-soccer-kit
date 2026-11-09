@@ -32,4 +32,4 @@ jobs:
         run: uv run -m rsk.game_controller -s -d
 
       - name: Running tests
-        run: uv run pytest tests
+        run: uv run --group dev pytest tests

@@ -6,7 +6,7 @@ format:
 	ruff format rsk/ tests/
 
 test:
-	python3 -m pytest tests/
+	uv run --group dev pytest tests/
 
 upload:
 	python3 -m twine upload --repository pypi dist/*

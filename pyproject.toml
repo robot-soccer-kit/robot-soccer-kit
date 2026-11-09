@@ -38,3 +38,7 @@ game_controller = "rsk.game_controller:start_and_serve"
 
 [dependency-groups]
 dev = ["pytest", "hypothesis"]
+
+[tool.uv]
+# Test dependencies are only installed on demand: uv run --group dev pytest tests
+default-groups = []
