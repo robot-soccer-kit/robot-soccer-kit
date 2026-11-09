@@ -27,45 +27,94 @@ def detect(image, frames=2):
 
 
 CAMERAS = {
-    "above": synthetic.camera(),
-    "lower, rotated": synthetic.camera(2.0, 0, 3),
-    "tilted": synthetic.camera(2.2, -12, 0, (0, -0.3)),
-    "rotated 90deg": synthetic.camera(2.5, 0, 90),
+    "above": synthetic.Camera(),
+    "lower, rotated": synthetic.Camera(height=2.0, yaw=3),
+    "tilted": synthetic.Camera(pitch=-12, offset=(0, -0.3)),
+    "rotated 90deg": synthetic.Camera(height=2.5, yaw=90),
 }
+
+
+def detection_errors(cameras, rng, noisy=True, scenes=1):
+    """
+    Renders scenes seen by the given cameras, and returns the position, orientation and ball errors
+    """
+    position_errors, orientation_errors, ball_errors = [], [], []
+
+    for camera in cameras:
+        for _ in range(scenes):
+            robots = synthetic.random_robots(rng)
+            ball = (rng.uniform(-0.8, 0.8), rng.uniform(-0.5, 0.5))
+            image = synthetic.render(robots, ball, camera)
+            if noisy:
+                image = synthetic.degrade(image, rng)
+
+            detection = detect(image)
+            assert detection.field.calibrated()
+            assert detection.field.see_whole_field
+
+            markers = detection.state.markers
+            for name, (x, y, orientation) in robots.items():
+                assert name in markers, f"{name} not detected"
+                px, py = markers[name]["position"]
+                position_errors.append(math.hypot(px - x, py - y))
+                orientation_errors.append(
+                    angle_error(markers[name]["orientation"], orientation)
+                )
+
+            assert detection.ball is not None
+            ball_errors.append(math.dist(detection.ball, ball))
+
+    return (
+        np.array(position_errors),
+        np.array(orientation_errors),
+        np.array(ball_errors),
+    )
 
 
 @pytest.mark.parametrize("camera", CAMERAS.values(), ids=CAMERAS.keys())
 @pytest.mark.parametrize("noisy", [False, True], ids=["clean", "noisy"])
 def test_detection_accuracy(camera, noisy):
-    rng = np.random.default_rng(42)
-    position_errors, orientation_errors = [], []
+    positions, orientations, balls = detection_errors(
+        [camera], np.random.default_rng(42), noisy, scenes=3
+    )
 
-    for _ in range(3):
-        robots = synthetic.random_robots(rng)
-        ball = (rng.uniform(-0.8, 0.8), rng.uniform(-0.5, 0.5))
-        image = synthetic.render(robots, ball, camera)
-        if noisy:
-            image = synthetic.degrade(image, rng)
+    assert positions.max() < 0.005
+    assert balls.max() < 0.005
+    assert orientations.mean() < math.radians(1.5)
+    assert orientations.max() < math.radians(4)
 
-        detection = detect(image)
-        assert detection.field.calibrated()
-        assert detection.field.see_whole_field
 
-        markers = detection.state.markers
-        for name, (x, y, orientation) in robots.items():
-            assert name in markers, f"{name} not detected"
-            px, py = markers[name]["position"]
-            position_errors.append(math.hypot(px - x, py - y))
-            orientation_errors.append(
-                angle_error(markers[name]["orientation"], orientation)
-            )
+def test_detection_with_any_camera_pose():
+    """
+    The camera doesn't have to be centered nor perpendicular to the field
+    """
+    rng = np.random.default_rng(7)
+    cameras = [synthetic.random_camera(rng) for _ in range(6)]
+    positions, orientations, balls = detection_errors(cameras, rng)
 
-        assert detection.ball is not None
-        assert math.dist(detection.ball, ball) < 0.005
+    assert positions.max() < 0.005
+    assert balls.max() < 0.005
+    assert orientations.max() < math.radians(4)
 
-    assert max(position_errors) < 0.005
-    assert np.mean(orientation_errors) < math.radians(1.5)
-    assert max(orientation_errors) < math.radians(4)
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Lens distortion is not modeled: the field calibration forces all distortion "
+    "coefficients to zero (field.py), errors reach several centimeters near the field borders",
+)
+def test_detection_with_lens_distortion():
+    """
+    Barrel distortion estimated for the recommended camera (120 deg wide angle lens)
+    """
+    rng = np.random.default_rng(3)
+    cameras = [
+        synthetic.random_camera(rng, distortion=(-0.1, 0.0, 0.0, 0.0, 0.0))
+        for _ in range(4)
+    ]
+    positions, orientations, balls = detection_errors(cameras, rng)
+
+    assert positions.max() < 0.01
+    assert balls.max() < 0.01
 
 
 def test_orientation_uses_the_whole_tag():
