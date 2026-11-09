@@ -166,12 +166,16 @@ class Control:
             elif marker == "ball":
                 if getattr(self.robots, "ball", None) is None:
                     raise RobotError("The ball can only be teleported in simulation")
-                if type(command) is not list or len(command) != 4:
+                if (
+                    type(command) is not list
+                    or len(command) != 4
+                    or command[0] != "teleport"
+                ):
                     raise ValueError('expected ["teleport", x, y, turn]')
                 self.robots.ball.teleport(
-                    int_in_range(command[1], -10, 10),
-                    int_in_range(command[2], -10, 10),
-                    int_in_range(command[3], -np.pi, np.pi),
+                    float_in_range(command[1], -10, 10),
+                    float_in_range(command[2], -10, 10),
+                    float_in_range(command[3], -np.pi, np.pi),
                 )
                 response = [True, "ok"]
             else:

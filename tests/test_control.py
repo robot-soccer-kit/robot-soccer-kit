@@ -129,3 +129,30 @@ def test_finished_task_replaced_is_not_removed(control):
     assert control.has_task("replaced")
     assert type(control.tasks["replaced"]) is tasks.StopAllTask
     control.remove_task("replaced")
+
+
+@pytest.fixture
+def simulated_ball(control):
+    """
+    Temporarily gives a simulated ball to the control's robots
+    """
+    from rsk.simulator import SimulatedObject
+
+    ball = SimulatedObject("ball", [0, 0, 0], 0.021)
+    control.robots.ball = ball
+    yield ball
+    del control.robots.ball
+
+
+def test_ball_teleport_keeps_float_coordinates(control, simulated_ball):
+    response = control.process_command("ball", ["teleport", 0.3, -0.4, 0.5], False)
+
+    assert response == [True, "ok"]
+    assert simulated_ball.position == pytest.approx([0.3, -0.4, 0.5])
+
+
+def test_ball_rejects_other_commands(control, simulated_ball):
+    response = control.process_command("ball", ["kick", 0.3, -0.4, 0.5], False)
+
+    assert response[0] is False
+    assert simulated_ball.position == pytest.approx([0, 0, 0])
