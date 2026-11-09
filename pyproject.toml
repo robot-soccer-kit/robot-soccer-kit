@@ -37,7 +37,7 @@ indent-width = 4
 game_controller = "rsk.game_controller:start_and_serve"
 
 [dependency-groups]
-dev = ["pytest", "hypothesis"]
+dev = ["pytest", "hypothesis", "playwright"]
 
 [tool.uv]
 # Test dependencies are only installed on demand: uv run --group dev pytest tests

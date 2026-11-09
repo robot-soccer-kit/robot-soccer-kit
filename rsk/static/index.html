@@ -119,7 +119,7 @@
 
         <!-- ============================== Vision ============================== -->
         <section class="page page-vision">
-            <div class="vision-hide-running">
+            <div class="vision-hide-running pt-4">
                 <div class="card mx-auto" style="max-width: 640px;">
                     <div class="card-header"><i class="bi bi-webcam"></i>&nbsp;Start the vision</div>
                     <div class="card-body">
@@ -140,11 +140,10 @@
             </div>
 
             <div class="vision-show-running">
-                <div class="row g-3">
-                    <div class="col-xl-7">
-                        <div class="card">
-                            <div class="card-body p-2">
-                                <img class="vision-image camera-image" alt="Camera image" />
+                <div class="vision-layout">
+                    <div class="card vision-image-card">
+                            <div class="vision-image-area">
+                                <img class="camera-image" alt="Camera image" />
                             </div>
                             <div class="card-footer d-flex flex-wrap align-items-center gap-2">
                                 <span class="calibrated me-auto"></span>
@@ -156,10 +155,9 @@
                                     <i class="bi bi-stop-fill"></i>&nbsp;Stop vision
                                 </button>
                             </div>
-                        </div>
                     </div>
 
-                    <div class="col-xl-5 d-flex flex-column gap-3">
+                    <div class="vision-side">
                         <div class="card">
                             <div class="card-header"><i class="bi bi-crosshair"></i>&nbsp;Detection</div>
                             <div class="card-body">
@@ -261,7 +259,7 @@
 
         <!-- ============================== Robots ============================== -->
         <section class="page page-robots">
-            <div class="card mb-3">
+            <div class="card">
                 <div class="card-body">
                     <div class="row g-2 align-items-end">
                         <div class="col-lg">
@@ -289,15 +287,17 @@
                     </div>
                 </div>
             </div>
-            <div class="row g-3 robots"></div>
-            <div class="text-center text-body-secondary py-5 no-robots">
-                <i class="bi bi-robot fs-1"></i>
-                <p class="mt-2 mb-0">No robot yet: select a robot above and click on "Add"</p>
+            <div class="robots-list">
+                <div class="row g-3 robots"></div>
+                <div class="text-center text-body-secondary py-5 no-robots">
+                    <i class="bi bi-robot fs-1"></i>
+                    <p class="mt-2 mb-0">No robot yet: select a robot above and click on "Add"</p>
+                </div>
             </div>
         </section>
 
         <!-- ============================== Control ============================== -->
-        <section class="page page-control">
+        <section class="page page-control page-scroll">
             <p class="text-body-secondary">
                 Teams control their robots with the client API. A team needs its key (if any) and to be allowed.
             </p>
@@ -306,87 +306,83 @@
 
         <!-- ============================== Referee ============================== -->
         <section class="page page-referee">
-            <div class="alert alert-warning d-flex align-items-center gap-2 vision-hide-running real-mode">
+            <div class="alert alert-warning d-flex align-items-center gap-2 py-2 mb-0 vision-hide-running real-mode">
                 <i class="bi bi-exclamation-triangle-fill"></i>
                 <div>The vision is not running: go to the <a href="#vision" class="alert-link goto-tab"
                         rel="vision">Vision tab</a> to start it.</div>
             </div>
-            <div class="alert alert-warning no-file-replay d-none">
+            <div class="alert alert-warning py-2 mb-0 no-file-replay d-none">
                 <i class="bi bi-exclamation-triangle-fill"></i>&nbsp;Invalid replay file
             </div>
 
             <!-- Scoreboard: teams are shown on the side of the field they defend -->
-            <div class="card scoreboard mb-3">
+            <div class="scoreboard">
                 <div class="team-block team-green" data-team="green">
-                    <div class="team-bar"></div>
                     <div class="team-info">
                         <input class="team-name" rel="green" type="text" placeholder="Green team"
                             aria-label="Green team name" />
-                        <div class="team-side"><span class="text-team fw-semibold">Green</span></div>
+                        <div class="team-side"><span class="team-chip">Green</span><span class="team-side-label"></span>
+                        </div>
                     </div>
-                    <div class="score">0</div>
                     <div class="score-buttons replay-hide">
-                        <button class="btn btn-outline-team up-score" type="button" title="Add a goal" disabled>
+                        <button class="btn btn-sm btn-outline-team up-score" type="button" title="Add a goal" disabled>
                             <i class="bi bi-plus-lg"></i>
                         </button>
-                        <button class="btn btn-outline-team down-score" type="button" title="Remove a goal"
+                        <button class="btn btn-sm btn-outline-team down-score" type="button" title="Remove a goal"
                             disabled>
                             <i class="bi bi-dash-lg"></i>
                         </button>
                     </div>
+                    <div class="score">0</div>
                 </div>
 
                 <div class="game-center">
                     <div class="timer TimerMinutes">00:00</div>
-                    <div class="game-state GameState">...</div>
+                    <span class="game-state-pill"><span class="status-dot"></span><span
+                            class="game-state GameState">...</span></span>
                 </div>
 
                 <div class="team-block team-blue" data-team="blue">
-                    <div class="team-bar"></div>
                     <div class="team-info">
                         <input class="team-name" rel="blue" type="text" placeholder="Blue team"
                             aria-label="Blue team name" />
-                        <div class="team-side"><span class="text-team fw-semibold">Blue</span></div>
+                        <div class="team-side"><span class="team-chip">Blue</span><span class="team-side-label"></span>
+                        </div>
                     </div>
-                    <div class="score">0</div>
                     <div class="score-buttons replay-hide">
-                        <button class="btn btn-outline-team up-score" type="button" title="Add a goal" disabled>
+                        <button class="btn btn-sm btn-outline-team up-score" type="button" title="Add a goal" disabled>
                             <i class="bi bi-plus-lg"></i>
                         </button>
-                        <button class="btn btn-outline-team down-score" type="button" title="Remove a goal"
+                        <button class="btn btn-sm btn-outline-team down-score" type="button" title="Remove a goal"
                             disabled>
                             <i class="bi bi-dash-lg"></i>
                         </button>
                     </div>
+                    <div class="score">0</div>
                 </div>
             </div>
 
-            <div class="row g-3">
+            <div class="referee-grid">
                 <!-- Field and robots -->
-                <div class="col-xxl-9 col-xl-8 col-lg-7">
-                    <div class="card field-card mb-3">
-                        <div class="card-body">
-                            <div class="field-view">
-                                <div class="field-wrapper" id="camera-area">
-                                    <canvas id="back" class="sim-canvas" width="100" height="100"></canvas>
-                                    <canvas id="robots" class="sim-canvas field-overlay"></canvas>
-                                    <canvas id="ball" class="sim-canvas field-overlay"></canvas>
-                                    <img id="vision" class="camera-image" alt="Camera image" />
-                                </div>
+                <div class="referee-main">
+                    <div class="card field-card">
+                        <div class="field-view">
+                            <img id="vision" class="camera-image" alt="Camera image" />
+                            <div class="field-wrapper" id="camera-area">
+                                <canvas id="back" class="sim-canvas" width="100" height="100"></canvas>
+                                <canvas id="robots" class="sim-canvas field-overlay"></canvas>
+                                <canvas id="ball" class="sim-canvas field-overlay"></canvas>
                             </div>
-                        </div>
-                        <div class="card-footer d-flex flex-wrap align-items-center gap-2 replay-hide">
-                            <span class="small text-body-secondary simulation-mode">
-                                <i class="bi bi-mouse"></i> Drag a robot or the ball to move it (right click: rotate)
-                            </span>
-                            <button class="btn btn-sm btn-outline-secondary view-change real-mode" type="button">
-                                <i class="bi bi-diagram-3"></i>&nbsp;<span class="view-change-label">Simulated
-                                    view</span>
-                            </button>
-                            <button class="btn btn-sm btn-warning ms-auto half-time" type="button"
-                                data-bs-toggle="modal" data-bs-target="#half-time-modal" disabled>
-                                <i class="bi bi-hourglass-split"></i>&nbsp;Half time
-                            </button>
+                            <div class="field-toolbar">
+                                <span class="field-hint simulation-mode">
+                                    <i class="bi bi-mouse"></i> Drag a robot or the ball to move it, right click to rotate
+                                </span>
+                                <button class="btn btn-sm btn-dark bg-opacity-75 view-change real-mode ms-auto"
+                                    type="button">
+                                    <i class="bi bi-diagram-3"></i>&nbsp;<span class="view-change-label">Simulated
+                                        view</span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Replay progress -->
@@ -422,18 +418,103 @@
                     </div>
 
                     <!-- Robots of each team (on the side of the field they defend) -->
-                    <div class="row g-3 team-robots-row">
-                        <div class="col-md-6 team-robots-col" data-team="green">
-                            <div class="card team-robots team-green h-100"></div>
+                    <div class="team-robots-row">
+                        <div class="team-robots-col" data-team="green">
+                            <div class="card team-robots team-green"></div>
                         </div>
-                        <div class="col-md-6 team-robots-col" data-team="blue">
-                            <div class="card team-robots team-blue h-100"></div>
+                        <div class="team-robots-col" data-team="blue">
+                            <div class="card team-robots team-blue"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game controls and history -->
+                <div class="referee-side">
+                    <div class="card replay-hide">
+                        <div class="card-body d-flex flex-column gap-3">
+                            <!-- Goal waiting for validation -->
+                            <div class="goal-pending d-none">
+                                <div class="goal-pending-title"><i class="bi bi-trophy-fill"></i>&nbsp;Goal for
+                                    <span class="goal-pending-team"></span>?</div>
+                                <div class="d-flex gap-2 mt-2">
+                                    <button class="btn btn-success flex-fill validate-goal" type="button">
+                                        <i class="bi bi-check-lg"></i>&nbsp;Validate
+                                    </button>
+                                    <button class="btn btn-outline-danger flex-fill cancel-goal" type="button">
+                                        <i class="bi bi-x-lg"></i>&nbsp;Cancel
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-success btn-lg flex-fill start-game" type="button">
+                                    <i class="bi bi-play-fill"></i>&nbsp;Start game
+                                </button>
+                                <button class="btn btn-warning btn-lg flex-fill text-nowrap pause-game d-none"
+                                    type="button" title="Pause (space bar)">
+                                    <i class="bi bi-pause-fill"></i>&nbsp;Pause <kbd class="ms-1 d-none d-xxl-inline">Space</kbd>
+                                </button>
+                                <button class="btn btn-success btn-lg flex-fill text-nowrap resume-game d-none"
+                                    type="button" title="Resume (space bar)">
+                                    <i class="bi bi-play-fill"></i>&nbsp;Resume <kbd class="ms-1 d-none d-xxl-inline">Space</kbd>
+                                </button>
+                                <button class="btn btn-outline-danger btn-lg text-nowrap stop-game d-none" type="button"
+                                    title="End the game">
+                                    <i class="bi bi-stop-fill"></i>&nbsp;End
+                                </button>
+                            </div>
+
+                            <div>
+                                <div class="section-title mb-2">Place the robots</div>
+                                <div class="btn-group w-100" role="group">
+                                    <button class="btn btn-outline-secondary place" data-configuration="side"
+                                        type="button" title="Robots on the side of the field">
+                                        <i class="bi bi-arrow-bar-up"></i> Side
+                                    </button>
+                                    <button class="btn btn-outline-secondary place" data-configuration="standard"
+                                        type="button" title="Kick-off position">
+                                        <i class="bi bi-dribbble"></i> Kick-off
+                                    </button>
+                                    <button class="btn btn-outline-secondary place" data-configuration="dots"
+                                        type="button" title="Robots on the dots">
+                                        <i class="bi bi-grid-3x3-gap"></i> Dots
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-outline-warning half-time" type="button" data-bs-toggle="modal"
+                                data-bs-target="#half-time-modal" disabled>
+                                <i class="bi bi-hourglass-split"></i>&nbsp;Half time
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card replay-mode">
+                        <div class="card-body">
+                            <button class="btn btn-success btn-lg w-100 start-replay start-replay-grp" type="button">
+                                <i class="bi bi-play-fill"></i>&nbsp;Start replay
+                            </button>
+                            <div class="d-flex gap-2 pause-replay-grp d-none">
+                                <button class="btn btn-warning btn-lg flex-fill pause-replay" type="button">
+                                    <i class="bi bi-pause-fill"></i>&nbsp;Pause
+                                </button>
+                                <button class="btn btn-outline-danger btn-lg flex-fill stop-replay" type="button">
+                                    <i class="bi bi-stop-fill"></i>&nbsp;Stop
+                                </button>
+                            </div>
+                            <div class="d-flex gap-2 resume-replay-grp d-none">
+                                <button class="btn btn-success btn-lg flex-fill start-replay" type="button">
+                                    <i class="bi bi-play-fill"></i>&nbsp;Resume
+                                </button>
+                                <button class="btn btn-outline-danger btn-lg flex-fill stop-replay" type="button">
+                                    <i class="bi bi-stop-fill"></i>&nbsp;Stop
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Replay: penalties and commands tables -->
-                    <div class="card mt-3 replay-mode penalized-replay-view">
-                        <div class="card-header">Penalties</div>
+                    <div class="card replay-mode penalized-replay-view">
                         <div class="card-body p-1">
                             <table class="table table-sm mb-0 align-middle replay-table">
                                 <thead>
@@ -454,7 +535,7 @@
                                         <td rel="blue2">...</td>
                                     </tr>
                                     <tr class="remaining-time-replay">
-                                        <th>remaining time</th>
+                                        <th>remaining</th>
                                         <td rel="green1">...</td>
                                         <td rel="green2">...</td>
                                         <td rel="blue1">...</td>
@@ -471,14 +552,13 @@
                             </table>
                         </div>
                     </div>
-                    <div class="card mt-3 replay-mode commands-view d-none">
-                        <div class="card-header">Commands</div>
+                    <div class="card replay-mode commands-view d-none">
                         <div class="card-body p-1">
                             <table class="table table-sm mb-0 align-middle replay-table">
                                 <thead>
                                     <tr>
                                         <th>Robot</th>
-                                        <th style="width: 50%;">Last command</th>
+                                        <th>Last command</th>
                                         <th>Response</th>
                                         <th>Age (s)</th>
                                     </tr>
@@ -512,75 +592,10 @@
                             </table>
                         </div>
                     </div>
-                </div>
 
-                <!-- Game controls and history -->
-                <div class="col-xxl-3 col-xl-4 col-lg-5 d-flex flex-column gap-3">
-                    <div class="card replay-hide">
-                        <div class="card-body d-flex flex-column gap-3">
-                            <div>
-                                <button class="btn btn-success btn-lg w-100 start-game" type="button">
-                                    <i class="bi bi-play-fill"></i>&nbsp;Start game
-                                </button>
-                                <div class="d-flex gap-2 running-game-controls d-none">
-                                    <button class="btn btn-warning btn-lg flex-fill pause-game" type="button">
-                                        <i class="bi bi-pause-fill"></i>&nbsp;Pause
-                                    </button>
-                                    <button class="btn btn-success btn-lg flex-fill resume-game d-none" type="button">
-                                        <i class="bi bi-play-fill"></i>&nbsp;Resume
-                                    </button>
-                                    <button class="btn btn-outline-danger btn-lg flex-fill stop-game" type="button">
-                                        <i class="bi bi-stop-fill"></i>&nbsp;End game
-                                    </button>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="section-title mb-2">Place the robots</div>
-                                <div class="btn-group w-100" role="group">
-                                    <button class="btn btn-outline-secondary place" data-configuration="side"
-                                        type="button" title="Robots on the side of the field">
-                                        <i class="bi bi-arrow-bar-up"></i>&nbsp;Side
-                                    </button>
-                                    <button class="btn btn-outline-secondary place" data-configuration="standard"
-                                        type="button" title="Kick-off position">
-                                        <i class="bi bi-dribbble"></i>&nbsp;Kick-off
-                                    </button>
-                                    <button class="btn btn-outline-secondary place" data-configuration="dots"
-                                        type="button" title="Robots on the dots">
-                                        <i class="bi bi-grid-3x3-gap"></i>&nbsp;Dots
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card replay-mode">
-                        <div class="card-body">
-                            <button class="btn btn-success btn-lg w-100 start-replay start-replay-grp" type="button">
-                                <i class="bi bi-play-fill"></i>&nbsp;Start replay
-                            </button>
-                            <div class="d-flex gap-2 pause-replay-grp d-none">
-                                <button class="btn btn-warning btn-lg flex-fill pause-replay" type="button">
-                                    <i class="bi bi-pause-fill"></i>&nbsp;Pause
-                                </button>
-                                <button class="btn btn-outline-danger btn-lg flex-fill stop-replay" type="button">
-                                    <i class="bi bi-stop-fill"></i>&nbsp;Stop
-                                </button>
-                            </div>
-                            <div class="d-flex gap-2 resume-replay-grp d-none">
-                                <button class="btn btn-success btn-lg flex-fill start-replay" type="button">
-                                    <i class="bi bi-play-fill"></i>&nbsp;Resume
-                                </button>
-                                <button class="btn btn-outline-danger btn-lg flex-fill stop-replay" type="button">
-                                    <i class="bi bi-stop-fill"></i>&nbsp;Stop
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card flex-fill">
+                    <div class="card history-card">
                         <div class="card-header d-flex align-items-center">
-                            <i class="bi bi-clock-history"></i>&nbsp;Referee history
+                            <i class="bi bi-clock-history"></i>&nbsp;History
                         </div>
                         <div class="card-body history" id="RefereeHistory">
                             <div class="text-body-secondary text-center history-empty">No event yet</div>
@@ -591,7 +606,7 @@
         </section>
 
         <!-- ============================== Competition ============================== -->
-        <section class="page page-competition competition-mode">
+        <section class="page page-competition competition-mode page-scroll">
             <div class="row g-3">
                 <div class="col-lg-8">
                     <div class="card">
@@ -631,7 +646,7 @@
         </section>
 
         <!-- ============================== Scheduler ============================== -->
-        <section class="page page-scheduler scheduler-mode">
+        <section class="page page-scheduler scheduler-mode page-scroll">
             <div class="card">
                 <div class="card-header d-flex align-items-center">
                     <span><i class="bi bi-calendar-event"></i>&nbsp;Games</span>

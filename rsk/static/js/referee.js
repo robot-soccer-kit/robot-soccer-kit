@@ -33,14 +33,27 @@ function referee_initialize(backend, constants) {
     function updateControls(game_state) {
         let running = game_state.game_is_running;
         let paused = game_state.game_paused;
+        let goalPending = game_state.game_state_msg == 'Waiting for Goal Validation';
 
+        // One main action: start, pause or resume
         $('.start-game').toggleClass('d-none', running);
-        $('.running-game-controls').toggleClass('d-none', !running);
-        $('.pause-game').toggleClass('d-none', paused);
-        $('.resume-game').toggleClass('d-none', !paused);
+        $('.pause-game').toggleClass('d-none', !running || paused);
+        $('.resume-game').toggleClass('d-none', !running || !paused);
+        $('.stop-game').toggleClass('d-none', !running);
         // A goal must be validated or cancelled before resuming
-        $('.resume-game').prop('disabled', game_state.game_state_msg == 'Waiting for Goal Validation');
+        $('.resume-game').prop('disabled', goalPending);
         $('.half-time').prop('disabled', !running);
+
+        // Goal waiting for validation
+        let goal = goalPending ? [...history].reverse().find(entry => entry[3] == 'Goal') : null;
+        $('.goal-pending').toggleClass('d-none', !goal);
+        if (goal) {
+            let team = goal[2];
+            $('.goal-pending').removeClass('team-green team-blue').addClass('team-' + team);
+            $('.goal-pending-team').text(game_state.teams[team].name || capitalize(team));
+        } else {
+            $('.goal-pending .btn').prop('disabled', false);
+        }
 
         // The recording settings can't be changed during a game
         $('.enable-rec-settings input').prop('disabled', running);
@@ -87,14 +100,30 @@ function referee_initialize(backend, constants) {
         });
     });
 
-    // Goals validation
-    $('#RefereeHistory').on('click', '.validate-goal', function () {
-        $(this).closest('.btn-group').find('.btn').prop('disabled', true);
+    // Goals validation (in the controls and in the history)
+    $(document).on('click', '.validate-goal', function () {
+        $('.validate-goal, .cancel-goal').prop('disabled', true);
         backend.validate_goal(true, update);
     });
-    $('#RefereeHistory').on('click', '.cancel-goal', function () {
-        $(this).closest('.btn-group').find('.btn').prop('disabled', true);
+    $(document).on('click', '.cancel-goal', function () {
+        $('.validate-goal, .cancel-goal').prop('disabled', true);
         backend.validate_goal(false, update);
+    });
+
+    // Space bar: pause / resume the game (not while typing, nor when a dialog is open)
+    $(document).on('keydown', function (event) {
+        if (event.code != 'Space' || current_tab != 'referee' || !gameState || !gameState.game_is_running) {
+            return;
+        }
+        if ($(event.target).is('input, textarea, select, button') || $('.modal.show').length) {
+            return;
+        }
+        event.preventDefault();
+        if (!gameState.game_paused) {
+            backend.pause_game(update);
+        } else if (!$('.resume-game').prop('disabled')) {
+            backend.resume_game(update);
+        }
     });
 
     // Robots placement

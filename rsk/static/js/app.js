@@ -107,38 +107,41 @@ $(document).ready(function () {
     let backend = new APIBackend('http://' + document.location.host + '/api');
     initializeTheme();
 
+    // All the modes are known before the tabs are initialized (a tab can be the one of a mode)
     backend.replay_mode_file(function (replayFile) {
         backend.is_simulated(function (simulated) {
-            backend.constants(function (constants) {
-                let mode = replayFile !== '' ? 'replay' : (simulated ? 'simulation' : 'real');
-                $('body').addClass('mode-' + mode);
-                initializeTabs();
+            backend.is_competition(function (competition) {
+                backend.scheduler_url(function (schedulerUrl) {
+                    backend.constants(function (constants) {
+                        let mode = replayFile !== '' ? 'replay' : (simulated ? 'simulation' : 'real');
+                        $('body').addClass('mode-' + mode);
+                        if (competition) {
+                            $('body').addClass('mode-competition');
+                        }
+                        if (schedulerUrl) {
+                            $('body').addClass('mode-scheduler');
+                        }
+                        initializeTabs();
 
-                if (mode == 'replay') {
-                    replay_initialize(backend, constants);
-                } else {
-                    referee_initialize(backend, constants);
-                    simulator_initialize(backend, constants, mode == 'simulation');
-                    control_initialize(backend);
-                    recorder_initialize(backend);
-                    if (mode == 'real') {
-                        video_initialize(backend);
-                        robots_initialize(backend);
-                    }
-                }
-
-                backend.is_competition(function (competition) {
-                    if (competition) {
-                        $('body').addClass('mode-competition');
-                        competition_initialize(backend);
-                    }
-                });
-
-                backend.scheduler_url(function (url) {
-                    if (url) {
-                        $('body').addClass('mode-scheduler');
-                        scheduler_initialize(backend, url);
-                    }
+                        if (mode == 'replay') {
+                            replay_initialize(backend, constants);
+                        } else {
+                            referee_initialize(backend, constants);
+                            simulator_initialize(backend, constants, mode == 'simulation');
+                            control_initialize(backend);
+                            recorder_initialize(backend);
+                            if (mode == 'real') {
+                                video_initialize(backend);
+                                robots_initialize(backend);
+                            }
+                        }
+                        if (competition) {
+                            competition_initialize(backend);
+                        }
+                        if (schedulerUrl) {
+                            scheduler_initialize(backend, schedulerUrl);
+                        }
+                    });
                 });
             });
         });

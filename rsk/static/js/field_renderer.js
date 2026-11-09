@@ -160,7 +160,23 @@ function createFieldRenderer(constants) {
         }
     }
 
+    // The field image is as large as possible in its area, keeping its ratio
+    function fitBackground() {
+        const back = document.getElementById('back')
+        const view = back.closest('.field-view')
+        if (!view || !back.width || !back.height) return
+        const margin = 12
+        const width = view.clientWidth - 2 * margin
+        const height = view.clientHeight - 2 * margin
+        if (width <= 0 || height <= 0) return
+        const ratio = back.width / back.height
+        const fitWidth = Math.min(width, height * ratio)
+        back.style.width = Math.floor(fitWidth) + "px"
+        back.style.height = Math.floor(fitWidth / ratio) + "px"
+    }
+
     function resizeCanvases() {
+        fitBackground()
         updateRatios()
         const back = document.getElementById('back')
         for (const id of ["robots", "ball"]) {
@@ -192,6 +208,16 @@ function createFieldRenderer(constants) {
             context.drawImage(background, 0, 0)
             if (callback) callback()
         }
+    }
+
+    // The field area can change size without the window being resized (e.g. alerts)
+    const fieldView = document.querySelector('.field-view')
+    if (fieldView && window.ResizeObserver) {
+        new ResizeObserver(function () {
+            if (document.body.classList.contains('sim-view')) {
+                resizeCanvases()
+            }
+        }).observe(fieldView)
     }
 
     return { renderFrame, resizeCanvases, updateRatios, transformViewToSim, screenToWorld, getRatioW, drawBg }

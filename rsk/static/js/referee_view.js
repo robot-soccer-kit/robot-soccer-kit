@@ -77,6 +77,23 @@ function createRefereeView(constants) {
         $('.scoreboard .game-center').css('order', 1);
     }
 
+    // Game state pill (colored dot according to the state)
+    function updateState(game_state) {
+        let state = '';
+        if (game_state.halftime_is_running) {
+            state = 'halftime';
+        } else if (game_state.game_state_msg == 'Waiting for Goal Validation') {
+            state = 'goal';
+        } else if (game_state.game_is_running && !game_state.game_paused) {
+            state = 'running';
+        } else if (game_state.game_is_running) {
+            state = 'paused';
+        }
+        $('.game-state-pill')
+            .removeClass('state-halftime state-goal state-running state-paused')
+            .addClass(state ? 'state-' + state : '');
+    }
+
     function updateTimer(game_state) {
         let timer = game_state.timer;
         let running = game_state.game_is_running && !game_state.game_paused;
@@ -142,6 +159,7 @@ function createRefereeView(constants) {
 
         updateSides(game_state);
         updateTimer(game_state);
+        updateState(game_state);
         $('.GameState').text(game_state.game_state_msg || '');
 
         for (let team of teams) {
@@ -202,10 +220,8 @@ function createRefereeView(constants) {
                         ? '<span class="badge text-bg-success"><i class="bi bi-check-lg"></i> Validated</span>'
                         : '<span class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Cancelled</span>';
                 } else if (options.pendingGoal && entry === lastGoal) {
-                    html += '<span class="btn-group">'
-                        + '<button class="btn btn-sm btn-success validate-goal" type="button"><i class="bi bi-check-lg"></i> Validate</button>'
-                        + '<button class="btn btn-sm btn-outline-danger cancel-goal" type="button"><i class="bi bi-x-lg"></i> Cancel</button>'
-                        + '</span>';
+                    // The decision is taken in the game controls
+                    html += '<span class="badge text-bg-warning"><i class="bi bi-hourglass-split"></i> Pending</span>';
                 }
             }
             html += '</div>';
