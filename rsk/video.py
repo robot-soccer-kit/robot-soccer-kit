@@ -4,6 +4,7 @@ import cv2
 import os
 import base64
 import threading
+import logging
 from . import detection, config
 
 resolutions = [
@@ -25,6 +26,14 @@ resolutions = [
 ]
 
 is_windows = os.name == "nt"
+
+# Focal of the recommended camera, for a 1080p image [px] (measured with rsk.calibrate_camera)
+DEFAULT_FOCAL = 935
+
+# Previous default focal, that was not matching the recommended camera
+OLD_DEFAULT_FOCAL = 885
+
+logger: logging.Logger = logging.getLogger("video")
 
 
 class Video:
@@ -57,7 +66,7 @@ class Video:
             "crop_y": 100,
             "rescale": 100,
             "exposure": -7 if is_windows else 100,
-            "focal": 885,
+            "focal": DEFAULT_FOCAL,
         }
         self.favourite_index = None
         self.resolution = len(resolutions) - 1
@@ -69,6 +78,14 @@ class Video:
                 self.resolution = config.config["camera"]["resolution"]
             for entry in config.config["camera"]["settings"]:
                 self.settings[entry] = config.config["camera"]["settings"][entry]
+
+            # The previous default focal was saved in the configuration of all users
+            if self.settings["focal"] == OLD_DEFAULT_FOCAL:
+                logger.info(
+                    f"Updating the focal setting from the previous default "
+                    f"({OLD_DEFAULT_FOCAL}) to {DEFAULT_FOCAL}"
+                )
+                self.settings["focal"] = DEFAULT_FOCAL
 
         # Starting the video processing thread
         self.running = True

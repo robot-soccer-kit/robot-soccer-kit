@@ -18,7 +18,7 @@ from rsk.field import Field
 
 WIDTH, HEIGHT = 1920, 1080
 # Default focal for a 1080p image (see video.py)
-FOCAL = 885.0
+FOCAL = 935.0
 DICTIONARY = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
 ROBOT_IDS = {"green1": 4, "green2": 5, "blue1": 6, "blue2": 7}
 
