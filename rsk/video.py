@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import os
 import base64
+import sys
 import threading
 import logging
 from . import detection, config, lens_calibration
@@ -26,6 +27,36 @@ resolutions = [
 ]
 
 is_windows = os.name == "nt"
+is_linux = sys.platform.startswith("linux")
+
+
+def open_camera(index: int) -> cv2.VideoCapture:
+    """
+    Opens a camera. On Linux, the V4L2 backend is used: the index is the one of /dev/videoN.
+    Otherwise, when V4L2 can't open an index (e.g. the metadata device of a camera), OpenCV tries
+    other backends that number the cameras differently, and the same camera appears several times.
+
+    :param int index: the camera index
+    :return cv2.VideoCapture: the capture
+    """
+    if is_linux:
+        return cv2.VideoCapture(index, cv2.CAP_V4L2)
+    return cv2.VideoCapture(index)
+
+
+def camera_name(index: int) -> str:
+    """
+    Name of a camera, if it can be known (Linux only)
+
+    :param int index: the camera index
+    :return str: the camera name, or an empty string
+    """
+    try:
+        with open(f"/sys/class/video4linux/video{index}/name") as file:
+            return " ".join(file.read().split())
+    except OSError:
+        return ""
+
 
 # Focal of the recommended camera, for a 1080p image [px] (measured with rsk.calibrate_camera)
 DEFAULT_FOCAL = 935
@@ -114,21 +145,26 @@ class Video:
         """
         Build a list of available cameras
 
-        :return list: a list containing possible indexes and favourite one (None if no favourite)
+        :return list: a list containing possible indexes, favourite one (None if no favourite)
+                      and the camera names (by index, empty if unknown)
         """
         if self.capture is None:
             indexes = []
             for index in range(10):
-                cap = cv2.VideoCapture(index, cv2.CAP_DSHOW if is_windows else None)
-                if cap.read()[0]:
+                if is_windows:
+                    cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
+                else:
+                    cap = open_camera(index)
+                if cap.isOpened() and cap.read()[0]:
                     if self.favourite_index is None:
                         self.favourite_index = index
                     indexes.append(index)
-                    cap.release()
+                cap.release()
 
-            return [indexes, self.favourite_index]
+            names = {index: camera_name(index) for index in indexes}
+            return [indexes, self.favourite_index, names]
         else:
-            return [[], None]
+            return [[], None, {}]
 
     def resolutions(self) -> list:
         """
@@ -161,7 +197,9 @@ class Video:
         :return bool: whether the capture started
         """
 
-        self.capture = cv2.VideoCapture(index)
+        # A stop requested before (e.g. while no capture was running) should not stop this one
+        self.should_stop_capture = False
+        self.capture = open_camera(index)
         w, h = resolutions[resolution]
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, w)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
@@ -184,7 +222,10 @@ class Video:
         """
         Stop video capture
         """
-        self.should_stop_capture = True
+        # The capture is released by the video thread. If no capture is running, nothing should be
+        # done (otherwise the next capture would be stopped as soon as started)
+        if self.capture is not None:
+            self.should_stop_capture = True
 
     def stop(self) -> None:
         """

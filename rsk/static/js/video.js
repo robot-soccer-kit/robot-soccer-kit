@@ -4,13 +4,15 @@ function video_initialize(backend)
         backend.cameras(function(data) {
             indexes = data[0]
             favourite_index = data[1]
+            let names = data[2] || {}
             let options = '';
             for (let index of indexes) {
                 let selected = '';
                 if (index == favourite_index) {
                     selected = 'selected="selected"';
                 }
-                options += "<option value="+index+" "+selected+">Camera "+index+"</option>";
+                let name = names[index] ? ' (' + $('<span>').text(names[index]).html() + ')' : '';
+                options += "<option value="+index+" "+selected+">Camera "+index+name+"</option>";
             }
             $('.cameras').html(options);
         });

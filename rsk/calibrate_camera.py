@@ -49,7 +49,7 @@ if not hasattr(cv2, "aruco") or not hasattr(cv2.aruco, "CharucoDetector"):
         f"OpenCV {cv2.__version__} is too old (4.7 or newer is needed). " + INSTALL_HELP
     )
 
-from . import lens_calibration  # noqa: E402
+from . import lens_calibration, video  # noqa: E402
 from .lens_calibration import MIN_VIEWS, calibrate, detect_board, make_board  # noqa: E402
 
 # Default file name of the board image (written in the current directory)
@@ -105,7 +105,7 @@ def open_camera(index: int, resolution: tuple):
     """
     Opens the camera with the same settings as the Game Controller (video.py)
     """
-    capture = cv2.VideoCapture(index)
+    capture = video.open_camera(index)
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
     capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
