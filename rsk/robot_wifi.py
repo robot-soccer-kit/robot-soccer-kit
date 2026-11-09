@@ -13,8 +13,11 @@ from .packets import (
     PACKET_ROBOT_LEDS_CUSTOM,
     PACKET_ROBOT_KICK,
 )
+import logging
 import numpy as np
 from .robots import Robots
+
+logger: logging.Logger = logging.getLogger("robot_wifi")
 
 
 class RobotWifi(robot.Robot):
@@ -29,7 +32,9 @@ class RobotWifi(robot.Robot):
     robots: dict = {}
 
     def start_service():
-        RobotWifi.thread_broadcast = Thread(target=lambda: RobotWifi.service_loop())
+        RobotWifi.thread_broadcast = Thread(
+            target=lambda: RobotWifi.service_loop(), daemon=True, name="RobotWifiThread"
+        )
         RobotWifi.thread_broadcast.start()
 
     def ip_to_int(ip: str) -> int:
@@ -53,16 +58,23 @@ class RobotWifi(robot.Robot):
         while True:
             try:
                 data, addr = sock.recvfrom(1024)
-                rcv_ip = addr[0]
-                RobotWifi.lock.acquire()
-                RobotWifi.statuses[rcv_ip] = {"last_message": time.time()}
-
-                if rcv_ip in RobotWifi.robots:
-                    RobotWifi.robots[rcv_ip].process(data)
-
-                RobotWifi.lock.release()
-            except Exception:
+            except OSError:
+                # No data available (non-blocking socket)
+                data = None
                 time.sleep(0.001)
+
+            if data is not None:
+                rcv_ip = addr[0]
+                with RobotWifi.lock:
+                    RobotWifi.statuses[rcv_ip] = {"last_message": time.time()}
+
+                    if rcv_ip in RobotWifi.robots:
+                        try:
+                            RobotWifi.robots[rcv_ip].process(data)
+                        except Exception:
+                            logger.exception(
+                                f"Error while processing data from {rcv_ip}"
+                            )
 
             time_now = time.time()
             if time_now > next_broadcast:
@@ -81,23 +93,25 @@ class RobotWifi(robot.Robot):
 
                     robots_data[ip] += data
 
-                RobotWifi.lock.acquire()
-                for key in RobotWifi.pending_packets:
-                    robot, ip, packet = RobotWifi.pending_packets[key]
-                    append_data(ip, packet.to_raw())
-                    robot.last_sent_message = time.time()
-                RobotWifi.pending_packets = {}
-
-                # Ensure the robots get a packet every 1s
-                for ip in RobotWifi.robots:
-                    if (
-                        RobotWifi.robots[ip].last_sent_message is None
-                        or time.time() - RobotWifi.robots[ip].last_sent_message > 1.0
-                    ):
-                        RobotWifi.robots[ip].last_sent_message = time.time()
-                        packet = Packet(PACKET_HEARTBEAT, dest=RobotWifi.robots[ip].id)
+                with RobotWifi.lock:
+                    for key in RobotWifi.pending_packets:
+                        robot, ip, packet = RobotWifi.pending_packets[key]
                         append_data(ip, packet.to_raw())
-                RobotWifi.lock.release()
+                        robot.last_sent_message = time.time()
+                    RobotWifi.pending_packets = {}
+
+                    # Ensure the robots get a packet every 1s
+                    for ip in RobotWifi.robots:
+                        if (
+                            RobotWifi.robots[ip].last_sent_message is None
+                            or time.time() - RobotWifi.robots[ip].last_sent_message
+                            > 1.0
+                        ):
+                            RobotWifi.robots[ip].last_sent_message = time.time()
+                            packet = Packet(
+                                PACKET_HEARTBEAT, dest=RobotWifi.robots[ip].id
+                            )
+                            append_data(ip, packet.to_raw())
 
                 for ip in robots_data:
                     try:
@@ -134,9 +148,8 @@ class RobotWifi(robot.Robot):
         RobotWifi.lock.release()
 
     def close(self):
-        RobotWifi.lock.acquire()
-        del RobotWifi.robots[self.url]
-        RobotWifi.lock.release()
+        with RobotWifi.lock:
+            RobotWifi.robots.pop(self.url, None)
 
     def process(self, data: bytes):
         if (
@@ -151,6 +164,11 @@ class RobotWifi(robot.Robot):
             if self.packet_reader.has_packet():
                 packet = self.packet_reader.pop_packet()
                 self.last_message = time.time()
+
+                # Monitor packet: version (1 byte), time (4 bytes), battery (1 byte)
+                if packet.available() < 6:
+                    logger.warning(f"Ignoring too short packet from {self.ip}")
+                    continue
 
                 _ = packet.readByte()
                 self.state["time"] = packet.read_float()

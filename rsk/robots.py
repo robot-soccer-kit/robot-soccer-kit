@@ -187,8 +187,7 @@ class Robots:
 
     def stop(self):
         """
-        Stops execution and closes all the connections
+        Closes all the connections
         """
-        self.control.stop()
         for url in self.robots:
             self.robots[url].close()

@@ -42,15 +42,15 @@ class RobotSerial(robot.Robot):
         # State retrieved from the packets
         self.state = {}
 
+        # Pending packets queued (must be created before the thread starts)
+        self.pending_packets = {}
+        self.lock = threading.Lock()
+
         # Starting the threads
         self.thread = threading.Thread(
             target=lambda: self.run_thread(), daemon=True, name="RobotSerialThread"
         )
         self.thread.start()
-
-        # Pending packets queued
-        self.pending_packets = {}
-        self.lock = threading.Lock()
 
     def available_urls() -> list:
         return [entry.device for entry in list_ports.comports()]

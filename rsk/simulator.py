@@ -1,5 +1,6 @@
 import threading
 import time
+import logging
 import numpy as np
 from numpy.linalg import norm
 from math import dist
@@ -7,6 +8,8 @@ from . import kinematics, utils, constants, state, robot, robots, client
 from .robots import Robots
 
 from collections.abc import Callable
+
+logger: logging.Logger = logging.getLogger("simulator")
 
 
 class SimulatedObject:
@@ -27,13 +30,21 @@ class SimulatedObject:
         self.velocity: np.ndarray = np.array([0.0, 0.0, 0.0])
         self.deceleration: float = deceleration
 
-        self.pending_actions: list(Callable) = []
+        # Actions (e.g: kick) are added by the control thread and executed by the simulator thread
+        self.pending_actions: list[Callable] = []
+        self.actions_lock: threading.Lock = threading.Lock()
         self.sim: Simulator = None
 
+    def add_action(self, action: Callable) -> None:
+        with self.actions_lock:
+            self.pending_actions.append(action)
+
     def execute_actions(self) -> None:
-        for action in self.pending_actions:
+        with self.actions_lock:
+            actions, self.pending_actions = self.pending_actions, []
+
+        for action in actions:
             action()
-        self.pending_actions = []
 
     def teleport(self, x: float, y: float, turn: float):
         self.position = np.array((x, y, turn))
@@ -168,7 +179,7 @@ class RobotSim(robot.Robot):
         )
 
     def kick(self, power: float = 1.0) -> None:
-        self.object.pending_actions.append(lambda: self.object.compute_kick(power))
+        self.object.add_action(lambda: self.object.compute_kick(power))
 
     def leds(self, red: int, green: int, blue: int) -> None:
         """
@@ -180,9 +191,7 @@ class RobotSim(robot.Robot):
         """
         super().leds(red, green, blue)
 
-        self.object.pending_actions.append(
-            lambda: self.object.control_leds(red, green, blue)
-        )
+        self.object.add_action(lambda: self.object.control_leds(red, green, blue))
 
 
 class Simulator:
@@ -229,7 +238,6 @@ class Simulator:
             target=lambda: self.thread(), daemon=True, name="SimulatorThread"
         )
         self.simu_thread.start()
-        self.lock: threading.Lock = threading.Lock()
 
     def add_object(self, object: SimulatedObject) -> None:
         self.objects[object.marker] = object
@@ -243,7 +251,11 @@ class Simulator:
         last_time = time.time()
         while self.run:
             self.dt = -last_time + (last_time := time.time())
-            self.loop(self.dt)
+            # An unexpected error should never stop the simulation: we log it and keep going
+            try:
+                self.loop(self.dt)
+            except Exception:
+                logger.exception("Error in simulator loop")
 
             while (self.fps_limit is not None) and (
                 time.time() - last_time < 1 / self.fps_limit
