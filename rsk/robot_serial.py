@@ -1,4 +1,3 @@
-import numpy as np
 import threading
 import time
 import serial
@@ -13,6 +12,7 @@ from .packets import (
     PACKET_ROBOT_BEEP,
     PACKET_ROBOT_LEDS_CUSTOM,
     PACKET_ROBOT_KICK,
+    encode_control,
     PACKET_MONITOR_DATA,
     PACKET_MONITOR,
 )
@@ -175,9 +175,8 @@ class RobotSerial(robot.Robot):
         """
         packet = Packet(PACKET_ROBOT)
         packet.append_byte(PACKET_ROBOT_CONTROL)
-        packet.append_short(int(1000 * dx))
-        packet.append_short(int(1000 * dy))
-        packet.append_short(int(np.rad2deg(dturn)))
+        for value in encode_control(dx, dy, dturn):
+            packet.append_short(value)
         self.add_packet("control", packet)
 
     def leds(self, red: int, green: int, blue: int) -> None:

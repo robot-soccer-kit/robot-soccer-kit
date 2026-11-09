@@ -4,7 +4,7 @@ import logging
 import numpy as np
 from numpy.linalg import norm
 from math import dist
-from . import kinematics, utils, constants, state, robot, robots, client
+from . import kinematics, utils, constants, state, robot, robots, client, packets
 from .robots import Robots
 
 from collections.abc import Callable
@@ -174,9 +174,9 @@ class RobotSim(robot.Robot):
         self.object.teleport(x, y, turn)
 
     def control(self, dx: float, dy: float, dturn: float) -> None:
-        self.object.control_cmd = kinematics.clip_target_order(
-            np.array([dx, dy, dturn])
-        )
+        # Orders are truncated as they would be when sent to a real robot
+        order = packets.decode_control(*packets.encode_control(dx, dy, dturn))
+        self.object.control_cmd = kinematics.clip_target_order(np.array(order))
 
     def kick(self, power: float = 1.0) -> None:
         self.object.add_action(lambda: self.object.compute_kick(power))

@@ -12,9 +12,9 @@ from .packets import (
     PACKET_ROBOT_BEEP,
     PACKET_ROBOT_LEDS_CUSTOM,
     PACKET_ROBOT_KICK,
+    encode_control,
 )
 import logging
-import numpy as np
 from .robots import Robots
 
 logger: logging.Logger = logging.getLogger("robot_wifi")
@@ -204,9 +204,8 @@ class RobotWifi(robot.Robot):
         """
         packet = Packet(PACKET_ROBOT, dest=self.id)
         packet.append_byte(PACKET_ROBOT_CONTROL)
-        packet.append_short(int(1000 * dx))
-        packet.append_short(int(1000 * dy))
-        packet.append_short(int(np.rad2deg(dturn)))
+        for value in encode_control(dx, dy, dturn):
+            packet.append_short(value)
         self.add_packet("control", packet, lock)
 
     def leds(self, red: int, green: int, blue: int, lock: bool = True) -> None:

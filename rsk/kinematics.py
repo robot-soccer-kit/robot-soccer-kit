@@ -7,8 +7,6 @@ the robots themselfs, allowing them to compute their own kinematics. This is onl
 we need to do some simulations.
 """
 
-# Maxium wheel RPM [rotation/min]
-max_wheel_rpm: float = 150
 
 # Wheel drive direction orientations [deg]
 wheel_alphas: list = [-90, 30, 150]
@@ -26,8 +24,11 @@ IK: np.ndarray = (1 / constants.wheel_radius) * np.hstack(
 # Forward Kinematics matrix
 FK: np.ndarray = np.linalg.pinv(IK)
 
-# Maximum wheel speed [rad/s]
-max_wheel_speed: float = max_wheel_rpm * 2 * np.pi / 60
+# Maximum wheel speed [rad/s] (MAX_WHEEL_SPEEDS in the firmware)
+max_wheel_speed: float = 16.0
+
+# Maxium wheel RPM [rotation/min]
+max_wheel_rpm: float = max_wheel_speed * 60 / (2 * np.pi)
 
 
 def forward_kinematics(w: np.ndarray) -> np.ndarray:

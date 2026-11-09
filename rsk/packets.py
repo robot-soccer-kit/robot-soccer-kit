@@ -13,6 +13,31 @@ PACKET_ROBOT_KICK = 12
 PACKET_MONITOR_DATA = 5
 
 
+def encode_control(dx: float, dy: float, dturn: float) -> tuple:
+    """
+    Values sent to the robot for a control order. They are truncated (toward zero) to integers:
+    [mm/s], [mm/s] and [deg/s]
+
+    :param float dx: x speed [m/s]
+    :param float dy: y speed [m/s]
+    :param float dturn: rotation speed [rad/s]
+    :return tuple: the integer values sent to the robot
+    """
+    return int(1000 * dx), int(1000 * dy), int(np.rad2deg(dturn))
+
+
+def decode_control(dx: int, dy: int, dturn: int) -> tuple:
+    """
+    Decodes the control order values, as the robot firmware does
+
+    :param int dx: x speed [mm/s]
+    :param int dy: y speed [mm/s]
+    :param int dturn: rotation speed [deg/s]
+    :return tuple: (dx [m/s], dy [m/s], dturn [rad/s])
+    """
+    return dx / 1000.0, dy / 1000.0, float(np.deg2rad(dturn))
+
+
 class Packet:
     """
     Represents a physical packet that is sent or received (binary protocol)
@@ -65,12 +90,14 @@ class Packet:
         n = n | (self.readByte() << 8)
         n = n | (self.readByte() << 0)
 
-        return int(np.int32(n))
+        # Two's complement (signed 32 bits)
+        return n - (1 << 32) if n & (1 << 31) else n
 
     def read_short(self):
         n = (self.readByte() << 8) | self.readByte()
 
-        return int(np.int16(n))
+        # Two's complement (signed 16 bits)
+        return n - (1 << 16) if n & (1 << 15) else n
 
     def read_float(self):
         return self.read_int() / 1000.0
