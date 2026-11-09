@@ -9,3 +9,6 @@ dist
 **.swp
 **.*#*
 .vscode
+
+# uv lock file (dependencies are only declared in pyproject.toml)
+uv.lock
