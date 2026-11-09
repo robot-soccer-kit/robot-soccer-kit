@@ -5,16 +5,22 @@ board (a chessboard with ArUco markers in its white squares).
 The board can be partially visible, which allows to bring it in the corners of the image, where the
 distortion of wide angle lenses is the largest.
 
-Usage (from the repository root):
+Installation (with the Game Controller dependencies):
+
+    pip install -U "robot-soccer-kit[gc]"
+
+Usage:
 
     # 1. Generate the board, print it and glue it on a flat rigid support
-    uv run --extra gc -m rsk.calibrate_camera --generate board.png
+    python -m rsk.calibrate_camera --generate board.png
 
     # 2. Calibrate with the live camera (views are captured automatically)
-    uv run --extra gc -m rsk.calibrate_camera --camera 0 --save-dir calibration_images
+    python -m rsk.calibrate_camera --camera 0 --save-dir calibration_images
 
     # Or calibrate from existing images
-    uv run --extra gc -m rsk.calibrate_camera --images "calibration_images/*.png"
+    python -m rsk.calibrate_camera --images "calibration_images/*.png"
+
+On Windows, "py" can be used instead of "python".
 
 The printed size of the board doesn't matter: the focal and the distortion don't depend on it.
 Requires OpenCV >= 4.7 (installed with the [gc] extra).
@@ -28,8 +34,19 @@ import os
 import sys
 import time
 
-import cv2
 import numpy as np
+
+INSTALL_HELP = 'Install the Game Controller dependencies with: pip install -U "robot-soccer-kit[gc]"'
+
+try:
+    import cv2
+except ImportError:
+    sys.exit("OpenCV is not installed. " + INSTALL_HELP)
+
+if not hasattr(cv2, "aruco") or not hasattr(cv2.aruco, "CharucoDetector"):
+    sys.exit(
+        f"OpenCV {cv2.__version__} is too old (4.7 or newer is needed). " + INSTALL_HELP
+    )
 
 # Board: 9x6 squares, 5x5 ArUco markers (different from the 4x4 markers of the field and robots)
 BOARD_SQUARES = (9, 6)
