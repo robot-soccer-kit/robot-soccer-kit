@@ -81,18 +81,22 @@ class Field:
         """
         return self.is_calibrated
 
-    def tag_position(self, corners: list, front=False) -> tuple:
+    def tag_position(self, corners: list, front=False, back=False) -> tuple:
         """
         Returns the position of a tag
 
         :param list corners: tag's corners
-        :param bool front: tag front ? (else, center), defaults to False
+        :param bool front: tag front (middle of the front edge)? defaults to False
+        :param bool back: tag back (middle of the back edge)? defaults to False
         :return tuple: position of the tag
         """
 
         if front:
             pX = (corners[0][0] + corners[1][0]) / 2.0
             pY = (corners[0][1] + corners[1][1]) / 2.0
+        elif back:
+            pX = (corners[2][0] + corners[3][0]) / 2.0
+            pY = (corners[2][1] + corners[3][1]) / 2.0
         else:
             pX = (corners[0][0] + corners[2][0]) / 2.0
             pY = (corners[0][1] + corners[2][1]) / 2.0
@@ -301,11 +305,16 @@ class Field:
             front = self.pixel_to_position(
                 self.tag_position(corners, front=True), constants.robot_height
             )
+            back = self.pixel_to_position(
+                self.tag_position(corners, back=True), constants.robot_height
+            )
 
+            # The orientation is computed from the back to the front of the tag (rather than from
+            # its center): this uses the 4 corners and doubles the lever arm, reducing the error
             return {
                 "position": center,
                 "orientation": float(
-                    np.arctan2(front[1] - center[1], front[0] - center[0])
+                    np.arctan2(front[1] - back[1], front[0] - back[0])
                 ),
             }
         else:
