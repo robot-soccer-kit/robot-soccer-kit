@@ -7,22 +7,8 @@ import synthetic
 
 from rsk import calibrate_camera, lens_calibration
 
-# A camera with a wide angle lens (barrel distortion) and an off-center principal point
-CAMERA = synthetic.Camera(
-    focal=885.0,
-    principal_offset=(18, -12),
-    distortion=(-0.12, 0.03, 0.0005, -0.0003, 0.0),
-)
-
-
-@pytest.fixture(scope="module")
-def board_images():
-    """
-    Synthetic images of the calibration board seen by CAMERA
-    """
-    return synthetic.calibration_board_views(
-        CAMERA, np.random.default_rng(0), noisy=True
-    )
+# The camera that took the board images (see the board_images fixture in conftest.py)
+CAMERA = synthetic.Camera(**synthetic.DISTORTED_LENS)
 
 
 def distortion_field(intrinsic, distortion):

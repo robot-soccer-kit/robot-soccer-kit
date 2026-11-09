@@ -22,6 +22,14 @@ FOCAL = 935.0
 DICTIONARY = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
 ROBOT_IDS = {"green1": 4, "green2": 5, "blue1": 6, "blue2": 7}
 
+# A wide angle lens with a strong barrel distortion and an off-center principal point, used to
+# test the lens calibration
+DISTORTED_LENS = dict(
+    focal=935.0,
+    principal_offset=(40, -25),
+    distortion=(-0.12, 0.03, 0.0005, -0.0003, 0.0),
+)
+
 # Images with distortion are rendered without distortion on a larger canvas, then distorted
 CANVAS_SCALE = 2.0
 
@@ -280,12 +288,15 @@ def degrade(image, rng, blur=1.0, noise=4.0, jpeg_quality=80):
     Makes the image more realistic: blur, noise and JPEG compression (the camera is used in MJPG)
     """
     image = cv2.GaussianBlur(image, (0, 0), blur)
-    image = np.clip(
-        image.astype(np.float32) + rng.normal(0, noise, image.shape), 0, 255
-    )
-    _, encoded = cv2.imencode(
-        ".jpg", image.astype(np.uint8), [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality]
-    )
+
+    # Gaussian noise (computed with OpenCV in 16 bits integers, much faster than numpy floats)
+    cv2.setRNGSeed(int(rng.integers(2**31)))
+    noise_image = np.empty(image.shape, np.int16)
+    cv2.randn(noise_image, 0, noise)
+    image = cv2.add(image.astype(np.int16), noise_image)
+    image = np.clip(image, 0, 255).astype(np.uint8)
+
+    _, encoded = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
     return cv2.imdecode(encoded, cv2.IMREAD_COLOR)
 
 
@@ -317,10 +328,15 @@ def random_robots(rng, margin=0.1):
             return robots
 
 
-def board_view(cam: Camera, board, rng, square_pixels=60, margin_squares=0.5):
+def board_view(
+    cam: Camera, board, rng, square_pixels=60, margin_squares=0.5, position=None
+):
     """
     Renders a view of a calibration board (ChArUco) held in front of the camera, at a random
     position in the image (including the corners), distance and tilt
+
+    :param position: position of the board center in the image, as a fraction of its size (x, y),
+                     random if None
 
     :return: the (BGR) image
     """
@@ -364,7 +380,9 @@ def board_view(cam: Camera, board, rng, square_pixels=60, margin_squares=0.5):
     rotation = cv2.Rodrigues(axis)[0] @ yaw @ facing_up
 
     # Board center: on the ray of a random pixel, at a random distance from the camera
-    pixel = [rng.uniform(0.05, 0.95) * WIDTH, rng.uniform(0.05, 0.95) * HEIGHT]
+    if position is None:
+        position = (rng.uniform(0.05, 0.95), rng.uniform(0.05, 0.95))
+    pixel = [position[0] * WIDTH, position[1] * HEIGHT]
     ray = np.linalg.inv(cam.intrinsic()) @ [*pixel, 1.0]
     rvec, tvec = cam.extrinsic()
     camera_rotation = cv2.Rodrigues(rvec)[0]
@@ -378,19 +396,42 @@ def board_view(cam: Camera, board, rng, square_pixels=60, margin_squares=0.5):
     return apply_distortion(image, cam, (128, 128, 128))
 
 
-def calibration_board_views(cam: Camera, rng, noisy=False, max_images=400):
+def calibration_board_views(cam: Camera, rng, noisy=False, max_images=300):
     """
     Views of the calibration board, accepted like in a live calibration (board still and in a new
-    position), until the calibration is ready (enough views covering the whole image)
+    position), until the calibration is ready (enough views covering the whole image). Like a
+    user would do, the board is moved in turn in each zone of the image that is not covered enough
+    yet (including the corners), with random distances and tilts.
 
     :return: list of images
     """
     from rsk import lens_calibration
 
+    columns, rows = lens_calibration.COVERAGE_CELLS
+    # Centers of the coverage cells, the board is pushed towards the image borders
+    positions = [
+        (
+            np.interp(column, [0, columns - 1], [0.06, 0.94]),
+            np.interp(row, [0, rows - 1], [0.08, 0.92]),
+        )
+        for row in range(rows)
+        for column in range(columns)
+    ]
+
     collector = lens_calibration.ViewCollector(min_interval=0.0)
     images = []
-    for _ in range(max_images):
-        image = board_view(cam, collector.board, rng)
+    for k in range(max_images):
+        # Like a user, the board is moved to the zones that are not covered enough yet
+        coverage = collector.coverage()
+        missing = [
+            position
+            for index, position in enumerate(positions)
+            if coverage[index // columns][index % columns]
+            < lens_calibration.COVERAGE_GOOD
+        ]
+        x, y = (missing or positions)[k % len(missing or positions)]
+        position = (x + rng.uniform(-0.04, 0.04), y + rng.uniform(-0.04, 0.04))
+        image = board_view(cam, collector.board, rng, position=position)
         if noisy:
             image = degrade(image, rng)
         # Twice the same image: the board is still
