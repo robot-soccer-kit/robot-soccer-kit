@@ -99,3 +99,22 @@ def test_capture_starts_after_a_stop_without_capture(make_video, monkeypatch):
     v.stop_capture()
     time.sleep(0.5)
     assert v.capture is None
+
+
+def test_camera_without_images_is_reported(make_video, monkeypatch):
+    camera = FakeCamera(readable=False)
+    monkeypatch.setattr(video, "open_camera", lambda index: camera)
+    monkeypatch.setattr(video, "NO_IMAGE_TIMEOUT", 0.3)
+    v = make_video()
+    v.detection.state = QuietState()
+
+    v.start_capture(0, len(video.resolutions) - 1)
+    time.sleep(0.1)
+    assert not v.get_video(False)["no_image"]
+    time.sleep(0.5)
+    assert v.get_video(False)["no_image"]
+
+    # Images come back
+    camera.readable = True
+    time.sleep(0.3)
+    assert not v.get_video(False)["no_image"]

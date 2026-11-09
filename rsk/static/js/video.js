@@ -155,7 +155,15 @@ function video_initialize(backend)
                 $('.calibrated').addClass('text-danger');
             }
 
-            if (video.running && video.detection.calibrated && video.detection.see_whole_field) {
+            if (video.no_image) {
+                $('.calibrated').html('<i class="text-danger bi bi-exclamation-triangle"></i> '
+                    + 'No image from the camera: is it used by another program? '
+                    + 'Try to stop and start the vision, or another camera');
+                $('.calibrated').removeClass('text-success');
+                $('.calibrated').addClass('text-danger');
+            }
+
+            if (video.running && !video.no_image && video.detection.calibrated && video.detection.see_whole_field) {
                 $('body').addClass('vision-no-error');
             } else {
                 $('body').removeClass('vision-no-error');

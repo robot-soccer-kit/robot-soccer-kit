@@ -66,6 +66,9 @@ OLD_DEFAULT_FOCAL = 885
 
 logger: logging.Logger = logging.getLogger("video")
 
+# If the camera gives no image for this duration, a warning is shown [s]
+NO_IMAGE_TIMEOUT = 2.0
+
 
 class Video:
     """
@@ -85,6 +88,9 @@ class Video:
         self.debug = False
         # Ask main thread to stop capture
         self.should_stop_capture = False
+        # Time of the last image received from the camera (None if no capture is running)
+        self.last_image_time = None
+        self.no_image_warned = False
 
         self.detection = detection.Detection()
 
@@ -199,6 +205,8 @@ class Video:
 
         # A stop requested before (e.g. while no capture was running) should not stop this one
         self.should_stop_capture = False
+        self.last_image_time = None
+        self.no_image_warned = False
         self.capture = open_camera(index)
         w, h = resolutions[resolution]
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, w)
@@ -279,6 +287,20 @@ class Video:
                     t0 = time.time()
                     grabbed, image_captured = self.capture.read()
                     image_debug = None
+
+                    if image_captured is not None:
+                        self.last_image_time = time.time()
+                    elif self.last_image_time is None:
+                        self.last_image_time = time.time()
+                    elif time.time() - self.last_image_time > NO_IMAGE_TIMEOUT:
+                        if not self.no_image_warned:
+                            logger.warning(
+                                "No image received from the camera, is it used by another "
+                                "program?"
+                            )
+                            self.no_image_warned = True
+                        # Avoids spinning when the camera doesn't give images
+                        time.sleep(0.05)
 
                     if image_captured is not None and self.lens_collector is not None:
                         # Lens calibration in progress: the raw image is used
@@ -547,6 +569,10 @@ class Video:
         """
         data = {
             "running": self.capture is not None,
+            # The camera is opened but doesn't give images (e.g. used by another program)
+            "no_image": self.capture is not None
+            and self.last_image_time is not None
+            and time.time() - self.last_image_time > NO_IMAGE_TIMEOUT,
             "fps": round(1 / self.period, 1) if self.period is not None else 0,
             "detection": self.detection.get_detection(),
         }
