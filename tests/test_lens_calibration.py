@@ -1,7 +1,6 @@
 import math
 import time
 
-import cv2
 import numpy as np
 import pytest
 import synthetic
@@ -69,16 +68,9 @@ def camera_video(isolated_config):
 
 @pytest.fixture(scope="module")
 def board_images():
-    rng = np.random.default_rng(1)
-    camera = synthetic.Camera(**CAMERA_LENS)
-    board = lens_calibration.make_board()
-    detector = cv2.aruco.CharucoDetector(board)
-    images = []
-    while len(images) < 18:
-        image = synthetic.board_view(camera, board, rng)
-        if lens_calibration.detect_board(image, detector, board) is not None:
-            images.append(image)
-    return images
+    return synthetic.calibration_board_views(
+        synthetic.Camera(**CAMERA_LENS), np.random.default_rng(1)
+    )
 
 
 def field_scenes(count, seed=2):
@@ -132,7 +124,7 @@ def test_lens_calibration_in_the_game_controller(
 
     # Collecting views of the board
     v.start_lens_calibration()
-    assert wait_for(lambda: v.lens_calibration_status()["views"] >= 16)
+    assert wait_for(lambda: v.lens_calibration_status()["ready"], timeout=60)
     status = v.lens_calibration_status()
     assert status["state"] == "collecting"
     assert sum(map(sum, status["coverage"])) > 0
@@ -175,7 +167,7 @@ def test_lens_calibration_needs_enough_views(camera_video, board_images):
     v.start_lens_calibration()
     assert wait_for(lambda: v.lens_calibration_status()["views"] == 3)
 
-    with pytest.raises(RuntimeError, match="views are needed"):
+    with pytest.raises(RuntimeError, match="27 more views are needed"):
         v.compute_lens_calibration()
 
     v.cancel_lens_calibration()
@@ -218,3 +210,44 @@ def test_intrinsics_for_cropped_and_rescaled_image():
     assert list(distortion) == calibration["distortion"]
 
     assert lens_calibration.intrinsics_for_image(calibration, (1280, 720)) is None
+
+
+def test_calibration_needs_30_views_covering_the_whole_image(board_images):
+    collector = lens_calibration.ViewCollector(min_interval=0.0)
+    collector.process(board_images[0], force=True)
+
+    assert lens_calibration.MIN_VIEWS == 30
+    assert collector.missing_views() == 29
+    # A single view is not enough to cover any zone of the image
+    assert collector.missing_cells() == 24
+    assert not collector.ready()
+    assert "29 more views are needed" in collector.not_ready_reason()
+    assert "zones of the image are not covered enough" in collector.not_ready_reason()
+
+    # Enough views, but all in the same part of the image: still not ready
+    for _ in range(30):
+        collector.process(board_images[0], force=True)
+    assert collector.missing_views() == 0
+    assert collector.missing_cells() > 0
+    assert not collector.ready()
+
+    for image in board_images:
+        collector.process(image, force=True)
+    assert collector.ready()
+    assert collector.not_ready_reason() == ""
+
+
+def test_capture_is_shown_on_the_image(board_images):
+    collector = lens_calibration.ViewCollector(min_interval=0.0)
+    assert collector.process(board_images[0], force=True)
+
+    # Just after the capture: green frame around the image
+    image = np.zeros_like(board_images[0])
+    collector.draw(image)
+    assert tuple(image[2, image.shape[1] // 2]) == (0, 220, 0)
+
+    # Later: no more frame
+    collector.last_capture -= lens_calibration.CAPTURE_FEEDBACK_DURATION + 0.1
+    image = np.zeros_like(board_images[0])
+    collector.draw(image)
+    assert tuple(image[2, image.shape[1] // 2]) != (0, 220, 0)

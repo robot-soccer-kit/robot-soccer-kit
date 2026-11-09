@@ -376,3 +376,30 @@ def board_view(cam: Camera, board, rng, square_pixels=60, margin_squares=0.5):
     image = new_image(cam, (128, 128, 128))
     draw_texture(image, texture, corners, cam, cam.has_distortion())
     return apply_distortion(image, cam, (128, 128, 128))
+
+
+def calibration_board_views(cam: Camera, rng, noisy=False, max_images=400):
+    """
+    Views of the calibration board, accepted like in a live calibration (board still and in a new
+    position), until the calibration is ready (enough views covering the whole image)
+
+    :return: list of images
+    """
+    from rsk import lens_calibration
+
+    collector = lens_calibration.ViewCollector(min_interval=0.0)
+    images = []
+    for _ in range(max_images):
+        image = board_view(cam, collector.board, rng)
+        if noisy:
+            image = degrade(image, rng)
+        # Twice the same image: the board is still
+        collector.process(image)
+        if collector.process(image):
+            images.append(image)
+        if collector.ready():
+            return images
+
+    raise RuntimeError(
+        "The synthetic views don't allow to calibrate: " + collector.not_ready_reason()
+    )

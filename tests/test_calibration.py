@@ -20,16 +20,9 @@ def board_images():
     """
     Synthetic images of the calibration board seen by CAMERA
     """
-    board = lens_calibration.make_board()
-    detector = cv2.aruco.CharucoDetector(board)
-    rng = np.random.default_rng(0)
-
-    images = []
-    while len(images) < 18:
-        image = synthetic.degrade(synthetic.board_view(CAMERA, board, rng), rng)
-        if lens_calibration.detect_board(image, detector, board) is not None:
-            images.append(image)
-    return images
+    return synthetic.calibration_board_views(
+        CAMERA, np.random.default_rng(0), noisy=True
+    )
 
 
 def distortion_field(intrinsic, distortion):

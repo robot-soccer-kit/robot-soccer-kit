@@ -25,12 +25,16 @@ DICTIONARY = cv2.aruco.DICT_5X5_100
 # Minimum number of chessboard corners detected for a view to be used
 MIN_CORNERS = 12
 # Minimum number of views to calibrate
-MIN_VIEWS = 12
+MIN_VIEWS = 30
 
 # Coverage grid of the image (columns, rows)
 COVERAGE_CELLS = (6, 4)
-# Number of board corners in a cell for it to be considered covered
+# Number of board corners in a cell for it to be considered covered: all the cells should be
+# covered (green) to calibrate
 COVERAGE_GOOD = 30
+
+# How long the capture of a view is shown on the image [s]
+CAPTURE_FEEDBACK_DURATION = 0.8
 
 
 def is_supported() -> bool:
@@ -260,6 +264,37 @@ class ViewCollector:
         self.views, self.keys, self.points = [], [], []
         self.previous_points = None
 
+    def missing_views(self) -> int:
+        """
+        Number of views still needed
+        """
+        return max(0, MIN_VIEWS - len(self.views))
+
+    def missing_cells(self) -> int:
+        """
+        Number of cells of the image that are not covered enough yet
+        """
+        return sum(count < COVERAGE_GOOD for row in self.coverage() for count in row)
+
+    def ready(self) -> bool:
+        """
+        Are there enough views, covering the whole image, to calibrate?
+        """
+        return self.missing_views() == 0 and self.missing_cells() == 0
+
+    def not_ready_reason(self) -> str:
+        """
+        What is still missing to calibrate (empty if ready)
+        """
+        reasons = []
+        if self.missing_views():
+            reasons.append(f"{self.missing_views()} more views are needed")
+        if self.missing_cells():
+            reasons.append(
+                f"{self.missing_cells()} zones of the image are not covered enough (not green)"
+            )
+        return ", ".join(reasons)
+
     def coverage(self) -> list:
         """
         Number of board corners captured in each cell of the image (rows of the coverage grid)
@@ -274,9 +309,10 @@ class ViewCollector:
                 counts[row, column] += 1
         return counts.tolist()
 
-    def draw(self, image, captured: bool = False):
+    def draw(self, image):
         """
-        Draws the coverage, the captured corners and the detected board on the image
+        Draws the coverage, the captured corners and the detected board on the image, and shows
+        when a view was just captured
         """
         height, width = image.shape[:2]
         columns, rows = COVERAGE_CELLS
@@ -306,8 +342,28 @@ class ViewCollector:
             for x, y in self.last_detection[1]:
                 cv2.circle(image, (int(x), int(y)), 4, (0, 255, 0), -1)
 
-        if captured:
-            image[:] = 255 - image  # Flash
+        # The capture of a view is shown for a while: green frame and message
+        if self.views and time.time() - self.last_capture < CAPTURE_FEEDBACK_DURATION:
+            thickness = max(10, width // 60)
+            cv2.rectangle(
+                image, (0, 0), (width - 1, height - 1), (0, 220, 0), 2 * thickness
+            )
+            text = f"Captured! ({len(self.views)})"
+            scale = width / 600
+            (text_width, text_height), _ = cv2.getTextSize(
+                text, cv2.FONT_HERSHEY_SIMPLEX, scale, int(3 * scale)
+            )
+            origin = ((width - text_width) // 2, (height + text_height) // 2)
+            for color, weight in (((0, 0, 0), 8), ((0, 255, 0), 3)):
+                cv2.putText(
+                    image,
+                    text,
+                    origin,
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    scale,
+                    color,
+                    int(weight * scale),
+                )
 
     def calibrate(self) -> dict:
         return calibrate(self.views, self.image_size)

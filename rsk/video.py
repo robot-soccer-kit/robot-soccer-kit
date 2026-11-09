@@ -363,9 +363,9 @@ class Video:
             collector = self.lens_collector
             if collector is None:
                 return frame
-            captured = collector.process(frame)
+            collector.process(frame)
             display = frame.copy()
-            collector.draw(display, captured)
+            collector.draw(display)
         return display
 
     def start_lens_calibration(self) -> None:
@@ -404,10 +404,10 @@ class Video:
             collector = self.lens_collector
             if collector is None or self.lens_state != "collecting":
                 raise RuntimeError("No lens calibration in progress")
-            if len(collector.views) < lens_calibration.MIN_VIEWS:
+            if not collector.ready():
                 raise RuntimeError(
-                    f"At least {lens_calibration.MIN_VIEWS} views are needed, got "
-                    f"{len(collector.views)}"
+                    "The calibration can't be computed yet: "
+                    + collector.not_ready_reason()
                 )
             self.lens_collector = None
             self.lens_state = "computing"
@@ -457,6 +457,16 @@ class Video:
                 "views": len(collector.views) if collector is not None else 0,
                 "coverage": collector.coverage() if collector is not None else None,
                 "coverage_good": lens_calibration.COVERAGE_GOOD,
+                "ready": collector is not None and collector.ready(),
+                "missing_views": collector.missing_views()
+                if collector is not None
+                else lens_calibration.MIN_VIEWS,
+                "missing_cells": collector.missing_cells()
+                if collector is not None
+                else 0,
+                "last_capture_age": time.time() - collector.last_capture
+                if collector is not None and collector.views
+                else None,
                 "board_visible": collector is not None
                 and collector.last_detection is not None,
                 "result": self.lens_result,

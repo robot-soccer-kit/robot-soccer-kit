@@ -247,10 +247,30 @@ function lens_calibration_initialize(backend)
 
             $('.lens-views').text(status.views);
             $('.lens-min-views').text(status.min_views);
+
+            // A view was just captured
+            let just_captured = status.last_capture_age !== null && status.last_capture_age < 1.0;
+            $('.lens-views-badge')
+                .toggleClass('bg-success', just_captured)
+                .toggleClass('bg-secondary', !just_captured);
+            $('.lens-captured').html(just_captured ? '<i class="bi bi-camera-fill"></i> View captured!' : '');
+
+            // What is missing to compute the calibration
+            let missing = [];
+            if (status.missing_views > 0) {
+                missing.push(status.missing_views + ' more views needed');
+            }
+            if (status.missing_cells > 0) {
+                missing.push(status.missing_cells + ' zones of the image are not green yet');
+            }
+            $('.lens-missing').html(missing.length
+                ? '<i class="bi bi-hourglass-split"></i> ' + missing.join(', ')
+                : '<span class="text-success"><i class="bi bi-check2-circle"></i> '
+                    + 'Ready: you can compute the calibration</span>');
             $('.lens-board-visible').html(status.board_visible
                 ? '<span class="text-success">board visible</span>'
                 : '<span class="text-muted">board not visible</span>');
-            $('.lens-compute').toggleClass('disabled', status.views < status.min_views);
+            $('.lens-compute').toggleClass('disabled', !status.ready);
             render_coverage(status);
 
             render_result(status.result);
@@ -259,7 +279,7 @@ function lens_calibration_initialize(backend)
     }
 
     $('.lens-state').hide();
-    setInterval(update, 500);
+    setInterval(update, 300);
 
     $('.lens-start').click(function() {
         backend.start_lens_calibration(update);

@@ -120,7 +120,7 @@ def live_calibration(index: int, resolution: tuple, save_dir: str = None) -> tup
     Live calibration: views are captured automatically when the board is still and in a new
     position. Keys: space = force a capture, c = calibrate, q / Esc = quit
 
-    :return: (views, image_size)
+    :return: (views, image_size), views is None if the calibration was cancelled
     """
     collector = lens_calibration.ViewCollector()
     capture = open_camera(index, resolution)
@@ -146,11 +146,14 @@ def live_calibration(index: int, resolution: tuple, save_dir: str = None) -> tup
                 )
 
             display = frame.copy()
-            collector.draw(display, captured)
-            text = (
-                f"{len(collector.views)} views (min {MIN_VIEWS}). "
-                "Move the board everywhere, tilted, also in the corners"
-            )
+            collector.draw(display)
+            if collector.ready():
+                text = f"{len(collector.views)} views: ready, press c to calibrate"
+            else:
+                text = (
+                    f"{len(collector.views)} views (min {MIN_VIEWS}), all zones should be "
+                    "green. Move the board everywhere, tilted, also in the corners"
+                )
             for color, thickness in (((0, 0, 0), 5), ((255, 255, 255), 2)):
                 cv2.putText(
                     display,
@@ -166,11 +169,12 @@ def live_calibration(index: int, resolution: tuple, save_dir: str = None) -> tup
             cv2.imshow(window, cv2.resize(display, None, fx=scale, fy=scale))
 
             if key in (ord("q"), 27):
-                break
+                print("Calibration cancelled")
+                return None, collector.image_size
             if key == ord("c"):
-                if len(collector.views) >= MIN_VIEWS:
+                if collector.ready():
                     break
-                print(f"Not enough views yet ({len(collector.views)}/{MIN_VIEWS})")
+                print("Can't calibrate yet: " + collector.not_ready_reason())
     finally:
         capture.release()
         cv2.destroyAllWindows()
@@ -258,6 +262,8 @@ def main(argv=None):
         except RuntimeError as e:
             print(f"Error: {e}")
             return 1
+        if views is None:
+            return 1
     elif args.images:
         views, image_size = views_from_images(args.images)
     else:
@@ -267,6 +273,16 @@ def main(argv=None):
     if len(views) < MIN_VIEWS:
         print(f"Not enough views: {len(views)} (at least {MIN_VIEWS} are needed)")
         return 1
+
+    # Checking that the views cover the whole image
+    coverage = lens_calibration.ViewCollector()
+    coverage.image_size = image_size
+    coverage.points = [point for _, image_points in views for point in image_points]
+    if coverage.missing_cells():
+        print(
+            f"WARNING: {coverage.missing_cells()} zones of the image are not covered enough by "
+            "the board, the calibration may be inaccurate in these zones"
+        )
 
     result = calibrate(views, image_size)
     print_result(result)
