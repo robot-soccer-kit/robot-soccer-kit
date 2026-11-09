@@ -169,7 +169,8 @@ class PacketReader:
             self.state += 1
         elif self.state == self.STATE_SIZE:  # Packet length
             self.length = byte
-            self.state += 1
+            # Empty packets have no payload, the next byte is the checksum
+            self.state = self.STATE_DATA if self.length > 0 else self.STATE_CHECKSUM
         elif self.state == self.STATE_DATA:  # Payload
             self.payload += bytearray((byte,))
             if len(self.payload) >= self.length:
@@ -177,8 +178,8 @@ class PacketReader:
         elif self.state == self.STATE_CHECKSUM:  # Checksum
             if sum(self.payload) % 256 == byte and self.dest == self.packet_dest:
                 self.packets.append(Packet(self.type_, self.payload))
-                self.reset()
-            self.state = self.STATE_HEADER1
+            # Whether the packet is valid or not, we wait for a new one
+            self.reset()
 
     def has_packet(self):
         return len(self.packets) > 0

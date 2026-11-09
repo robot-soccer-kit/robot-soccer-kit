@@ -3,7 +3,6 @@ import time
 
 import pytest
 import zmq
-
 from rsk import tasks
 
 

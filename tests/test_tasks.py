@@ -1,5 +1,4 @@
 import pytest
-
 from rsk import tasks, utils
 from rsk.path_finder import PathFinder
 

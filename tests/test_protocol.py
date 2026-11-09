@@ -1,8 +1,9 @@
 import numpy as np
 import pytest
-
+from hypothesis import given, settings
+from hypothesis import strategies as st
 from rsk import kinematics
-from rsk.packets import Packet, decode_control, encode_control
+from rsk.packets import Packet, PacketReader, decode_control, encode_control
 from rsk.robot_wifi import RobotWifi
 from rsk.robots import Robots
 from rsk.simulator import RobotSim
@@ -75,3 +76,58 @@ def test_packet_int_roundtrip(value):
     packet = Packet(0)
     packet.append_int(value)
     assert packet.read_int() == value
+
+
+def read_packets(reader, data):
+    packets = []
+    for byte in data:
+        reader.push(byte)
+        while reader.has_packet():
+            packet = reader.pop_packet()
+            packets.append((packet.type, bytes(packet.payload)))
+    return packets
+
+
+MONITOR = Packet(5, bytearray([2, 0, 0, 5, 220, 78]))
+
+
+def test_packet_reader_recovers_after_corrupted_packet():
+    corrupted = MONITOR.to_raw()
+    corrupted[-1] ^= 0xFF
+
+    packets = read_packets(PacketReader(), corrupted + MONITOR.to_raw() * 3)
+    assert packets == [(5, bytes(MONITOR.payload))] * 3
+
+
+def test_packet_reader_recovers_after_packet_for_another_destination():
+    other = Packet(5, bytearray([1, 2, 3]), dest=7).to_raw()
+    mine = Packet(5, bytearray([9]), dest=0).to_raw()
+
+    assert read_packets(PacketReader(dest=0), other + mine) == [(5, b"\x09")]
+
+
+def test_packet_reader_empty_packet():
+    packets = read_packets(PacketReader(), Packet(7).to_raw() + MONITOR.to_raw())
+    assert packets == [(7, b""), (5, bytes(MONITOR.payload))]
+
+
+@settings(max_examples=300, deadline=None)
+@given(
+    st.lists(
+        st.tuples(
+            st.binary(max_size=8).filter(lambda garbage: 0xFF not in garbage),
+            st.integers(0, 255),
+            st.binary(max_size=40),
+        ),
+        max_size=6,
+    )
+)
+def test_packet_reader_finds_packets_between_garbage(chunks):
+    stream = bytearray()
+    expected = []
+    for garbage, type_, payload in chunks:
+        packet = Packet(type_, bytearray(payload))
+        stream += garbage + packet.to_raw()
+        expected.append((type_, payload))
+
+    assert read_packets(PacketReader(), stream) == expected
