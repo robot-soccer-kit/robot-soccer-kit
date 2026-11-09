@@ -103,7 +103,7 @@ function video_initialize(backend)
     // Retrieving the images
     setInterval(function() {
 
-        is_vision = current_tab == 'vision' || 'referee';
+        is_vision = (current_tab == 'vision' || current_tab == 'referee');
         backend.enableVideoDebug(is_vision);
 
         backend.get_video(is_vision, function(video) {

@@ -1,4 +1,5 @@
 from . import (
+    api,
     state,
     video,
     robots,
@@ -49,6 +50,16 @@ class Backend:
         self.control.robots = self.robots
         self.control.start()
 
+    def _video(self) -> video.Video:
+        if not hasattr(self, "video"):
+            raise api.APIError("No camera in simulation or replay mode")
+        return self.video
+
+    def _detection(self) -> detection.Detection:
+        if not hasattr(self, "detection"):
+            raise api.APIError("No detection in simulation or replay mode")
+        return self.detection
+
     def is_competition(self):
         return self.competition
 
@@ -62,7 +73,7 @@ class Backend:
         return self.simulated
 
     def cameras(self):
-        return self.video.cameras()
+        return self._video().cameras()
 
     def constants(self) -> dict:
         # Retrieving all values declared in constants.py
@@ -86,29 +97,29 @@ class Backend:
         return state
 
     def resolutions(self):
-        return self.video.resolutions()
+        return self._video().resolutions()
 
     def getCameraSettings(self):
-        return self.video.settings
+        return self._video().settings
 
     def start_capture(self, index: int, res: int) -> bool:
-        return self.video.start_capture(index, res)
+        return self._video().start_capture(index, res)
 
     def stop_capture(self):
-        self.video.stop_capture()
+        self._video().stop_capture()
 
     def get_image(self) -> str:
-        image = self.video.get_image()
+        image = self._video().get_image()
         return image
 
     def get_video(self, with_image: bool) -> dict:
-        return self.video.get_video(with_image)
+        return self._video().get_video(with_image)
 
     def enableVideoDebug(self, enable=True) -> bool:
-        self.video.debug = enable
+        self._video().debug = enable
 
     def cameraSettings(self, settings):
-        self.video.set_camera_settings(settings)
+        self._video().set_camera_settings(settings)
         return True
 
     def available_urls(self):
@@ -154,12 +165,6 @@ class Backend:
     def identify(self):
         self.robots.identify()
 
-    def startReferee(self):
-        self.referee.startReferee()
-
-    def stopReferee(self):
-        self.referee.stopReferee()
-
     def increment_score(self, team: str, increment: int):
         self.referee.increment_score(team, increment)
 
@@ -167,10 +172,10 @@ class Backend:
         self.referee.reset_score()
 
     def set_display_setting(self, entry: str, value: bool):
-        self.detection.set_display_setting(entry, value)
+        self._detection().set_display_setting(entry, value)
 
     def get_display_settings(self, reset: bool = False) -> list:
-        return self.detection.get_display_settings(reset)
+        return self._detection().get_display_settings(reset)
 
     def start_game(self):
         self.referee.start_game()
@@ -185,7 +190,7 @@ class Backend:
         self.referee.stop_game()
 
     def calibrate_camera(self):
-        self.detection.calibrate_camera()
+        self._detection().calibrate_camera()
 
     def place_game(self, configuration: str, end_buzz=False):
         self.referee.place_game(configuration, end_buzz=end_buzz)
