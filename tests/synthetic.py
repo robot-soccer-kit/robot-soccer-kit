@@ -98,6 +98,31 @@ def camera(height=2.2, tilt_deg=0.0, yaw_deg=0.0, offset=(0.0, 0.0)) -> Camera:
     return Camera(height=height, pitch=tilt_deg, yaw=yaw_deg, offset=offset)
 
 
+def draw_texture(image, texture, corners, cam: Camera, canvas: bool):
+    """
+    Draws a planar texture
+
+    :param texture: the texture (grayscale or BGR image)
+    :param corners: positions (3D, field frame) of the top left, top right, bottom right and bottom
+                    left corners of the texture
+    """
+    if texture.ndim == 2:
+        texture = cv2.cvtColor(texture, cv2.COLOR_GRAY2BGR)
+    height, width = texture.shape[:2]
+    source = np.array(
+        [[0, 0], [width, 0], [width, height], [0, height]], dtype=np.float32
+    )
+    transform = cv2.getPerspectiveTransform(
+        source, cam.project(corners, canvas).astype(np.float32)
+    )
+    shape = (image.shape[1], image.shape[0])
+    warped = cv2.warpPerspective(texture, transform, shape, flags=cv2.INTER_AREA)
+    mask = cv2.warpPerspective(
+        np.full((height, width), 255, np.uint8), transform, shape
+    )
+    image[mask > 0] = warped[mask > 0]
+
+
 def draw_marker(image, marker_id, corners, cam: Camera, canvas: bool, border=0.25):
     """
     Draws a marker (with its white border)
@@ -115,18 +140,7 @@ def draw_marker(image, marker_id, corners, cam: Camera, canvas: bool, border=0.2
     corners = np.array(corners, dtype=np.float64)
     center = corners.mean(axis=0)
     outer = center + (corners - center) * (side + 2 * pad) / side
-
-    size = marker.shape[0]
-    source = np.array([[0, 0], [size, 0], [size, size], [0, size]], dtype=np.float32)
-    transform = cv2.getPerspectiveTransform(
-        source, cam.project(outer, canvas).astype(np.float32)
-    )
-    shape = (image.shape[1], image.shape[0])
-    warped = cv2.warpPerspective(
-        cv2.cvtColor(marker, cv2.COLOR_GRAY2BGR), transform, shape
-    )
-    mask = cv2.warpPerspective(np.full(marker.shape, 255, np.uint8), transform, shape)
-    image[mask > 0] = warped[mask > 0]
+    draw_texture(image, marker, outer, cam, canvas)
 
 
 def robot_marker_corners(x, y, orientation):
@@ -180,10 +194,7 @@ def render(robots: dict, ball=None, cam: Camera = None) -> np.ndarray:
     """
     cam = Camera() if cam is None else cam
     canvas = cam.has_distortion()
-    scale = CANVAS_SCALE if canvas else 1
-    image = np.full(
-        (int(HEIGHT * scale), int(WIDTH * scale), 3), (40, 120, 40), np.uint8
-    )
+    image = new_image(cam, (40, 120, 40))
 
     field = Field()
     for marker_id, name in enumerate(["c1", "c2", "c3", "c4"]):
@@ -206,15 +217,27 @@ def render(robots: dict, ball=None, cam: Camera = None) -> np.ndarray:
             image, [cam.project(circle, canvas).astype(np.int32)], (0, 110, 255)
         )
 
-    if canvas:
-        map_x, map_y = distortion_maps(
-            cam.focal, tuple(cam.principal_offset), tuple(cam.distortion)
-        )
-        image = cv2.remap(
-            image, map_x, map_y, cv2.INTER_LINEAR, borderValue=(40, 120, 40)
-        )
+    return apply_distortion(image, cam, (40, 120, 40))
 
-    return image
+
+def new_image(cam: Camera, color) -> np.ndarray:
+    """
+    A new image (the larger undistorted canvas if the camera has a distortion)
+    """
+    scale = CANVAS_SCALE if cam.has_distortion() else 1
+    return np.full((int(HEIGHT * scale), int(WIDTH * scale), 3), color, np.uint8)
+
+
+def apply_distortion(image, cam: Camera, background) -> np.ndarray:
+    """
+    Distorts an image rendered on the undistorted canvas (no-op without distortion)
+    """
+    if not cam.has_distortion():
+        return image
+    map_x, map_y = distortion_maps(
+        cam.focal, tuple(cam.principal_offset), tuple(cam.distortion)
+    )
+    return cv2.remap(image, map_x, map_y, cv2.INTER_LINEAR, borderValue=background)
 
 
 def corners_visible(cam: Camera, margin=0.3) -> bool:
@@ -292,3 +315,64 @@ def random_robots(rng, margin=0.1):
             for b in poses[k + 1 :]
         ):
             return robots
+
+
+def board_view(cam: Camera, board, rng, square_pixels=60, margin_squares=0.5):
+    """
+    Renders a view of a calibration board (ChArUco) held in front of the camera, at a random
+    position in the image (including the corners), distance and tilt
+
+    :return: the (BGR) image
+    """
+    margin = int(margin_squares * square_pixels)
+    squares_x, squares_y = board.getChessboardSize()
+    texture = board.generateImage(
+        (
+            squares_x * square_pixels + 2 * margin,
+            squares_y * square_pixels + 2 * margin,
+        ),
+        marginSize=margin,
+    )
+    meters_per_pixel = board.getSquareLength() / square_pixels
+    height, width = texture.shape[:2]
+    # Texture corners in the board frame (x right, y down, z behind the board)
+    local = (
+        np.array(
+            [
+                [-margin, -margin, 0],
+                [width - margin, -margin, 0],
+                [width - margin, height - margin, 0],
+                [-margin, height - margin, 0],
+            ],
+            dtype=np.float64,
+        )
+        * meters_per_pixel
+    )
+    local -= [
+        (squares_x / 2) * board.getSquareLength(),
+        (squares_y / 2) * board.getSquareLength(),
+        0,
+    ]
+
+    # Board orientation: facing the camera (up), rotated and tilted randomly
+    facing_up = np.diag([1.0, -1.0, -1.0])
+    yaw = cv2.Rodrigues(np.array([0, 0, rng.uniform(-math.pi, math.pi)]))[0]
+    axis = rng.uniform(-1, 1, 2)
+    axis = np.array([*(axis / np.linalg.norm(axis)), 0]) * math.radians(
+        rng.uniform(0, 45)
+    )
+    rotation = cv2.Rodrigues(axis)[0] @ yaw @ facing_up
+
+    # Board center: on the ray of a random pixel, at a random distance from the camera
+    pixel = [rng.uniform(0.05, 0.95) * WIDTH, rng.uniform(0.05, 0.95) * HEIGHT]
+    ray = np.linalg.inv(cam.intrinsic()) @ [*pixel, 1.0]
+    rvec, tvec = cam.extrinsic()
+    camera_rotation = cv2.Rodrigues(rvec)[0]
+    center = camera_rotation.T @ (
+        ray / np.linalg.norm(ray) * rng.uniform(0.6, 1.4) - tvec
+    )
+
+    corners = [center + rotation @ point for point in local]
+    image = new_image(cam, (128, 128, 128))
+    draw_texture(image, texture, corners, cam, cam.has_distortion())
+    return apply_distortion(image, cam, (128, 128, 128))
