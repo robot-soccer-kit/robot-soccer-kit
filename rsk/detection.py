@@ -93,7 +93,6 @@ class Detection:
         self.upper_orange = np.array([25, 255, 255])
 
         # Detection output
-        self.markers = {}
         self.last_updates = {}
         self.ball = None
         self.no_ball = 0
@@ -482,24 +481,20 @@ class Detection:
 
         self.state.set_ball(self.ball)
 
-    def get_detection(self, foo=None):
-        while True:
-            try:
-                det_info = {
-                    "ball": self.ball,
-                    "markers": self.markers,
-                    "calibrated": self.field.calibrated(),
-                    "see_whole_field": self.field.see_whole_field,
-                    "referee": None
-                    if self.referee is None
-                    else self.referee.get_game_state(full=False),
-                }
-                replay_logger.register_infos(
-                    det_info.keys(),
-                    det_info,
-                    "detection_info",
-                    ["markers", "referee", "ball"],
-                )
-                return det_info
-            except Exception as err:
-                print("Thread init error : ", err)
+    def get_detection(self):
+        det_info = {
+            "ball": self.ball,
+            "markers": dict(self.state.markers) if self.state is not None else {},
+            "calibrated": self.field.calibrated(),
+            "see_whole_field": self.field.see_whole_field,
+            "referee": None
+            if self.referee is None
+            else self.referee.get_game_state(full=False),
+        }
+        replay_logger.register_infos(
+            det_info.keys(),
+            det_info,
+            "detection_info",
+            ["markers", "referee", "ball"],
+        )
+        return det_info

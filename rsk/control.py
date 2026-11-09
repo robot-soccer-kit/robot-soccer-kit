@@ -159,7 +159,7 @@ class Control:
                             response = [True, "ok"]
                         else:
                             response[0] = 2
-                            response[1] = "Only master can set the LEDs"
+                            response[1] = "Only master can beep"
                     else:
                         response[0] = 2
                         response[1] = "Unknown command"

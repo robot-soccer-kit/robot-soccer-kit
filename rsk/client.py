@@ -223,7 +223,9 @@ class ClientRobot(ClientTracked):
         :param skip_old: If True, returns False if the position is older than 1 second.
         """
         if wait:
-            while not self.goto(target, wait=False, avoid_obstacles=avoid_obstacles):
+            while not self.goto(
+                target, wait=False, skip_old=skip_old, avoid_obstacles=avoid_obstacles
+            ):
                 time.sleep(0.05)
             self.control(0, 0, 0)
             return True
@@ -413,13 +415,13 @@ class Client:
         if threading.current_thread() is threading.main_thread():
             sigint_handler = signal.getsignal(signal.SIGINT)
             signal.signal(signal.SIGINT, signal.SIG_IGN)
-        self.lock.acquire()
-        self.req.send_json([self.key, color, number, [name, *parameters]])
-        success, message = self.req.recv_json()
-        self.lock.release()
-
-        if threading.current_thread() is threading.main_thread():
-            signal.signal(signal.SIGINT, sigint_handler)
+        try:
+            with self.lock:
+                self.req.send_json([self.key, color, number, [name, *parameters]])
+                success, message = self.req.recv_json()
+        finally:
+            if threading.current_thread() is threading.main_thread():
+                signal.signal(signal.SIGINT, sigint_handler)
 
         time.sleep(0.01)
 

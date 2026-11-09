@@ -134,8 +134,9 @@ class Backend:
             self.robots.robots[url].kick()
 
     def teleport(self, marker: str, x: float, y: float, turn: float):
-        if marker in self.robots.robots_by_marker or marker == "ball":
-            self.simulator.objects[marker].teleport(x, y, turn)
+        simulator = getattr(self, "simulator", None)
+        if simulator is not None and marker in simulator.objects:
+            simulator.objects[marker].teleport(x, y, turn)
 
     def control_status(self):
         return self.control.status()
