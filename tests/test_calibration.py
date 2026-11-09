@@ -91,3 +91,38 @@ def test_calibration_recovers_the_camera(board_images):
     truth = distortion_field(CAMERA.intrinsic(), CAMERA.distortion)
     assert np.max(np.linalg.norm(truth, axis=1)) > 100
     assert np.max(np.linalg.norm(estimated - truth, axis=1)) < 2.0
+
+
+def test_command_line_with_images(board_images, tmp_path):
+    for k, image in enumerate(board_images):
+        cv2.imwrite(str(tmp_path / f"view_{k:02d}.png"), image)
+    output = tmp_path / "calibration.json"
+
+    code = calibrate_camera.main(
+        ["--images", str(tmp_path / "*.png"), "--output", str(output)]
+    )
+
+    assert code == 0
+    result = json.loads(output.read_text())
+    assert result["views"] == len(board_images)
+    assert result["distortion"][0] == pytest.approx(CAMERA.distortion[0], abs=0.02)
+
+
+def test_command_line_not_enough_views(board_images, tmp_path):
+    for k, image in enumerate(board_images[:3]):
+        cv2.imwrite(str(tmp_path / f"view_{k:02d}.png"), image)
+
+    code = calibrate_camera.main(
+        ["--images", str(tmp_path / "*.png"), "--output", str(tmp_path / "out.json")]
+    )
+
+    assert code == 1
+    assert not (tmp_path / "out.json").exists()
+
+
+def test_command_line_without_camera(capsys):
+    # No camera with this index
+    code = calibrate_camera.main(["--camera", "99"])
+
+    assert code == 1
+    assert "Can't open camera 99" in capsys.readouterr().out

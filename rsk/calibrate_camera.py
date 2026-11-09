@@ -5,16 +5,16 @@ board (a chessboard with ArUco markers in its white squares).
 The board can be partially visible, which allows to bring it in the corners of the image, where the
 distortion of wide angle lenses is the largest.
 
-Usage:
+Usage (from the repository root):
 
     # 1. Generate the board, print it and glue it on a flat rigid support
-    python -m rsk.calibrate_camera --generate board.png
+    uv run --extra gc -m rsk.calibrate_camera --generate board.png
 
     # 2. Calibrate with the live camera (views are captured automatically)
-    python -m rsk.calibrate_camera --camera 0 --save-dir calibration_images
+    uv run --extra gc -m rsk.calibrate_camera --camera 0 --save-dir calibration_images
 
     # Or calibrate from existing images
-    python -m rsk.calibrate_camera --images "calibration_images/*.png"
+    uv run --extra gc -m rsk.calibrate_camera --images "calibration_images/*.png"
 
 The printed size of the board doesn't matter: the focal and the distortion don't depend on it.
 Requires OpenCV >= 4.7 (installed with the [gc] extra).
