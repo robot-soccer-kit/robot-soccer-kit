@@ -95,4 +95,9 @@ def test_goal_cancelled_only_once(backend, referee):
     referee.validate_goal(False)
     referee.validate_goal(False)
     assert referee.game_state["teams"]["blue"]["score"] == 0
+    # The decision is in the history
+    assert [entry[2:] for entry in referee.referee_history[-2:]] == [
+        ["blue", "Goal"],
+        ["blue", "Goal cancelled"],
+    ]
     assert referee.game_state["teams"]["green"]["score"] == 0

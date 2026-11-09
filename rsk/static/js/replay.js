@@ -1,18 +1,7 @@
-function replay_initialize(backend) {
+// Replay mode: plays a recorded game (positions, referee, commands)
 
-    let displayed_toast_nb = 0;
-
-    let event_neutral_tpl = '';
-    $.get('/static/referee_event_neutral.html', function (data) {
-        event_neutral_tpl = data;
-    });
-    let event_team_tpl = ''
-    $.get('/static/referee_event_team.html', function (data) {
-        event_team_tpl = data;
-    });
-
-    $('.detection-view').css("display", 'none')
-    $('.commands-view').css("display", 'none')
+function replay_initialize(backend, constants) {
+    const view = createRefereeView(constants)
 
     $('.team-name').prop('disabled', true)
 
@@ -25,7 +14,7 @@ function replay_initialize(backend) {
                 throw new Error("Invalid replay file: missing positions or referee")
             }
 
-            backend.constants(function (constants) {
+            {
                 const renderer = createFieldRenderer(constants)
                 $(window).on("resize", renderer.resizeCanvases)
 
@@ -81,7 +70,7 @@ function replay_initialize(backend) {
                     $("#reset-spe-forward").removeClass("d-none")
                     $("#prev-speed").removeClass("d-none")
                     $("#reset-spe-back").addClass("d-none")
-                    $(".replay-progress-bar").css("background", "#3399ff")
+                    $(".replay-progress").addClass("fast")
                 })
                 $('#prev-speed').click(function () {
                     speed = -2
@@ -93,7 +82,7 @@ function replay_initialize(backend) {
                     $("#reset-spe-back").removeClass("d-none")
                     $("#next-speed").removeClass("d-none")
                     $("#reset-spe-forward").addClass("d-none")
-                    $(".replay-progress-bar").css("background", "#3399ff")
+                    $(".replay-progress").addClass("fast")
                     
                 })
                 $('.reset-speed').click(function () {
@@ -105,7 +94,7 @@ function replay_initialize(backend) {
 
                     $("#prev-speed").removeClass("d-none")
                     $("#next-speed").removeClass("d-none")
-                    $(".replay-progress-bar").css("background", "#0000ff")
+                    $(".replay-progress").removeClass("fast")
                     
                 })
 
@@ -201,112 +190,61 @@ function replay_initialize(backend) {
                     return series[indexes[key]]?.timestamp <= t ? series[indexes[key]].data : null
                 }
 
-                function validationGoal(current_history, t) {
+                // Referee history up to t: entries with the time they appeared
+                function getHistoryEntries(t) {
+                    const series = logs.referee?.referee_history_sliced
+                    if (!series?.length) return []
 
-                    let last_index_validation = refereeIndexes.validate_goal
-                    let serie_validate_goal = logs.referee?.validate_goal
-
-                    if (!serie_validate_goal?.length) return
-
-                    if (
-                        last_index_validation < serie_validate_goal.length &&
-                        serie_validate_goal[last_index_validation].timestamp <= t
-                    ) {
-
-                        const is_validated = serie_validate_goal[last_index_validation].data
-
-                        const lastEvent = current_history[current_history.length - 1]
-
-                        if (!lastEvent) return
-
-                        const [num] = lastEvent
-
-                        $('#toast-' + num + ' .toast-body').show()
-
-                        if (is_validated) {
-
-                            $("#toast-" + num)
-                                .find('.icon')
-                                .removeClass('bi-circle-fill')
-                                .addClass('bi-check2-circle')
-
-                            $("#toast-" + num)
-                                .find('.toast-body')
-                                .addClass('text-success')
-                                .removeClass('text-danger')
-                                .html('<h5 class="m-0">Goal Validated</h5>')
-
-                        } else {
-
-                            $("#toast-" + num)
-                                .find('.icon')
-                                .removeClass('bi-circle-fill')
-                                .addClass('bi-x-circle')
-
-                            $("#toast-" + num)
-                                .find('.toast-body')
-                                .addClass('text-danger')
-                                .removeClass('text-success')
-                                .html('<h5 class="m-0">Goal Disallowed</h5>')
+                    const entries = {}
+                    for (const entry of series) {
+                        if (entry.timestamp > t) break
+                        for (const event of entry.data || []) {
+                            if (!(event[0] in entries)) {
+                                entries[event[0]] = { event, timestamp: entry.timestamp }
+                            }
                         }
-
-                        refereeIndexes.validate_goal++
                     }
+                    return Object.values(entries).sort((a, b) => a.event[0] - b.event[0])
                 }
 
+                // Old records don't have the goal decisions in the history: they are retrieved
+                // from the validate_goal series (a decision concerns the last goal before it)
+                function getGoalOutcomes(entries, t) {
+                    const outcomes = {}
+                    for (const decision of logs.referee?.validate_goal || []) {
+                        if (decision.timestamp > t) break
+                        const goal = [...entries].reverse().find(
+                            entry => entry.event[3] == 'Goal' && entry.timestamp <= decision.timestamp)
+                        if (goal) outcomes[goal.event[0]] = decision.data
+                    }
+                    return outcomes
+                }
+
+                let teamNames = {}
+
+                function updateRefereeHistory(t, scrollToEnd = false) {
+                    const entries = getHistoryEntries(t)
+                    view.renderHistory(entries.map(entry => entry.event), {
+                        outcomes: getGoalOutcomes(entries, t),
+                        scrollToEnd: scrollToEnd,
+                        teamNames: teamNames,
+                    })
+                }
 
                 function updateReferee(referee_state) {
-                    $('.GameState').html(referee_state.game_state_msg)
-                    $('#GreenScore').html(referee_state.teams["green"]["score"])
-                    $('#BlueScore').html(referee_state.teams["blue"]["score"])
-                    $('.team-name[rel="green"]').val(referee_state.teams["green"]["name"])
-                    $('.team-name[rel="blue"]').val(referee_state.teams["blue"]["name"])
-                    $('.TimerMinutes').html(formatTimer(referee_state.timer))
-                    $('.PlayerName[rel="green"]').val(referee_state.teams["green"]["name"]);
-                    $('.PlayerName[rel="blue"]').val(referee_state.teams["blue"]["name"]);
-
+                    if (referee_state.teams) {
+                        teamNames = { green: referee_state.teams.green.name, blue: referee_state.teams.blue.name }
+                        view.render(referee_state, { live: false })
+                    } else {
+                        $('.GameState').text(referee_state.game_state_msg || '')
+                        $('.TimerMinutes').text(formatTimer(referee_state.timer))
+                    }
                     updatePenalizedReplayView(referee_state)
                 }
 
-                function updateRefereeHistory(history) {
-
-                    for (const history_entry of history) {
-
-                        const [num, time, team, referee_event] = history_entry
-                        $("#NoHistory").html('')
-
-                        if (num >= displayed_toast_nb) {
-
-                            let html = ''
-                            const vars = {
-                                id: num,
-                                team,
-                                title: referee_event,
-                                timestamp: formatTimer(time),
-                                event: referee_event
-                            }
-
-                            html = team === 'neutral'
-                                ? event_neutral_tpl
-                                : event_team_tpl
-
-                            for (const key in vars) {
-                                html = html.replaceAll('{' + key + '}', vars[key])
-                            }
-
-                            $("#RefereeHistory").append(html)
-                            $('#toast-' + num + ' .toast-body').hide()
-                            $('#toast-' + num).toast('show')
-                            $("#tchat").scrollTop($("#tchat")[0].scrollHeight)
-
-                            displayed_toast_nb = num + 1
-                        }
-                    }
-                }
-
                 function updatePenalizedReplayView(referee_state) {
-                    for (const [team, team_infos] of Object.entries(referee_state.teams)) {
-                        for (const [key, value] of Object.entries(team_infos.robots)) {
+                    for (const [team, team_infos] of Object.entries(referee_state.teams || {})) {
+                        for (const [key, value] of Object.entries(team_infos.robots || {})) {
                             if(value?.penalized) {
                                 $('.penalized-replay td[rel="' + team + key + '"]').html("true").addClass("text-bg-danger").removeClass("text-bg-success");
                                 $('.remaining-time-replay td[rel="' + team + key + '"]').html(value.penalized_remaining).addClass("text-bg-warning");
@@ -383,10 +321,8 @@ function replay_initialize(backend) {
                         updateCommands(current_commands, t)
                     }
 
-                    const history = getHistoryUpTo(t)
-                    updateRefereeHistory(history)
-                    validationGoal(history, t)
                     updateReferee(referee_state)
+                    updateRefereeHistory(t)
 
                     updateProgressBar()
 
@@ -394,23 +330,6 @@ function replay_initialize(backend) {
                     renderer.renderFrame(state, markers, {})
                     frameId = requestAnimationFrame(loop)
 
-                }
-
-                function getHistoryUpTo(t) {
-                    const series = logs.referee?.referee_history_sliced
-                    if (!series?.length) return []
-
-                    const result = []
-
-                    for (const entry of series) {
-                        if (entry.timestamp > t) break
-
-                        if (entry.data?.length) {
-                            result.push(...entry.data)
-                        }
-                    }
-
-                    return result
                 }
 
                 function getNextPositionTimestamp(t, direction = 1) {
@@ -442,11 +361,6 @@ function replay_initialize(backend) {
                     logStart = targetTimestamp
                     seekIndexes(targetTimestamp)
 
-                    displayed_toast_nb = 0
-                    $('.toast').remove()
-                    $("#RefereeHistory").html('')
-                    $("#NoHistory").html('<h6 class="text-muted">No History</h6>')
-
                     const {
                         state,
                         referee_state,
@@ -459,10 +373,8 @@ function replay_initialize(backend) {
                         updateCommands(current_commands, targetTimestamp)
                     }
 
-                    const history = getHistoryUpTo(targetTimestamp)
-                    updateRefereeHistory(history)
-
                     updateReferee(referee_state)
+                    updateRefereeHistory(targetTimestamp, true)
                     updateProgressBar()
                 }
 
@@ -516,8 +428,6 @@ function replay_initialize(backend) {
 
                     resetUI()
 
-                    if (currentTimestamp == 0) $('.toast').remove()
-
                     isRunning = true
                     wallStart = performance.now()
                     logStart = currentTimestamp > 0 ? currentTimestamp : startTimestamp
@@ -548,15 +458,10 @@ function replay_initialize(backend) {
                     Object.keys(commandsIndexes).forEach(k => commandsIndexes[k] = 0)
 
                     updateProgressBar()
-
-                    displayed_toast_nb = 0;
+                    updateRefereeHistory(-Infinity)
                 }
 
                 function resetUI() {
-                    $("#RefereeHistory").html('');
-                    $("#NoHistory").html('<h6 class="text-muted">No History</h6>');
-                    displayed_toast_nb = 0;
-
                     $('.commands-tab .response').html('...')
                         .removeClass("text-bg-danger").removeClass("text-bg-success")
 
@@ -584,47 +489,28 @@ function replay_initialize(backend) {
 
                 function get_display_settings() {
                     let html = ''
-                    for (setting_name in display_settings) {
-                        let setting = display_settings[setting_name]
-                        let checked = setting["value"] ? 'checked="checked"' : ''
-
+                    for (const setting_name in display_settings) {
+                        const setting = display_settings[setting_name]
                         html += '<div class="form-check form-switch">'
-                        html += '    <input class="form-check-input display-setting" type="checkbox"'
-                        html += 'role="switch" rel="' + setting_name + '" ' + checked + '>'
-                        html += '    <label class="form-check-label" for="flexSwitchCheckDefault">'
-                        html += '    ' + setting['label']
-                        html += '    </label>'
-                        html += '</div>'
+                            + '<input class="form-check-input display-setting" type="checkbox" role="switch" id="replay-display-' + setting_name + '" rel="' + setting_name + '"'
+                            + (setting.value ? ' checked' : '') + '>'
+                            + '<label class="form-check-label" for="replay-display-' + setting_name + '">' + setting.label + '</label>'
+                            + '</div>'
                     }
-
                     $('.display-settings').html(html)
-                    $('.display-setting').click(function () {
-                        const rel = $(this).attr('rel')
-                        const checked = $(this).is(':checked')
-                        display_settings[rel]["value"] = checked
-
-                        if (rel === "penalized-tab") {
-                            if (checked) {
-                                $('.penalized-replay-view').removeClass('d-none').addClass('d-flex')
-                            } else {
-                                $('.penalized-replay-view').removeClass('d-flex').addClass('d-none')
-                            }
-                        }
-                        else if (rel === "commands") {
-                            if (checked) {
-                                $('.commands-view').removeClass('d-none').addClass('d-flex')
-                            } else {
-                                $('.commands-view').removeClass('d-flex').addClass('d-none')
-                            }
-                        }
-                    });
                 }
 
-                $('.robot-detection-tab').removeClass('d-flex').addClass('d-none')
+                $('.display-settings').on('change', '.display-setting', function () {
+                    const rel = $(this).attr('rel')
+                    display_settings[rel].value = $(this).is(':checked')
+                    if (rel === "penalized-tab") {
+                        $('.penalized-replay-view').toggleClass('d-none', !display_settings[rel].value)
+                    } else if (rel === "commands") {
+                        $('.commands-view').toggleClass('d-none', !display_settings[rel].value)
+                    }
+                })
 
-                $('.display-python-settings').click(function () {
-                    get_display_settings()
-                });
+                $('#settings-panel').on('show.bs.offcanvas', get_display_settings)
 
                 const display_settings = {
                     "commands": { "label": "Show commands view", "default": false },
@@ -634,16 +520,14 @@ function replay_initialize(backend) {
                     display_settings[setting_name]["value"] = display_settings[setting_name]["default"]
                 }
 
-                $('#back').removeClass('d-none')
-                $('.sim_vim').css('opacity', '100')
-                $('body').addClass('vision-running')
+                $('body').addClass('sim-view')
 
                 renderer.drawBg(() => renderer.resizeCanvases())
 
                 $('.start-replay').click(play)
                 $('.pause-replay').click(pause)
                 $('.stop-replay').click(stop)
-            })
+            }
         })
         .catch(() => {
             $('.no-file-replay').removeClass('d-none')

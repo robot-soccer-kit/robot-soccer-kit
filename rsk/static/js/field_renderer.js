@@ -66,11 +66,17 @@ function createFieldRenderer(constants) {
     }
 
     function renderFrame(state, markers, displaySettings = {}) {
+        let canvas = document.getElementById("robots")
 
-        if (!ratio_w) updateRatios()
+        // The canvases have no size while they are hidden (e.g. other tab)
+        if (!canvas.width || !canvas.height || !ratio_w) {
+            resizeCanvases()
+            if (!canvas.width || !canvas.height) {
+                return
+            }
+        }
 
         let presentMarker = state.markers
-        let canvas = document.getElementById("robots")
 
         if (!("offscreenCanvas" in canvas)) {
             canvas.offscreenCanvas = document.createElement("canvas")
@@ -149,7 +155,7 @@ function createFieldRenderer(constants) {
             drawline(center, [center[0] + 100, center[1]], ballCanvas, "red")
         }
 
-        if (displaySettings["timed_circle"]?.["value"]) {
+        if (displaySettings["timed_circle"]?.["value"] && state.ball) {
             drawCircle(transformViewToSim(state.ball), constants.timed_circle_radius * ratio_w, "red", ballCanvas, false, 1, [10, 10])
         }
     }
@@ -161,6 +167,8 @@ function createFieldRenderer(constants) {
             const c = document.getElementById(id)
             c.width = back.offsetWidth
             c.height = back.offsetHeight
+            c.style.width = back.offsetWidth + "px"
+            c.style.height = back.offsetHeight + "px"
         }
     }
 
@@ -178,7 +186,7 @@ function createFieldRenderer(constants) {
         var background = new Image()
         background.src = "static/imgs/field.svg"
         background.onload = function () {
-            let context = document.getElementsByTagName('canvas')[0].getContext('2d')
+            let context = document.getElementById('back').getContext('2d')
             context.canvas.width = this.naturalWidth
             context.canvas.height = this.naturalHeight
             context.drawImage(background, 0, 0)

@@ -236,6 +236,7 @@ class Referee:
         self.game_state["halftime_is_running"] = True
         self.game_state["game_paused"] = True
         self.game_state["game_state_msg"] = "Half Time"
+        self.add_referee_history("neutral", "Half time")
         self.pending_goal_team = None
 
         task = tasks.StopAllTask("half-time")
@@ -491,6 +492,10 @@ class Referee:
 
         replay_logger.register_info(
             "validate_goal", yes_no, "referee", allow_repeat=True
+        )
+        # The decision is kept in the history (shown by the interface, also in replays)
+        self.add_referee_history(
+            goal_team, "Goal validated" if yes_no else "Goal cancelled"
         )
 
         if yes_no:

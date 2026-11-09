@@ -1,31 +1,28 @@
-function video_initialize(backend)
-{
+// Vision tab: camera, detection, camera settings, display settings and lens calibration
+
+function video_initialize(backend) {
+    // Cameras and resolutions
     function updateCameras() {
-        backend.cameras(function(data) {
-            indexes = data[0]
-            favourite_index = data[1]
-            let names = data[2] || {}
+        backend.cameras(function (data) {
+            let [indexes, favourite, names] = [data[0], data[1], data[2] || {}];
             let options = '';
             for (let index of indexes) {
-                let selected = '';
-                if (index == favourite_index) {
-                    selected = 'selected="selected"';
-                }
-                let name = names[index] ? ' (' + $('<span>').text(names[index]).html() + ')' : '';
-                options += "<option value="+index+" "+selected+">Camera "+index+name+"</option>";
+                let name = names[index] ? ' (' + escapeHtml(names[index]) + ')' : '';
+                options += '<option value="' + index + '"' + (index == favourite ? ' selected' : '') + '>'
+                    + 'Camera ' + index + name + '</option>';
+            }
+            if (!indexes.length) {
+                options = '<option value="" disabled selected>No camera found</option>';
             }
             $('.cameras').html(options);
+            $('.start-capture').prop('disabled', !indexes.length);
         });
-        backend.resolutions(function(data) {
+        backend.resolutions(function (data) {
+            let [current, resolutions] = data;
             let options = '';
-            let resolution = data[0];
-            let resolutions = data[1];
             for (let index in resolutions) {
-                let selected = '';
-                if (index == resolution) {
-                    selected = 'selected="selected"';
-                }
-                options += '<option value="'+index+'" '+selected+'>'+resolutions[index]+'</option>';
+                options += '<option value="' + index + '"' + (index == current ? ' selected' : '') + '>'
+                    + escapeHtml(resolutions[index]) + '</option>';
             }
             $('.resolutions').html(options);
         });
@@ -34,144 +31,136 @@ function video_initialize(backend)
     updateCameras();
     $('.refresh-cameras').click(updateCameras);
 
-    function get_display_settings() {
-        backend.get_display_settings(false, function(display_settings) {
-
-            let html = ''
-            for (setting_name in display_settings) {
-                let setting = display_settings[setting_name]
-                let checked = setting["value"] ? 'checked="checked"' : ''
-
-                html += '<div class="form-check form-switch">'
-                html += '    <input class="form-check-input display-setting" type="checkbox" '
-                html += 'role="switch" rel="'+setting_name+'" '+checked+'>'
-                html += '    <label class="form-check-label" for="flexSwitchCheckDefault">'
-                html += '    '+setting['label']
-                html += '    </label>'
-                html += '</div>'
-            }
-            $('.display-settings').html(html)
-
-            $('.display-setting').click(function() {
-                backend.set_display_setting($(this).attr('rel'), $(this).is(':checked'));
-            });
-        });
-    }
-
-    $('.display-python-settings').click(function() {
-        get_display_settings()
-    });
-
-    $('#default-settings').click(function() {
-        backend.get_display_settings(true, function(display_settings) {
-            for (setting_name in display_settings) {
-                $('.display-setting[rel="'+setting_name+'"]').prop('checked', display_settings[setting_name]["default"])
-            }
-        });
-    });
-
-    $('.calibrate-camera').click(function() {
-        backend.calibrate_camera()
-    });
-
-    // Camera settings
-    $.get('static/camera-setting.html', function(template) {
-        backend.getCameraSettings(function(settings) {
-            for (let key in settings) {
-                $('.camera-settings').append(template.replace(/{key}/g, key));
-                $('.'+key).val(settings[key]);
-    
-                $('.camera-settings .'+key).change(function() {
-                    // All the values are read from the inputs, since some of them can be
-                    // updated by the backend (e.g. the focal, by the lens calibration)
-                    for (let name in settings) {
-                        settings[name] = parseInt($('.camera-settings .'+name).val());
-                    }
-                    backend.cameraSettings(settings);
-                });
-            }
-        });
-    });
-
-    $('.camera-settings').change(function() {
-        backend.calibrate_camera()
-    });
-
-    // Starting the video capture
-    $('.start-capture').click(function() {
+    $('.start-capture').click(function () {
         backend.start_capture($('.cameras').val(), $('.resolutions').val());
     });
 
-    $('.stop-capture').click(function() {
+    $('.stop-capture').click(function () {
         backend.stop_capture();
+        // The list of cameras can only be retrieved when no camera is used
+        setTimeout(updateCameras, 1000);
     });
 
-    lens_calibration_initialize(backend);
+    $('.calibrate-camera').click(function () {
+        backend.calibrate_camera();
+    });
 
-    // Retrieving the images
-    setInterval(function() {
+    // Display settings (what is drawn on the camera image), in the settings panel
+    function renderDisplaySettings(settings) {
+        let html = '';
+        for (let name in settings) {
+            html += '<div class="form-check form-switch">'
+                + '<input class="form-check-input display-setting" type="checkbox" role="switch" id="display-' + name + '" rel="' + name + '"'
+                + (settings[name].value ? ' checked' : '') + '>'
+                + '<label class="form-check-label" for="display-' + name + '">' + escapeHtml(settings[name].label) + '</label>'
+                + '</div>';
+        }
+        $('.display-settings').html(html);
+    }
 
-        is_vision = (current_tab == 'vision' || current_tab == 'referee');
-        backend.enableVideoDebug(is_vision);
+    $('#settings-panel').on('show.bs.offcanvas', function () {
+        backend.get_display_settings(false, renderDisplaySettings);
+    });
+    $('.display-settings').on('change', '.display-setting', function () {
+        backend.set_display_setting($(this).attr('rel'), $(this).is(':checked'));
+    });
+    $('.default-settings').click(function () {
+        backend.get_display_settings(true, renderDisplaySettings);
+    });
 
-        backend.get_video(is_vision, function(video) {
+    // Camera settings
+    let cameraSettingsNames = [];
+    backend.getCameraSettings(function (settings) {
+        let html = '';
+        for (let key in settings) {
+            cameraSettingsNames.push(key);
+            html += '<div class="col-6 col-md-4">'
+                + '<label class="form-label" for="camera-setting-' + key + '">' + escapeHtml(key.replace('_', ' ')) + '</label>'
+                + '<input type="number" class="form-control form-control-sm camera-setting" id="camera-setting-' + key + '" rel="' + key + '" value="' + escapeHtml(settings[key]) + '">'
+                + '</div>';
+        }
+        $('.camera-settings').html(html);
+    });
+
+    $('.camera-settings').on('change', '.camera-setting', function () {
+        // All the values are read from the inputs, since some of them can be updated by the
+        // backend (e.g. the focal, by the lens calibration)
+        let settings = {};
+        for (let key of cameraSettingsNames) {
+            settings[key] = parseInt($('.camera-setting[rel="' + key + '"]').val());
+        }
+        backend.cameraSettings(settings);
+        backend.calibrate_camera();
+    });
+
+    // Refreshing the camera settings (e.g. after a lens calibration)
+    $(document).on('rsk:camera-settings', function () {
+        backend.getCameraSettings(function (settings) {
+            for (let key in settings) {
+                $('.camera-setting[rel="' + key + '"]').val(settings[key]);
+            }
+        });
+    });
+
+    // Video status and images
+    function updateStatus(video) {
+        let running = video.running;
+        let detection = video.detection;
+        $('body').toggleClass('vision-running', running);
+
+        let status = 'error', title = 'The vision is not running', message = '';
+        if (running && video.no_image) {
+            message = '<i class="bi bi-exclamation-triangle-fill text-danger"></i> No image from the camera: '
+                + 'is it used by another program? Try to stop and start the vision, or another camera';
+            title = 'No image from the camera';
+        } else if (running && detection.calibrated && detection.see_whole_field) {
+            status = 'ok';
+            title = 'The vision is running, the field is calibrated';
+            message = '<i class="bi bi-check-circle-fill text-success"></i> Field detected and calibrated';
+        } else if (running && detection.calibrated) {
+            status = 'warning';
+            title = 'The whole field is not visible';
+            message = '<i class="bi bi-exclamation-triangle-fill text-warning"></i> The whole field is not '
+                + 'visible: all the green area should be in the image';
+        } else if (running) {
+            status = 'warning';
+            title = 'The field is not calibrated';
+            message = '<i class="bi bi-exclamation-triangle-fill text-warning"></i> Field not calibrated: '
+                + 'the four field markers should be visible';
+        }
+        $('.vision-status').removeClass('ok warning error').addClass(status).attr('title', title);
+        $('.calibrated').html(message);
+        $('.fps').text(running ? 'FPS: ' + video.fps.toFixed(1) : 'FPS: -');
+
+        // Detected objects
+        let html = '';
+        if (detection.ball) {
+            html += '<div><span class="badge text-bg-warning me-2">ball</span>x = ' + round(detection.ball[0])
+                + ', y = ' + round(detection.ball[1]) + '</div>';
+        }
+        for (let entry of Object.keys(detection.markers || {}).sort()) {
+            let marker = detection.markers[entry];
+            let team = robotTeamNumber(entry)[0];
+            let badge = ['green', 'blue'].includes(team) ? 'bg-team team-' + team : 'text-bg-secondary';
+            html += '<div><span class="badge ' + badge + ' me-2">' + escapeHtml(entry) + '</span>'
+                + 'x = ' + round(marker.position[0]) + ', y = ' + round(marker.position[1])
+                + ', orientation = ' + round(marker.orientation) + '</div>';
+        }
+        $('.detection').html(html || '<span class="text-body-secondary">Nothing detected</span>');
+    }
+
+    setInterval(function () {
+        let withImage = current_tab == 'vision' || current_tab == 'referee';
+        backend.enableVideoDebug(withImage);
+        backend.get_video(withImage, function (video) {
             if (video.image) {
-                $('.camera-image').attr('src', 'data:image/jpeg;base64,'+video.image);
+                $('.camera-image').attr('src', 'data:image/jpeg;base64,' + video.image);
             }
-        
-            if (video.running) {
-                $('body').addClass('vision-running');
-            } else {
-                $('body').removeClass('vision-running');
-            }
-
-            $('.fps').text("FPS : " + video.fps.toFixed(1));
-
-            let detection = ''
-            if (video.detection.ball) {
-                detection += 'ball: x='+round(video.detection.ball[0])+', y='+round(video.detection.ball[1])+"<br>";
-            }
-            for (let entry in video.detection.markers) {
-                let robot = video.detection.markers[entry];
-                detection += entry+': x='+round(robot.position[0])+', y='+round(robot.position[1])+', o='+round(robot.orientation)+"<br>";
-            }
-            if (detection == '') {
-                detection = 'no detection';
-            }
-            $('.detection').html(detection);
-
-            if (video.detection.calibrated && video.detection.see_whole_field) {
-                $('.calibrated').text('Field calibrated');
-                $('.calibrated').addClass('text-success');
-                $('.calibrated').removeClass('text-danger');
-                $('.calibrated').html('<i class="bi bi-check2-circle text-success"></i> Field detected and calibrated');
-            } else {
-                if (video.detection.calibrated) {
-                    $('.calibrated').html('<i class="text-warning bi bi-exclamation-circle"></i> Can\'t see whole field, all the green area should be visible</i>');
-                } else {
-                    $('.calibrated').html('<i class="text-warning bi bi-exclamation-circle"></i> Not calibrated (should see the four field markers)</i>');
-                }
-                $('.calibrated').removeClass('text-success');
-                $('.calibrated').addClass('text-danger');
-            }
-
-            if (video.no_image) {
-                $('.calibrated').html('<i class="text-danger bi bi-exclamation-triangle"></i> '
-                    + 'No image from the camera: is it used by another program? '
-                    + 'Try to stop and start the vision, or another camera');
-                $('.calibrated').removeClass('text-success');
-                $('.calibrated').addClass('text-danger');
-            }
-
-            if (video.running && !video.no_image && video.detection.calibrated && video.detection.see_whole_field) {
-                $('body').addClass('vision-no-error');
-            } else {
-                $('body').removeClass('vision-no-error');
-            }
-
-
+            updateStatus(video);
         });
     }, 50);
+
+    lens_calibration_initialize(backend);
 }
 
 function lens_calibration_initialize(backend)
@@ -219,8 +208,8 @@ function lens_calibration_initialize(backend)
             html += '<tr>';
             for (let count of row) {
                 let color = count == 0 ? '#dc3545' : (count < status.coverage_good ? '#ffc107' : '#198754');
-                html += '<td style="width: 28px; height: 18px; background: ' + color
-                    + '; border: 1px solid white" title="' + count + ' corners"></td>';
+                html += '<td style="background: ' + color
+                    + '" title="' + count + ' corners"></td>';
             }
             html += '</tr>';
         }
@@ -310,16 +299,12 @@ function lens_calibration_initialize(backend)
         backend.apply_lens_calibration(function() {
             update();
             // The focal setting was updated from the calibration
-            backend.getCameraSettings(function(settings) {
-                for (let key in settings) {
-                    $('.camera-settings .' + key).val(settings[key]);
-                }
-            });
+            $(document).trigger('rsk:camera-settings');
         });
     });
     $('.lens-remove').click(function() {
-        if (confirm('Remove the lens calibration? The focal setting will be used again.')) {
+        confirmDialog('Remove the lens calibration? The focal setting will be used again.', function () {
             backend.remove_lens_calibration(update);
-        }
+        }, 'Remove');
     });
 }

@@ -1,56 +1,66 @@
+// Competition mode: teams (name and key) saved in the browser, to set them quickly for a game
+
 function competition_initialize(backend) {
     let teams = {};
 
-    let data = localStorage.getItem("teams")
-    if (data != null) {
+    try {
+        teams = JSON.parse(localStorage.getItem('teams')) || {};
+    } catch (e) {
+        teams = {};
+    }
+
+    function save() {
         try {
-            teams = JSON.parse(data);
-        } catch (SyntaxError) {
-            teams = {}
-        }
+            localStorage.setItem('teams', JSON.stringify(teams));
+        } catch (e) { }
     }
 
     function setTeam(name, color) {
-        $(".team-name[rel=" + color + "]").val(name)
-        $(".key-" + color).val(teams[name]);
-        $(".key-" + color).change();
+        $('.team-name[rel="' + color + '"]').val(name).change();
+        $('.key-' + color).val(teams[name]).change();
+        notify(name + ' plays as ' + color, 'success', 3000);
     }
 
     function renderTeams() {
-        console.log(teams);
         let html = '';
-        for (let name in teams) {
-            html += "<tr>"
-            html += "  <td>" + name + "</td>"
-            html += '  <td>'
-            html += '<a class="m-2 btn btn-primary team-blue" rel="' + name + '" href="#">Blue</a>'
-            html += '<a class="m-2 btn btn-success team-green" rel="' + name + '" href="#">Green</a>'
-            html += '<a class="m-2 btn btn-danger team-remove"  rel="' + name + '" href="#">Remove</a>'
-            html += '</td>'
-            html += "</tr>"
+        for (let name of Object.keys(teams).sort()) {
+            html += '<tr data-team="' + escapeHtml(name) + '">'
+                + '<td class="ps-3 fw-semibold">' + escapeHtml(name) + '</td>'
+                + '<td class="text-end pe-3">'
+                + '<span class="team-green"><button class="btn btn-sm btn-team me-1 play-as" data-color="green" type="button">Green</button></span>'
+                + '<span class="team-blue"><button class="btn btn-sm btn-team me-3 play-as" data-color="blue" type="button">Blue</button></span>'
+                + '<button class="btn btn-sm btn-outline-danger team-remove" type="button" title="Remove"><i class="bi bi-trash"></i></button>'
+                + '</td>'
+                + '</tr>';
+        }
+        if (!html) {
+            html = '<tr><td colspan="2" class="text-center text-body-secondary py-4">No team yet</td></tr>';
         }
         $('.competition-teams').html(html);
-
-
-        $('.team-blue').click(function () {
-            let name = $(this).attr('rel');
-            setTeam(name, "blue");
-        });
-        $('.team-green').click(function () {
-            let name = $(this).attr('rel');
-            setTeam(name, "green");
-        });
-        $('.team-remove').click(function () {
-            let name = $(this).attr('rel');
-            delete (teams[name]);
-            renderTeams();
-        });
     }
 
-    $('.add-team').click(function () {
-        teams[$('.add-team-name').val()] = $('.add-team-password').val();
-        localStorage.setItem("teams", JSON.stringify(teams));
+    $('.competition-teams').on('click', '.play-as', function () {
+        setTeam($(this).closest('tr').attr('data-team'), $(this).data('color'));
+    });
+    $('.competition-teams').on('click', '.team-remove', function () {
+        let name = $(this).closest('tr').attr('data-team');
+        confirmDialog('Remove the team "' + name + '"?', function () {
+            delete teams[name];
+            save();
+            renderTeams();
+        }, 'Remove');
+    });
+
+    $('.add-team-form').submit(function (event) {
+        event.preventDefault();
+        let name = $('.add-team-name').val().trim();
+        if (!name) {
+            return;
+        }
+        teams[name] = $('.add-team-password').val();
+        save();
         renderTeams();
+        $('.add-team-name, .add-team-password').val('');
     });
 
     renderTeams();

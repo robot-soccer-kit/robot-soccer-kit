@@ -1,312 +1,188 @@
-html {
-    scroll-behavior: smooth;
+/*
+ * Robot Soccer Kit - Game Controller interface
+ *
+ * Built on Bootstrap 5.3 (light and dark color modes). The team colors are defined once here.
+ */
+
+:root {
+    --rsk-green: #0a9400;
+    --rsk-blue: #0366b8;
+    --rsk-navbar-height: 60px;
+    --rsk-radius: 0.75rem;
 }
 
+[data-bs-theme="dark"] {
+    --rsk-green: #21b316;
+    --rsk-blue: #3d8fe0;
+}
+
+/* Team colors helpers */
+.team-green {
+    --team-color: var(--rsk-green);
+}
+
+.team-blue {
+    --team-color: var(--rsk-blue);
+}
+
+.text-team {
+    color: var(--team-color) !important;
+}
+
+.bg-team {
+    background-color: var(--team-color) !important;
+    color: #fff;
+}
+
+.bg-team-subtle {
+    background-color: color-mix(in srgb, var(--team-color) 12%, transparent);
+}
+
+.border-team {
+    border-color: var(--team-color) !important;
+}
+
+.btn-team {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--team-color);
+    --bs-btn-border-color: var(--team-color);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: color-mix(in srgb, var(--team-color) 85%, black);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--team-color) 85%, black);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: color-mix(in srgb, var(--team-color) 75%, black);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--team-color) 75%, black);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--team-color);
+    --bs-btn-disabled-border-color: var(--team-color);
+}
+
+.btn-outline-team {
+    --bs-btn-color: var(--team-color);
+    --bs-btn-border-color: var(--team-color);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--team-color);
+    --bs-btn-hover-border-color: var(--team-color);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--team-color);
+    --bs-btn-active-border-color: var(--team-color);
+    --bs-btn-disabled-color: var(--team-color);
+    --bs-btn-disabled-border-color: var(--team-color);
+}
+
+/* Layout */
 body {
-    font-size: 20px;
-    position: relative;
+    min-height: 100vh;
+    background-color: var(--bs-tertiary-bg);
 }
 
-
-.waiting-screen {
-    position: fixed;
-    z-index: 1;
-    background-color: rgba(0, 0, 0, 0.8);
-    width: 100%;
-    height: 100%;
-    display: inherit;
+.rsk-navbar {
+    min-height: var(--rsk-navbar-height);
+    background: #1b1f24;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.loader-text {
-    position: fixed;
-    text-align: center;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 2;
-    top: calc(80%);
-    font-size: 50px;
-    color: white;
+.rsk-navbar .navbar-brand img {
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 }
 
-.loader-robot {
-    position: fixed;
-    z-index: 2;
-    left: calc(50% - 240px);
-    top: calc(40% - 240px);
-    width: 470px;
-    height: 470px;
-    animation: spin 5s linear infinite;
-    animation-play-state: running;
+.rsk-navbar .nav-tab .nav-link {
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    white-space: nowrap;
 }
 
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-        content: url("../imgs/robotblue1.svg");
-    }
-
-    25% {
-        content: url("../imgs/robotgreen1.svg");
-    }
-
-    50% {
-        content: url("../imgs/robotblue2.svg");
-    }
-
-    75% {
-        content: url("../imgs/robotgreen2.svg");
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+.rsk-navbar .nav-tab .nav-link:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.06);
 }
 
-.sim_vim {
-    position: absolute;
-    z-index: 0;
-    opacity: 100;
-    /* opacity: 100; */
+.rsk-navbar .nav-tab .nav-link.active {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.14);
 }
 
-.style_fps {
-    background-color: #333;
-    margin-left: 0px;
-    font-size: 28px;
-    text-align: center;
-    min-width: 5em;
+.rsk-navbar .fps {
+    font-variant-numeric: tabular-nums;
+    min-width: 5.5em;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 0.55em;
+    height: 0.55em;
+    border-radius: 50%;
+    background-color: var(--bs-secondary);
+    vertical-align: middle;
+}
+
+.status-dot.ok {
+    background-color: var(--bs-success);
+    box-shadow: 0 0 6px var(--bs-success);
+}
+
+.status-dot.warning {
+    background-color: var(--bs-warning);
+    box-shadow: 0 0 6px var(--bs-warning);
+}
+
+.status-dot.error {
+    background-color: var(--bs-danger);
+    box-shadow: 0 0 6px var(--bs-danger);
+}
+
+.rsk-content {
+    padding: 1rem;
 }
 
 .card {
-    filter: drop-shadow(-5px 5px 5px #ccc);
-    margin-bottom: 20px;
-}
-
-.camera-area-referee {
-    width: 100%;
-    height: calc(100vh - 357px);
-}
-
-.tchat-dim {
-    height: calc(100vh - 477px)
-}
-
-.emergency-button {
-    position: fixed;
-    right: 5px;
-    bottom: 5px;
-}
-
-.settings-button {
-    position: absolute;
-    left: 18px;
-    top: 84px;
-}
-
-.camera-setting label {
-    text-align: right;
-    font-weight: bold;
-}
-
-.invisible {
-    opacity: 0;
-}
-
-.vision-show-running {
-    display: none;
-}
-
-.vision-running .vision-show-running {
-    display: block;
-}
-
-.vision-running .vision-hide-running {
-    display: none;
-}
-
-.vision-has-no-error {
-    display: none;
-}
-
-.vision-no-error .vision-has-no-error {
-    display: inline;
-}
-
-.vision-no-error .vision-has-error {
-    display: none;
-}
-
-
-.nav-item {
-    background-color: #333;
-    margin-right: 5px;
-}
-
-.nav-link {
-    border-radius: 5px;
-    border: 2px solid transparent;
-}
-
-.nav-link.active {
-    background-color: #444;
-    border: 2px solid white;
-}
-
-.robots-show-warning {
-    display: none;
-}
-
-.control-show-warning {
-    display: none;
-}
-
-.robots-warning .robots-show-warning {
-    display: inline;
-}
-
-.control-warning .control-show-warning {
-    display: inline;
-}
-
-.detection-wrapper {
-    min-height: 150px;
-}
-
-.bg-head-green {
-    background-color: rgb(10, 148, 0);
-}
-
-.bg-body-green {
-    background-color: rgba(10, 148, 0, 0.205);
-}
-
-.border-green {
-    border: 1px solid rgb(10, 148, 0);
-}
-
-/* .green-toast-position{
-} */
-
-.form_green_border:focus {
-    border-color: #28a745;
-    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
-}
-
-
-
-/* .bg-head-neutral{
-}
-.bg-body-neutral{
-}
-.border-neutral{
-} */
-
-.neutral-toast-position {
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.text-blue {
-    color: rgb(3, 102, 184);
-}
-
-.text-green {
-    color: rgba(10, 148, 0);
-}
-
-.bg-head-blue {
-    background-color: rgb(3, 102, 184);
-}
-
-.bg-body-blue {
-    background-color: rgb(3, 102, 184, 0.205);
-}
-
-.border-blue {
-    border: 1px solid rgb(3, 102, 184);
-}
-
-.blue-toast-position {
-    margin-left: auto;
-    margin-right: 0;
-}
-
-.bg-body-grey {
-    background-color: rgba(180, 180, 180, 0.205);
-}
-
-.bg-body-red {
-    background-color: rgba(250, 53, 69, 1);
-}
-
-.vert-align {
-    display: flex;
-    align-items: center;
-}
-
-div.progress {
-    margin: 0;
-}
-
-.progress-large {
-    height: 20px;
+    border-radius: var(--rsk-radius);
+    border-color: var(--bs-border-color-translucent);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 14px rgba(0, 0, 0, 0.04);
 }
 
 .card-header {
-    text-transform: capitalize;
+    background-color: transparent;
+    font-weight: 600;
 }
 
-.competition-mode {
+.card-header:first-child {
+    border-radius: var(--rsk-radius) var(--rsk-radius) 0 0;
+}
+
+.section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+}
+
+/* Modes: elements shown or hidden depending on the mode (see app.js) */
+body:not(.mode-competition) .competition-mode,
+body:not(.mode-scheduler) .scheduler-mode,
+body:not(.mode-replay) .replay-mode,
+body:not(.mode-simulation) .simulation-mode,
+body:not(.mode-real) .real-mode,
+body.mode-replay .replay-hide,
+body.mode-simulation .simulation-hide {
+    display: none !important;
+}
+
+/* Vision running or not */
+body:not(.vision-running) .vision-show-running,
+body.vision-running .vision-hide-running {
+    display: none !important;
+}
+
+/* No backend */
+.no-backend {
     display: none;
 }
 
-.scheduler-mode {
-    display: none;
-}
-
-.replay-mode {
-    display: none;
-}
-
-.recording-settings {
-    display: none;
-}
-
-.commands-view table, .penalized-replay-view table {
-    font-size: 17px;
-}
-
-.commands-view td,
-.commands-view th {
-    padding: 0 4px !important;
-    line-height: 1;
-    text-align: center;
-}
-
-.commands-tab td {
-    font-variant-numeric: tabular-nums;
-    min-width: 17px;
-}
-
-.penalized-replay-tab th,
-.penalized-replay-tab td {
-    text-align: center;
-    padding: 0 4px !important;
-}
-
-.replay-progress {
-    width: 100%;
-    height: 6px;
-    background: #ccc;
-    cursor: pointer;
-    position: relative;
-}
-
-.replay-progress-bar {
-    height: 100%;
-    background: blue;
-    width: 0%;
-    pointer-events: none;
+body.backend-lost .no-backend {
+    display: inline-block;
 }
 
 .blinking {
@@ -315,18 +191,358 @@ div.progress {
 
 @keyframes blinker {
     50% {
-        opacity: 0.5;
+        opacity: 0.4;
     }
 }
 
-#back {
-    object-fit: contain;
-} 
-
-.no-backend {
-    position:relative;
+/* Scoreboard */
+.scoreboard {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    overflow: hidden;
 }
 
-.scheduler-game-row-selected, .scheduler-game-row-selected tr {
-    background-color: rgba(255, 200, 0, 0.206);
+.scoreboard .team-block {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    min-width: 0;
+}
+
+.scoreboard .team-block.is-right {
+    flex-direction: row-reverse;
+    text-align: right;
+}
+
+.scoreboard .team-bar {
+    width: 6px;
+    align-self: stretch;
+    border-radius: 3px;
+    background-color: var(--team-color);
+}
+
+.scoreboard .team-info {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.scoreboard .team-name {
+    font-size: 1.35rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 0.1rem 0.4rem;
+    width: 100%;
+    color: inherit;
+}
+
+.scoreboard .team-block.is-right .team-name {
+    text-align: right;
+}
+
+.scoreboard .team-name:hover,
+.scoreboard .team-name:focus {
+    border-color: var(--bs-border-color);
+    background: var(--bs-body-bg);
+    outline: none;
+}
+
+.scoreboard .team-name:disabled {
+    border-color: transparent;
+    background: transparent;
+}
+
+.scoreboard .team-side {
+    font-size: 0.8rem;
+    color: var(--bs-secondary-color);
+    padding: 0 0.45rem;
+}
+
+.scoreboard .score {
+    font-size: 3.2rem;
+    font-weight: 700;
+    line-height: 1;
+    min-width: 1.6em;
+    text-align: center;
+    color: var(--team-color);
+    font-variant-numeric: tabular-nums;
+}
+
+.scoreboard .score-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.scoreboard .score-buttons .btn {
+    --bs-btn-padding-y: 0.05rem;
+    --bs-btn-padding-x: 0.45rem;
+    --bs-btn-font-size: 0.8rem;
+}
+
+.scoreboard .game-center {
+    flex: 0 0 auto;
+    min-width: 13rem;
+    padding: 0.6rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid var(--bs-border-color-translucent);
+    border-right: 1px solid var(--bs-border-color-translucent);
+    background-color: var(--bs-secondary-bg);
+}
+
+.scoreboard .timer {
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.scoreboard .timer.overtime {
+    color: var(--bs-danger);
+}
+
+.scoreboard .timer.ending {
+    animation: blinker 1s linear infinite;
+    color: var(--bs-danger);
+}
+
+.scoreboard .game-state {
+    font-size: 0.9rem;
+    color: var(--bs-secondary-color);
+    text-align: center;
+}
+
+/* Field / camera view */
+.field-card .card-body {
+    padding: 0.5rem;
+}
+
+.field-view {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.field-wrapper {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+}
+
+.field-wrapper .camera-image,
+.field-wrapper #back {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100vh - 430px);
+    min-height: 200px;
+    border-radius: 0.5rem;
+    object-fit: contain;
+}
+
+.field-wrapper .field-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+.field-wrapper #ball.field-overlay.interactive {
+    pointer-events: auto;
+    cursor: grab;
+}
+
+.field-view .camera-placeholder {
+    min-height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bs-secondary-color);
+}
+
+body.sim-view .field-wrapper .camera-image,
+body:not(.sim-view) .field-wrapper .sim-canvas {
+    display: none !important;
+}
+
+/* Robots of a team (referee) */
+.team-robots .card-header {
+    color: #fff;
+    background-color: var(--team-color);
+    border-bottom: 0;
+}
+
+.robot-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.25rem;
+}
+
+.robot-row + .robot-row {
+    border-top: 1px solid var(--bs-border-color-translucent);
+}
+
+.robot-row img {
+    width: 44px;
+    height: 44px;
+}
+
+.robot-row .robot-status {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.robot-row .robot-state {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.robot-row .progress {
+    height: 6px;
+    margin-top: 0.3rem;
+}
+
+.robot-row .progress-bar {
+    background-color: var(--team-color);
+    transition: width 0.2s linear;
+}
+
+/* Referee history */
+.history {
+    max-height: calc(100vh - 470px);
+    min-height: 160px;
+    overflow-y: auto;
+}
+
+.history-entry {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.6rem;
+    border-left: 4px solid var(--bs-border-color);
+    border-radius: 0.35rem;
+    background-color: var(--bs-body-bg);
+    margin-bottom: 0.4rem;
+}
+
+.history-entry.team-green,
+.history-entry.team-blue {
+    border-left-color: var(--team-color);
+    background-color: color-mix(in srgb, var(--team-color) 8%, var(--bs-body-bg));
+}
+
+.history-entry .history-time {
+    font-variant-numeric: tabular-nums;
+    color: var(--bs-secondary-color);
+    font-size: 0.85rem;
+    min-width: 3.2em;
+}
+
+.history-entry .history-event {
+    flex: 1 1 auto;
+}
+
+.history-entry .history-team {
+    font-weight: 600;
+    color: var(--team-color);
+}
+
+.history-separator {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--bs-secondary-color);
+    margin: 0.5rem 0;
+}
+
+/* Vision */
+.vision-image {
+    width: 100%;
+    border-radius: 0.5rem;
+    background: #000;
+}
+
+.detection-list {
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+    min-height: 3rem;
+}
+
+.camera-settings .form-label {
+    font-size: 0.85rem;
+    margin-bottom: 0.15rem;
+    color: var(--bs-secondary-color);
+}
+
+.lens-coverage td {
+    width: 28px;
+    height: 18px;
+    border: 1px solid var(--bs-body-bg);
+}
+
+/* Robots */
+.robot-card .marker-image img {
+    width: 72px;
+    height: 72px;
+    image-rendering: pixelated;
+}
+
+.robot-card .robot-url {
+    font-family: var(--bs-font-monospace);
+    font-size: 0.95rem;
+    word-break: break-all;
+}
+
+.robot-card .robot-infos {
+    font-size: 0.9rem;
+}
+
+/* Replay */
+.replay-progress {
+    width: 100%;
+    height: 8px;
+    background: var(--bs-secondary-bg);
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.replay-progress-bar {
+    height: 100%;
+    background: var(--bs-primary);
+    width: 0%;
+    pointer-events: none;
+}
+
+.replay-progress.fast .replay-progress-bar {
+    background: var(--bs-info);
+}
+
+.replay-table {
+    font-size: 0.85rem;
+}
+
+.replay-table td,
+.replay-table th {
+    text-align: center;
+    padding: 0.15rem 0.3rem !important;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Scheduler */
+.scheduler-game-row-selected > td {
+    background-color: color-mix(in srgb, var(--bs-warning) 20%, transparent) !important;
+}
+
+/* Toasts (notifications) */
+.toast-container {
+    z-index: 1090;
 }

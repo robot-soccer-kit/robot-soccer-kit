@@ -240,6 +240,9 @@ class Backend:
     def get_game_state(self) -> dict:
         return self.referee.get_game_state()
 
+    def get_referee_history(self) -> list:
+        return list(self.referee.referee_history)
+
     def get_wait_ball_position(self):
         return self.referee.wait_ball_position
 
@@ -251,6 +254,12 @@ class Backend:
 
     def set_record_commands(self, yes_no: bool):
         replay_logger.set_record_commands(yes_no)
+
+    def get_recording_settings(self) -> dict:
+        return {
+            "ready_to_record": replay_logger.ready_to_record,
+            "record_commands": replay_logger.record_commands,
+        }
 
     def get_record_filepath(self) -> str:
         return replay_logger.filepath

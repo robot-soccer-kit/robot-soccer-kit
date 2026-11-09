@@ -1,1032 +1,751 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-bs-theme="light">
+
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<link rel="stylesheet" type="text/css" href="static/bootstrap/css/bootstrap.min.css" />
-<link rel="stylesheet" type="text/css" href="static/icons/font/bootstrap-icons.css" />
-<link rel="stylesheet" type="text/css" href="static/css/app.css" />
-<script type="text/javascript" src="static/jquery/jquery.js"></script>
-<script type="text/javascript" src="static/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script type="text/javascript" src="static/js/utils.js"></script>
-<script type="text/javascript" src="static/js/video.js"></script>
-<script type="text/javascript" src="static/js/robots.js"></script>
-<script type="text/javascript" src="static/js/referee.js"></script>
-<script type="text/javascript" src="static/js/simulator.js"></script>
-<script type="text/javascript" src="static/js/competition.js"></script>
-<script type="text/javascript" src="static/js/scheduler.js"></script>
-<script type="text/javascript" src="static/js/control.js"></script>
-<script type="text/javascript" src="static/js/tabs.js"></script>
-<script type="text/javascript" src="static/js/replay.js"></script>
-<script type="text/javascript" src="static/js/field_renderer.js"></script>
-<script type="text/javascript" src="static/js/app.js"></script>
-<script src="static/js/recorder.js"></script>
-<link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon">
-<title>Robot Soccer Kit</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Robot Soccer Kit</title>
+    <link rel="icon" href="static/favicon.ico" type="image/x-icon" />
+
+    <!-- Applying the saved theme before the page is displayed (avoids a flash) -->
+    <script>
+        (function () {
+            let theme = null;
+            try { theme = localStorage.getItem('rsk-theme'); } catch (e) { }
+            if (!theme) {
+                theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
+
+    <link rel="stylesheet" href="static/vendor/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="static/vendor/bootstrap-icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="static/css/app.css" />
+
+    <script src="static/vendor/jquery/jquery.min.js"></script>
+    <script src="static/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="static/js/utils.js"></script>
+    <script src="static/js/field_renderer.js"></script>
+    <script src="static/js/referee_view.js"></script>
+    <script src="static/js/referee.js"></script>
+    <script src="static/js/replay.js"></script>
+    <script src="static/js/simulator.js"></script>
+    <script src="static/js/video.js"></script>
+    <script src="static/js/robots.js"></script>
+    <script src="static/js/control.js"></script>
+    <script src="static/js/recorder.js"></script>
+    <script src="static/js/competition.js"></script>
+    <script src="static/js/scheduler.js"></script>
+    <script src="static/js/app.js"></script>
 </head>
 
-
-<nav class="navbar navbar-expand navbar-dark bg-dark">
-    <div class="container-fluid">
-        <div>
-            <a class="navbar-brand" href="#">
-                <img src="static/imgs/ball.png" width="32" />
-                Robot Soccer Kit
-                <span class="no-backend">
-                <span class="badge rounded-pill text-bg-danger blinking" style="font-size:50%">
-                    No Python Backend
-                </span>
-            </span>
+<body>
+    <!-- Navigation bar -->
+    <nav class="navbar navbar-expand-lg rsk-navbar sticky-top" data-bs-theme="dark">
+        <div class="container-fluid gap-2">
+            <a class="navbar-brand d-flex align-items-center gap-2 me-2" href="#">
+                <img src="static/imgs/ball_32x32.png" width="28" height="28" alt="" />
+                <span class="fw-semibold">Robot Soccer Kit</span>
             </a>
-        </div>
+            <span class="badge text-bg-info simulation-mode">Simulation</span>
+            <span class="badge text-bg-info replay-mode">Replay</span>
+            <span class="badge text-bg-danger no-backend blinking">No connection to the Game Controller</span>
 
-        <ul class="navbar-nav">
-            <li class="nav-item rounded nav-tab not_show_simulated" rel="vision">
-                <a class="nav-link active" aria-current="page" href="#">
-                    <span class="input-group">
-                        <i class="bi bi-webcam"></i>&nbsp;
-                        Vision&nbsp;
-                        <i class="text-warning bi bi-exclamation-circle vision-has-error"></i>
-                        <i class="text-success bi bi-check-lg vision-has-no-error"></i>
-                    </span>
-                </a>
-            </li>
-            <li class="nav-item rounded nav-tab not_show_simulated" rel="robots">
-                <a class="nav-link" href="#">
-                    <i class="bi bi-gear"></i>&nbsp;
-                    Robots&nbsp;
-                    [<span class="text-success robots-ok">0</span>/<span class="text-success robots-count">0</span>]
-                    <i class="text-warning bi bi-exclamation-circle robots-show-warning"></i>
-                </a>
-            </li>
-            <li class="nav-item rounded nav-tab replay-hide" rel="control">
-                <a class="nav-link" href="#">
-                    <i class="bi bi-arrows-move"></i>&nbsp;
-                    Control
-                    <i class="text-warning bi bi-exclamation-circle control-show-warning"></i>
-                </a>
-            </li>
-            <li class="nav-item rounded nav-tab" rel="referee">
-                <a class="nav-link" href="#">
-                    <i class="bi bi-binoculars"></i>&nbsp;
-                    Referee
-                </a>
-            </li>
-            <li class="nav-item rounded nav-tab competition-mode" rel="competition">
-                <a class="nav-link" href="#">
-                    <i class="bi bi-award"></i>&nbsp;
-                    Competition
-                </a>
-            </li>
-            <li class="nav-item rounded nav-tab scheduler-mode" rel="scheduler">
-                <a class="nav-link" href="#">
-                    <i class="bi bi-calendar-date"></i>&nbsp;
-                    Scheduler
-                </a>
-            </li>
-        </ul>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav"
+                aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <ul class="navbar-nav p-2">
-            <li class="style_fps rounded replay-hide">
-                <span class="navbar-text p-2 fps">
-                </span>
-            </li>
-            <li class="replay-mode">
-                <span class="badge rounded-pill text-bg-info" style="font-size:50%">
-                    Replay Mode
-                </span>
-            </li>
-        </ul>
-    </div>
-</nav>
+            <div class="collapse navbar-collapse" id="main-nav">
+                <ul class="navbar-nav mx-lg-auto gap-1">
+                    <li class="nav-item nav-tab real-mode" rel="vision">
+                        <a class="nav-link" href="#vision">
+                            <i class="bi bi-webcam"></i>&nbsp;Vision
+                            <span class="status-dot ms-1 vision-status" title="Vision status"></span>
+                        </a>
+                    </li>
+                    <li class="nav-item nav-tab real-mode" rel="robots">
+                        <a class="nav-link" href="#robots">
+                            <i class="bi bi-robot"></i>&nbsp;Robots
+                            <span class="badge rounded-pill text-bg-secondary ms-1 robots-badge">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item nav-tab replay-hide" rel="control">
+                        <a class="nav-link" href="#control">
+                            <i class="bi bi-joystick"></i>&nbsp;Control
+                            <i class="bi bi-exclamation-triangle-fill text-warning ms-1 control-warning-icon d-none"
+                                title="A team is not allowed to control its robots"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item nav-tab" rel="referee">
+                        <a class="nav-link" href="#referee">
+                            <i class="bi bi-flag"></i>&nbsp;Referee
+                        </a>
+                    </li>
+                    <li class="nav-item nav-tab competition-mode" rel="competition">
+                        <a class="nav-link" href="#competition">
+                            <i class="bi bi-trophy"></i>&nbsp;Competition
+                        </a>
+                    </li>
+                    <li class="nav-item nav-tab scheduler-mode" rel="scheduler">
+                        <a class="nav-link" href="#scheduler">
+                            <i class="bi bi-calendar-event"></i>&nbsp;Scheduler
+                        </a>
+                    </li>
+                </ul>
 
-<div class="p-3 pt-2">
-    <div class="page page-vision">
-        <div class="vision-hide-running">
-
-            <div class="card">
-                <div class="card-header">
-                    <b>Camera detection</b>
+                <div class="d-flex align-items-center gap-2 ms-lg-2">
+                    <span class="badge text-bg-dark border border-secondary-subtle fs-6 fw-normal fps replay-hide"
+                        title="Detection frames per second">FPS: -</span>
+                    <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="offcanvas"
+                        data-bs-target="#settings-panel" title="Settings">
+                        <i class="bi bi-gear"></i>
+                    </button>
+                    <button class="btn btn-outline-light btn-sm theme-toggle" type="button"
+                        title="Switch between light and dark theme">
+                        <i class="bi bi-moon-stars"></i>
+                    </button>
+                    <button class="btn btn-danger fw-semibold emergency replay-hide" type="button"
+                        title="Stops all the robots and disallows the teams to control them">
+                        <i class="bi bi-sign-stop"></i>&nbsp;Emergency
+                    </button>
                 </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="rsk-content">
+
+        <!-- ============================== Vision ============================== -->
+        <section class="page page-vision">
+            <div class="vision-hide-running">
+                <div class="card mx-auto" style="max-width: 640px;">
+                    <div class="card-header"><i class="bi bi-webcam"></i>&nbsp;Start the vision</div>
+                    <div class="card-body">
+                        <label class="form-label" for="camera-select">Camera</label>
+                        <select class="form-select mb-3 cameras" id="camera-select"></select>
+                        <label class="form-label" for="resolution-select">Resolution</label>
+                        <select class="form-select mb-3 resolutions" id="resolution-select"></select>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button class="btn btn-outline-secondary refresh-cameras" type="button">
+                                <i class="bi bi-arrow-repeat"></i>&nbsp;Refresh cameras
+                            </button>
+                            <button class="btn btn-success start-capture" type="button">
+                                <i class="bi bi-play-fill"></i>&nbsp;Start vision
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vision-show-running">
+                <div class="row g-3">
+                    <div class="col-xl-7">
+                        <div class="card">
+                            <div class="card-body p-2">
+                                <img class="vision-image camera-image" alt="Camera image" />
+                            </div>
+                            <div class="card-footer d-flex flex-wrap align-items-center gap-2">
+                                <span class="calibrated me-auto"></span>
+                                <button class="btn btn-sm btn-outline-secondary calibrate-camera" type="button"
+                                    title="Calibrates the field again from its 4 markers">
+                                    <i class="bi bi-bounding-box-circles"></i>&nbsp;Calibrate field
+                                </button>
+                                <button class="btn btn-sm btn-danger stop-capture" type="button">
+                                    <i class="bi bi-stop-fill"></i>&nbsp;Stop vision
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-5 d-flex flex-column gap-3">
+                        <div class="card">
+                            <div class="card-header"><i class="bi bi-crosshair"></i>&nbsp;Detection</div>
+                            <div class="card-body">
+                                <div class="detection-list detection"></div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header"><i class="bi bi-sliders"></i>&nbsp;Camera settings</div>
+                            <div class="card-body">
+                                <div class="row g-2 camera-settings"></div>
+                            </div>
+                        </div>
+
+                        <div class="card lens-calibration">
+                            <div class="card-header"><i class="bi bi-camera"></i>&nbsp;Lens calibration</div>
+                            <div class="card-body">
+                                <div class="lens-current mb-3"></div>
+
+                                <div class="lens-state lens-state-idle">
+                                    <p class="small text-body-secondary mb-2">
+                                        Measures the focal, the optical center and the distortion of the camera
+                                        lens with a calibration board, for a more accurate vision. Print the board
+                                        (its size doesn't matter) and glue it on a flat rigid support.
+                                    </p>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a class="btn btn-outline-secondary" href="api/calibration_board.png"
+                                            download="calibration_board.png">
+                                            <i class="bi bi-download"></i>&nbsp;Download board
+                                        </a>
+                                        <button class="btn btn-primary lens-start" type="button">
+                                            <i class="bi bi-camera"></i>&nbsp;Start lens calibration
+                                        </button>
+                                        <button class="btn btn-outline-danger lens-remove" type="button">
+                                            <i class="bi bi-trash"></i>&nbsp;Remove calibration
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="lens-state lens-state-collecting">
+                                    <ul class="small mb-2">
+                                        <li>Hold the board still: views are captured automatically</li>
+                                        <li>Move it everywhere, <b>including the corners</b> of the image (it can be
+                                            partially out of the image)</li>
+                                        <li>Tilt it in different directions, at different distances</li>
+                                    </ul>
+                                    <div class="mb-2 d-flex flex-wrap align-items-center gap-2">
+                                        <span class="badge fs-6 text-bg-secondary lens-views-badge">
+                                            <span class="lens-views">0</span> views
+                                        </span>
+                                        <span class="small">(at least <span class="lens-min-views"></span>)</span>
+                                        <span class="small lens-board-visible"></span>
+                                        <span class="small text-success fw-bold lens-captured"></span>
+                                    </div>
+                                    <table class="lens-coverage mb-2"></table>
+                                    <div class="small mb-2 lens-missing"></div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-success lens-compute" type="button">
+                                            <i class="bi bi-check2-circle"></i>&nbsp;Compute calibration
+                                        </button>
+                                        <button class="btn btn-outline-secondary lens-cancel" type="button">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="lens-state lens-state-computing">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                    &nbsp;Computing the calibration...
+                                </div>
+
+                                <div class="lens-state lens-state-done">
+                                    <table class="table table-sm small mb-2 lens-result"></table>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-success lens-apply" type="button">
+                                            <i class="bi bi-check2"></i>&nbsp;Apply
+                                        </button>
+                                        <button class="btn btn-outline-secondary lens-cancel" type="button">
+                                            Discard
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="lens-state lens-state-error">
+                                    <p class="text-danger lens-error"></p>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-primary lens-start" type="button">Retry</button>
+                                        <button class="btn btn-outline-secondary lens-cancel" type="button">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================== Robots ============================== -->
+        <section class="page page-robots">
+            <div class="card mb-3">
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label>Camera source</label>
-                        <select class="m-1 cameras form-select"></select>
-                        <select class="m-1 resolutions form-select"></select>
-                    </div>
-                    <div class="d-flex justify-content-end">
-                        <span class="m-1 btn btn-primary refresh-cameras">
-                            <i class="bi bi-arrow-repeat"></i>
-                            Refresh cameras
-                        </span>
-                        <span class="m-1 btn btn-success start-capture">
-                            <i class="bi bi-play-fill"></i>
-                            Start Vision
-                        </span>
+                    <div class="row g-2 align-items-end">
+                        <div class="col-lg">
+                            <label class="form-label" for="robot-urls">Available robots</label>
+                            <select class="form-select urls" id="robot-urls"></select>
+                        </div>
+                        <div class="col-lg-auto d-flex flex-wrap gap-2">
+                            <button class="btn btn-success add-robot" type="button">
+                                <i class="bi bi-plus-lg"></i>&nbsp;Add
+                            </button>
+                            <button class="btn btn-outline-success add-all-robots" type="button">
+                                <i class="bi bi-plus-square-dotted"></i>&nbsp;Add all
+                            </button>
+                            <button class="btn btn-outline-secondary refresh-urls" type="button">
+                                <i class="bi bi-arrow-repeat"></i>&nbsp;Refresh
+                            </button>
+                            <button class="btn btn-outline-primary identify" type="button"
+                                title="Each robot turns in turn, to find which marker is on it">
+                                <i class="bi bi-bullseye"></i>&nbsp;Identify
+                            </button>
+                            <button class="btn btn-outline-danger remove-offline" type="button">
+                                <i class="bi bi-trash"></i>&nbsp;Remove offline
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+            <div class="row g-3 robots"></div>
+            <div class="text-center text-body-secondary py-5 no-robots">
+                <i class="bi bi-robot fs-1"></i>
+                <p class="mt-2 mb-0">No robot yet: select a robot above and click on "Add"</p>
+            </div>
+        </section>
 
+        <!-- ============================== Control ============================== -->
+        <section class="page page-control">
+            <p class="text-body-secondary">
+                Teams control their robots with the client API. A team needs its key (if any) and to be allowed.
+            </p>
+            <div class="row g-3 teams"></div>
+        </section>
 
-        <div class="vision-show-running">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="camera-area d-flex">
-                        <img class="card camera-image w-100" />
+        <!-- ============================== Referee ============================== -->
+        <section class="page page-referee">
+            <div class="alert alert-warning d-flex align-items-center gap-2 vision-hide-running real-mode">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div>The vision is not running: go to the <a href="#vision" class="alert-link goto-tab"
+                        rel="vision">Vision tab</a> to start it.</div>
+            </div>
+            <div class="alert alert-warning no-file-replay d-none">
+                <i class="bi bi-exclamation-triangle-fill"></i>&nbsp;Invalid replay file
+            </div>
+
+            <!-- Scoreboard: teams are shown on the side of the field they defend -->
+            <div class="card scoreboard mb-3">
+                <div class="team-block team-green" data-team="green">
+                    <div class="team-bar"></div>
+                    <div class="team-info">
+                        <input class="team-name" rel="green" type="text" placeholder="Green team"
+                            aria-label="Green team name" />
+                        <div class="team-side"><span class="text-team fw-semibold">Green</span></div>
+                    </div>
+                    <div class="score">0</div>
+                    <div class="score-buttons replay-hide">
+                        <button class="btn btn-outline-team up-score" type="button" title="Add a goal" disabled>
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                        <button class="btn btn-outline-team down-score" type="button" title="Remove a goal"
+                            disabled>
+                            <i class="bi bi-dash-lg"></i>
+                        </button>
                     </div>
                 </div>
 
-                <div class="col-md-6">
+                <div class="game-center">
+                    <div class="timer TimerMinutes">00:00</div>
+                    <div class="game-state GameState">...</div>
+                </div>
+
+                <div class="team-block team-blue" data-team="blue">
+                    <div class="team-bar"></div>
+                    <div class="team-info">
+                        <input class="team-name" rel="blue" type="text" placeholder="Blue team"
+                            aria-label="Blue team name" />
+                        <div class="team-side"><span class="text-team fw-semibold">Blue</span></div>
+                    </div>
+                    <div class="score">0</div>
+                    <div class="score-buttons replay-hide">
+                        <button class="btn btn-outline-team up-score" type="button" title="Add a goal" disabled>
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                        <button class="btn btn-outline-team down-score" type="button" title="Remove a goal"
+                            disabled>
+                            <i class="bi bi-dash-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <!-- Field and robots -->
+                <div class="col-xl-8 col-lg-7">
+                    <div class="card field-card mb-3">
+                        <div class="card-body">
+                            <div class="field-view">
+                                <div class="field-wrapper" id="camera-area">
+                                    <canvas id="back" class="sim-canvas" width="100" height="100"></canvas>
+                                    <canvas id="robots" class="sim-canvas field-overlay"></canvas>
+                                    <canvas id="ball" class="sim-canvas field-overlay"></canvas>
+                                    <img id="vision" class="camera-image" alt="Camera image" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex flex-wrap align-items-center gap-2 replay-hide">
+                            <span class="small text-body-secondary simulation-mode">
+                                <i class="bi bi-mouse"></i> Drag a robot or the ball to move it (right click: rotate)
+                            </span>
+                            <button class="btn btn-sm btn-outline-secondary view-change real-mode" type="button">
+                                <i class="bi bi-diagram-3"></i>&nbsp;<span class="view-change-label">Simulated
+                                    view</span>
+                            </button>
+                            <button class="btn btn-sm btn-warning ms-auto half-time" type="button"
+                                data-bs-toggle="modal" data-bs-target="#half-time-modal" disabled>
+                                <i class="bi bi-hourglass-split"></i>&nbsp;Half time
+                            </button>
+                        </div>
+
+                        <!-- Replay progress -->
+                        <div class="card-footer d-flex align-items-center gap-2 replay-mode replay-progress-grp">
+                            <button class="btn btn-sm btn-outline-secondary replay-btn" id="prev-speed"
+                                title="Play backward (x2)" disabled>
+                                <i class="bi bi-rewind-fill"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary replay-btn d-none reset-speed"
+                                id="reset-spe-back" title="Normal speed" disabled>
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary replay-btn frame-stepper" id="prev-frame"
+                                title="Previous frame" disabled>
+                                <i class="bi bi-skip-start-fill"></i>
+                            </button>
+                            <div class="replay-progress flex-grow-1">
+                                <div class="replay-progress-bar"></div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary replay-btn frame-stepper" id="next-frame"
+                                title="Next frame" disabled>
+                                <i class="bi bi-skip-end-fill"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary replay-btn" id="next-speed"
+                                title="Play forward (x2)" disabled>
+                                <i class="bi bi-fast-forward-fill"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary replay-btn d-none reset-speed"
+                                id="reset-spe-forward" title="Normal speed" disabled>
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Robots of each team (on the side of the field they defend) -->
+                    <div class="row g-3 team-robots-row">
+                        <div class="col-md-6 team-robots-col" data-team="green">
+                            <div class="card team-robots team-green h-100"></div>
+                        </div>
+                        <div class="col-md-6 team-robots-col" data-team="blue">
+                            <div class="card team-robots team-blue h-100"></div>
+                        </div>
+                    </div>
+
+                    <!-- Replay: penalties and commands tables -->
+                    <div class="card mt-3 replay-mode penalized-replay-view">
+                        <div class="card-header">Penalties</div>
+                        <div class="card-body p-1">
+                            <table class="table table-sm mb-0 align-middle replay-table">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>green1</th>
+                                        <th>green2</th>
+                                        <th>blue1</th>
+                                        <th>blue2</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="penalized-replay">
+                                        <th>penalized</th>
+                                        <td rel="green1">...</td>
+                                        <td rel="green2">...</td>
+                                        <td rel="blue1">...</td>
+                                        <td rel="blue2">...</td>
+                                    </tr>
+                                    <tr class="remaining-time-replay">
+                                        <th>remaining time</th>
+                                        <td rel="green1">...</td>
+                                        <td rel="green2">...</td>
+                                        <td rel="blue1">...</td>
+                                        <td rel="blue2">...</td>
+                                    </tr>
+                                    <tr class="penalized-reason-replay">
+                                        <th>reason</th>
+                                        <td rel="green1">...</td>
+                                        <td rel="green2">...</td>
+                                        <td rel="blue1">...</td>
+                                        <td rel="blue2">...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card mt-3 replay-mode commands-view d-none">
+                        <div class="card-header">Commands</div>
+                        <div class="card-body p-1">
+                            <table class="table table-sm mb-0 align-middle replay-table">
+                                <thead>
+                                    <tr>
+                                        <th>Robot</th>
+                                        <th style="width: 50%;">Last command</th>
+                                        <th>Response</th>
+                                        <th>Age (s)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="commands-tab">
+                                    <tr>
+                                        <td>blue1</td>
+                                        <td class="command" rel="blue1">...</td>
+                                        <td class="response" rel="blue1">...</td>
+                                        <td class="age" rel="blue1">...</td>
+                                    </tr>
+                                    <tr>
+                                        <td>blue2</td>
+                                        <td class="command" rel="blue2">...</td>
+                                        <td class="response" rel="blue2">...</td>
+                                        <td class="age" rel="blue2">...</td>
+                                    </tr>
+                                    <tr>
+                                        <td>green1</td>
+                                        <td class="command" rel="green1">...</td>
+                                        <td class="response" rel="green1">...</td>
+                                        <td class="age" rel="green1">...</td>
+                                    </tr>
+                                    <tr>
+                                        <td>green2</td>
+                                        <td class="command" rel="green2">...</td>
+                                        <td class="response" rel="green2">...</td>
+                                        <td class="age" rel="green2">...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game controls and history -->
+                <div class="col-xl-4 col-lg-5 d-flex flex-column gap-3">
+                    <div class="card replay-hide">
+                        <div class="card-body d-flex flex-column gap-3">
+                            <div>
+                                <button class="btn btn-success btn-lg w-100 start-game" type="button">
+                                    <i class="bi bi-play-fill"></i>&nbsp;Start game
+                                </button>
+                                <div class="d-flex gap-2 running-game-controls d-none">
+                                    <button class="btn btn-warning btn-lg flex-fill pause-game" type="button">
+                                        <i class="bi bi-pause-fill"></i>&nbsp;Pause
+                                    </button>
+                                    <button class="btn btn-success btn-lg flex-fill resume-game d-none" type="button">
+                                        <i class="bi bi-play-fill"></i>&nbsp;Resume
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-lg flex-fill stop-game" type="button">
+                                        <i class="bi bi-stop-fill"></i>&nbsp;End game
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="section-title mb-2">Place the robots</div>
+                                <div class="btn-group w-100" role="group">
+                                    <button class="btn btn-outline-secondary place" data-configuration="side"
+                                        type="button" title="Robots on the side of the field">
+                                        <i class="bi bi-arrow-bar-up"></i>&nbsp;Side
+                                    </button>
+                                    <button class="btn btn-outline-secondary place" data-configuration="standard"
+                                        type="button" title="Kick-off position">
+                                        <i class="bi bi-dribbble"></i>&nbsp;Kick-off
+                                    </button>
+                                    <button class="btn btn-outline-secondary place" data-configuration="dots"
+                                        type="button" title="Robots on the dots">
+                                        <i class="bi bi-grid-3x3-gap"></i>&nbsp;Dots
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card replay-mode">
+                        <div class="card-body">
+                            <button class="btn btn-success btn-lg w-100 start-replay start-replay-grp" type="button">
+                                <i class="bi bi-play-fill"></i>&nbsp;Start replay
+                            </button>
+                            <div class="d-flex gap-2 pause-replay-grp d-none">
+                                <button class="btn btn-warning btn-lg flex-fill pause-replay" type="button">
+                                    <i class="bi bi-pause-fill"></i>&nbsp;Pause
+                                </button>
+                                <button class="btn btn-outline-danger btn-lg flex-fill stop-replay" type="button">
+                                    <i class="bi bi-stop-fill"></i>&nbsp;Stop
+                                </button>
+                            </div>
+                            <div class="d-flex gap-2 resume-replay-grp d-none">
+                                <button class="btn btn-success btn-lg flex-fill start-replay" type="button">
+                                    <i class="bi bi-play-fill"></i>&nbsp;Resume
+                                </button>
+                                <button class="btn btn-outline-danger btn-lg flex-fill stop-replay" type="button">
+                                    <i class="bi bi-stop-fill"></i>&nbsp;Stop
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card flex-fill">
+                        <div class="card-header d-flex align-items-center">
+                            <i class="bi bi-clock-history"></i>&nbsp;Referee history
+                        </div>
+                        <div class="card-body history" id="RefereeHistory">
+                            <div class="text-body-secondary text-center history-empty">No event yet</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================== Competition ============================== -->
+        <section class="page page-competition competition-mode">
+            <div class="row g-3">
+                <div class="col-lg-8">
                     <div class="card">
-                        <div class="card-header">
-                            <b>Camera detection settings</b>
-                        </div>
-                        <div class="p-2 card-body ">
-                            <div class="mx-1 row d-flex align-items-center">
-                                <div class="col-9 px-0">
-                                    <span class="calibrated">
-                                    </span>
-                                </div>
-                                <div class="col-3 px-0 text-end">
-                                    <span class="btn btn-secondary calibrate-camera">
-                                        Calibrate Field
-                                    </span>
-                                </div>
-                            </div>
-
-                            <hr class="m-2" />
-
-                            <div class="camera-settings row">
-                            </div>
-                            </label>
-
-                            <hr />
-                            <div class="detection-wrapper">
-                                <code class="detection"></code>
-                            </div>
-
-                            <hr />
-                            <span class="btn btn-danger stop-capture">
-                                <i class="bi bi-stop-fill"></i>&nbsp;
-                                Stop Vision
-                            </span>
+                        <div class="card-header"><i class="bi bi-people"></i>&nbsp;Teams</div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-3">Team</th>
+                                        <th class="text-end pe-3">Play as</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="competition-teams"></tbody>
+                            </table>
                         </div>
                     </div>
-
-                    <div class="card mt-2 lens-calibration">
-                        <div class="card-header">
-                            <b>Lens calibration</b>
-                        </div>
-                        <div class="p-2 card-body">
-                            <div class="lens-current mb-2"></div>
-
-                            <div class="lens-state lens-state-idle">
-                                <p class="small text-muted mb-2">
-                                    Measures the focal, the optical center and the distortion of
-                                    the camera lens with a calibration board, for a more accurate
-                                    vision. Print the board (its size doesn't matter) and glue it on
-                                    a flat rigid support.
-                                </p>
-                                <a class="btn btn-outline-secondary m-1" href="/api/calibration_board.png"
-                                    download="calibration_board.png">
-                                    <i class="bi bi-download"></i>&nbsp;
-                                    Download board
-                                </a>
-                                <span class="btn btn-primary m-1 lens-start">
-                                    <i class="bi bi-camera"></i>&nbsp;
-                                    Start lens calibration
-                                </span>
-                                <span class="btn btn-outline-danger m-1 lens-remove">
-                                    <i class="bi bi-trash"></i>&nbsp;
-                                    Remove calibration
-                                </span>
-                            </div>
-
-                            <div class="lens-state lens-state-collecting">
-                                <ul class="small mb-2">
-                                    <li>Hold the board still: views are captured automatically</li>
-                                    <li>Move it everywhere, <b>including the corners</b> of the image
-                                        (it can be partially out of the image)</li>
-                                    <li>Tilt it in different directions, at different distances</li>
-                                </ul>
-                                <div class="mb-2">
-                                    <span class="badge fs-6 bg-secondary lens-views-badge">
-                                        <span class="lens-views">0</span> views
-                                    </span>
-                                    (at least <span class="lens-min-views"></span>),
-                                    <span class="lens-board-visible"></span>
-                                    <span class="lens-captured text-success fw-bold"></span>
-                                </div>
-                                <table class="lens-coverage mb-2"></table>
-                                <div class="small mb-2 lens-missing"></div>
-                                <span class="btn btn-success m-1 lens-compute">
-                                    <i class="bi bi-check2-circle"></i>&nbsp;
-                                    Compute calibration
-                                </span>
-                                <span class="btn btn-outline-secondary m-1 lens-cancel">
-                                    Cancel
-                                </span>
-                            </div>
-
-                            <div class="lens-state lens-state-computing">
-                                <div class="spinner-border spinner-border-sm" role="status"></div>
-                                &nbsp;Computing the calibration...
-                            </div>
-
-                            <div class="lens-state lens-state-done">
-                                <table class="table table-sm small mb-2 lens-result"></table>
-                                <span class="btn btn-success m-1 lens-apply">
-                                    <i class="bi bi-check2"></i>&nbsp;
-                                    Apply
-                                </span>
-                                <span class="btn btn-outline-secondary m-1 lens-cancel">
-                                    Discard
-                                </span>
-                            </div>
-
-                            <div class="lens-state lens-state-error">
-                                <p class="text-danger lens-error"></p>
-                                <span class="btn btn-primary m-1 lens-start">
-                                    Retry
-                                </span>
-                                <span class="btn btn-outline-secondary m-1 lens-cancel">
-                                    Cancel
-                                </span>
-                            </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-person-plus"></i>&nbsp;Add a team</div>
+                        <div class="card-body">
+                            <form class="add-team-form">
+                                <label class="form-label" for="add-team-name">Team name</label>
+                                <input class="form-control mb-2 add-team-name" id="add-team-name" type="text"
+                                    required />
+                                <label class="form-label" for="add-team-password">Team key</label>
+                                <input class="form-control mb-3 add-team-password" id="add-team-password"
+                                    type="password" autocomplete="off" />
+                                <button class="btn btn-success w-100 add-team" type="submit">
+                                    <i class="bi bi-plus-lg"></i>&nbsp;Add
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <button
-            class="btn btn-outline-light btn-lg settings-button border-0 vision-show-running display-python-settings"
-            type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSettings"
-            aria-controls="offcanvasSettings">
-            <i class="bi bi-gear-fill"></i>
-        </button>
-    </div>
+        </section>
 
-    <div class="page page-robots">
-        <div class="card">
-            <div class="card-header">
-                <b>Adding a robot</b>
-            </div>
-            <div class="card-body">
-                <div class="justify-content-center">
-                    <div class="mb-3">
-                        <label>URLs</label>
-                        <select class="m-1 urls form-select"></select>
-                    </div>
+        <!-- ============================== Scheduler ============================== -->
+        <section class="page page-scheduler scheduler-mode">
+            <div class="card">
+                <div class="card-header d-flex align-items-center">
+                    <span><i class="bi bi-calendar-event"></i>&nbsp;Games</span>
+                    <button class="btn btn-sm btn-outline-primary ms-auto scheduler-refresh-games" type="button">
+                        <i class="bi bi-arrow-repeat"></i>&nbsp;Refresh games
+                    </button>
                 </div>
-                <div class="d-flex justify-content-end">
-                    <span class="m-1 btn btn-danger remove-offline">
-                        <i class="bi bi-trash"></i>
-                        Remove offline
-                    </span>
-                    <span class="m-1 btn btn-primary refresh-urls">
-                        <i class="bi bi-arrow-repeat"></i>
-                        Refresh URLs
-                    </span>
-                    <span class="m-1 btn btn-secondary identify">
-                        <i class="bi bi-bullseye"></i>
-                        Identify
-                    </span>
-                    <span class="m-1 btn btn-success add-all-robots">
-                        <i class="bi bi-asterisk"></i>
-                        Add all
-                    </span>
-                    <span class="m-1 btn btn-success add-robot">
-                        <i class="bi bi-plus-circle"></i>
-                        Add
-                    </span>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Time</th>
+                                <th class="text-end">Green team</th>
+                                <th class="text-center">Result</th>
+                                <th>Blue team</th>
+                                <th>Comment</th>
+                                <th class="text-end pe-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="scheduler-teams"></tbody>
+                    </table>
                 </div>
             </div>
-        </div>
+        </section>
+    </main>
 
-        <div class="robots">
-        </div>
-    </div>
-
-    <div class="page page-control">
-        <div class="teams"></div>
-    </div>
-
-    <div class="page page-referee">
-        <div class="referee"></div>
-
-        <div class="vision-hide-running replay-hide">
-            <div class="alert alert-warning d-flex align-items-center" role="alert">
-                <div>
-                    <i class="bi bi-exclamation-triangle-fill"></i>&nbsp;
-                    Detection algorithm is not running, please go to <a href="#" class="alert-link goto-tab"
-                        rel="vision">Vision tab</a> to start it.
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div id="first-col" class="col-7">
-                <div class="alert alert-warning align-items-center d-flex no-file-replay d-none" role="alert">
-                    <div>
-                        <i class="bi bi-exclamation-triangle-fill"></i>&nbsp;
-                        Invalid replay file
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12">
-                        <div class="vision-show-running">
-                            <div id="camera-area" class="camera-area-referee justify-content-center d-flex">
-                                <canvas id="back" class="card d-none m-0" height="100" width="100"></canvas>
-                                <canvas id="robots" class="sim_vim"></canvas>
-                                <canvas id="ball" class="sim_vim"></canvas>
-                                <img id="vision" class="card camera-image m-0" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 py-2 text-center replay-hide">
-                        <button id="MidTimeChange" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#staticBackdrop" disabled>
-                            <i class="bi bi-arrow-repeat"></i> Half time Change
-                        </button>
-
-                        <button id="ViewChange" class="btn btn-secondary btn-sm not_show_simulated" z-index="0">
-                            <i class="bi bi-camera"></i> Simulated View
-                        </button>
-                    </div>
-                    <div class="d-flex d-none align-items-center gap-2 my-2 replay-progress-grp replay-mode">
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-outline-secondary replay-btn" id="prev-speed" disabled>
-                                <i class="bi bi-chevron-double-left"></i>
-                            </button>
-                            <button class="btn btn-outline-secondary replay-btn d-none reset-speed" id="reset-spe-back" disabled>
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
-                            <button class="btn btn-outline-secondary replay-btn frame-stepper" id="prev-frame" disabled>
-                                <i class="bi bi-chevron-bar-left"></i>
-                            </button>
-                        </div>
-
-                        <div class="replay-progress flex-grow-1">
-                            <div class="replay-progress-bar"></div>
-                        </div>
-
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-outline-secondary replay-btn frame-stepper" id="next-frame" disabled>
-                                <i class="bi bi-chevron-bar-right"></i>
-                            </button>
-                            <button class="btn btn-outline-secondary replay-btn" id="next-speed" disabled>
-                                <i class="bi bi-chevron-double-right"></i>
-                            </button>
-                            <button class="btn btn-outline-secondary replay-btn d-none reset-speed" id="reset-spe-forward" disabled>
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="row d-flex robot-penalize-tab replay-hide">
-                    <div id="XnegPenalty" class="col-6">
-                        <div class="card text-center border-blue">
-                            <div class="card-header bg-head-blue text-light">
-                                <b class="second-team-name">Team 2 Name</b>
-                            </div>
-                            <div class="p-2 card-body bg-body-blue">
-                                <div class="row vert-align mb-3 mt-1 robot-penalty" rel="blue1">
-                                    <div class="col-2">
-                                        <img src="static/imgs/robotblue1.svg" alt="Robot Blue 1" height="50px" />
-                                    </div>
-                                    <div class="col-7 replay-hide">
-                                        <div class="row">
-                                            <div class="col-12 robot-state">
-                                                <h6>Blue 1 State</h6>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <div class="progress progress-large">
-                                                    <div class="progress-bar progress-bar-striped" role="progressbar"
-                                                        style="width: 100%"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-1 p-0 m-0">
-                                        <button class="btn btn-primary btn-sm penalize" disabled>
-                                            5s
-                                        </button>
-                                    </div>
-                                    <div class="col-1 p-2 m-0">
-                                        <button class="btn btn-danger btn-sm unpenalize" disabled>
-                                            <i class="bi bi-x-circle"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="row vert-align mb-1 robot-penalty" rel="blue2">
-                                    <div class="col-2">
-                                        <img src="static/imgs/robotblue2.svg" alt="Robot Blue 2" height="50px" />
-                                    </div>
-                                    <div class="col-7 replay-hide">
-                                        <div class="row">
-                                            <div class="col-12 robot-state">
-                                                <h6>Blue 2 State</h6>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <div class="progress progress-large">
-                                                    <div class="progress-bar progress-bar-striped" role="progressbar"
-                                                        style="width: 100%"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-1 p-0 m-0">
-                                        <button class="btn btn-primary btn-sm penalize" disabled>
-                                            5s
-                                        </button>
-                                    </div>
-                                    <div class="col-1 p-2 m-0">
-                                        <button class="btn btn-danger btn-sm unpenalize" disabled>
-                                            <i class="bi bi-x-circle"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="XposPenalty" class="col-6">
-                        <div class="card text-center border-green">
-                            <div class="card-header bg-head-green text-light">
-                                <b class="first-team-name">Team 1 Name</b>
-                            </div>
-                            <div id="green-referee-body" class="p-2 card-body bg-body-green">
-                                <div class="row vert-align mb-3 mt-1 robot-penalty" rel="green1">
-                                    <div class="col-2">
-                                        <img src="static/imgs/robotgreen1.svg" alt="Robot Green 1" height="50" />
-                                    </div>
-                                    <div class="col-7 replay-hide">
-                                        <div class="row">
-                                            <div class="col-12 robot-state">
-                                                <h6>Green 1 State</h6>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <div class="progress progress-large">
-                                                    <div class="progress-bar progress-bar-striped bg-success"
-                                                        role="progressbar" style="width: 100%"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-1 p-0 m-0">
-                                        <button class="btn btn-success btn-sm penalize" disabled>
-                                            5s
-                                        </button>
-                                    </div>
-                                    <div class="col-1 p-2 m-0">
-                                        <button class="btn btn-danger btn-sm unpenalize" disabled>
-                                            <i class="bi bi-x-circle"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="row vert-align mb-1 robot-penalty" rel="green2">
-                                    <div class="col-2">
-                                        <img src="static/imgs/robotgreen2.svg" alt="Robot Green 2" height="50px" />
-                                    </div>
-                                    <div class="col-7 replay-hide">
-                                        <div class="row">
-                                            <div class="col-12 robot-state">
-                                                <h6>Green 2 State</h6>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <div class="progress progress-large">
-                                                    <div class="progress-bar progress-bar-striped bg-success"
-                                                        role="progressbar" style="width: 100%"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-1 p-0 m-0">
-                                        <button class="btn btn-success btn-sm penalize" disabled>
-                                            5s
-                                        </button>
-                                    </div>
-                                    <div class="col-1 p-2 m-0">
-                                        <button class="btn btn-danger btn-sm unpenalize" disabled>
-                                            <i class="bi bi-x-circle"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- <div class="card replay-mode detection-view">
-
-                    <div class="card-body p-1">
-
-                        <table class="table table-sm mb-0 align-middle detection-tab">
-
-                            <colgroup>
-                                <col span="11" style="width: 11.1%">
-                            </colgroup>
-
-                            <thead>
-                                <tr>
-                                    <th>markers</th>
-                                    <td>green1</td>
-                                    <td>green2</td>
-                                    <td>blue1</td>
-                                    <td>blue2</td>
-                                    <td>c1</td>
-                                    <td>c2</td>
-                                    <td>c3</td>
-                                    <td>c4</td>
-                                </tr>
-                            </thead>
-
-                            <tbody class="detection-tab">
-
-                                <tr class="detected">
-                                    <th>detected</th>
-                                    <td rel="green1">...</td>
-                                    <td rel="green2">...</td>
-                                    <td rel="blue1">...</td>
-                                    <td rel="blue2">...</td>
-                                    <td rel="c1">...</td>
-                                    <td rel="c2">...</td>
-                                    <td rel="c3">...</td>
-                                    <td rel="c4">...</td>
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div> -->
-                <div class="card replay-mode penalized-replay-view">
-
-                    <div class="card-body p-1">
-
-                        <table class="table table-sm mb-0 align-middle penalized-replay-tab">
-
-                            <colgroup>
-                                <col span="11" style="width: 20%">
-                            </colgroup>
-
-                            <thead>
-                                <tr>
-                                    <th>markers</th>
-                                    <td>green1</td>
-                                    <td>green2</td>
-                                    <td>blue1</td>
-                                    <td>blue2</td>
-                                </tr>
-                            </thead>
-
-                            <tbody class="">
-
-                                <tr class="penalized-replay">
-                                    <th>penalized</th>
-                                    <td rel="green1">...</td>
-                                    <td rel="green2">...</td>
-                                    <td rel="blue1">...</td>
-                                    <td rel="blue2">...</td>
-                                </tr>
-
-                                <tr class="remaining-time-replay">
-                                    <th>remaining time</th>
-                                    <td rel="green1">...</td>
-                                    <td rel="green2">...</td>
-                                    <td rel="blue1">...</td>
-                                    <td rel="blue2">...</td>
-                                </tr>
-
-                                <tr class="penalized-reason-replay">
-                                    <th>penalized-reason</th>
-                                    <td rel="green1">...</td>
-                                    <td rel="green2">...</td>
-                                    <td rel="blue1">...</td>
-                                    <td rel="blue2">...</td>
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div>
-                <div class="card replay-mode commands-view">
-
-                    <div class="card-body p-1">
-
-                        <table class="table table-sm mb-0 align-middle">
-
-                            <thead>
-                                <tr class="bg-body-grey">
-                                    <th>Robot</th>
-                                    <th style="width: 50%;">Last Command</th>
-                                    <th>Response</th>
-                                    <th>Age</th>
-                                </tr>
-                            </thead>
-
-                            <tbody class="commands-tab">
-
-                                <tr>
-                                    <td>blue1</td>
-                                    <td class="command" rel="blue1">...</td>
-                                    <td class="response" rel="blue1">...</td>
-                                    <td class="age" rel="blue1">...</td>
-                                </tr>
-
-                                <tr>
-                                    <td>blue2</td>
-                                    <td class="command" rel="blue2">...</td>
-                                    <td class="response" rel="blue2">...</td>
-                                    <td class="age" rel="blue2">...</td>
-                                </tr>
-
-                                <tr>
-                                    <td>green1</td>
-                                    <td class="command" rel="green1">...</td>
-                                    <td class="response" rel="green1">...</td>
-                                    <td class="age" rel="green1">...</td>
-                                </tr>
-
-                                <tr>
-                                    <td>green2</td>
-                                    <td class="command" rel="green2">...</td>
-                                    <td class="response" rel="green2">...</td>
-                                    <td class="age" rel="green2">...</td>
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div>
-            </div>
-            <div class="col-5">
-                <div class="row">
-                     <div class="col-12 replay-hide">
-                        <span class="mb-2 btn btn-success w-100 start-game start-game-grp">
-                            <i class="bi bi-play-fill"></i>&nbsp;
-                            Start Game
-                        </span>
-                        <span class="mb-2 btn-group pause-game-grp d-flex d-none" role="group">
-                            <span class="btn btn-warning pause-game w-100">
-                                <i class="bi bi-pause-fill"></i>&nbsp;
-                                Pause Game
-                            </span>
-                            <span class="btn btn-danger stop-game w-100">
-                                <i class="bi bi-stop-fill"></i>&nbsp;
-                                End Game
-                            </span>
-                        </span>
-                        <span class="mb-2 btn-group resume-game-grp d-flex d-none" role="group">
-                            <button class="btn btn-success resume-game w-100">
-                                <i class="bi bi-play-fill"></i>&nbsp;
-                                Resume Game
-                            </button>
-                            <span class="btn btn-danger stop-game w-100">
-                                <i class="bi bi-stop-fill"></i>&nbsp;
-                                End Game
-                            </span>
-                        </span>
-                    </div>
-                    <div class="col-12 replay-mode">
-                        <span class="mb-2 btn btn-success w-100 start-replay start-replay-grp">
-                            <i class="bi bi-play-fill"></i>&nbsp;
-                            Start replay
-                        </span>
-                        <span class="mb-2 btn-group d-flex d-none pause-replay-grp" role="group">
-                            <span class="btn btn-warning w-100 pause-replay">
-                                <i class="bi bi-pause-fill"></i>&nbsp;
-                                Pause
-                            </span>
-                            <span class="btn btn-danger w-100 stop-replay">
-                                <i class="bi bi-stop-fill"></i>&nbsp;
-                                Stop
-                            </span>
-                        </span>
-                        <span class="mb-2 btn-group d-flex d-none resume-replay-grp" role="group">
-                            <button class="btn btn-success w-100 start-replay">
-                                <i class="bi bi-play-fill"></i>&nbsp;
-                                Resume
-                            </button>
-                            <span class="btn btn-danger stop-game w-100 stop-replay">
-                                <i class="bi bi-stop-fill"></i>&nbsp;
-                                Stop
-                            </span>
-                        </span>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card text-center">
-                            <div class="card-header">
-                                <h5 class="mb-0 GameState">...</h5>
-                            </div>
-                            <div class="p-2 card-body">
-                                <div class="row align-items-center">
-                                    <div class="col-3">
-                                        <div class="card bg-body-green m-1">
-                                            <div class="card-body p-2">
-                                                <h1 class="mb-1" id="GreenScore"></h1>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-1 p-0 score-zone" rel="green">
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <button
-                                                    class="btn rounded-circle btn-success btn-sm up-score bg-head-green replay-hide"
-                                                    disabled>
-                                                    <i class="bi bi-caret-up-fill"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <button
-                                                    class="btn rounded-circle btn-success btn-sm down-score bg-head-green replay-hide"
-                                                    disabled>
-                                                    <i class="bi bi-caret-down-fill"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-4 p-0">
-                                        <div class="card bg-body-grey m-1 mx-4">
-                                            <div class="card-body p-2">
-                                                <h2 class="TimerMinutes mb-1"></h2>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-1 p-0 score-zone" rel="blue">
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <button
-                                                    class="btn rounded-circle btn-primary btn-sm up-score bg-head-blue replay-hide"
-                                                    disabled>
-                                                    <i class="bi bi-caret-up-fill"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <button
-                                                    class="btn rounded-circle btn-primary btn-sm down-score bg-head-blue replay-hide"
-                                                    disabled>
-                                                    <i class="bi bi-caret-down-fill"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-3">
-                                        <div class="card bg-body-blue m-1">
-                                            <div class="card-body p-2">
-                                                <h1 class="mb-1" id="BlueScore"></h1>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-5 pe-5">
-                                        <input class="form-control team-name form_green_border" rel="green" type="text"
-                                            placeholder="Green Team Name">
-                                    </div>
-                                    <div class="col-2">
-                                    </div>
-                                    <div class="col-5 ps-5">
-                                        <input class="form-control team-name text-end" rel="blue" type="text"
-                                            placeholder="Blue Team Name">
-                                    </div>
-                                </div>
-
-                                <div class="row replay-hide">
-                                    <h6 class="mt-3 mb-0 text-center">
-                                        Set Robots Configuration
-                                    </h6>
-                                    <div class="mt-2 btn-group btn-group-sm d-flex" role="group">
-                                        <button class="btn btn-outline-secondary w-100 side-place">
-                                            Side
-                                        </button>
-                                        <button class="btn btn-secondary w-100 strd-place">
-                                            Standard
-                                        </button>
-                                        <button class="btn btn-outline-secondary w-100 dots-place">
-                                            Dots
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card text-center">
-                            <div class="card-header">
-                                <h5 class="mb-0">Referee History</h5>
-                            </div>
-                            <div id="tchat" class="p-2 card-body overflow-auto tchat-dim">
-                                <h6 id="NoHistory" class="text-muted">No History</h6>
-                                <div id="RefereeHistory" class="neutral-position-relative top-0 px-3 w-100">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <span class="btn btn-outline-dark btn-lg settings-button border-0 vision-show-running display-python-settings"
-            type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSettings"
-            aria-controls="offcanvasSettings">
-            <i class="bi bi-gear-fill"></i>
-        </span>
-    </div>
-
-
-    <!-- Modal -->
-    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        aria-labelledby="staticBackdropLabel" aria-hidden="true">
-        <div class="modal-dialog">
+    <!-- ============================== Half time ============================== -->
+    <div class="modal fade" id="half-time-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="half-time-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="staticBackdropLabel">Half-Time Waiting Room</h5>
+                    <h5 class="modal-title" id="half-time-title">
+                        <i class="bi bi-hourglass-split"></i>&nbsp;Half time
+                    </h5>
                 </div>
-                <div class="modal-body pb-0 text-center">
-                    <div class="card bg-body-grey m-1 mx-4">
-                        <div class="card-body p-2">
-                            <h2 class="TimerMinutes mb-1"></h2>
-                        </div>
+                <div class="modal-body text-center">
+                    <div class="display-5 fw-bold mb-3 TimerMinutes">00:00</div>
+                    <div class="half-time-step" data-step="covers">
+                        <p>Do the teams want to swap their robots covers?</p>
                     </div>
-                    <div class="ChangeCover m-2">
-                        Do you want to swap robot covers ?
+                    <div class="half-time-step d-none" data-step="identify">
+                        <p>When the covers are swapped, click on "Identify" to find which marker is on each robot.</p>
+                        <p class="half-time-identifying d-none text-body-secondary">
+                            <span class="spinner-border spinner-border-sm"></span>&nbsp;Identifying the robots...
+                        </p>
                     </div>
-                    <div class="MidTimeIdentifyBefore m-2 d-none">
-                        When covers are swapped, please click on "Identify" and wait for Robots identification
-                    </div>
-                    <div class="MidTimeIdentifyWait m-2 d-none">
-                        Wait for Robots identification...
-                    </div>
-                    <div class="MidTimeIdentifyDone m-2 d-none">
-                        Identification Done. Please Continue
-                    </div>
-                    <div class="SecondHalfTime m-2 d-none">
-                        When Half-Time has ended, click on "Start Second Half-Time" to continue the Game
+                    <div class="half-time-step d-none" data-step="second-half">
+                        <p>When the half time is over, start the second half.</p>
                     </div>
                 </div>
-                <div class="ChangeCover modal-footer d-flex justify-content-center">
-                    <button id="Y_ChangeCover" type="button" class="btn btn-success">Yes</button>
-                    <button id="N_ChangeCover" type="button" class="btn btn-danger">No</button>
+                <div class="modal-footer justify-content-center half-time-step" data-step="covers">
+                    <button class="btn btn-success half-time-swap-covers" type="button">Yes, swap covers</button>
+                    <button class="btn btn-outline-secondary half-time-keep-covers" type="button">No</button>
                 </div>
-                <div class="MidTimeIdentify modal-footer d-flex justify-content-center d-none">
-                    <span id="BtnMidTimeIdentify" class="m-1 btn btn-secondary identify">
-                        <i class="bi bi-bullseye"></i>
-                        Identify
-                    </span>
-                    <button id="Next_MidTimeIdentify" type="button" class="btn btn-success d-none">Continue</button>
+                <div class="modal-footer justify-content-center half-time-step d-none" data-step="identify">
+                    <button class="btn btn-primary half-time-identify" type="button">
+                        <i class="bi bi-bullseye"></i>&nbsp;Identify
+                    </button>
+                    <button class="btn btn-success half-time-identified d-none" type="button">Continue</button>
                 </div>
-                <div class="SecondHalfTime modal-footer d-flex justify-content-center d-none replay-hide">
-                    <button id="BtnSecondHalfTime" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Start
-                        Second Half-Time</button>
+                <div class="modal-footer justify-content-center half-time-step d-none" data-step="second-half">
+                    <button class="btn btn-success half-time-second-half" type="button" data-bs-dismiss="modal">
+                        <i class="bi bi-play-fill"></i>&nbsp;Start second half
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Settings Panel -->
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasSettings"
-        aria-labelledby="offcanvasSettingsLabel">
+    <!-- ============================== Settings ============================== -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="settings-panel" aria-labelledby="settings-title">
         <div class="offcanvas-header">
-            <h4 class="offcanvas-title" id="offcanvasSettingsLabel">Settings</h4>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <h5 class="offcanvas-title" id="settings-title"><i class="bi bi-gear"></i>&nbsp;Settings</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-        <div class="m-3 btn-group btn-group-sm d-flex replay-hide" role="group">
-            <button class="btn btn-secondary w-100 show-general-settings">
-                General
+        <div class="offcanvas-body">
+            <div class="section-title mb-2">Display</div>
+            <p class="small text-body-secondary replay-hide">
+                What is drawn on the image (disabling drawings can improve the performances of slow computers)
+            </p>
+            <div class="display-settings mb-2"></div>
+            <button type="button" class="btn btn-sm btn-outline-secondary default-settings real-mode">
+                <i class="bi bi-arrow-counterclockwise"></i>&nbsp;Default display
             </button>
-            <button class="btn btn-outline-secondary w-100 show-rec-settings">
-                Recording
-            </button>
-        </div>
-        <div class="offcanvas-body pt-0 general-settings">
-            <div class="pb-4 replay-hide">
-                Here, you can change what is drawn on the camera image (disabling drawings can improve performances for
-                slow computers)
-            </div>
-            <div class="display-settings"></div>
-            <div class="btn-group pt-4 replay-hide" role="group" aria-label="Basic mixed styles example">
-                <button type="button" id="default-settings" class="btn btn-outline-warning">
-                    Default
-                    <i class="bi bi-arrow-counterclockwise"></i>
-                </button>
-            </div>
-        </div>
-        <div class="offcanvas-body pt-0 recording-settings">
-            <div class="pb-4">
-                Here, you can enable the recorder to save the logs of the game, allowing you to review them
-                in replay mode <br>
-                Logs are saved in <span class="fw-bold">rsk_recorder/</span> (it will be created if it doesn't exist)
-            </div>
-            <div class="enable-rec-settings">
-                <div class="form-check form-switch mb-4">
-                    <input class="form-check-input" type="checkbox" role="switch" id="activate-rec">
-                    <label class="form-check-label" for="flexSwitchCheckDefault">Enable Recording</label>
-                </div>
-                <div class="display-rec-settings d-none not_show_simulated">
-                    <h6 class="mb-2">More options for debugging during replay</h6>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" rel="rec-commands">
-                        <label class="form-check-label" for="flexSwitchCheckDefault">Record command flow</label>
+
+            <div class="replay-hide">
+                <hr class="my-4" />
+                <div class="section-title mb-2">Recording</div>
+                <p class="small text-body-secondary">
+                    Records the games to review them in replay mode. Records are saved in
+                    <code>rsk_recorder/</code>, next to where the Game Controller is started.
+                </p>
+                <div class="enable-rec-settings">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="activate-rec" />
+                        <label class="form-check-label" for="activate-rec">Record the games</label>
                     </div>
-                    <div class="mb-1" style="font-size: 60%;">
-                        Record the commands received by the robots (may increase the replay's file size)
+                    <div class="form-check form-switch display-rec-settings d-none simulation-hide">
+                        <input class="form-check-input" type="checkbox" role="switch" id="record-commands" />
+                        <label class="form-check-label" for="record-commands">Record the commands sent to the
+                            robots</label>
+                        <div class="form-text">For debugging, makes the record bigger</div>
                     </div>
-                    <!-- <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" rel="rec-detection">
-                        <label class="form-check-label" for="flexSwitchCheckDefault">Record detection info</label>
+                    <div class="form-text recording-locked d-none">
+                        The recording settings can't be changed during a game
                     </div>
-                    <div class="mb-1" style="font-size: 60%;">
-                        Record the detection informations from the camera
-                    </div> -->
                 </div>
             </div>
         </div>
     </div>
-    <!-- End Settings Panel -->
 
-    <div class="page page-competition competition-mode">
-        <table class="table table-striped">
-            <tr>
-                <th>
-                    Team
-                </th>
-                <th>
-                    Action
-                </th>
-            </tr>
-            
-            <tbody class="competition-teams">
-            </tbody>
-        </table>
-
-        <hr/>
-
-        <div class="card">
-            <div class="card-header col-sm-10">
-                Add a team
-            </div>
-            <div class="card-body">
-                Team name: <input class="form-control add-team-name" type="text" /><br/>
-                Team password: <input class="form-control add-team-password" type="password" />
-                <hr/>
-                <input type="submit" class="form-control btn btn-success add-team">
-            </div>
-        </div>
-    </div>
-
-    <div class="page page-scheduler scheduler-mode">
-        <div class="card">
-            <div class="card-header text-center">
-                <a href="#" class="scheduler-refresh-games btn btn-primary">Refresh games</a>
-            </div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <tr>
-                        <th>Time</th>
-                        <th>Blue team</th>
-                        <th>Result</th>
-                        <th>Green team</th>
-                        <th>Comment</th>
-                        <th>Action</th>
-                    </tr>
-                    
-                    <tbody class="scheduler-teams">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="emergency-button p-2 replay-hide">
-        <span class="btn emergency btn-danger">
-            <i class="bi bi-slash-circle"></i>
-            Emergency
-        </span>
-    </div>
-    </body>
+    <!-- Notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="notifications"></div>
+</body>
 
 </html>
