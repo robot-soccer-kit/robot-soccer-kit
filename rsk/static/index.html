@@ -172,6 +172,85 @@
                             </span>
                         </div>
                     </div>
+
+                    <div class="card mt-2 lens-calibration">
+                        <div class="card-header">
+                            <b>Lens calibration</b>
+                        </div>
+                        <div class="p-2 card-body">
+                            <div class="lens-current mb-2"></div>
+
+                            <div class="lens-state lens-state-idle">
+                                <p class="small text-muted mb-2">
+                                    Measures the focal, the optical center and the distortion of
+                                    the camera lens with a calibration board, for a more accurate
+                                    vision. Print the board (its size doesn't matter) and glue it on
+                                    a flat rigid support.
+                                </p>
+                                <a class="btn btn-outline-secondary m-1" href="/api/calibration_board.png"
+                                    download="calibration_board.png">
+                                    <i class="bi bi-download"></i>&nbsp;
+                                    Download board
+                                </a>
+                                <span class="btn btn-primary m-1 lens-start">
+                                    <i class="bi bi-camera"></i>&nbsp;
+                                    Start lens calibration
+                                </span>
+                                <span class="btn btn-outline-danger m-1 lens-remove">
+                                    <i class="bi bi-trash"></i>&nbsp;
+                                    Remove calibration
+                                </span>
+                            </div>
+
+                            <div class="lens-state lens-state-collecting">
+                                <ul class="small mb-2">
+                                    <li>Hold the board still: views are captured automatically</li>
+                                    <li>Move it everywhere, <b>including the corners</b> of the image
+                                        (it can be partially out of the image)</li>
+                                    <li>Tilt it in different directions, at different distances</li>
+                                </ul>
+                                <div class="mb-2">
+                                    <b class="lens-views">0</b> views
+                                    (at least <span class="lens-min-views"></span>),
+                                    <span class="lens-board-visible"></span>
+                                </div>
+                                <table class="lens-coverage mb-2"></table>
+                                <span class="btn btn-success m-1 lens-compute">
+                                    <i class="bi bi-check2-circle"></i>&nbsp;
+                                    Compute calibration
+                                </span>
+                                <span class="btn btn-outline-secondary m-1 lens-cancel">
+                                    Cancel
+                                </span>
+                            </div>
+
+                            <div class="lens-state lens-state-computing">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                &nbsp;Computing the calibration...
+                            </div>
+
+                            <div class="lens-state lens-state-done">
+                                <table class="table table-sm small mb-2 lens-result"></table>
+                                <span class="btn btn-success m-1 lens-apply">
+                                    <i class="bi bi-check2"></i>&nbsp;
+                                    Apply
+                                </span>
+                                <span class="btn btn-outline-secondary m-1 lens-cancel">
+                                    Discard
+                                </span>
+                            </div>
+
+                            <div class="lens-state lens-state-error">
+                                <p class="text-danger lens-error"></p>
+                                <span class="btn btn-primary m-1 lens-start">
+                                    Retry
+                                </span>
+                                <span class="btn btn-outline-secondary m-1 lens-cancel">
+                                    Cancel
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -100,6 +100,8 @@ function video_initialize(backend)
         backend.stop_capture();
     });
 
+    lens_calibration_initialize(backend);
+
     // Retrieving the images
     setInterval(function() {
 
@@ -156,4 +158,126 @@ function video_initialize(backend)
 
         });
     }, 50);
+}
+
+function lens_calibration_initialize(backend)
+{
+    function round_to(value, digits) {
+        return Number(value).toFixed(digits);
+    }
+
+    function render_current(status) {
+        let current = status.current;
+        let html = '';
+
+        if (!status.supported) {
+            html = '<i class="bi bi-exclamation-circle text-warning"></i> '
+                + 'The installed OpenCV version is too old for the lens calibration (4.7 or newer is needed)';
+        } else if (!current) {
+            html = '<i class="bi bi-info-circle"></i> '
+                + 'Lens not calibrated: the <code>focal</code> setting is used and the lens distortion is ignored';
+        } else {
+            let date = current.date ? current.date.replace('T', ' ') : '?';
+            let summary = 'focal ' + round_to((current.focal_px[0] + current.focal_px[1]) / 2, 0) + ' px, '
+                + 'distortion ' + round_to(current.distortion_at_image_corners_px, 0) + ' px in the corners';
+            if (status.current_used) {
+                html = '<i class="bi bi-check2-circle text-success"></i> '
+                    + 'Lens calibrated on ' + date + ' (' + summary + '), used by the vision '
+                    + '(the <code>focal</code> setting is not used)';
+            } else {
+                html = '<i class="bi bi-exclamation-circle text-warning"></i> '
+                    + 'Lens calibrated on ' + date + ' for a ' + current.image_size.join('x')
+                    + ' resolution: not used with the current resolution'
+                    + (status.raw_size ? ' (' + status.raw_size.join('x') + ')' : '');
+            }
+        }
+        $('.lens-current').html(html);
+        $('.lens-remove').toggle(!!current);
+    }
+
+    function render_coverage(status) {
+        if (!status.coverage) {
+            $('.lens-coverage').html('');
+            return;
+        }
+        let html = '';
+        for (let row of status.coverage) {
+            html += '<tr>';
+            for (let count of row) {
+                let color = count == 0 ? '#dc3545' : (count < status.coverage_good ? '#ffc107' : '#198754');
+                html += '<td style="width: 28px; height: 18px; background: ' + color
+                    + '; border: 1px solid white" title="' + count + ' corners"></td>';
+            }
+            html += '</tr>';
+        }
+        $('.lens-coverage').html(html);
+    }
+
+    function render_result(result) {
+        if (!result) {
+            return;
+        }
+        let rows = [
+            ['Views', result.views],
+            ['Reprojection error', round_to(result.rms_reprojection_error_px, 2) + ' px'
+                + (result.rms_reprojection_error_px > 1 ? ' <span class="text-warning">(high: is the board flat? images blurred?)</span>' : '')],
+            ['Focal', round_to(result.focal_px[0], 1) + ' / ' + round_to(result.focal_px[1], 1) + ' px'],
+            ['Optical center offset', round_to(result.principal_point_offset_px[0], 1) + ' / '
+                + round_to(result.principal_point_offset_px[1], 1) + ' px'],
+            ['Distortion in the corners', round_to(result.distortion_at_image_corners_px, 1) + ' px'],
+            ['Field of view (diagonal)', round_to(result.diagonal_fov_deg, 1) + '°'],
+        ];
+        let html = '';
+        for (let [name, value] of rows) {
+            html += '<tr><th>' + name + '</th><td>' + value + '</td></tr>';
+        }
+        $('.lens-result').html(html);
+    }
+
+    function update() {
+        if (current_tab != 'vision') {
+            return;
+        }
+        backend.lens_calibration_status(function(status) {
+            $('.lens-state').hide();
+            $('.lens-state-' + status.state).show();
+
+            render_current(status);
+            $('.lens-start').toggleClass('disabled', !status.supported);
+
+            $('.lens-views').text(status.views);
+            $('.lens-min-views').text(status.min_views);
+            $('.lens-board-visible').html(status.board_visible
+                ? '<span class="text-success">board visible</span>'
+                : '<span class="text-muted">board not visible</span>');
+            $('.lens-compute').toggleClass('disabled', status.views < status.min_views);
+            render_coverage(status);
+
+            render_result(status.result);
+            $('.lens-error').text(status.error || '');
+        });
+    }
+
+    $('.lens-state').hide();
+    setInterval(update, 500);
+
+    $('.lens-start').click(function() {
+        backend.start_lens_calibration(update);
+    });
+    $('.lens-cancel').click(function() {
+        backend.cancel_lens_calibration(update);
+    });
+    $('.lens-compute').click(function() {
+        if (!$(this).hasClass('disabled')) {
+            backend.compute_lens_calibration(update);
+        }
+    });
+    $('.lens-apply').click(function() {
+        backend.apply_lens_calibration(update);
+    });
+    $('.lens-remove').click(function() {
+        if (confirm('Remove the lens calibration? The focal setting will be used again.')) {
+            backend.remove_lens_calibration(update);
+        }
+    });
 }
