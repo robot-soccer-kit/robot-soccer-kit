@@ -11,8 +11,9 @@ Installation (with the Game Controller dependencies):
 
 Usage:
 
-    # 1. Generate the board, print it and glue it on a flat rigid support
-    python -m rsk.calibrate_camera --generate board.png
+    # 1. Generate the board (calibration_board.png, in the current directory), print it and glue
+    #    it on a flat rigid support
+    python -m rsk.calibrate_camera --generate
 
     # 2. Calibrate with the live camera (views are captured automatically)
     python -m rsk.calibrate_camera --camera 0 --save-dir calibration_images
@@ -58,6 +59,9 @@ DICTIONARY = cv2.aruco.DICT_5X5_100
 MIN_CORNERS = 12
 # Minimum number of views to calibrate
 MIN_VIEWS = 12
+
+# Default file name of the board image (written in the current directory)
+DEFAULT_BOARD_FILE = "calibration_board.png"
 
 # Resolution used by the Game Controller (see video.py)
 DEFAULT_RESOLUTION = (1920, 1080)
@@ -272,6 +276,7 @@ def live_calibration(index: int, resolution: tuple, save_dir: str = None) -> tup
 
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
+        print(f"Captured views are saved in {os.path.abspath(save_dir)}")
 
     try:
         while True:
@@ -387,7 +392,12 @@ def main(argv=None):
         description="Camera calibration (focal, principal point, lens distortion) with a ChArUco board"
     )
     parser.add_argument(
-        "--generate", type=str, help="Write the board image to print in this file"
+        "--generate",
+        type=str,
+        nargs="?",
+        const=DEFAULT_BOARD_FILE,
+        help=f"Write the board image to print in this file (default: {DEFAULT_BOARD_FILE}, "
+        "in the current directory)",
     )
     parser.add_argument(
         "--camera", "-c", type=int, help="Camera index for live calibration"
@@ -415,7 +425,7 @@ def main(argv=None):
 
     if args.generate:
         generate_board(args.generate)
-        print(f"Board written to {args.generate}")
+        print(f"Board written to {os.path.abspath(args.generate)}")
         print("Print it (the size doesn't matter) and glue it on a flat rigid support")
         return 0
 
@@ -441,7 +451,7 @@ def main(argv=None):
 
     with open(args.output, "w") as file:
         json.dump(result, file, indent=2)
-    print(f"\nResult saved to {args.output}")
+    print(f"\nResult saved to {os.path.abspath(args.output)}")
     return 0
 
 

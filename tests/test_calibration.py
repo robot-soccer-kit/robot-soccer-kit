@@ -126,3 +126,14 @@ def test_command_line_without_camera(capsys):
 
     assert code == 1
     assert "Can't open camera 99" in capsys.readouterr().out
+
+
+def test_generate_board_in_the_current_directory(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+
+    assert calibrate_camera.main(["--generate"]) == 0
+
+    board_file = tmp_path / calibrate_camera.DEFAULT_BOARD_FILE
+    assert board_file.exists()
+    # The full path is shown, so the user knows where the file is
+    assert str(board_file) in capsys.readouterr().out
