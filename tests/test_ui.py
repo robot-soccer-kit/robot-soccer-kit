@@ -498,3 +498,21 @@ def test_phone_referee_without_scrolling(open_page, size):
     expect(page.locator("#history-panel #RefereeHistory")).to_be_visible()
     page.click("#history-panel .btn-close")
     expect(page.locator("#history-panel #RefereeHistory")).to_be_hidden()
+
+
+def test_navbar_tabs_are_aligned(open_page):
+    # In real mode, as the Robots tab (its icon is not a font icon, and it has a badge)
+    page = open_page((1794, 1000))
+    page.evaluate("document.body.classList.replace('mode-simulation', 'mode-real')")
+    tops = page.evaluate(
+        """() => [...document.querySelectorAll('.nav-tab .nav-link')]
+            .filter(link => link.offsetWidth)
+            .map(link => {
+                const text = [...link.childNodes].find(n => n.nodeType == 3 && n.textContent.trim());
+                const range = document.createRange();
+                range.selectNodeContents(text);
+                return range.getBoundingClientRect().top;
+            })"""
+    )
+    assert len(tops) >= 4
+    assert max(tops) - min(tops) < 0.5
