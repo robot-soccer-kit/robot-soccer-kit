@@ -5,21 +5,6 @@ import pytest
 import zmq
 
 from rsk import tasks
-from rsk.control import Control
-from rsk.robots import Robots
-from rsk.state import State
-
-
-@pytest.fixture(scope="module")
-def control():
-    """
-    A running Control (binds the 7558 port, so it is shared by the whole module)
-    """
-    control = Control()
-    control.robots = Robots(State())
-    control.start()
-    yield control
-    control.stop()
 
 
 @pytest.fixture
@@ -54,7 +39,6 @@ MALFORMED_REQUESTS = [
     b'["", "green", 99, ["control", 0, 0, 0]]',  # Unknown robot number
     b'["", "green", 1, []]',  # Empty command
     b'["", "green", 1, "kick"]',  # Command is not a list
-    b'["", "ball", 0, ["teleport", 0, 0, 0]]',  # Ball teleport without simulator
     b'["", "ball", 0, []]',  # Empty ball command
     b'["", ["green"], 1, ["kick", 1]]',  # Unhashable team
     b'{"not": "a list"}',
@@ -73,8 +57,7 @@ def test_malformed_request_gets_error_response(control, request_control, payload
     # The control server should still answer valid requests afterwards
     response = request_control(b'["", "green", 1, ["kick", 1]]')
     assert response is not None, "The control server is dead after a malformed request"
-    # The robot doesn't exist here, but the request is properly processed
-    assert response == [False, "Unknown robot: green1"]
+    assert response == [True, "ok"]
 
 
 def test_concurrent_task_access(control):
@@ -131,28 +114,31 @@ def test_finished_task_replaced_is_not_removed(control):
     control.remove_task("replaced")
 
 
-@pytest.fixture
-def simulated_ball(control):
-    """
-    Temporarily gives a simulated ball to the control's robots
-    """
-    from rsk.simulator import SimulatedObject
+def test_ball_teleport_keeps_float_coordinates(backend):
+    ball = backend.simulator.objects["ball"]
+    try:
+        response = backend.control.process_command(
+            "ball", ["teleport", 0.3, -0.4, 0.5], False
+        )
 
-    ball = SimulatedObject("ball", [0, 0, 0], 0.021)
-    control.robots.ball = ball
-    yield ball
-    del control.robots.ball
-
-
-def test_ball_teleport_keeps_float_coordinates(control, simulated_ball):
-    response = control.process_command("ball", ["teleport", 0.3, -0.4, 0.5], False)
-
-    assert response == [True, "ok"]
-    assert simulated_ball.position == pytest.approx([0.3, -0.4, 0.5])
+        assert response == [True, "ok"]
+        assert ball.position == pytest.approx([0.3, -0.4, 0.5])
+    finally:
+        ball.teleport(0, 0, 0)
 
 
-def test_ball_rejects_other_commands(control, simulated_ball):
-    response = control.process_command("ball", ["kick", 0.3, -0.4, 0.5], False)
+def test_ball_rejects_other_commands(backend):
+    ball = backend.simulator.objects["ball"]
+    response = backend.control.process_command("ball", ["kick", 0.3, -0.4, 0.5], False)
 
     assert response[0] is False
-    assert simulated_ball.position == pytest.approx([0, 0, 0])
+    assert ball.position == pytest.approx([0, 0, 0])
+
+
+def test_ball_teleport_without_simulator(backend, monkeypatch):
+    monkeypatch.delattr(backend.robots, "ball")
+    response = backend.control.process_command(
+        "ball", ["teleport", 0.3, -0.4, 0.5], False
+    )
+
+    assert response == [False, "The ball can only be teleported in simulation"]

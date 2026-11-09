@@ -30,6 +30,8 @@ class Referee:
 
         # Set when a goal validation is pending
         self.goal_validated = None
+        # Team that scored the goal waiting for validation (None if no goal is pending)
+        self.pending_goal_team = None
 
         # Position where we wait for the ball to be
         self.wait_ball_position = None
@@ -155,6 +157,7 @@ class Referee:
         self.game_state["timer"] = constants.game_duration
         self.game_state["game_is_running"] = True
         self.referee_history = []
+        self.pending_goal_team = None
         self.reset_score()
         self.pause_game("game-start")
         self.start_timer = 0
@@ -208,6 +211,7 @@ class Referee:
         self.game_state["game_is_running"] = False
         self.chrono_is_running = False
         self.wait_ball_position = None
+        self.pending_goal_team = None
         self.start_timer = 0.0
 
         self.reset_penalties()
@@ -232,6 +236,7 @@ class Referee:
         self.game_state["halftime_is_running"] = True
         self.game_state["game_paused"] = True
         self.game_state["game_state_msg"] = "Half Time"
+        self.pending_goal_team = None
 
         task = tasks.StopAllTask("half-time")
         self.control.add_task(task)
@@ -341,33 +346,14 @@ class Referee:
             task_name = "penalty-" + robot
             self.logger.info(f"Adding penalty for robot {robot}, reason: {reason}")
 
+            spot_index = None
             if robot in markers:
-                x, y = markers[robot]["position"]
+                spot_index = self.find_penalty_spot(
+                    robot, markers[robot]["position"], markers
+                )
 
-                # Find the nearest free penalty spot
-                distances = []
-                for penalty_spot in self.penalty_spot:
-                    distance = math.dist((x, y), penalty_spot["pos"][:2])
-                    for marker in markers:
-                        if (
-                            marker != robot
-                            and math.dist(
-                                markers[marker]["position"], penalty_spot["pos"][:2]
-                            )
-                            < constants.robot_radius * 1.3
-                        ):
-                            distance = math.inf
-
-                    if (
-                        penalty_spot["robot"] is not None
-                        or time.time() - penalty_spot["last_use"]
-                        < constants.penalty_spot_lock_time
-                    ):
-                        distance = math.inf
-                    distances.append(distance)
-
-                free_penaltly_spot_index = distances.index(min(distances))
-
+            if spot_index is not None:
+                free_penaltly_spot_index = spot_index
                 target = self.penalty_spot[free_penaltly_spot_index]["pos"]
                 self.penalty_spot[free_penaltly_spot_index]["robot"] = robot
 
@@ -380,6 +366,43 @@ class Referee:
             self.control.add_task(task)
         else:
             self.penalties[robot]["remaining"] += float(duration)
+
+    def find_penalty_spot(self, robot: str, position: tuple, markers: dict) -> int:
+        """
+        Finds the penalty spot a robot should go to. We prefer the nearest spot that is not
+        assigned, not recently used and not occupied by another robot. If there is no such spot,
+        we fall back on the nearest spot that is not assigned to another robot.
+
+        :param str robot: the penalized robot
+        :param tuple position: the robot position (x, y)
+        :param dict markers: detected markers
+        :return int: the penalty spot index
+        """
+        best_index, best_score = None, None
+
+        for index, penalty_spot in enumerate(self.penalty_spot):
+            # A spot assigned to another robot can never be used
+            if penalty_spot["robot"] is not None:
+                continue
+
+            spot_position = penalty_spot["pos"][:2]
+            occupied = any(
+                marker != robot
+                and math.dist(markers[marker]["position"], spot_position)
+                < constants.robot_radius * 1.3
+                for marker in markers
+            )
+            recently_used = (
+                time.time() - penalty_spot["last_use"]
+                < constants.penalty_spot_lock_time
+            )
+
+            # Spots that are free are always preferred over occupied/recently used ones
+            score = (occupied or recently_used, math.dist(position, spot_position))
+            if best_score is None or score < best_score:
+                best_index, best_score = index, score
+
+        return best_index
 
     def cancel_penalty(self, robot: str):
         """
@@ -458,6 +481,14 @@ class Referee:
         :param bool yes_no: whether the goal is validated or canceller
         """
 
+        if self.pending_goal_team is None:
+            # This can happen if the button of an old goal is clicked, or if it is clicked twice
+            self.logger.warning("Goal validation ignored: no goal is pending")
+            return
+
+        goal_team = self.pending_goal_team
+        self.pending_goal_team = None
+
         replay_logger.register_info(
             "validate_goal", yes_no, "referee", allow_repeat=True
         )
@@ -471,7 +502,7 @@ class Referee:
             self.wait_for_ball_placement()
             self.goal_validated = True
         else:
-            self.increment_score(self.referee_history[-1][2], -1)
+            self.increment_score(goal_team, -1)
             self.goal_validated = False
             self.resume_game()
 
@@ -510,6 +541,7 @@ class Referee:
             self.logger.info(f"Goal for team {goal_team}")
 
             self.ball_out_field = True
+            self.pending_goal_team = goal_team
             self.increment_score(goal_team, 1)
             self.add_referee_history(goal_team, "Goal")
             self.reset_penalties()
