@@ -101,3 +101,16 @@ def test_goal_cancelled_only_once(backend, referee):
         ["blue", "Goal cancelled"],
     ]
     assert referee.game_state["teams"]["green"]["score"] == 0
+
+
+def test_ending_the_game_during_half_time(referee):
+    referee.start_game()
+    referee.start_half_time()
+    assert referee.get_game_state()["halftime_is_running"]
+
+    # The game is ended during the half time, then a new game is started
+    referee.stop_game()
+    assert not referee.get_game_state()["halftime_is_running"]
+    referee.start_game()
+    assert not referee.get_game_state()["halftime_is_running"]
+    referee.stop_game()

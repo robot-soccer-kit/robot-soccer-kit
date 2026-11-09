@@ -161,16 +161,31 @@ function createFieldRenderer(constants) {
     }
 
     // The field image is as large as possible in its area, keeping its ratio
+    // Keep in sync with the phones media query of app.css
+    const PHONE_FIT = '(max-width: 767.98px) and (min-height: 480px)'
+
     function fitBackground() {
         const back = document.getElementById('back')
         const view = back.closest('.field-view')
         if (!view || !back.width || !back.height) return
-        const margin = 12
-        const width = view.clientWidth - 2 * margin
-        const height = view.clientHeight - 2 * margin
-        if (width <= 0 || height <= 0) return
         const ratio = back.width / back.height
-        const fitWidth = Math.min(width, height * ratio)
+        let fitWidth
+        // Phones in portrait (referee tab): the field fits the remaining room (see app.css)
+        const phoneFit = window.matchMedia(PHONE_FIT).matches
+            && document.body.dataset.tab == 'referee'
+            && !document.body.classList.contains('mode-replay')
+        if (!phoneFit && window.matchMedia('(max-width: 991.98px)').matches) {
+            // Small screens (the page scrolls): the field takes the whole width, the card adapts
+            // its height
+            fitWidth = view.clientWidth
+        } else {
+            const margin = phoneFit ? 0 : 12
+            const width = view.clientWidth - 2 * margin
+            const height = view.clientHeight - 2 * margin
+            if (width <= 0 || height <= 0) return
+            fitWidth = Math.min(width, height * ratio)
+        }
+        if (fitWidth <= 0) return
         back.style.width = Math.floor(fitWidth) + "px"
         back.style.height = Math.floor(fitWidth / ratio) + "px"
     }

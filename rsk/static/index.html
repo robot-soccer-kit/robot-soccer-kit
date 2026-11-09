@@ -46,18 +46,28 @@
         <div class="container-fluid gap-2">
             <a class="navbar-brand d-flex align-items-center gap-2 me-2" href="#">
                 <img src="static/imgs/ball_32x32.png" width="28" height="28" alt="" />
-                <span class="fw-semibold">Robot Soccer Kit</span>
+                <span class="fw-semibold d-none d-sm-inline">Robot Soccer Kit</span>
             </a>
             <span class="badge text-bg-info simulation-mode">Simulation</span>
             <span class="badge text-bg-info replay-mode">Replay</span>
             <span class="badge text-bg-danger no-backend blinking">No connection to the Game Controller</span>
+
+            <!-- Always visible (also on small screens, when the menu is collapsed) -->
+            <div class="d-flex align-items-center gap-2 ms-auto order-lg-2">
+                <span class="badge text-bg-dark border border-secondary-subtle fs-6 fw-normal fps replay-hide"
+                    title="Detection frames per second">FPS: -</span>
+                <button class="btn btn-danger fw-semibold emergency replay-hide" type="button"
+                    title="Stops all the robots and disallows the teams to control them">
+                    <i class="bi bi-sign-stop"></i><span class="d-none d-sm-inline">&nbsp;Emergency</span>
+                </button>
+            </div>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav"
                 aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse" id="main-nav">
+            <div class="collapse navbar-collapse order-lg-1" id="main-nav">
                 <ul class="navbar-nav mx-lg-auto gap-1">
                     <li class="nav-item nav-tab real-mode" rel="vision">
                         <a class="nav-link" href="#vision">
@@ -67,7 +77,7 @@
                     </li>
                     <li class="nav-item nav-tab real-mode" rel="robots">
                         <a class="nav-link" href="#robots">
-                            <i class="bi bi-robot"></i>&nbsp;Robots
+                            <i class="rsk-icon-robot"></i>&nbsp;Robots
                             <span class="badge rounded-pill text-bg-secondary ms-1 robots-badge">0</span>
                         </a>
                     </li>
@@ -96,8 +106,6 @@
                 </ul>
 
                 <div class="d-flex align-items-center gap-2 ms-lg-2">
-                    <span class="badge text-bg-dark border border-secondary-subtle fs-6 fw-normal fps replay-hide"
-                        title="Detection frames per second">FPS: -</span>
                     <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="offcanvas"
                         data-bs-target="#settings-panel" title="Settings">
                         <i class="bi bi-gear"></i>
@@ -105,10 +113,6 @@
                     <button class="btn btn-outline-light btn-sm theme-toggle" type="button"
                         title="Switch between light and dark theme">
                         <i class="bi bi-moon-stars"></i>
-                    </button>
-                    <button class="btn btn-danger fw-semibold emergency replay-hide" type="button"
-                        title="Stops all the robots and disallows the teams to control them">
-                        <i class="bi bi-sign-stop"></i>&nbsp;Emergency
                     </button>
                 </div>
             </div>
@@ -290,7 +294,7 @@
             <div class="robots-list">
                 <div class="row g-3 robots"></div>
                 <div class="text-center text-body-secondary py-5 no-robots">
-                    <i class="bi bi-robot fs-1"></i>
+                    <i class="rsk-icon-robot fs-1"></i>
                     <p class="mt-2 mb-0">No robot yet: select a robot above and click on "Add"</p>
                 </div>
             </div>
@@ -438,10 +442,10 @@
                                     <span class="goal-pending-team"></span>?</div>
                                 <div class="d-flex gap-2 mt-2">
                                     <button class="btn btn-success flex-fill validate-goal" type="button">
-                                        <i class="bi bi-check-lg"></i>&nbsp;Validate
+                                        <i class="bi bi-check-lg"></i><span class="goal-btn-label">&nbsp;Validate</span>
                                     </button>
                                     <button class="btn btn-outline-danger flex-fill cancel-goal" type="button">
-                                        <i class="bi bi-x-lg"></i>&nbsp;Cancel
+                                        <i class="bi bi-x-lg"></i><span class="goal-btn-label">&nbsp;Cancel</span>
                                     </button>
                                 </div>
                             </div>
@@ -462,9 +466,14 @@
                                     title="End the game">
                                     <i class="bi bi-stop-fill"></i>&nbsp;End
                                 </button>
+                                <button class="btn btn-outline-secondary btn-lg d-lg-none" type="button"
+                                    data-bs-toggle="offcanvas" data-bs-target="#history-panel" title="History">
+                                    <i class="bi bi-clock-history"></i>
+                                </button>
                             </div>
 
-                            <div>
+                            <div class="secondary-controls">
+                            <div class="placement">
                                 <div class="section-title mb-2">Place the robots</div>
                                 <div class="btn-group w-100" role="group">
                                     <button class="btn btn-outline-secondary place" data-configuration="side"
@@ -482,10 +491,11 @@
                                 </div>
                             </div>
 
-                            <button class="btn btn-outline-warning half-time" type="button" data-bs-toggle="modal"
-                                data-bs-target="#half-time-modal" disabled>
+                            <button class="btn btn-outline-warning half-time text-nowrap" type="button"
+                                data-bs-toggle="modal" data-bs-target="#half-time-modal" disabled>
                                 <i class="bi bi-hourglass-split"></i>&nbsp;Half time
                             </button>
+                            </div>
                         </div>
                     </div>
 
@@ -593,12 +603,23 @@
                         </div>
                     </div>
 
-                    <div class="card history-card">
-                        <div class="card-header d-flex align-items-center">
-                            <i class="bi bi-clock-history"></i>&nbsp;History
+                    <!-- History (on small screens, a panel opened with the History button) -->
+                    <div class="offcanvas-lg offcanvas-bottom history-panel" tabindex="-1" id="history-panel"
+                        aria-labelledby="history-panel-title">
+                        <div class="offcanvas-header d-lg-none">
+                            <h5 class="offcanvas-title" id="history-panel-title">
+                                <i class="bi bi-clock-history"></i>&nbsp;History
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
+                                data-bs-target="#history-panel" aria-label="Close"></button>
                         </div>
-                        <div class="card-body history" id="RefereeHistory">
-                            <div class="text-body-secondary text-center history-empty">No event yet</div>
+                        <div class="card history-card">
+                            <div class="card-header d-none d-lg-flex align-items-center">
+                                <i class="bi bi-clock-history"></i>&nbsp;History
+                            </div>
+                            <div class="card-body history" id="RefereeHistory">
+                                <div class="text-body-secondary text-center history-empty">No event yet</div>
+                            </div>
                         </div>
                     </div>
                 </div>

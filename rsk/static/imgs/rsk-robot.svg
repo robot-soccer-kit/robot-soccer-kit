@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="#000" stroke="#000" stroke-linejoin="round" stroke-linecap="round">
+  <!-- Robot Soccer Kit robot seen from above (as in robotgreen1.svg): kicker, chassis, three omni
+       wheels and the marker on the top. Used as an icon (CSS mask, see app.css: .rsk-icon-robot) -->
+  <!-- Kicker -->
+  <path d="M4.4 1.1h7.2" fill="none" stroke-width="1.1"/>
+  <path d="M8 1.6v1.1" fill="none" stroke-width="0.9"/>
+  <!-- Chassis -->
+  <path d="M3.7 2.9h8.6l2.8 4.8-3 6.9H3.9l-3-6.9z" fill="none" stroke-width="1"/>
+  <!-- Omni wheels -->
+  <rect x="2.1" y="4.9" width="3.1" height="1.3" rx="0.4" transform="rotate(-58 3.65 5.55)" stroke="none"/>
+  <rect x="10.8" y="4.9" width="3.1" height="1.3" rx="0.4" transform="rotate(58 12.35 5.55)" stroke="none"/>
+  <rect x="6.3" y="12.3" width="3.4" height="1.3" rx="0.4" stroke="none"/>
+  <!-- Marker -->
+  <rect x="5.3" y="5.4" width="5.4" height="5.4" rx="0.5" stroke="none"/>
+</svg>

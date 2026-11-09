@@ -49,10 +49,10 @@ function createRefereeView(constants) {
                 + '<div class="progress invisible"><div class="progress-bar" style="width: 0%"></div></div>'
                 + '</div>'
                 + '<div class="btn-group replay-hide">'
-                + '<button class="btn btn-sm btn-outline-team penalize" type="button" disabled'
+                + '<button class="btn btn-outline-team penalize" type="button" disabled'
                 + ' title="Penalize this robot for ' + constants.default_penalty + ' s">'
                 + '<i class="bi bi-hourglass-split"></i> ' + constants.default_penalty + ' s</button>'
-                + '<button class="btn btn-sm btn-outline-secondary unpenalize" type="button" disabled'
+                + '<button class="btn btn-outline-secondary unpenalize" type="button" disabled'
                 + ' title="Cancel the penalty"><i class="bi bi-x-lg"></i></button>'
                 + '</div>'
                 + '</div>';

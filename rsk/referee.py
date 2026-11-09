@@ -156,6 +156,7 @@ class Referee:
         self.logger.info("Game started")
         self.game_state["timer"] = constants.game_duration
         self.game_state["game_is_running"] = True
+        self.game_state["halftime_is_running"] = False
         self.referee_history = []
         self.pending_goal_team = None
         self.reset_score()
@@ -209,6 +210,7 @@ class Referee:
         self.logger.info("Game stopped")
         self.game_state["game_paused"] = True
         self.game_state["game_is_running"] = False
+        self.game_state["halftime_is_running"] = False
         self.chrono_is_running = False
         self.wait_ball_position = None
         self.pending_goal_team = None

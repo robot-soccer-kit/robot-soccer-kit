@@ -365,3 +365,136 @@ def test_replay(open_page, backend):
         server.shutdown()
     finally:
         backend.replay = ""
+
+
+def test_mobile_navigation(open_page):
+    page = open_page((390, 844))
+
+    # Emergency and FPS are always visible, the tabs are in the collapsed menu
+    expect(page.locator(".emergency")).to_be_visible()
+    expect(page.locator(".fps")).to_be_visible()
+    expect(page.locator('.nav-tab[rel="control"]')).to_be_hidden()
+
+    # Nothing goes out of the screen horizontally, the scoreboard is readable
+    assert page.evaluate("document.documentElement.scrollWidth") <= 390
+    for team in ("green", "blue"):
+        block = page.locator(f'.scoreboard .team-block[data-team="{team}"]')
+        expect(block.locator(".score")).to_be_visible()
+        assert block.locator(".team-name").bounding_box()["width"] > 50
+
+    page.click(".navbar-toggler")
+    expect(page.locator('.nav-tab[rel="control"]')).to_be_visible()
+    page.click('.nav-tab[rel="control"] .nav-link')
+    expect(page.locator(".page-control")).to_be_visible()
+    # The menu is closed after choosing a tab
+    expect(page.locator('.nav-tab[rel="control"]')).to_be_hidden()
+
+
+def test_fps_are_rounded(open_page):
+    page = open_page()
+    expect(page.locator(".fps")).to_have_text(re.compile(r"^FPS: \d+$"), timeout=5000)
+
+
+def test_robot_icon(open_page, server):
+    page = open_page()
+    response = page.request.get(server + "static/imgs/rsk-robot.svg")
+    assert response.ok
+    assert "<svg" in response.text()
+
+    # The icon is drawn with a CSS mask of this image
+    mask = page.evaluate(
+        """() => {
+            const icon = document.createElement('i');
+            icon.className = 'rsk-icon-robot';
+            document.body.appendChild(icon);
+            return getComputedStyle(icon).maskImage || getComputedStyle(icon).webkitMaskImage;
+        }"""
+    )
+    assert "rsk-robot.svg" in mask
+
+
+def test_image_background_follows_the_theme(open_page):
+    page = open_page(color_scheme="light")
+    light = page.evaluate(
+        "getComputedStyle(document.querySelector('.field-card')).backgroundColor"
+    )
+    page.click(".theme-toggle")
+    dark = page.evaluate(
+        "getComputedStyle(document.querySelector('.field-card')).backgroundColor"
+    )
+
+    assert dark == "rgb(0, 0, 0)"
+    assert light != dark
+    # Light background in light mode
+    assert sum(int(c) for c in re.findall(r"\d+", light)[:3]) > 600
+
+
+def test_small_screen_field_card_fits_the_image(open_page):
+    # Phone in landscape: the page scrolls
+    page = open_page((844, 390))
+    page.wait_for_function("document.getElementById('back').width > 100")
+    page.wait_for_timeout(300)
+
+    area = page.locator(".field-view").bounding_box()
+    field = page.locator("#back").bounding_box()
+    # No bar above and below the field: the card takes its height
+    assert abs(area["height"] - field["height"]) <= 1
+    assert abs(area["width"] - field["width"]) <= 1
+
+
+PHONES = [(390, 700), (360, 640), (375, 548)]
+
+
+@pytest.mark.parametrize("size", PHONES, ids=[f"{w}x{h}" for w, h in PHONES])
+def test_phone_referee_without_scrolling(open_page, size):
+    width, height = size
+    page = open_page(size)
+    page.wait_for_function("document.getElementById('back').width > 100")
+    # Worst case: a goal waiting for validation, during a game
+    page.add_style_tag(
+        content="html body[data-tab] .page-referee .goal-pending.d-none { display: flex !important; }"
+        " html body[data-tab] .page-referee .stop-game.d-none { display: inline-block !important; }"
+    )
+    page.wait_for_timeout(300)
+
+    assert page.evaluate("document.documentElement.scrollHeight - innerHeight") <= 0
+    assert page.evaluate("document.documentElement.scrollWidth") <= width
+    assert page.evaluate(CUT_ELEMENTS) == []
+
+    # Everything needed to referee is on the screen
+    controls = [
+        ".scoreboard .timer",
+        ".validate-goal",
+        ".cancel-goal",
+        ".start-game",
+        ".stop-game",
+        ".half-time",
+        "[data-bs-toggle=offcanvas][data-bs-target='#history-panel']",
+    ]
+    controls += [
+        f".place[data-configuration={c}]" for c in ("side", "standard", "dots")
+    ]
+    for team in ("green", "blue"):
+        controls += [
+            f'.team-block[data-team="{team}"] .{b}' for b in ("up-score", "down-score")
+        ]
+        for number in (1, 2):
+            controls += [
+                f'.robot-penalty[rel="{team}{number}"] .{b}'
+                for b in ("penalize", "unpenalize")
+            ]
+    for selector in controls:
+        box = page.locator(selector).bounding_box()
+        assert box is not None, selector
+        assert box["y"] >= 0 and box["y"] + box["height"] <= height, selector
+
+    # The field takes the remaining room
+    field = page.locator("#back").bounding_box()
+    assert field["height"] > 60
+    assert field["y"] + field["height"] <= height
+
+    # The history is a panel opened with its button
+    page.click("[data-bs-toggle=offcanvas][data-bs-target='#history-panel']")
+    expect(page.locator("#history-panel #RefereeHistory")).to_be_visible()
+    page.click("#history-panel .btn-close")
+    expect(page.locator("#history-panel #RefereeHistory")).to_be_hidden()

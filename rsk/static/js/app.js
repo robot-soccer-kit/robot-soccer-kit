@@ -57,6 +57,7 @@ function setTab(page) {
         page = 'referee';
     }
     current_tab = page;
+    document.body.dataset.tab = page;
 
     $('.page').hide();
     $('.page-' + page).show();
@@ -64,10 +65,16 @@ function setTab(page) {
     $('.nav-tab[rel="' + page + '"] .nav-link').addClass('active').attr('aria-current', 'page');
     $(document).trigger('rsk:tab', [page]);
 
-    // Closing the menu on small screens
-    let collapse = bootstrap.Collapse.getInstance(document.getElementById('main-nav'));
+    // Closing the menu on small screens (Bootstrap ignores hide() while the menu is opening: a
+    // quick tap on a tab, so it is closed once opened)
+    let menu = document.getElementById('main-nav');
+    let collapse = bootstrap.Collapse.getInstance(menu);
     if (collapse) {
-        collapse.hide();
+        if (menu.classList.contains('collapsing')) {
+            menu.addEventListener('shown.bs.collapse', () => collapse.hide(), { once: true });
+        } else {
+            collapse.hide();
+        }
     }
 }
 

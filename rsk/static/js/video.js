@@ -130,7 +130,7 @@ function video_initialize(backend) {
         }
         $('.vision-status').removeClass('ok warning error').addClass(status).attr('title', title);
         $('.calibrated').html(message);
-        $('.fps').text(running ? 'FPS: ' + video.fps.toFixed(1) : 'FPS: -');
+        $('.fps').text(running ? 'FPS: ' + Math.round(video.fps) : 'FPS: -');
 
         // Detected objects
         let html = '';
