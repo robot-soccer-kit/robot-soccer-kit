@@ -80,7 +80,11 @@ function video_initialize(backend)
                 $('.'+key).val(settings[key]);
     
                 $('.camera-settings .'+key).change(function() {
-                    settings[key] = parseInt($(this).val());
+                    // All the values are read from the inputs, since some of them can be
+                    // updated by the backend (e.g. the focal, by the lens calibration)
+                    for (let name in settings) {
+                        settings[name] = parseInt($('.camera-settings .'+name).val());
+                    }
                     backend.cameraSettings(settings);
                 });
             }
@@ -182,8 +186,8 @@ function lens_calibration_initialize(backend)
                 + 'distortion ' + round_to(current.distortion_at_image_corners_px, 0) + ' px in the corners';
             if (status.current_used) {
                 html = '<i class="bi bi-check2-circle text-success"></i> '
-                    + 'Lens calibrated on ' + date + ' (' + summary + '), used by the vision '
-                    + '(the <code>focal</code> setting is not used)';
+                    + 'Lens calibrated on ' + date + ' (' + summary + '), used by the vision. '
+                    + 'The <code>focal</code> setting was set from this calibration.';
             } else {
                 html = '<i class="bi bi-exclamation-circle text-warning"></i> '
                     + 'Lens calibrated on ' + date + ' for a ' + current.image_size.join('x')
@@ -293,7 +297,15 @@ function lens_calibration_initialize(backend)
         }
     });
     $('.lens-apply').click(function() {
-        backend.apply_lens_calibration(update);
+        backend.apply_lens_calibration(function() {
+            update();
+            // The focal setting was updated from the calibration
+            backend.getCameraSettings(function(settings) {
+                for (let key in settings) {
+                    $('.camera-settings .' + key).val(settings[key]);
+                }
+            });
+        });
     });
     $('.lens-remove').click(function() {
         if (confirm('Remove the lens calibration? The focal setting will be used again.')) {

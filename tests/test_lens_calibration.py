@@ -8,12 +8,8 @@ import synthetic
 from rsk import lens_calibration, video
 from rsk.state import State
 
-# A camera with a strong barrel distortion and an off-center principal point
-CAMERA_LENS = dict(
-    focal=935.0,
-    principal_offset=(40, -25),
-    distortion=(-0.12, 0.03, 0.0005, -0.0003, 0.0),
-)
+# The lens of the camera that took the board images (see the board_images fixture in conftest.py)
+CAMERA_LENS = synthetic.DISTORTED_LENS
 
 
 class QuietState(State):
@@ -64,13 +60,6 @@ def camera_video(isolated_config):
     yield v
     v.stop()
     isolated_config.config.pop("camera", None)
-
-
-@pytest.fixture(scope="module")
-def board_images():
-    return synthetic.calibration_board_views(
-        synthetic.Camera(**CAMERA_LENS), np.random.default_rng(1)
-    )
 
 
 def field_scenes(count, seed=2):
@@ -138,10 +127,15 @@ def test_lens_calibration_in_the_game_controller(
         CAMERA_LENS["principal_offset"], abs=8
     )
 
-    # Applying it: it is saved in the configuration
+    # Applying it: it is saved in the configuration, and the focal setting is set to the
+    # measured focal (used if the calibration is removed)
+    v.settings["focal"] = 700
     v.apply_lens_calibration()
     assert isolated_config.config["camera"]["lens_calibration"] == result
     assert v.lens_calibration_status()["state"] == "idle"
+    assert v.settings["focal"] == round(result["rsk_focal_setting"])
+    assert isolated_config.config["camera"]["settings"]["focal"] == v.settings["focal"]
+    assert v.settings["focal"] == pytest.approx(CAMERA_LENS["focal"], rel=0.02)
 
     # The vision uses it
     scenes = field_scenes(3)

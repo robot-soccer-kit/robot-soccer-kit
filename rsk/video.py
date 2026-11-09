@@ -426,14 +426,18 @@ class Video:
 
     def apply_lens_calibration(self) -> None:
         """
-        Uses the computed calibration for the vision (saved in the configuration)
+        Uses the computed calibration for the vision (saved in the configuration). The focal
+        setting is also set to the measured focal: it is the one of this camera, which is used if
+        the calibration is removed or can't be used (other resolution).
         """
         with self.lens_lock:
             if self.lens_state != "done":
                 raise RuntimeError("No lens calibration to apply")
             self.lens_calibration = self.lens_result
             self.lens_state, self.lens_result = "idle", None
+        self.settings["focal"] = round(self.lens_calibration["rsk_focal_setting"])
         self.save_config()
+        self.apply_camera_settings()
 
     def remove_lens_calibration(self) -> None:
         """
