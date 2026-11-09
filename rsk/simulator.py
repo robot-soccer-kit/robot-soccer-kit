@@ -47,7 +47,7 @@ class SimulatedObject:
             action()
 
     def teleport(self, x: float, y: float, turn: float):
-        self.position = np.array((x, y, turn))
+        self.position = np.array((x, y, turn), dtype=float)
         self.velocity = np.array([0.0, 0.0, 0.0])
 
     def update_velocity(self, dt) -> None:
@@ -313,7 +313,42 @@ class Simulator:
             self.objects["ball"].position[:3] = [0.0, 0.0, 0.0]
             self.objects["ball"].velocity[:3] = [0.0, 0.0, 0.0]
 
+        self.separate_overlapping_objects()
+
         self.push()
+
+    def separate_overlapping_objects(self, iterations: int = 10) -> None:
+        """
+        Objects can't overlap physically, but it can happen in the simulation (e.g. teleport, ball
+        reset to the center). In that case, they are moved apart, the lightest object being moved
+        the most (e.g. the ball is pushed out of a robot).
+
+        :param int iterations: maximum number of passes (separating two objects can make them
+                               overlap with a third one)
+        """
+        objects = list(self.objects.values())
+        for _ in range(iterations):
+            overlapping = False
+            for k, a in enumerate(objects):
+                for j, b in enumerate(objects[k + 1 :], k + 1):
+                    delta = b.position[:2] - a.position[:2]
+                    distance = norm(delta)
+                    penetration = a.radius + b.radius - distance
+
+                    if penetration > 1e-9:
+                        overlapping = True
+                        if distance > 1e-9:
+                            normal = delta / distance
+                        else:
+                            # Objects at the exact same position: a different direction for each pair
+                            alpha = (k * len(objects) + j) * 2.399963
+                            normal = np.array([np.cos(alpha), np.sin(alpha)])
+                        total_mass = a.mass + b.mass
+                        a.position[:2] -= normal * penetration * b.mass / total_mass
+                        b.position[:2] += normal * penetration * a.mass / total_mass
+
+            if not overlapping:
+                break
 
     def push(self) -> None:
         if self.state is not None:
@@ -325,6 +360,9 @@ class Simulator:
                     self.state.set_marker(marker, pos[:2].tolist(), pos[2])
 
         # Simulating the fact that state is published at a fixed frequency
-        if time.time() - self.last_publish > self.publish_period:
+        if (
+            self.state is not None
+            and time.time() - self.last_publish > self.publish_period
+        ):
             self.state.publish()
             self.last_publish = time.time()
