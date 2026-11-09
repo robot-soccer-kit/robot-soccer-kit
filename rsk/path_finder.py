@@ -65,10 +65,13 @@ class PathFinder(astar.AStar):
         Performs A* search from start node to goal node
         :param start: starting node
         :param goal: goal node
-        :return: a path (list of points)
+        :return: a path (list of points), or None if no path was found
         """
         self.obstacles = np.array(self.obstacles)
-        path = list(super().astar(start, goal))
+        path = super().astar(start, goal)
+        if path is None:
+            return None
+        path = list(path)
 
         for k, node_idx in enumerate(path):
             path[k] = np.array(self.nodes[node_idx])

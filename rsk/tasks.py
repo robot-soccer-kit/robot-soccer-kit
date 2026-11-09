@@ -22,9 +22,9 @@ class ControlTask:
         return False
 
 
-class SpeedTask:
+class SpeedTask(ControlTask):
     """
-    Gets the robot rotating
+    Sends a constant speed order to a robot
     """
 
     def __init__(
@@ -128,25 +128,26 @@ class GoToConfigurationTask(ControlTask):
         if self.forever:
             return False
 
-        for robot in available_robots:
-            team, number = utils.robot_str2list(robot)
+        # Robots of this task that are currently available
+        robots = [
+            utils.robot_str2list(robot)
+            for robot in available_robots
+            if utils.robot_str2list(robot) in self.targets
+        ]
 
-            if (team, number) in self.targets:
-                arrived, _ = client.robots[team][number].goto_compute_order(
-                    self.targets[(team, number)], skip_old=self.skip_old
-                )
+        for team, number in robots:
+            arrived, _ = client.robots[team][number].goto_compute_order(
+                self.targets[(team, number)], skip_old=self.skip_old
+            )
 
-                if not arrived:
-                    return False
+            if not arrived:
+                return False
 
-        for robot in available_robots:
-            if (team, number) in self.targets:
-                team, number = utils.robot_str2list(robot)
-                client.robots[team][number].control(0.0, 0.0, 0.0)
+        for team, number in robots:
+            client.robots[team][number].control(0.0, 0.0, 0.0)
 
         if self.end_buzz:
-            for robot in available_robots:
-                team, number = utils.robot_str2list(robot)
+            for team, number in robots:
                 client.robots[team][number].leds(255, 255, 255)
                 client.robots[team][number].beep(100, 500)
 
@@ -161,5 +162,5 @@ class GoToTask(GoToConfigurationTask):
     def __init__(
         self, name: str, team: str, number: int, target, skip_old=True, **kwargs
     ):
-        super().__init__(name, **kwargs)
+        super().__init__(name, skip_old=skip_old, **kwargs)
         self.targets[(team, number)] = target
