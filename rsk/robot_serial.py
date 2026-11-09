@@ -280,11 +280,3 @@ class RobotSerial(robot.Robot):
 
         if self.bt is not None:
             self.bt.close()
-
-
-if __name__ == "__main__":
-    r = RobotSerial("/dev/rfcomm0")
-
-    while True:
-        print(r.state)
-        time.sleep(5)

@@ -1,30 +1,11 @@
 import numpy as np
 import cv2
-import zmq
 import time
 from .field import Field
 from . import constants, config, replay_logger
 import os
 
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
-
-
-class Detect:
-    def __init__(self):
-        # Video attribute
-        self.detection = self
-        self.capture = None
-        self.period = None
-
-        self.referee = None
-
-        # Publishing server
-        self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.PUB)
-        self.socket.set_hwm(1)
-        self.socket.bind("tcp://*:7557")
-
-        self.field = Field()
 
 
 class Detection:
