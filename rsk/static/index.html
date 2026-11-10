@@ -123,21 +123,31 @@
 
         <!-- ============================== Vision ============================== -->
         <section class="page page-vision">
-            <div class="vision-hide-running pt-4">
-                <div class="card mx-auto" style="max-width: 640px;">
+            <div class="vision-hide-running vision-start">
+                <div class="card vision-start-card">
                     <div class="card-header"><i class="bi bi-webcam"></i>&nbsp;Start the vision</div>
-                    <div class="card-body">
-                        <label class="form-label" for="camera-select">Camera</label>
-                        <select class="form-select mb-3 cameras" id="camera-select"></select>
-                        <label class="form-label" for="resolution-select">Resolution</label>
-                        <select class="form-select mb-3 resolutions" id="resolution-select"></select>
-                        <div class="d-flex justify-content-end gap-2">
-                            <button class="btn btn-outline-secondary refresh-cameras" type="button">
-                                <i class="bi bi-arrow-repeat"></i>&nbsp;Refresh cameras
-                            </button>
-                            <button class="btn btn-success start-capture" type="button">
-                                <i class="bi bi-play-fill"></i>&nbsp;Start vision
-                            </button>
+                    <div class="card-body vision-start-body">
+                        <div class="vision-start-form">
+                            <label class="form-label" for="camera-select">Camera</label>
+                            <select class="form-select mb-3 cameras" id="camera-select"></select>
+                            <label class="form-label" for="resolution-select">Resolution</label>
+                            <select class="form-select mb-3 resolutions" id="resolution-select"></select>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-success flex-fill start-capture" type="button">
+                                    <i class="bi bi-play-fill"></i>&nbsp;Start vision
+                                </button>
+                                <button class="btn btn-outline-secondary refresh-cameras" type="button">
+                                    <i class="bi bi-arrow-repeat"></i>&nbsp;Refresh cameras
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Preview of the camera chosen (its images, not processed) -->
+                        <div class="vision-preview">
+                            <div class="vision-preview-area">
+                                <img class="preview-image" alt="Camera preview" />
+                                <div class="vision-preview-message"></div>
+                            </div>
+                            <div class="small text-body-secondary vision-preview-info">Preview</div>
                         </div>
                     </div>
                 </div>
@@ -148,6 +158,10 @@
                     <div class="card vision-image-card">
                             <div class="vision-image-area">
                                 <img class="camera-image" alt="Camera image" />
+                            </div>
+                            <div class="vision-detection">
+                                <span class="section-title"><i class="bi bi-crosshair"></i>&nbsp;Detected</span>
+                                <div class="detection-list detection"></div>
                             </div>
                             <div class="card-footer d-flex flex-wrap align-items-center gap-2">
                                 <span class="calibrated me-auto"></span>
@@ -162,36 +176,45 @@
                     </div>
 
                     <div class="vision-side">
-                        <div class="card">
-                            <div class="card-header"><i class="bi bi-crosshair"></i>&nbsp;Detection</div>
-                            <div class="card-body">
-                                <div class="detection-list detection"></div>
+                        <div class="card vision-settings-card">
+                            <div class="card-header">
+                                <ul class="nav nav-tabs card-header-tabs flex-nowrap text-nowrap" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="vision-tab-camera-button" type="button"
+                                            data-bs-toggle="tab" data-bs-target="#vision-tab-camera" role="tab"
+                                            aria-controls="vision-tab-camera" aria-selected="true">
+                                            <i class="bi bi-sliders"></i>&nbsp;Camera
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="vision-tab-lens-button" type="button"
+                                            data-bs-toggle="tab" data-bs-target="#vision-tab-lens" role="tab"
+                                            aria-controls="vision-tab-lens" aria-selected="false">
+                                            <i class="bi bi-camera"></i>&nbsp;Lens calibration<span
+                                                class="lens-tab-status"></span>
+                                        </button>
+                                    </li>
+                                </ul>
                             </div>
-                        </div>
-
-                        <div class="card camera-settings-card">
-                            <div class="card-header d-flex align-items-center gap-2">
-                                <span><i class="bi bi-sliders"></i>&nbsp;Camera settings</span>
-                                <div class="ms-auto d-flex gap-2">
-                                    <button class="btn btn-sm btn-primary auto-camera-settings" type="button"
+                            <div class="card-body tab-content">
+                            <div class="tab-pane show active camera-settings-card" id="vision-tab-camera" role="tabpanel"
+                                aria-labelledby="vision-tab-camera-button">
+                                <div class="d-flex gap-2 mb-2">
+                                    <button class="btn btn-primary flex-fill auto-camera-settings" type="button"
                                         title="Image settings to the defaults of the camera, then the exposure for a bright field without saturation">
-                                        <i class="bi bi-magic"></i>&nbsp;Auto
+                                        <i class="bi bi-magic"></i>&nbsp;Auto settings
                                     </button>
-                                    <button class="btn btn-sm btn-outline-primary auto-crop" type="button" disabled
+                                    <button class="btn btn-outline-primary flex-fill auto-crop" type="button" disabled
                                         title="Crops the image to the field and the border around it (the four field markers should be visible)">
                                         <i class="bi bi-crop"></i>&nbsp;Auto crop
                                     </button>
                                 </div>
-                            </div>
-                            <div class="card-body">
                                 <div class="auto-settings-status d-none"></div>
                                 <div class="camera-settings"></div>
                             </div>
-                        </div>
 
-                        <div class="card lens-calibration">
-                            <div class="card-header"><i class="bi bi-camera"></i>&nbsp;Lens calibration</div>
-                            <div class="card-body">
+                            <div class="tab-pane lens-calibration" id="vision-tab-lens" role="tabpanel"
+                                aria-labelledby="vision-tab-lens-button">
                                 <div class="lens-current mb-3"></div>
 
                                 <div class="lens-state lens-state-idle">
@@ -267,6 +290,7 @@
                                         </button>
                                     </div>
                                 </div>
+                            </div>
                             </div>
                         </div>
                     </div>

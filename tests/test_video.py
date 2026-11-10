@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 import pytest
 import synthetic
-
 from rsk import video
 from rsk.state import State
 
@@ -325,3 +324,73 @@ def test_exposure_is_free_when_its_range_is_unknown(make_video):
     v = make_video()
     v.set_camera_settings(dict(v.settings, power_line=50, exposure=-6))
     assert v.settings["exposure"] == -6
+
+
+def start_preview(make_video, monkeypatch, cameras=None):
+    cameras = {} if cameras is None else cameras
+    monkeypatch.setattr(
+        video, "open_camera", lambda index: cameras.setdefault(index, FakeCamera())
+    )
+    monkeypatch.setattr(video.camera_controls, "query_controls", lambda index: {})
+    v = make_video()
+    v.detection.state = QuietState()
+    v.start_preview(0, len(video.resolutions) - 1)
+    return v, cameras
+
+
+def test_preview(make_video, monkeypatch):
+    v, cameras = start_preview(make_video, monkeypatch)
+
+    assert wait_until(lambda: v.get_preview()["image"] != "")
+    preview = v.get_preview()
+    assert preview["size"] == [1920, 1080]
+    # The preview is not the vision: the images are not processed
+    assert not v.get_video(False)["running"]
+    assert v.last_frame is None
+    # The camera chosen is not saved
+    assert "camera" not in video.config.config
+
+    # Another camera
+    v.start_preview(2, 0)
+    assert cameras[0].released
+    assert v.preview == (2, 0)
+
+    v.stop_preview()
+    assert wait_until(lambda: v.capture is None)
+    assert cameras[2].released
+    assert v.get_preview()["image"] == ""
+
+
+def test_preview_is_stopped_when_not_retrieved(make_video, monkeypatch):
+    monkeypatch.setattr(video, "PREVIEW_TIMEOUT", 0.3)
+    v, cameras = start_preview(make_video, monkeypatch)
+
+    assert wait_until(lambda: v.capture is None, 3)
+    assert cameras[0].released
+    assert v.preview is None
+
+
+def test_vision_starts_after_the_preview(make_video, monkeypatch):
+    v, cameras = start_preview(make_video, monkeypatch)
+    assert wait_until(lambda: v.image is not None)
+
+    v.start_capture(0, len(video.resolutions) - 1)
+
+    assert cameras[0].released
+    assert v.preview is None
+    assert wait_until(lambda: v.last_frame is not None)
+    assert v.get_video(False)["running"]
+    # No preview while the vision is running
+    with pytest.raises(RuntimeError, match="running"):
+        v.start_preview(0, 0)
+
+
+def test_cameras_are_listed_during_a_preview(make_video, monkeypatch):
+    v, _ = start_preview(make_video, monkeypatch)
+    monkeypatch.setattr(video, "camera_name", lambda index: "")
+
+    indexes, _, _ = v.cameras()
+
+    # The camera of the preview is released, to be listed
+    assert v.preview is None
+    assert 0 in indexes

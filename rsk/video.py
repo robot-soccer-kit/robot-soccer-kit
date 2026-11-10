@@ -87,6 +87,12 @@ AUTO_EXPOSURE_MAX_V4L2 = 333
 # the same time). With V4L2, the exposure is rounded to a multiple of this period [100 µs]
 V4L2_EXPOSURE_UNITS_PER_SECOND = 10000
 AUTO_EXPOSURE_RANGE_LOG2 = (-11, -5)
+# The preview of a camera (before starting the vision) is stopped when it is not retrieved for this
+# duration (e.g. the page is closed), to release the camera [s]
+PREVIEW_TIMEOUT = 5.0
+# Maximum width of the preview images sent to the interface [px]
+PREVIEW_MAX_WIDTH = 960
+
 # Number of new images to wait for after a change of the camera settings
 AUTO_SETTLE_FRAMES = 5
 
@@ -123,6 +129,10 @@ class Video:
         self.image_geometry = None
         # Ranges and defaults of the controls of the current camera (see camera_controls.py)
         self.controls = {}
+        # Preview of a camera, before starting the vision: (index, resolution), None if no preview.
+        # The images are captured, but not processed
+        self.preview = None
+        self.preview_retrieved = 0.0
         # Automatic camera settings
         self.auto_state = "idle"
         self.auto_message = ""
@@ -190,6 +200,9 @@ class Video:
         :return list: a list containing possible indexes, favourite one (None if no favourite)
                       and the camera names (by index, empty if unknown)
         """
+        if self.preview is not None:
+            # The camera of the preview is listed too
+            self.release_capture()
         if self.capture is None:
             indexes = []
             for index in range(10):
@@ -230,17 +243,83 @@ class Video:
         }
         config.save()
 
-    def start_capture(self, index: int, resolution: int) -> bool:
+    def release_capture(self, timeout: float = 3.0) -> None:
         """
-        Starts video capture
-
-        :param int index: the camera index to use
-        :param int resolution: the resolution index to use
-        :return bool: whether the capture started
+        Stops the capture and waits for the camera to be released by the video thread
         """
+        if self.capture is None:
+            return
+        self.should_stop_capture = True
+        start = time.time()
+        while self.capture is not None and time.time() - start < timeout:
+            time.sleep(0.01)
+        if self.capture is not None:
+            # The video thread is stuck (e.g. the camera gives no image)
+            logger.warning("The camera was not released by the video thread")
+            capture, self.capture = self.capture, None
+            capture.release()
+            self.should_stop_capture = False
+            self.preview = None
+            self.image = None
+            self.last_frame = None
 
+    def start_preview(self, index: int, resolution: int) -> None:
+        """
+        Starts the preview of a camera (before starting the vision): its images are captured with
+        the camera settings, but not processed
+
+        :param int index: the camera index
+        :param int resolution: the resolution index
+        """
+        if self.capture is not None and self.preview is None:
+            raise RuntimeError("The vision is running")
+        self.preview_retrieved = time.time()
+        if self.preview == (index, resolution):
+            return
+        self.release_capture()
+        self.open_capture(index, resolution)
+        self.preview = (index, resolution)
+
+    def get_preview(self) -> dict:
+        """
+        The last image of the preview
+
+        :return dict: the image (base64 encoded JPEG, empty if none), the size of the images of
+            the camera and the frame rate
+        """
+        self.preview_retrieved = time.time()
+        image = self.image
+        if self.preview is None or image is None:
+            return {"image": "", "running": self.preview is not None}
+        height, width = image.shape[:2]
+        if width > PREVIEW_MAX_WIDTH:
+            image = cv2.resize(
+                image,
+                (PREVIEW_MAX_WIDTH, round(height * PREVIEW_MAX_WIDTH / width)),
+                interpolation=cv2.INTER_AREA,
+            )
+        data = cv2.imencode(".jpg", image)[1]
+        return {
+            "image": base64.b64encode(data).decode("utf-8"),
+            "running": True,
+            "size": [width, height],
+            "fps": round(1 / self.period, 1) if self.period else 0,
+        }
+
+    def stop_preview(self) -> None:
+        """
+        Stops the preview of a camera
+        """
+        if self.preview is not None:
+            self.stop_capture()
+
+    def open_capture(self, index: int, resolution: int) -> None:
+        """
+        Opens a camera with a resolution, and applies the camera settings
+        """
         # A stop requested before (e.g. while no capture was running) should not stop this one
         self.should_stop_capture = False
+        self.period = None
         self.last_image_time = None
         self.no_image_warned = False
         self.capture = open_camera(index)
@@ -256,8 +335,19 @@ class Video:
 
         self.favourite_index = index
         self.resolution = resolution
-
         self.apply_camera_settings()
+
+    def start_capture(self, index: int, resolution: int) -> bool:
+        """
+        Starts video capture
+
+        :param int index: the camera index to use
+        :param int resolution: the resolution index to use
+        :return bool: whether the capture started
+        """
+        if self.preview is not None:
+            self.release_capture()
+        self.open_capture(index, resolution)
         self.save_config()
 
         time.sleep(0.1)
@@ -374,7 +464,13 @@ class Video:
                         # Avoids spinning when the camera doesn't give images
                         time.sleep(0.05)
 
-                    if image_captured is not None and self.lens_collector is not None:
+                    if self.preview is not None:
+                        # Preview: the image is not processed. Stopped when not retrieved anymore
+                        if image_captured is not None:
+                            self.frame_count += 1
+                        if time.time() - self.preview_retrieved > PREVIEW_TIMEOUT:
+                            self.should_stop_capture = True
+                    elif image_captured is not None and self.lens_collector is not None:
                         # Lens calibration in progress: the raw image is used
                         image_debug = self.process_lens_calibration_frame(
                             image_captured
@@ -446,6 +542,7 @@ class Video:
                         self.capture.release()
                         del self.capture
                         self.capture = None
+                        self.preview = None
                         self.image = None
                         self.last_frame = None
                 except Exception:
@@ -645,7 +742,7 @@ class Video:
         gain) are set to the defaults of the camera (when they are known), then the exposure is
         searched. Runs in the background, see auto_camera_settings_status()
         """
-        if self.capture is None or self.last_frame is None:
+        if self.capture is None or self.preview is not None or self.last_frame is None:
             raise RuntimeError("The vision is not running")
         if self.auto_state == "running":
             return
@@ -902,9 +999,10 @@ class Video:
         :return dict: a dictionnary containing current status of video service
         """
         data = {
-            "running": self.capture is not None,
+            "running": self.capture is not None and self.preview is None,
             # The camera is opened but doesn't give images (e.g. used by another program)
             "no_image": self.capture is not None
+            and self.preview is None
             and self.last_image_time is not None
             and time.time() - self.last_image_time > NO_IMAGE_TIMEOUT,
             "fps": round(1 / self.period, 1) if self.period is not None else 0,

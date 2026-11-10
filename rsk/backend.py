@@ -108,6 +108,15 @@ class Backend:
     def stop_capture(self):
         self._video().stop_capture()
 
+    def start_preview(self, index: int, resolution: int):
+        self._video_call("start_preview", index, resolution)
+
+    def get_preview(self) -> dict:
+        return self._video().get_preview()
+
+    def stop_preview(self):
+        self._video().stop_preview()
+
     def get_image(self) -> str:
         image = self._video().get_image()
         return image
@@ -136,9 +145,9 @@ class Backend:
     def remove_lens_calibration(self):
         self._video_call("remove_lens_calibration")
 
-    def _video_call(self, method: str):
+    def _video_call(self, method: str, *args):
         try:
-            getattr(self._video(), method)()
+            getattr(self._video(), method)(*args)
         except RuntimeError as e:
             raise api.APIError(str(e))
 

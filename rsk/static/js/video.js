@@ -1,9 +1,14 @@
 // Vision tab: camera, detection, camera settings, display settings and lens calibration
 
 function video_initialize(backend) {
-    // Cameras and resolutions
+    // Cameras and resolutions. The cameras are listed when no camera is used (the preview is
+    // stopped meanwhile)
+    let listingCameras = false;
     function updateCameras() {
+        listingCameras = true;
+        preview = null;
         backend.cameras(function (data) {
+            listingCameras = false;
             let [indexes, favourite, names] = [data[0], data[1], data[2] || {}];
             let options = '';
             for (let index of indexes) {
@@ -28,10 +33,79 @@ function video_initialize(backend) {
         });
     }
 
+    // Preview of the camera chosen, before starting the vision (its images, not processed)
+    let preview = null;
+    let previewPending = false;
+    let previewStarted = 0;
+    // No preview while the vision starts
+    let visionStarting = 0;
+
+    function showPreviewMessage(html) {
+        $('.vision-preview-message').html(html);
+    }
+
+    function updatePreview() {
+        let wanted = current_tab == 'vision' && !$('body').hasClass('vision-running') && !listingCameras
+            && Date.now() - visionStarting > 4000 && $('.cameras').val() && $('.resolutions').val() !== null;
+        if (!wanted) {
+            if (preview !== null && !listingCameras) {
+                backend.stop_preview();
+            }
+            preview = null;
+            $('.preview-image').removeAttr('src');
+            return;
+        }
+        if (previewPending) {
+            return;
+        }
+
+        let chosen = $('.cameras').val() + '/' + $('.resolutions').val();
+        if (chosen != preview) {
+            preview = chosen;
+            previewPending = true;
+            previewStarted = Date.now();
+            $('.preview-image').removeAttr('src');
+            $('.vision-preview-info').text('Preview');
+            showPreviewMessage('<span class="spinner-border spinner-border-sm"></span> Opening the camera...');
+            backend.start_preview(parseInt($('.cameras').val()), parseInt($('.resolutions').val()), function () {
+                previewPending = false;
+            });
+            // On an error, the preview is tried again later
+            setTimeout(function () {
+                previewPending = false;
+            }, 5000);
+            return;
+        }
+
+        previewPending = true;
+        backend.get_preview(function (data) {
+            previewPending = false;
+            if (data.image) {
+                $('.preview-image').attr('src', 'data:image/jpeg;base64,' + data.image);
+                showPreviewMessage('');
+                $('.vision-preview-info').text('Preview: ' + data.size[0] + ' x ' + data.size[1]
+                    + (data.fps ? ', ' + Math.round(data.fps) + ' FPS' : ''));
+            } else if (!data.running) {
+                // Stopped by the backend (e.g. not retrieved for a while): started again
+                preview = null;
+            } else if (Date.now() - previewStarted > 4000) {
+                showPreviewMessage('<i class="bi bi-exclamation-triangle-fill text-warning"></i> '
+                    + 'No image from this camera: is it used by another program?');
+            }
+        });
+        setTimeout(function () {
+            previewPending = false;
+        }, 3000);
+    }
+    setInterval(updatePreview, 100);
+
     updateCameras();
     $('.refresh-cameras').click(updateCameras);
 
     $('.start-capture').click(function () {
+        // The preview is replaced by the vision
+        preview = null;
+        visionStarting = Date.now();
         backend.start_capture($('.cameras').val(), $('.resolutions').val());
     });
 
@@ -72,8 +146,7 @@ function video_initialize(backend) {
     // they are known (Linux), else these settings are numbers
     const SETTINGS_GROUPS = [
         ['Image', ['brightness', 'contrast', 'saturation', 'gain', 'power_line', 'exposure']],
-        ['Framing', ['crop_x', 'crop_y', 'rescale']],
-        ['Lens', ['focal']],
+        ['Framing', ['crop_x', 'crop_y', 'rescale', 'focal']],
     ];
     const SETTINGS = {
         brightness: { label: 'Brightness' },
@@ -174,15 +247,9 @@ function video_initialize(backend) {
                 html += settingRow(key, cameraSettings[key]);
                 shown.add(key);
             }
-            if (group == 'Image' && cameraControls.exposure) {
-                let period = flickerPeriod();
-                html += '<div class="form-text mt-0">Exposure in 0.1 ms: a long exposure blurs the moving robots'
-                    + (period ? '. Multiples of ' + (period / 10).toFixed(period % 10 ? 2 : 0)
-                        + ' ms only, to avoid bands of light on the image' : '') + '</div>';
-            }
             html += '</div>';
         }
-        let others = Object.keys(cameraSettings).filter(key => !shown.has(key));
+        let others = Object.keys(cameraSettings).filter(key => !shown.has(key) && key != 'power_line');
         if (others.length) {
             html += '<div class="camera-settings-group"><div class="section-title">Other</div>';
             for (let key of others) {
@@ -341,16 +408,17 @@ function video_initialize(backend) {
         // Detected objects
         let html = '';
         if (detection.ball) {
-            html += '<div><span class="badge text-bg-warning me-2">ball</span>x = ' + round(detection.ball[0])
-                + ', y = ' + round(detection.ball[1]) + '</div>';
+            html += '<span class="detection-item"><span class="badge text-bg-warning">ball</span>'
+                + round(detection.ball[0]) + ', ' + round(detection.ball[1]) + '</span>';
         }
         for (let entry of Object.keys(detection.markers || {}).sort()) {
             let marker = detection.markers[entry];
             let team = robotTeamNumber(entry)[0];
             let badge = ['green', 'blue'].includes(team) ? 'bg-team team-' + team : 'text-bg-secondary';
-            html += '<div><span class="badge ' + badge + ' me-2">' + escapeHtml(entry) + '</span>'
-                + 'x = ' + round(marker.position[0]) + ', y = ' + round(marker.position[1])
-                + ', orientation = ' + round(marker.orientation) + '</div>';
+            html += '<span class="detection-item" title="x, y [m], orientation [rad]">'
+                + '<span class="badge ' + badge + '">' + escapeHtml(entry) + '</span>'
+                + round(marker.position[0]) + ', ' + round(marker.position[1])
+                + ' <span class="text-body-secondary">∠</span>' + round(marker.orientation) + '</span>';
         }
         $('.detection').html(html || '<span class="text-body-secondary">Nothing detected</span>');
     }
@@ -443,6 +511,7 @@ function lens_calibration_initialize(backend)
         $('.lens-result').html(html);
     }
 
+    let lastState = 'idle';
     function update() {
         if (current_tab != 'vision') {
             return;
@@ -450,6 +519,13 @@ function lens_calibration_initialize(backend)
         backend.lens_calibration_status(function(status) {
             $('.lens-state').hide();
             $('.lens-state-' + status.state).show();
+
+            if (status.state != 'idle' && status.state != lastState) {
+                bootstrap.Tab.getOrCreateInstance(document.getElementById('vision-tab-lens-button')).show();
+            }
+            lastState = status.state;
+            $('.lens-tab-status').html(status.current_used
+                ? ' <i class="bi bi-check-circle-fill text-success" title="Lens calibrated"></i>' : '');
 
             render_current(status);
             $('.lens-start').toggleClass('disabled', !status.supported);

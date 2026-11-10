@@ -1302,6 +1302,85 @@ body:not(.sim-view) .field-wrapper {
     height: 100%;
 }
 
+/* Start of the vision: the camera and its resolution, with a preview of the camera */
+.page-vision>.vision-start {
+    height: 100%;
+}
+
+.vision-start-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.vision-start-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
+    gap: 1.5rem;
+}
+
+.vision-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-height: 0;
+}
+
+.vision-preview-area {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 12rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: var(--rsk-image-background);
+}
+
+.vision-preview-area .preview-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.vision-preview-area .preview-image:not([src]) {
+    visibility: hidden;
+}
+
+.vision-preview-message {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--bs-secondary-color);
+    pointer-events: none;
+}
+
+.vision-preview-info {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Small screens: the preview under the form, with the ratio of the image (the page scrolls) */
+@media (max-width: 991.98px) {
+    .vision-start-card,
+    .page-vision>.vision-start {
+        height: auto;
+    }
+
+    .vision-start-body {
+        grid-template-columns: 1fr;
+    }
+
+    .vision-preview-area {
+        min-height: 0;
+        aspect-ratio: 16 / 9;
+    }
+}
+
 .vision-layout {
     height: 100%;
     display: grid;
@@ -1344,13 +1423,46 @@ body:not(.sim-view) .field-wrapper {
     flex: 0 0 auto;
 }
 
+/* Detected objects, under the image */
+.vision-detection {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--bs-border-color-translucent);
+}
+
+.vision-detection .section-title {
+    flex: 0 0 auto;
+}
+
+.detection-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
+    font-size: 0.88rem;
+    font-variant-numeric: tabular-nums;
+    min-width: 0;
+}
+
+.detection-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    white-space: nowrap;
+}
+
+.vision-settings-card .card-header-tabs .nav-link {
+    padding: 0.45rem 0.8rem;
+}
+
 /* Camera settings: a slider (when the range is known) and the value of each setting */
 .camera-settings-group+.camera-settings-group {
-    margin-top: 0.9rem;
+    margin-top: 0.6rem;
 }
 
 .camera-settings-group .section-title {
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.2rem;
 }
 
 .camera-setting-row {
@@ -1358,7 +1470,7 @@ body:not(.sim-view) .field-wrapper {
     grid-template-columns: 6.5rem minmax(0, 1fr) 6rem 1.9rem;
     align-items: center;
     gap: 0.6rem;
-    padding: 0.15rem 0;
+    padding: 0.1rem 0;
 }
 
 .camera-setting-row .camera-setting-select {
@@ -1390,11 +1502,6 @@ body:not(.sim-view) .field-wrapper {
 .camera-settings.busy {
     opacity: 0.5;
     pointer-events: none;
-}
-
-.detection-list {
-    font-size: 0.9rem;
-    font-variant-numeric: tabular-nums;
 }
 
 .camera-settings .form-label {
