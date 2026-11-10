@@ -151,8 +151,8 @@ class Backend:
         except RuntimeError as e:
             raise api.APIError(str(e))
 
-    def cameraSettings(self, settings):
-        self._video().set_camera_settings(settings)
+    def cameraSettings(self, settings, save: bool = True):
+        self._video().set_camera_settings(settings, save)
         return True
 
     def camera_controls(self) -> dict:

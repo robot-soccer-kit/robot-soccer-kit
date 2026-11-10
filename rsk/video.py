@@ -500,20 +500,32 @@ class Video:
         self.running = False
         self.stop_capture()
 
-    def apply_camera_settings(self) -> None:
+    def apply_camera_settings(self, names=None) -> None:
         """
         Use camera settings to set OpenCV properties on capture stream
+
+        :param names: the settings to apply (e.g. the ones that changed), None for all of them
         """
+
+        def changed(name):
+            return names is None or name in names
+
         if self.capture is not None:
-            self.capture.set(cv2.CAP_PROP_BRIGHTNESS, self.settings["brightness"])
-            self.capture.set(cv2.CAP_PROP_CONTRAST, self.settings["contrast"])
-            self.capture.set(cv2.CAP_PROP_SATURATION, self.settings["saturation"])
-            self.capture.set(cv2.CAP_PROP_GAIN, self.settings["gain"])
-            self.capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
-            self.capture.set(cv2.CAP_PROP_FOCUS, 0)
-            self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)
-            self.capture.set(cv2.CAP_PROP_EXPOSURE, self.settings["exposure"])
-            if self.favourite_index is not None:
+            for name, prop in (
+                ("brightness", cv2.CAP_PROP_BRIGHTNESS),
+                ("contrast", cv2.CAP_PROP_CONTRAST),
+                ("saturation", cv2.CAP_PROP_SATURATION),
+                ("gain", cv2.CAP_PROP_GAIN),
+            ):
+                if changed(name):
+                    self.capture.set(prop, self.settings[name])
+            if names is None:
+                self.capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+                self.capture.set(cv2.CAP_PROP_FOCUS, 0)
+                self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)
+            if changed("exposure"):
+                self.capture.set(cv2.CAP_PROP_EXPOSURE, self.settings["exposure"])
+            if changed("power_line") and self.favourite_index is not None:
                 camera_controls.set_power_line_frequency(
                     self.favourite_index, self.settings.get("power_line", 50)
                 )
@@ -553,19 +565,28 @@ class Video:
         count = min(max(1, round(exposure / period)), max(1, int(maximum / period)))
         return round(count * period)
 
-    def set_camera_settings(self, settings: dict):
+    def set_camera_settings(self, settings: dict, save: bool = True):
         """
-        Set camera settings, save and apply them
+        Set camera settings, save and apply them. Only the settings that changed are applied
+        (they can be set many times per second, e.g. while a slider is moved)
 
         :param dict settings: settings
+        :param bool save: whether the configuration is saved (e.g. not while a slider is moved)
         """
+        previous = self.settings
         self.settings = settings
         if "exposure" in self.settings:
             self.settings["exposure"] = self.flicker_free_exposure(
                 self.settings["exposure"]
             )
-        self.save_config()
-        self.apply_camera_settings()
+        if save:
+            self.save_config()
+        names = {name for name in settings if previous.get(name) != settings[name]}
+        self.apply_camera_settings(names)
+        if "focal" in names:
+            # The field is calibrated with the focal (a change of the crop or rescale is detected
+            # by the video thread)
+            self.detection.calibrate_camera()
 
     def thread(self):
         """

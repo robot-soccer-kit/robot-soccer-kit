@@ -662,3 +662,55 @@ def test_image_is_encoded_once(make_video, monkeypatch):
     v.image = np.full((1080, 1920, 3), 255, np.uint8)
     assert v.get_image() != first
     assert len(encoded) == 2
+
+
+class RecordingCamera(FakeCamera):
+    """
+    A camera recording the properties set
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.sets = []
+
+    def set(self, prop, value):
+        self.sets.append((prop, value))
+        return True
+
+
+def test_settings_changed_live(make_video, monkeypatch):
+    # As while a slider is moved: many changes, only the setting changed is sent to the camera,
+    # the configuration is not saved
+    camera = RecordingCamera()
+    monkeypatch.setattr(video, "open_camera", lambda index: camera)
+    monkeypatch.setattr(video.camera_controls, "query_controls", lambda index: CONTROLS)
+    v = make_video()
+    v.detection.state = QuietState()
+    v.start_capture(0, len(video.resolutions) - 1)
+    saved = copy.deepcopy(video.config.config["camera"]["settings"])
+
+    for contrast in (10, 20, 30):
+        camera.sets.clear()
+        v.set_camera_settings(dict(v.settings, contrast=contrast), save=False)
+        assert camera.sets == [(cv2.CAP_PROP_CONTRAST, contrast)]
+    assert video.config.config["camera"]["settings"] == saved
+    assert v.settings["contrast"] == 30
+
+    # Released: saved
+    v.set_camera_settings(dict(v.settings), save=True)
+    assert video.config.config["camera"]["settings"]["contrast"] == 30
+
+
+def test_focal_change_calibrates_the_field_again(make_video, monkeypatch):
+    monkeypatch.setattr(video, "open_camera", lambda index: FakeCamera())
+    monkeypatch.setattr(video.camera_controls, "query_controls", lambda index: {})
+    v = make_video()
+    v.detection.state = QuietState()
+    v.start_preview(0, 0)
+
+    v.detection.field.should_calibrate = False
+    v.set_camera_settings(dict(v.settings, brightness=v.settings["brightness"] + 1))
+    assert not v.detection.field.should_calibrate
+
+    v.set_camera_settings(dict(v.settings, focal=v.settings["focal"] + 10))
+    assert v.detection.field.should_calibrate

@@ -318,7 +318,7 @@ function video_initialize(backend) {
     }
     loadCameraSettings();
 
-    function sendCameraSettings() {
+    function readCameraSettings() {
         // All the values are read from the inputs, since some of them can be updated by the
         // backend (e.g. the focal, by the lens calibration)
         $('.camera-setting').each(function () {
@@ -330,22 +330,54 @@ function video_initialize(backend) {
         // The exposure follows the lights (the inputs are updated with the value used)
         cameraSettings.exposure = flickerFreeExposure(cameraSettings.exposure);
         setSettingValue('exposure', cameraSettings.exposure);
-        backend.cameraSettings(cameraSettings);
-        backend.calibrate_camera();
+    }
+
+    // The settings are sent one request at a time (a previous value never arrives after a new
+    // one), at most every 50 ms. They are saved when a slider is released, not while it moves
+    let sending = false;
+    let queued = null;
+    function sendCameraSettings(save = true) {
+        if (sending) {
+            queued = { save: save || (queued !== null && queued.save) };
+            return;
+        }
+        sending = true;
+        readCameraSettings();
+        let done = false;
+        function next() {
+            if (done) {
+                return;
+            }
+            done = true;
+            setTimeout(function () {
+                sending = false;
+                if (queued !== null) {
+                    let request = queued;
+                    queued = null;
+                    sendCameraSettings(request.save);
+                }
+            }, 50);
+        }
+        backend.cameraSettings(cameraSettings, save, next);
+        // No answer (e.g. an error): the next settings are sent anyway
+        setTimeout(next, 2000);
     }
 
     function setSettingValue(key, value) {
         $('.camera-setting[rel="' + key + '"], .camera-setting-range[rel="' + key + '"]').val(value);
     }
 
-    // Sliders: the value is shown while moving, sent when released
+    // Sliders: the image follows while moving, the settings are saved when released
     $('.camera-settings').on('input', '.camera-setting-range', function () {
         $('.camera-setting[rel="' + $(this).attr('rel') + '"]').val(Math.round($(this).val()));
+        sendCameraSettings(false);
     });
-    $('.camera-settings').on('change', '.camera-setting-range', sendCameraSettings);
+    $('.camera-settings').on('change', '.camera-setting-range', function () {
+        sendCameraSettings(true);
+    });
     $('.camera-settings').on('change', '.camera-setting', function () {
         $('.camera-setting-range[rel="' + $(this).attr('rel') + '"]').val($(this).val());
-        sendCameraSettings();
+        sendCameraSettings(true);
         if ($(this).attr('rel') == 'power_line') {
             // The exposure slider and its help follow the lights
             renderCameraSettings();
@@ -354,7 +386,7 @@ function video_initialize(backend) {
     $('.camera-settings').on('click', '.camera-setting-default', function () {
         let key = $(this).attr('rel');
         setSettingValue(key, cameraControls[key].default);
-        sendCameraSettings();
+        sendCameraSettings(true);
     });
 
     // Refreshing the camera settings (e.g. after a lens calibration)
