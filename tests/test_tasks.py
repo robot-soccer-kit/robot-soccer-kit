@@ -1,5 +1,6 @@
+import numpy as np
 import pytest
-from rsk import tasks, utils
+from rsk import constants, tasks, utils
 from rsk.path_finder import PathFinder
 
 
@@ -130,3 +131,47 @@ def test_path_finder_avoids_obstacle():
     assert len(path) > 2
     for point in path[1:-1]:
         assert abs(point[1]) > 0.1
+
+
+def numpy_distance_between(path_finder, n1, n2):
+    # The previous implementation (numpy), as a reference
+    node1_xy = path_finder.nodes[n1]
+    node2_xy = path_finder.nodes[n2]
+    distance = np.linalg.norm(np.array(node1_xy) - np.array(node2_xy))
+    intersect_ratio = 0
+    for obstacle in path_finder.obstacles:
+        segment_dx = node2_xy[0] - node1_xy[0]
+        segment_dy = node2_xy[1] - node1_xy[1]
+        a = segment_dx**2 + segment_dy**2
+        x_ca = node1_xy[0] - obstacle[0]
+        y_ca = node1_xy[1] - obstacle[1]
+        b = 2 * (x_ca * segment_dx + y_ca * segment_dy)
+        c = x_ca**2 + y_ca**2 - (obstacle[2]) ** 2
+        d = b**2 - 4 * a * c
+        if d > 0:
+            d = np.sqrt(d)
+            t1 = np.clip((-b - d) / (2 * a), 0, 1)
+            t2 = np.clip((-b + d) / (2 * a), 0, 1)
+            intersect_ratio = max(intersect_ratio, np.abs(t2 - t1))
+    return distance + path_finder.obstacle_penalty * intersect_ratio * distance
+
+
+@pytest.mark.parametrize("seed", range(10))
+def test_path_finder_distances(seed):
+    rng = np.random.default_rng(seed)
+    path_finder = PathFinder(avoid_margin=0.05)
+    for x, y in rng.uniform([-1.3, -1.0], [1.3, 1.0], (4, 2)):
+        path_finder.add_node(x, y)
+    for x, y in rng.uniform([-0.8, -0.5], [0.8, 0.5], (3, 2)):
+        path_finder.add_obstacle(x, y, 0.16)
+
+    for n1 in range(len(path_finder.nodes)):
+        for n2 in range(len(path_finder.nodes)):
+            if n1 != n2:
+                assert path_finder.distance_between(n1, n2) == pytest.approx(
+                    numpy_distance_between(path_finder, n1, n2), rel=1e-12, abs=1e-15
+                )
+    # The nodes are on the carpet
+    for x, y in path_finder.nodes:
+        assert abs(x) <= constants.carpet_length / 2
+        assert abs(y) <= constants.carpet_width / 2

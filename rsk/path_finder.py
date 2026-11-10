@@ -1,5 +1,8 @@
-import numpy as np
+import math
+
 import astar
+import numpy as np
+
 from . import constants
 
 
@@ -18,6 +21,8 @@ class PathFinder(astar.AStar):
         self.discretization: int = discretization
         self.avoid_margin: float = avoid_margin
         self.obstacles = []
+        # The obstacles as Python floats (x, y, radius), for distance_between()
+        self.obstacles_list = []
         self.obstacle_penalty: float = 25.0
         self.nodes = []
 
@@ -38,6 +43,7 @@ class PathFinder(astar.AStar):
         :param radius: obstacle radius
         """
         self.obstacles.append([x, y, radius])
+        self.obstacles_list.append((float(x), float(y), float(radius)))
         for k in self.angles():
             # Storing all nodes
             self.add_node(
@@ -53,8 +59,8 @@ class PathFinder(astar.AStar):
         :return: node index
         """
         # Clipping nodes to the carpet
-        x = np.clip(x, -constants.carpet_length / 2, constants.carpet_length / 2)
-        y = np.clip(y, -constants.carpet_width / 2, constants.carpet_width / 2)
+        x = min(max(x, -constants.carpet_length / 2), constants.carpet_length / 2)
+        y = min(max(y, -constants.carpet_width / 2), constants.carpet_width / 2)
 
         self.nodes.append([x, y])
 
@@ -124,27 +130,29 @@ class PathFinder(astar.AStar):
         :param n2: node 2 index
         :return: distance between the two nodes
         """
-        node1_xy = self.nodes[n1]
-        node2_xy = self.nodes[n2]
-        distance = np.linalg.norm(np.array(node1_xy) - np.array(node2_xy))
+        # Computed with Python floats: called for all the pairs of nodes, numpy functions on
+        # single numbers are much slower
+        x1, y1 = self.nodes[n1]
+        x2, y2 = self.nodes[n2]
+        segment_dx = float(x2 - x1)
+        segment_dy = float(y2 - y1)
+        distance = math.hypot(segment_dx, segment_dy)
 
         # Penalizing segment part crossing obstacles
         if len(self.obstacles):
             intersect_ratio = 0
-            for obstacle in self.obstacles:
-                segment_dx = node2_xy[0] - node1_xy[0]
-                segment_dy = node2_xy[1] - node1_xy[1]
-                a = segment_dx**2 + segment_dy**2
-                x_ca = node1_xy[0] - obstacle[0]
-                y_ca = node1_xy[1] - obstacle[1]
+            a = segment_dx**2 + segment_dy**2
+            for ox, oy, radius in self.obstacles_list:
+                x_ca = x1 - ox
+                y_ca = y1 - oy
                 b = 2 * (x_ca * segment_dx + y_ca * segment_dy)
-                c = x_ca**2 + y_ca**2 - (obstacle[2]) ** 2
+                c = x_ca**2 + y_ca**2 - radius**2
                 d = b**2 - 4 * a * c
                 if d > 0:
-                    d = np.sqrt(d)
-                    t1 = np.clip((-b - d) / (2 * a), 0, 1)
-                    t2 = np.clip((-b + d) / (2 * a), 0, 1)
-                    intersect_ratio = max(intersect_ratio, np.abs(t2 - t1))
+                    d = math.sqrt(d)
+                    t1 = min(max((-b - d) / (2 * a), 0), 1)
+                    t2 = min(max((-b + d) / (2 * a), 0), 1)
+                    intersect_ratio = max(intersect_ratio, abs(t2 - t1))
 
             distance += self.obstacle_penalty * intersect_ratio * distance
 
@@ -157,6 +165,6 @@ class PathFinder(astar.AStar):
         :param goal: goal node
         :return: heuristic cost estimate (Euclidean distance)
         """
-        node1_xy = self.nodes[current]
-        node2_xy = self.nodes[goal]
-        return np.linalg.norm(np.array(node1_xy) - np.array(node2_xy))
+        x1, y1 = self.nodes[current]
+        x2, y2 = self.nodes[goal]
+        return math.hypot(x2 - x1, y2 - y1)
