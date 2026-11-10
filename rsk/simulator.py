@@ -257,10 +257,12 @@ class Simulator:
             except Exception:
                 logger.exception("Error in simulator loop")
 
-            while (self.fps_limit is not None) and (
-                time.time() - last_time < 1 / self.fps_limit
-            ):
-                time.sleep(1e-3)
+            # Waiting for the next step (one sleep: waking up every millisecond to check the time
+            # costs more than the simulation itself)
+            if self.fps_limit is not None:
+                remaining = 1 / self.fps_limit - (time.time() - last_time)
+                if remaining > 0:
+                    time.sleep(remaining)
 
     def loop(self, dt):
         # Simulator proceed in two steps:

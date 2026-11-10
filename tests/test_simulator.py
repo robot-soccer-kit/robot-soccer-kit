@@ -1,10 +1,10 @@
 import math
+import time
 
 import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
-
 from rsk import constants, simulator
 from rsk.robots import Robots
 
@@ -146,3 +146,27 @@ def test_random_scenes_keep_objects_apart_and_finite(positions, orders, kicks):
     for k, a in enumerate(sim.objects):
         for b in list(sim.objects)[k + 1 :]:
             assert gap(sim, a, b) > -1e-3
+
+
+def test_simulation_rate():
+    # The simulation runs at about fps_limit steps per second (100), sleeping between the steps.
+    # The threshold is low: on Windows with Python < 3.11, sleeps last at least ~15.6 ms
+    robots = Robots()
+    robots.save_robots = False
+    Robots.protocols["sim"] = simulator.RobotSim
+    sim = simulator.Simulator(robots, None, run_thread=False)
+    steps = []
+    loop = sim.loop
+    sim.loop = lambda dt: (steps.append(dt), loop(dt))
+
+    sim.run_thread()
+    try:
+        time.sleep(1.0)
+        steps.clear()
+        time.sleep(1.0)
+        count = len(steps)
+    finally:
+        sim.run = False
+        sim.simu_thread.join(timeout=1)
+
+    assert 50 <= count <= 105
