@@ -96,8 +96,8 @@ class Backend:
         }
         return state
 
-    def resolutions(self):
-        return self._video().resolutions()
+    def resolutions(self, index: int = None):
+        return self._video().resolutions(index)
 
     def getCameraSettings(self):
         return self._video().settings

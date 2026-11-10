@@ -21,15 +21,42 @@ function video_initialize(backend) {
             }
             $('.cameras').html(options);
             $('.start-capture').prop('disabled', !indexes.length);
+            updateResolutions();
         });
-        backend.resolutions(function (data) {
-            let [current, resolutions] = data;
+    }
+
+    // Resolutions the camera chosen can give (all the resolutions if unknown), with their frame
+    // rate. The resolution chosen is kept if possible
+    let updatingResolutions = false;
+    function updateResolutions(callback) {
+        updatingResolutions = true;
+        let camera = $('.cameras').val();
+        let args = camera ? [parseInt(camera)] : [];
+        backend.resolutions(...args, function (data) {
+            let [current, resolutions, available] = data;
+            if (!available) {
+                available = resolutions.map((label, index) => [index, 0]);
+            }
+            let numbers = available.map(entry => entry[0]);
+            let chosen = parseInt($('.resolutions').val());
+            if (!numbers.includes(chosen)) {
+                chosen = numbers.includes(current) ? current : null;
+            }
+            if (chosen === null) {
+                // The largest resolution with the highest frame rate
+                let best = Math.max(...available.map(entry => entry[1]));
+                chosen = available.filter(entry => entry[1] == best).map(entry => entry[0]).pop();
+            }
             let options = '';
-            for (let index in resolutions) {
-                options += '<option value="' + index + '"' + (index == current ? ' selected' : '') + '>'
-                    + escapeHtml(resolutions[index]) + '</option>';
+            for (let [index, fps] of available) {
+                options += '<option value="' + index + '"' + (index == chosen ? ' selected' : '') + '>'
+                    + escapeHtml(resolutions[index]) + (fps ? ' (' + Math.round(fps) + ' FPS)' : '') + '</option>';
             }
             $('.resolutions').html(options);
+            updatingResolutions = false;
+            if (callback) {
+                callback();
+            }
         });
     }
 
@@ -45,6 +72,9 @@ function video_initialize(backend) {
     }
 
     function updatePreview() {
+        if (updatingResolutions) {
+            return;
+        }
         let wanted = current_tab == 'vision' && !$('body').hasClass('vision-running') && !listingCameras
             && Date.now() - visionStarting > 4000 && $('.cameras').val() && $('.resolutions').val() !== null;
         if (!wanted) {
@@ -105,9 +135,15 @@ function video_initialize(backend) {
         }, 3000);
     }
     setInterval(updatePreview, 500);
-    $('.cameras, .resolutions').on('change', function () {
+    $('.resolutions').on('change', function () {
         previewPending = false;
         updatePreview();
+    });
+    $('.cameras').on('change', function () {
+        updateResolutions(function () {
+            previewPending = false;
+            updatePreview();
+        });
     });
 
     updateCameras();

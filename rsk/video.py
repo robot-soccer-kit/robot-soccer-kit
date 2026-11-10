@@ -220,15 +220,29 @@ class Video:
         else:
             return [[], None, {}]
 
-    def resolutions(self) -> list:
+    def resolutions(self, index: int = None) -> list:
         """
-        Returns all possible resolutions
+        Returns all possible resolutions, and the ones a camera can give (when known)
 
-        :return list: a list of possible resolutions
+        :param int index: the camera index (None: no camera)
+        :return list: the current resolution index, the resolutions (labels), and the resolutions
+            the camera can give: [resolution index, maximum frame rate] (None if unknown)
         """
         res = ["%d x %d" % res for res in resolutions]
 
-        return [self.resolution, res]
+        available = None
+        if index is not None:
+            sizes = camera_controls.frame_sizes(index)
+            available = [
+                [number, sizes[size]]
+                for number, size in enumerate(resolutions)
+                if size in sizes
+            ]
+            if not available:
+                # Unknown (e.g. not on Linux), or none of the resolutions of RSK
+                available = None
+
+        return [self.resolution, res, available]
 
     def save_config(self):
         """

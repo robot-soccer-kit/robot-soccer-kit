@@ -426,3 +426,98 @@ def test_cameras_are_listed_during_a_preview(make_video, monkeypatch):
     # The camera of the preview is released, to be listed
     assert v.preview is None
     assert 0 in indexes
+
+
+def test_resolutions_of_a_camera(make_video, monkeypatch):
+    sizes = {
+        (1920, 1080): 30.0,
+        (1280, 720): 30.0,
+        (2592, 1944): 15.0,
+        (640, 480): 30.0,
+    }
+    monkeypatch.setattr(video.camera_controls, "frame_sizes", lambda index: sizes)
+    v = make_video()
+
+    current, labels, available = v.resolutions(0)
+
+    assert labels == ["%d x %d" % size for size in video.resolutions]
+    # Only the resolutions of RSK that the camera can give, with their frame rate
+    assert [video.resolutions[number] for number, _ in available] == [
+        (640, 480),
+        (1280, 720),
+        (1920, 1080),
+    ]
+    assert all(fps == 30.0 for _, fps in available)
+
+
+def test_resolutions_of_an_unknown_camera(make_video, monkeypatch):
+    # E.g. on Windows: all the resolutions are proposed
+    monkeypatch.setattr(video.camera_controls, "frame_sizes", lambda index: {})
+    v = make_video()
+
+    assert v.resolutions(0)[2] is None
+    assert v.resolutions()[2] is None
+
+
+class WindowsFieldCamera(FieldCamera):
+    """
+    The camera of FieldCamera as seen on Windows: the exposure is the log2 of the exposure time in
+    seconds, the image has its full brightness for an exposure of -7 (1/128 s)
+    """
+
+    def read(self):
+        exposure = self.properties.get(cv2.CAP_PROP_EXPOSURE, -7)
+        image = self.image * 2 ** (exposure + 7)
+        return True, np.clip(image, 0, 255).astype(np.uint8)
+
+
+def test_auto_camera_settings_on_windows(make_video, monkeypatch):
+    # On Windows, the ranges of the settings are unknown and the exposure is a power of 2
+    monkeypatch.setattr(video, "is_windows", True)
+    camera = WindowsFieldCamera(synthetic.render({}))
+    v = start_field_camera(make_video, monkeypatch, camera, controls={})
+    assert wait_until(lambda: v.detection.field.calibrated())
+    settings = dict(v.settings)
+
+    v.auto_camera_settings()
+    assert wait_until(lambda: v.auto_camera_settings_status()["state"] != "running", 30)
+
+    status = v.auto_camera_settings_status()
+    assert status["state"] == "done", status["message"]
+    # The green of the field reaches 225 between -7 (120) and -6 (240): the longest exposure
+    # under the target, not rounded to the flickering of the lights
+    assert v.settings["exposure"] == -7
+    assert "1/128 s" in status["message"]
+    # The image settings are kept (the defaults of the camera are unknown)
+    for name in ("brightness", "contrast", "saturation", "gain"):
+        assert v.settings[name] == settings[name]
+
+
+def test_camera_controls_outside_linux(monkeypatch):
+    # On Windows, nothing is known: the interface proposes all the resolutions, numbers for the
+    # settings, and no automatic image settings
+    monkeypatch.setattr(video.camera_controls, "is_linux", False)
+    assert video.camera_controls.query_controls(0) == {}
+    assert video.camera_controls.frame_sizes(0) == {}
+    assert not video.camera_controls.set_power_line_frequency(0, 50)
+
+
+def test_camera_controls_of_a_missing_camera():
+    assert video.camera_controls.query_controls(99) == {}
+    assert video.camera_controls.frame_sizes(99) == {}
+    assert not video.camera_controls.set_power_line_frequency(99, 50)
+
+
+def test_v4l2_structures():
+    # Sizes of the structures of the Linux kernel (linux/videodev2.h), part of the ioctl numbers
+    import ctypes
+
+    controls = video.camera_controls
+    assert ctypes.sizeof(controls.v4l2_queryctrl) == 68
+    assert ctypes.sizeof(controls.v4l2_control) == 8
+    assert ctypes.sizeof(controls.v4l2_fmtdesc) == 64
+    assert ctypes.sizeof(controls.v4l2_frmsizeenum) == 44
+    assert ctypes.sizeof(controls.v4l2_frmivalenum) == 52
+    assert controls.VIDIOC_QUERYCTRL == 0xC0445624
+    assert controls.VIDIOC_S_CTRL == 0xC008561C
+    assert controls.MJPG == 0x47504A4D

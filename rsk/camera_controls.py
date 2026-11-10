@@ -51,6 +51,55 @@ class v4l2_control(ctypes.Structure):
     _fields_ = [("id", ctypes.c_uint32), ("value", ctypes.c_int32)]
 
 
+class v4l2_fmtdesc(ctypes.Structure):
+    _fields_ = [
+        ("index", ctypes.c_uint32),
+        ("type", ctypes.c_uint32),
+        ("flags", ctypes.c_uint32),
+        ("description", ctypes.c_char * 32),
+        ("pixelformat", ctypes.c_uint32),
+        ("mbus_code", ctypes.c_uint32),
+        ("reserved", ctypes.c_uint32 * 3),
+    ]
+
+
+class v4l2_frmsizeenum(ctypes.Structure):
+    # The union of the discrete and stepwise sizes is read as 6 integers
+    _fields_ = [
+        ("index", ctypes.c_uint32),
+        ("pixel_format", ctypes.c_uint32),
+        ("type", ctypes.c_uint32),
+        ("size", ctypes.c_uint32 * 6),
+        ("reserved", ctypes.c_uint32 * 2),
+    ]
+
+
+class v4l2_frmivalenum(ctypes.Structure):
+    # The union of the discrete and stepwise intervals is read as 6 integers (fractions)
+    _fields_ = [
+        ("index", ctypes.c_uint32),
+        ("pixel_format", ctypes.c_uint32),
+        ("width", ctypes.c_uint32),
+        ("height", ctypes.c_uint32),
+        ("type", ctypes.c_uint32),
+        ("interval", ctypes.c_uint32 * 6),
+        ("reserved", ctypes.c_uint32 * 2),
+    ]
+
+
+V4L2_BUF_TYPE_VIDEO_CAPTURE = 1
+V4L2_FRMSIZE_TYPE_DISCRETE = 1
+V4L2_FRMIVAL_TYPE_DISCRETE = 1
+
+
+def fourcc(code: str) -> int:
+    return sum(ord(c) << (8 * i) for i, c in enumerate(code))
+
+
+# Format of the images asked by RSK to the cameras (see video.py)
+MJPG = fourcc("MJPG")
+
+
 def _iowr(group: str, number: int, size: int) -> int:
     # _IOWR macro of the Linux kernel (asm-generic/ioctl.h)
     return (3 << 30) | (size << 16) | (ord(group) << 8) | number
@@ -58,6 +107,87 @@ def _iowr(group: str, number: int, size: int) -> int:
 
 VIDIOC_QUERYCTRL = _iowr("V", 36, ctypes.sizeof(v4l2_queryctrl))
 VIDIOC_S_CTRL = _iowr("V", 28, ctypes.sizeof(v4l2_control))
+VIDIOC_ENUM_FMT = _iowr("V", 2, ctypes.sizeof(v4l2_fmtdesc))
+VIDIOC_ENUM_FRAMESIZES = _iowr("V", 74, ctypes.sizeof(v4l2_frmsizeenum))
+VIDIOC_ENUM_FRAMEINTERVALS = _iowr("V", 75, ctypes.sizeof(v4l2_frmivalenum))
+
+
+def _enumerate(fd, request, make):
+    """
+    Calls an enumeration ioctl with the indexes 0, 1, 2... until it fails
+    """
+    import fcntl
+
+    index = 0
+    while index < 256:
+        item = make(index)
+        try:
+            fcntl.ioctl(fd, request, item)
+        except OSError:
+            return
+        yield item
+        index += 1
+
+
+def frame_sizes(index: int) -> dict:
+    """
+    Sizes of the images a camera can give, with their maximum frame rate, in the format asked by
+    RSK (MJPG), or in any format if the camera doesn't have it (Linux only)
+
+    :param int index: the camera index (/dev/videoN on Linux)
+    :return dict: (width, height) => maximum frame rate [FPS] (0 if unknown), empty if unknown
+    """
+    if not is_linux:
+        return {}
+
+    try:
+        fd = os.open(f"/dev/video{int(index)}", os.O_RDWR | os.O_NONBLOCK)
+    except OSError:
+        return {}
+
+    def sizes_of(pixel_format):
+        sizes = {}
+        for size in _enumerate(
+            fd,
+            VIDIOC_ENUM_FRAMESIZES,
+            lambda i: v4l2_frmsizeenum(index=i, pixel_format=pixel_format),
+        ):
+            if size.type != V4L2_FRMSIZE_TYPE_DISCRETE:
+                # Continuous or stepwise sizes: not listed
+                continue
+            width, height = size.size[0], size.size[1]
+            fps = 0.0
+            for interval in _enumerate(
+                fd,
+                VIDIOC_ENUM_FRAMEINTERVALS,
+                lambda i: v4l2_frmivalenum(
+                    index=i, pixel_format=pixel_format, width=width, height=height
+                ),
+            ):
+                numerator, denominator = interval.interval[0], interval.interval[1]
+                if interval.type == V4L2_FRMIVAL_TYPE_DISCRETE and numerator:
+                    fps = max(fps, denominator / numerator)
+            sizes[(width, height)] = max(fps, sizes.get((width, height), 0.0))
+        return sizes
+
+    try:
+        formats = [
+            description.pixelformat
+            for description in _enumerate(
+                fd,
+                VIDIOC_ENUM_FMT,
+                lambda i: v4l2_fmtdesc(index=i, type=V4L2_BUF_TYPE_VIDEO_CAPTURE),
+            )
+        ]
+        if MJPG in formats:
+            return sizes_of(MJPG)
+        sizes = {}
+        for pixel_format in formats:
+            for size, fps in sizes_of(pixel_format).items():
+                sizes[size] = max(fps, sizes.get(size, 0.0))
+        return sizes
+    finally:
+        os.close(fd)
 
 
 def set_power_line_frequency(index: int, frequency: int) -> bool:
