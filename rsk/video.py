@@ -90,8 +90,6 @@ AUTO_EXPOSURE_RANGE_LOG2 = (-11, -5)
 # The preview of a camera (before starting the vision) is stopped when it is not retrieved for this
 # duration (e.g. the page is closed), to release the camera [s]
 PREVIEW_TIMEOUT = 5.0
-# Maximum width of the preview images sent to the interface [px]
-PREVIEW_MAX_WIDTH = 960
 
 # Number of new images to wait for after a change of the camera settings
 AUTO_SETTLE_FRAMES = 5
@@ -133,6 +131,7 @@ class Video:
         # The images are captured, but not processed
         self.preview = None
         self.preview_retrieved = 0.0
+        self.preview_lock = threading.Lock()
         # Automatic camera settings
         self.auto_state = "idle"
         self.auto_message = ""
@@ -271,40 +270,57 @@ class Video:
         :param int index: the camera index
         :param int resolution: the resolution index
         """
-        if self.capture is not None and self.preview is None:
-            raise RuntimeError("The vision is running")
-        self.preview_retrieved = time.time()
-        if self.preview == (index, resolution):
-            return
-        self.release_capture()
-        self.open_capture(index, resolution)
-        self.preview = (index, resolution)
+        with self.preview_lock:
+            if self.capture is not None and self.preview is None:
+                raise RuntimeError("The vision is running")
+            self.preview_retrieved = time.time()
+            if self.preview == (index, resolution):
+                return
+            self.release_capture()
+            # Set before the camera is opened (it takes time): it is not the vision
+            self.preview = (index, resolution)
+            self.open_capture(index, resolution)
 
     def get_preview(self) -> dict:
         """
-        The last image of the preview
+        Status of the preview (the images are retrieved with preview_stream())
 
-        :return dict: the image (base64 encoded JPEG, empty if none), the size of the images of
-            the camera and the frame rate
+        :return dict: whether the preview is running, whether the camera gives images, the size
+            of its images and the frame rate
         """
         self.preview_retrieved = time.time()
         image = self.image
         if self.preview is None or image is None:
-            return {"image": "", "running": self.preview is not None}
+            return {"running": self.preview is not None, "has_image": False}
         height, width = image.shape[:2]
-        if width > PREVIEW_MAX_WIDTH:
-            image = cv2.resize(
-                image,
-                (PREVIEW_MAX_WIDTH, round(height * PREVIEW_MAX_WIDTH / width)),
-                interpolation=cv2.INTER_AREA,
-            )
-        data = cv2.imencode(".jpg", image)[1]
         return {
-            "image": base64.b64encode(data).decode("utf-8"),
             "running": True,
+            "has_image": True,
             "size": [width, height],
             "fps": round(1 / self.period, 1) if self.period else 0,
         }
+
+    def preview_stream(self):
+        """
+        The images of the preview, as they come from the camera (full size, all the images), to
+        be sent as a MJPEG stream. Ends when the preview stops or changes.
+
+        :return: a generator of JPEG images (bytes)
+        """
+        preview = self.preview
+        last_count = None
+        last_image = time.time()
+        while preview is not None and self.preview == preview and self.running:
+            self.preview_retrieved = time.time()
+            image = self.image
+            if image is None or self.frame_count == last_count:
+                if time.time() - last_image > PREVIEW_TIMEOUT:
+                    return
+                time.sleep(0.005)
+                continue
+            last_count = self.frame_count
+            last_image = time.time()
+            yield cv2.imencode(".jpg", image)[1].tobytes()
 
     def stop_preview(self) -> None:
         """

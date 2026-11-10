@@ -52,6 +52,7 @@ function video_initialize(backend) {
                 backend.stop_preview();
             }
             preview = null;
+            // Closes the stream
             $('.preview-image').removeAttr('src');
             return;
         }
@@ -69,6 +70,10 @@ function video_initialize(backend) {
             showPreviewMessage('<span class="spinner-border spinner-border-sm"></span> Opening the camera...');
             backend.start_preview(parseInt($('.cameras').val()), parseInt($('.resolutions').val()), function () {
                 previewPending = false;
+                // The images, as a MJPEG stream (all the images of the camera, full size)
+                if (preview == chosen) {
+                    $('.preview-image').attr('src', 'api/preview.mjpg?t=' + Date.now());
+                }
             });
             // On an error, the preview is tried again later
             setTimeout(function () {
@@ -80,11 +85,13 @@ function video_initialize(backend) {
         previewPending = true;
         backend.get_preview(function (data) {
             previewPending = false;
-            if (data.image) {
-                $('.preview-image').attr('src', 'data:image/jpeg;base64,' + data.image);
+            if (data.has_image) {
                 showPreviewMessage('');
                 $('.vision-preview-info').text('Preview: ' + data.size[0] + ' x ' + data.size[1]
                     + (data.fps ? ', ' + Math.round(data.fps) + ' FPS' : ''));
+                if (!$('.preview-image').attr('src')) {
+                    $('.preview-image').attr('src', 'api/preview.mjpg?t=' + Date.now());
+                }
             } else if (!data.running) {
                 // Stopped by the backend (e.g. not retrieved for a while): started again
                 preview = null;
@@ -97,7 +104,11 @@ function video_initialize(backend) {
             previewPending = false;
         }, 3000);
     }
-    setInterval(updatePreview, 100);
+    setInterval(updatePreview, 500);
+    $('.cameras, .resolutions').on('change', function () {
+        previewPending = false;
+        updatePreview();
+    });
 
     updateCameras();
     $('.refresh-cameras').click(updateCameras);

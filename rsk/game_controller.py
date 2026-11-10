@@ -6,7 +6,7 @@ import time
 import logging
 import threading
 import waitress
-from flask import Flask, send_from_directory, jsonify, request, make_response
+from flask import Flask, Response, send_from_directory, jsonify, request, make_response
 from flask_cors import CORS
 from .backend import Backend
 from . import api, robot_wifi, config
@@ -108,6 +108,28 @@ def create_app(backend: Backend) -> Flask:
             return jsonify([0, f"Arguments for command {command} are not valid JSON"])
 
         return jsonify(api.call(command, args))
+
+    @app.route("/api/preview.mjpg", methods=["GET"])
+    def get_preview_stream():
+        # Images of the preview of a camera, as a MJPEG stream (shown by the browsers in an <img>)
+        if not hasattr(backend, "video"):
+            return jsonify({"error": "No camera in simulation or replay mode"}), 404
+
+        def stream():
+            for image in backend.video.preview_stream():
+                yield (
+                    b"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: "
+                    + str(len(image)).encode()
+                    + b"\r\n\r\n"
+                    + image
+                    + b"\r\n"
+                )
+
+        response = Response(
+            stream(), mimetype="multipart/x-mixed-replace; boundary=frame"
+        )
+        response.headers["Cache-Control"] = "no-store"
+        return response
 
     @app.route("/api/calibration_board.png", methods=["GET"])
     def get_calibration_board():

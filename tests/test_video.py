@@ -1,3 +1,4 @@
+import threading
 import time
 
 import cv2
@@ -341,9 +342,15 @@ def start_preview(make_video, monkeypatch, cameras=None):
 def test_preview(make_video, monkeypatch):
     v, cameras = start_preview(make_video, monkeypatch)
 
-    assert wait_until(lambda: v.get_preview()["image"] != "")
+    assert wait_until(lambda: v.get_preview()["has_image"])
     preview = v.get_preview()
     assert preview["size"] == [1920, 1080]
+
+    # The images of the camera, full size
+    stream = v.preview_stream()
+    images = [next(stream) for _ in range(3)]
+    decoded = cv2.imdecode(np.frombuffer(images[0], np.uint8), cv2.IMREAD_COLOR)
+    assert decoded.shape == (1080, 1920, 3)
     # The preview is not the vision: the images are not processed
     assert not v.get_video(False)["running"]
     assert v.last_frame is None
@@ -355,10 +362,35 @@ def test_preview(make_video, monkeypatch):
     assert cameras[0].released
     assert v.preview == (2, 0)
 
+    # The stream of the previous camera ends
+    assert next(stream, None) is None
+
     v.stop_preview()
     assert wait_until(lambda: v.capture is None)
     assert cameras[2].released
-    assert v.get_preview()["image"] == ""
+    assert not v.get_preview()["has_image"]
+
+
+def test_preview_is_not_the_vision_while_the_camera_opens(make_video, monkeypatch):
+    class SlowCamera(FakeCamera):
+        def __init__(self):
+            time.sleep(0.5)
+            super().__init__()
+
+    states = []
+    monkeypatch.setattr(video, "open_camera", lambda index: SlowCamera())
+    monkeypatch.setattr(video.camera_controls, "query_controls", lambda index: {})
+    v = make_video()
+    v.detection.state = QuietState()
+
+    opening = threading.Thread(target=v.start_preview, args=(0, 0))
+    opening.start()
+    while opening.is_alive():
+        states.append(v.get_video(False)["running"])
+        time.sleep(0.02)
+    states.append(v.get_video(False)["running"])
+
+    assert not any(states)
 
 
 def test_preview_is_stopped_when_not_retrieved(make_video, monkeypatch):
