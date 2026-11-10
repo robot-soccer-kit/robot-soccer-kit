@@ -95,6 +95,42 @@ PREVIEW_TIMEOUT = 5.0
 AUTO_SETTLE_FRAMES = 5
 
 
+def default_settings() -> dict:
+    """
+    Default camera settings. The image settings (brightness, contrast, saturation, gain) are raw
+    values of the controls of the camera, that suit the recommended camera: for other cameras,
+    the defaults of the camera are used when they are known (see Video.settings_for_new_camera)
+    """
+    return {
+        "brightness": 0,
+        "contrast": 0,
+        "saturation": 100,
+        "gain": 0,
+        "crop_x": 100,
+        "crop_y": 100,
+        "rescale": 100,
+        "exposure": -7 if is_windows else 100,
+        "focal": DEFAULT_FOCAL,
+        # Frequency of the power line, for the flickering of the lights (0: lights that don't
+        # flicker) [Hz]
+        "power_line": 50,
+    }
+
+
+# Image settings, that are the raw values of the controls of a camera
+IMAGE_SETTINGS = ("brightness", "contrast", "saturation", "gain")
+# Settings that don't depend on the camera (but on the room), kept when the camera changes
+SHARED_SETTINGS = ("power_line",)
+
+
+def camera_key(index: int) -> str:
+    """
+    Key of a camera for its settings: its name (cameras of the same model share their settings),
+    or its index if the name is unknown (e.g. on Windows)
+    """
+    return camera_name(index) or f"Camera {index}"
+
+
 class Video:
     """
     Handles video capture from the camera
@@ -136,20 +172,11 @@ class Video:
         self.auto_state = "idle"
         self.auto_message = ""
 
-        self.settings = {
-            "brightness": 0,
-            "contrast": 0,
-            "saturation": 100,
-            "gain": 0,
-            "crop_x": 100,
-            "crop_y": 100,
-            "rescale": 100,
-            "exposure": -7 if is_windows else 100,
-            "focal": DEFAULT_FOCAL,
-            # Frequency of the power line, for the flickering of the lights (0: lights that don't
-            # flicker) [Hz]
-            "power_line": 50,
-        }
+        self.settings = default_settings()
+        # Settings and lens calibration of each camera used (by camera_key()), and the key of
+        # the current camera (None before a camera is opened)
+        self.cameras_settings = {}
+        self.camera_key = None
         self.favourite_index = None
         self.resolution = len(resolutions) - 1
 
@@ -174,16 +201,26 @@ class Video:
                 self.resolution = config.config["camera"]["resolution"]
             if "lens_calibration" in config.config["camera"]:
                 self.lens_calibration = config.config["camera"]["lens_calibration"]
-            for entry in config.config["camera"]["settings"]:
+            for entry in config.config["camera"].get("settings", {}):
                 self.settings[entry] = config.config["camera"]["settings"][entry]
+            self.cameras_settings = config.config["camera"].get("cameras", {})
+
+            # Previous configuration, without the settings of each camera: they are the ones of
+            # the favourite camera
+            if not self.cameras_settings and self.favourite_index is not None:
+                self.cameras_settings[camera_key(self.favourite_index)] = {
+                    "settings": dict(self.settings),
+                    "lens_calibration": self.lens_calibration,
+                }
 
             # The previous default focal was saved in the configuration of all users
-            if self.settings["focal"] == OLD_DEFAULT_FOCAL:
-                logger.info(
-                    f"Updating the focal setting from the previous default "
-                    f"({OLD_DEFAULT_FOCAL}) to {DEFAULT_FOCAL}"
-                )
-                self.settings["focal"] = DEFAULT_FOCAL
+            for entry in [{"settings": self.settings}, *self.cameras_settings.values()]:
+                if entry["settings"].get("focal") == OLD_DEFAULT_FOCAL:
+                    logger.info(
+                        f"Updating the focal setting from the previous default "
+                        f"({OLD_DEFAULT_FOCAL}) to {DEFAULT_FOCAL}"
+                    )
+                    entry["settings"]["focal"] = DEFAULT_FOCAL
 
         # Starting the video processing thread
         self.running = True
@@ -248,13 +285,73 @@ class Video:
         """
         Save the configuration
         """
+        self.store_camera_settings()
         config.config["camera"] = {
             "favourite_index": self.favourite_index,
             "resolution": self.resolution,
+            # Settings of the current camera
             "settings": self.settings,
             "lens_calibration": self.lens_calibration,
+            # Settings of each camera
+            "cameras": self.cameras_settings,
         }
         config.save()
+
+    def store_camera_settings(self) -> None:
+        """
+        Keeps the settings and the lens calibration of the current camera
+        """
+        if self.camera_key is not None:
+            self.cameras_settings[self.camera_key] = {
+                "settings": dict(self.settings),
+                "lens_calibration": self.lens_calibration,
+            }
+
+    def settings_for_new_camera(self) -> dict:
+        """
+        Settings of a camera used for the first time: the defaults, with the image settings of the
+        camera when they are known (the raw default values suit the recommended camera only)
+        """
+        settings = default_settings()
+        for name in IMAGE_SETTINGS:
+            if name in self.controls:
+                settings[name] = self.controls[name]["default"]
+        return settings
+
+    def use_camera(self, index: int) -> None:
+        """
+        Uses the settings and the lens calibration of a camera (when it changes): the ones saved
+        for it, or the ones of a new camera
+
+        :param int index: the camera index
+        """
+        key = camera_key(index)
+        if key == self.camera_key:
+            return
+        self.store_camera_settings()
+        shared = {
+            name: self.settings[name]
+            for name in SHARED_SETTINGS
+            if name in self.settings
+        }
+        if key in self.cameras_settings:
+            saved = self.cameras_settings[key]
+            self.settings = {**default_settings(), **saved["settings"]}
+            self.lens_calibration = saved.get("lens_calibration")
+        else:
+            self.settings = self.settings_for_new_camera()
+            self.lens_calibration = None
+        self.settings.update(shared)
+        # An image setting out of the range of the camera (e.g. set for another camera): the
+        # default of the camera
+        for name in IMAGE_SETTINGS:
+            control = self.controls.get(name)
+            if control and not control["min"] <= self.settings[name] <= control["max"]:
+                self.settings[name] = control["default"]
+        self.camera_key = key
+        # The lens intrinsics are computed again for this camera (even without lens calibration,
+        # whose key is None)
+        self.lens_intrinsics_key = "camera changed"
 
     def release_capture(self, timeout: float = 3.0) -> None:
         """
@@ -352,8 +449,9 @@ class Video:
         self.period = None
         self.last_image_time = None
         self.no_image_warned = False
-        self.capture = open_camera(index)
         self.controls = camera_controls.query_controls(index)
+        self.use_camera(index)
+        self.capture = open_camera(index)
         w, h = resolutions[resolution]
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, w)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, h)

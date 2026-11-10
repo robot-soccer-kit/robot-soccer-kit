@@ -1,3 +1,4 @@
+import copy
 import threading
 import time
 
@@ -438,9 +439,9 @@ def test_resolutions_of_a_camera(make_video, monkeypatch):
     monkeypatch.setattr(video.camera_controls, "frame_sizes", lambda index: sizes)
     v = make_video()
 
-    current, labels, available = v.resolutions(0)
+    _, labels, available = v.resolutions(0)
 
-    assert labels == ["%d x %d" % size for size in video.resolutions]
+    assert labels == [f"{width} x {height}" for width, height in video.resolutions]
     # Only the resolutions of RSK that the camera can give, with their frame rate
     assert [video.resolutions[number] for number, _ in available] == [
         (640, 480),
@@ -521,3 +522,120 @@ def test_v4l2_structures():
     assert controls.VIDIOC_QUERYCTRL == 0xC0445624
     assert controls.VIDIOC_S_CTRL == 0xC008561C
     assert controls.MJPG == 0x47504A4D
+
+
+CAMERA_NAMES = {0: "Integrated Camera", 2: "USB Live camera"}
+CAMERA_CONTROLS = {
+    0: CONTROLS,
+    2: {
+        "brightness": {"min": -64, "max": 64, "step": 1, "default": 0},
+        "contrast": {"min": 0, "max": 64, "step": 1, "default": 32},
+        "saturation": {"min": 0, "max": 128, "step": 1, "default": 85},
+        "gain": {"min": 0, "max": 100, "step": 1, "default": 0},
+        "exposure": {"min": 1, "max": 5000, "step": 1, "default": 157},
+    },
+}
+
+
+@pytest.fixture
+def two_cameras(monkeypatch):
+    monkeypatch.setattr(video, "open_camera", lambda index: FakeCamera())
+    monkeypatch.setattr(video, "camera_name", lambda index: CAMERA_NAMES.get(index, ""))
+    monkeypatch.setattr(
+        video.camera_controls,
+        "query_controls",
+        lambda index: CAMERA_CONTROLS.get(index, {}),
+    )
+
+
+def test_settings_of_each_camera(make_video, two_cameras):
+    v = make_video()
+    v.detection.state = QuietState()
+    full_hd = len(video.resolutions) - 1
+
+    # A new camera: the image settings are the defaults of the camera
+    v.start_capture(0, full_hd)
+    assert (v.settings["brightness"], v.settings["contrast"]) == (128, 32)
+    v.set_camera_settings(dict(v.settings, contrast=50, crop_x=80, power_line=60))
+
+    # Another camera: its own settings, but the lights are the same
+    v.start_capture(2, full_hd)
+    assert (v.settings["brightness"], v.settings["contrast"]) == (0, 32)
+    assert v.settings["saturation"] == 85
+    assert v.settings["crop_x"] == 100
+    assert v.settings["power_line"] == 60
+    v.set_camera_settings(dict(v.settings, brightness=-10))
+
+    # Back to the first camera: its settings
+    v.start_capture(0, full_hd)
+    assert v.settings["contrast"] == 50
+    assert v.settings["crop_x"] == 80
+
+    # Saved for each camera
+    saved = video.config.config["camera"]["cameras"]
+    assert saved["Integrated Camera"]["settings"]["contrast"] == 50
+    assert saved["USB Live camera"]["settings"]["brightness"] == -10
+    # Loaded again
+    v2 = make_video(copy.deepcopy(video.config.config["camera"]))
+    assert v2.cameras_settings["USB Live camera"]["settings"]["brightness"] == -10
+
+
+def test_lens_calibration_of_each_camera(make_video, two_cameras):
+    v = make_video()
+    v.start_preview(0, 0)
+    v.lens_calibration = {"date": "calibration of the camera 0"}
+
+    v.start_preview(2, 0)
+    assert v.lens_calibration is None
+
+    v.start_preview(0, 0)
+    assert v.lens_calibration == {"date": "calibration of the camera 0"}
+
+
+def test_settings_of_a_previous_configuration(make_video, two_cameras):
+    # Before, the settings were not saved for each camera: they are the ones of the favourite
+    v = make_video(
+        {
+            "favourite_index": 2,
+            "resolution": 0,
+            "settings": {"brightness": 5, "contrast": 7},
+            "lens_calibration": None,
+        }
+    )
+    v.detection.state = QuietState()
+    assert v.cameras_settings["USB Live camera"]["settings"]["contrast"] == 7
+
+    # The favourite camera is started automatically
+    assert wait_until(lambda: v.capture is not None)
+    assert (v.settings["brightness"], v.settings["contrast"]) == (5, 7)
+
+
+def test_camera_without_name(make_video, two_cameras):
+    # E.g. on Windows: the camera is known by its index
+    v = make_video()
+    v.start_preview(1, 0)
+    assert v.camera_key == "Camera 1"
+    # Its image settings are the defaults of RSK (the ones of the camera are unknown)
+    assert v.settings["contrast"] == video.default_settings()["contrast"]
+
+
+def test_image_settings_out_of_the_range_of_the_camera(make_video, two_cameras):
+    # The settings of another camera were saved for this one (e.g. previous configuration)
+    v = make_video(
+        {
+            "favourite_index": None,
+            "settings": {},
+            "cameras": {
+                "USB Live camera": {
+                    "settings": {"brightness": 128, "contrast": 32, "saturation": 64},
+                    "lens_calibration": None,
+                }
+            },
+        }
+    )
+    v.start_preview(2, 0)
+
+    # Brightness from -64 to 64: the default of the camera
+    assert v.settings["brightness"] == 0
+    # In the ranges: kept
+    assert (v.settings["contrast"], v.settings["saturation"]) == (32, 64)
