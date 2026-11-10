@@ -1,9 +1,9 @@
 import math
 
+import cv2
 import numpy as np
 import pytest
 import synthetic
-
 from rsk.detection import Detection
 from rsk.field import Field
 from rsk.state import State
@@ -135,3 +135,45 @@ def test_orientation_uses_the_whole_tag():
     assert pose["orientation"] == pytest.approx(math.atan2(0 - 0.2, 1 - (-1)))
     # The position is still the middle of the diagonal 0-2
     assert pose["position"] == pytest.approx([0, 0])
+
+
+def connected_components_candidates(mask, min_pixels=4):
+    # The previous method: centroids of the 8-connected areas of at least min_pixels pixels
+    count, _, stats, centroids = cv2.connectedComponentsWithStats(mask, 8, cv2.CV_32S)
+    return [
+        list(centroids[k])
+        for k in range(1, count)
+        if stats[k][cv2.CC_STAT_AREA] >= min_pixels
+    ]
+
+
+@pytest.mark.parametrize("seed", range(20))
+def test_ball_candidates_are_the_connected_components(seed):
+    # Separate areas (disks, rectangles, disks with a hole as a reflection, tiny areas), each
+    # in its own cell of a grid
+    rng = np.random.default_rng(seed)
+    mask = np.zeros((480, 640), np.uint8)
+    for cx in range(40, 640, 80):
+        for cy in range(40, 480, 80):
+            if rng.random() < 0.4:
+                continue
+            kind = rng.integers(4)
+            if kind == 0:
+                cv2.circle(mask, (cx, cy), int(rng.integers(2, 30)), 255, -1)
+            elif kind == 1:
+                w, h = rng.integers(1, 30, 2)
+                cv2.rectangle(mask, (cx - w, cy - h), (cx + w, cy + h), 255, -1)
+            elif kind == 2:
+                cv2.circle(mask, (cx, cy), int(rng.integers(10, 30)), 255, -1)
+                cv2.circle(mask, (cx + 3, cy - 2), int(rng.integers(2, 6)), 0, -1)
+            else:
+                # 1 to 3 pixels: not a candidate
+                for _ in range(int(rng.integers(1, 4))):
+                    mask[cy, cx + int(rng.integers(0, 2))] = 255
+
+    expected = sorted(connected_components_candidates(mask))
+    found = sorted(Detection.ball_candidates(mask, max_candidates=1000))
+
+    assert len(found) == len(expected)
+    for (x1, y1), (x2, y2) in zip(found, expected):
+        assert abs(x1 - x2) < 1e-6 and abs(y1 - y2) < 1e-6

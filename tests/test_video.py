@@ -29,6 +29,10 @@ def make_video(isolated_config):
     yield make
     for v in created:
         v.stop()
+    # The video threads can still save the configuration (e.g. when starting the favourite
+    # camera): they are finished before the configuration is cleared for the next test
+    for v in created:
+        v.video_thread.join(timeout=5)
     isolated_config.config.pop("camera", None)
 
 
@@ -639,3 +643,22 @@ def test_image_settings_out_of_the_range_of_the_camera(make_video, two_cameras):
     assert v.settings["brightness"] == 0
     # In the ranges: kept
     assert (v.settings["contrast"], v.settings["saturation"]) == (32, 64)
+
+
+def test_image_is_encoded_once(make_video, monkeypatch):
+    v = make_video()
+    v.image = np.zeros((1080, 1920, 3), np.uint8)
+    encoded = []
+    original = cv2.imencode
+    monkeypatch.setattr(
+        video.cv2, "imencode", lambda *args: encoded.append(1) or original(*args)
+    )
+
+    first = v.get_image()
+    assert v.get_image() == first
+    assert len(encoded) == 1
+
+    # A new image
+    v.image = np.full((1080, 1920, 3), 255, np.uint8)
+    assert v.get_image() != first
+    assert len(encoded) == 2

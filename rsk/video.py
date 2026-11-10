@@ -159,6 +159,9 @@ class Video:
         # automatic settings
         self.last_frame = None
         self.frame_count = 0
+        # Last image encoded for the interface (image, base64 JPEG), see get_image()
+        self.encoded_image = None
+        self.encoded_lock = threading.Lock()
         # Geometry of the last processed image (see thread())
         self.image_geometry = None
         # Ranges and defaults of the controls of the current camera (see camera_controls.py)
@@ -1113,11 +1116,15 @@ class Video:
 
         :return str: the image contents (base64 encoded)
         """
-        if self.image is not None:
-            data = cv2.imencode(".jpg", self.image)
-            return base64.b64encode(data[1]).decode("utf-8")
-        else:
+        image = self.image
+        if image is None:
             return ""
+        # Encoded once per image, whatever the number of pages showing it
+        with self.encoded_lock:
+            if self.encoded_image is None or self.encoded_image[0] is not image:
+                data = cv2.imencode(".jpg", image)[1]
+                self.encoded_image = (image, base64.b64encode(data).decode("utf-8"))
+            return self.encoded_image[1]
 
     def get_video(self, with_image: bool) -> dict:
         """
