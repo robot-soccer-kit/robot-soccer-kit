@@ -1,3 +1,7 @@
+"""
+Command line tool placing the robots in a configuration: python -m rsk.place --target side
+"""
+
 import argparse
 import rsk
 

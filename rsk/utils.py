@@ -1,3 +1,7 @@
+"""
+Utilities: robot names, frames and angles, geometry
+"""
+
 import numpy as np
 import re
 
@@ -31,21 +35,42 @@ def frame_inv(frame):
 
 
 def frame_transform(frame, vector):
+    """
+    :param frame: a 2D frame (3x3 homogeneous matrix, see frame())
+    :param vector: a point (x, y) in this frame
+    :return: the point (x, y) in the parent frame
+    """
     return (frame @ [*vector, 1])[:2]
 
 
 def robot_frame(robot):
+    """
+    :param robot: a robot (with position and orientation, e.g. a client robot)
+    :return: the frame of the robot (3x3 homogeneous matrix), in the field frame
+    """
     pos = robot.position
     return frame(pos[0], pos[1], robot.orientation)
 
 
 def angle_wrap(alpha):
+    """
+    :param alpha: an angle [rad]
+    :return: the same angle in [-pi, pi[
+    """
     return (alpha + np.pi) % (2 * np.pi) - np.pi
 
 
 def update_limit_variation(
     current_value: np.ndarray, target_value: np.ndarray, max_variation: float
 ):
+    """
+    Moves a value toward a target, with a limited variation (e.g. an acceleration limit)
+
+    :param np.ndarray current_value: the current value
+    :param np.ndarray target_value: the target value
+    :param float max_variation: maximum variation (norm)
+    :return np.ndarray: the new value
+    """
     variation = np.linalg.norm(target_value - current_value)
 
     if variation > 0:
@@ -60,6 +85,11 @@ def update_limit_variation(
 
 
 def intersect(A, B, C, D):
+    """
+    Intersection of the segments [A, B] and [C, D]
+
+    :return: (True, intersection point) or (False, None) if the segments don't intersect
+    """
     u = B - A
     v = D - C
 

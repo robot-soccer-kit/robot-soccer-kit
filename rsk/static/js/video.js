@@ -7,6 +7,10 @@ function video_initialize(backend) {
     function updateCameras() {
         listingCameras = true;
         preview = null;
+        // No answer (e.g. an error): the preview is not blocked
+        setTimeout(function () {
+            listingCameras = false;
+        }, 12000);
         backend.cameras(function (data) {
             listingCameras = false;
             let [indexes, favourite, names] = [data[0], data[1], data[2] || {}];
@@ -30,6 +34,10 @@ function video_initialize(backend) {
     let updatingResolutions = false;
     function updateResolutions(callback) {
         updatingResolutions = true;
+        // No answer (e.g. an error): the preview is not blocked
+        setTimeout(function () {
+            updatingResolutions = false;
+        }, 4000);
         let camera = $('.cameras').val();
         let args = camera ? [parseInt(camera)] : [];
         backend.resolutions(...args, function (data) {
@@ -177,13 +185,19 @@ function video_initialize(backend) {
                 + '</div>';
         }
         $('.display-settings').html(html);
+        // Also used by the simulated view (see simulator.js)
+        $(document).trigger('rsk:display-settings', [settings]);
     }
 
+    backend.get_display_settings(false, settings => $(document).trigger('rsk:display-settings', [settings]));
     $('#settings-panel').on('show.bs.offcanvas', function () {
         backend.get_display_settings(false, renderDisplaySettings);
     });
     $('.display-settings').on('change', '.display-setting', function () {
-        backend.set_display_setting($(this).attr('rel'), $(this).is(':checked'));
+        let name = $(this).attr('rel');
+        let value = $(this).is(':checked');
+        backend.set_display_setting(name, value);
+        $(document).trigger('rsk:display-settings', [{ [name]: { value: value } }]);
     });
     $('.default-settings').click(function () {
         backend.get_display_settings(true, renderDisplaySettings);
@@ -502,15 +516,38 @@ function video_initialize(backend) {
         $('.detection').html(html || '<span class="text-body-secondary">Nothing detected</span>');
     }
 
+    // The image (annotated) is retrieved when it is shown (Vision tab, camera view of the Referee
+    // tab), the status (FPS, detection) less often otherwise. Nothing when the page is hidden
+    let lastDebugRequest = 0;
+    let lastStatus = 0;
+    let videoPending = false;
     setInterval(function () {
-        let withImage = current_tab == 'vision' || current_tab == 'referee';
-        backend.enableVideoDebug(withImage);
+        if (document.hidden || videoPending) {
+            return;
+        }
+        let withImage = current_tab == 'vision'
+            || (current_tab == 'referee' && !$('body').hasClass('sim-view'));
+        if (!withImage && Date.now() - lastStatus < 250) {
+            return;
+        }
+        if (withImage && Date.now() - lastDebugRequest > 500) {
+            // The image is annotated while a page asks for it (see Video.request_debug)
+            lastDebugRequest = Date.now();
+            backend.enableVideoDebug(true);
+        }
+        lastStatus = Date.now();
+        videoPending = true;
         backend.get_video(withImage, function (video) {
+            videoPending = false;
             if (video.image) {
                 $('.camera-image').attr('src', 'data:image/jpeg;base64,' + video.image);
             }
             updateStatus(video);
         });
+        // No answer (e.g. an error): the next request is sent anyway
+        setTimeout(function () {
+            videoPending = false;
+        }, 1000);
     }, 50);
 
     lens_calibration_initialize(backend);
@@ -592,7 +629,8 @@ function lens_calibration_initialize(backend)
 
     let lastState = 'idle';
     function update() {
-        if (current_tab != 'vision') {
+        // Only shown on the Vision tab, when the vision is running
+        if (current_tab != 'vision' || !$('body').hasClass('vision-running') || document.hidden) {
             return;
         }
         backend.lens_calibration_status(function(status) {

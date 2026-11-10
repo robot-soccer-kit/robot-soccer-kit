@@ -21,3 +21,5 @@ camera_calibration.json
 calibration_board.png
 /images/
 /mire.png
+config.json.broken
+config.json.tmp

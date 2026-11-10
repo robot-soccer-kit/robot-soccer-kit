@@ -100,22 +100,26 @@ function referee_initialize(backend, constants) {
         });
     });
 
-    // Goals validation (in the controls and in the history)
-    $(document).on('click', '.validate-goal', function () {
+    // Goals validation. The buttons are disabled until the answer (not clicked twice), and
+    // enabled again if there is no answer (e.g. the connection was lost)
+    function validateGoal(yes) {
         $('.validate-goal, .cancel-goal').prop('disabled', true);
-        backend.validate_goal(true, update);
-    });
-    $(document).on('click', '.cancel-goal', function () {
-        $('.validate-goal, .cancel-goal').prop('disabled', true);
-        backend.validate_goal(false, update);
-    });
+        backend.validate_goal(yes, update);
+        setTimeout(function () {
+            $('.validate-goal, .cancel-goal').prop('disabled', false);
+        }, 3000);
+    }
+    $(document).on('click', '.validate-goal', () => validateGoal(true));
+    $(document).on('click', '.cancel-goal', () => validateGoal(false));
 
-    // Space bar: pause / resume the game (not while typing, nor when a dialog is open)
+    // Space bar: pause / resume the game (not while typing, nor when a dialog is open). Also when
+    // a button has the focus (e.g. the last one clicked): the space bar would click it again
+    // (e.g. a second penalty)
     $(document).on('keydown', function (event) {
         if (event.code != 'Space' || current_tab != 'referee' || !gameState || !gameState.game_is_running) {
             return;
         }
-        if ($(event.target).is('input, textarea, select, button') || $('.modal.show').length) {
+        if ($(event.target).is('input, textarea, select') || $('.modal.show').length) {
             return;
         }
         event.preventDefault();
@@ -172,10 +176,20 @@ function referee_initialize(backend, constants) {
     $('.half-time-identify').click(function () {
         $(this).prop('disabled', true);
         $('.half-time-identifying').removeClass('d-none');
+        let answered = false;
         backend.identify(function () {
+            answered = true;
             $('.half-time-identifying, .half-time-identify').addClass('d-none');
             $('.half-time-identified').removeClass('d-none');
         });
+        // No answer (error, connection lost): the identification can be retried, or skipped
+        setTimeout(function () {
+            if (!answered) {
+                $('.half-time-identifying').addClass('d-none');
+                $('.half-time-identify').prop('disabled', false);
+                $('.half-time-identified').removeClass('d-none');
+            }
+        }, 65000);
     });
 
     $('.half-time-identified').click(placeForSecondHalf);

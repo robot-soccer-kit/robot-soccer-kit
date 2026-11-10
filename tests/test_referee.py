@@ -114,3 +114,34 @@ def test_ending_the_game_during_half_time(referee):
     referee.start_game()
     assert not referee.get_game_state()["halftime_is_running"]
     referee.stop_game()
+
+
+def test_half_time_cancels_the_ball_placement(referee):
+    # E.g. a goal was validated: the game waits for the ball at the center, then the half time
+    # is started. The ball placed at the center during the break should not resume the game
+    referee.start_game()
+    referee.wait_for_ball_placement((0.0, 0.0))
+    referee.start_half_time()
+
+    assert referee.wait_ball_position is None
+    time.sleep(1.5)
+    state = referee.get_game_state()
+    assert state["halftime_is_running"]
+    assert state["game_paused"]
+
+
+def test_sideline_cross_asks_for_the_ball_placement(referee):
+    import numpy as np
+    from rsk import constants
+
+    referee.start_game()
+    referee.resume_game()
+    referee.ball_out_field = False
+
+    # The ball crosses the top sideline, on the positive x side
+    referee.check_line_crosses(np.array([0.3, 0.75]), np.array([0.3, 0.5]))
+
+    state = referee.get_game_state()
+    assert state["game_paused"]
+    assert state["game_state_msg"] == "Place the ball on the dot"
+    assert referee.wait_ball_position == (constants.dots_x, constants.dots_y)

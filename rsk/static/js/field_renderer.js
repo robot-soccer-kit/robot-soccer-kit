@@ -1,3 +1,7 @@
+// Drawing of the simulated view of the field (Referee tab): the robots, their LEDs, the ball,
+// the ball placement circle and the display settings (center landmark, timed circle), on the
+// canvases #back (field image), #robots and #ball
+
 function createFieldRenderer(constants) {
     let ratio_w, ratio_h, back_width, back_height
 
@@ -19,7 +23,7 @@ function createFieldRenderer(constants) {
     }
 
     function drawCircle(position, radius, color, canvas, clear = false, tickness = 0, dash = 0) {
-        context = canvas.getContext('2d')
+        const context = canvas.getContext('2d')
         if (clear) context.clearRect(0, 0, canvas.width, canvas.height)
         context.beginPath()
         context.strokeStyle = color
@@ -33,7 +37,7 @@ function createFieldRenderer(constants) {
     }
 
     function drawline(begin, end, canvas, color, tickness = 0) {
-        context = canvas.getContext('2d')
+        const context = canvas.getContext('2d')
         context.beginPath()
         context.strokeStyle = color
         context.fillStyle = color
@@ -44,12 +48,12 @@ function createFieldRenderer(constants) {
         context.stroke()
     }
     function drawLeds(color, context) {
-        for (i = -30; i < -30 + 120 * 3; i += 120) {
-            angle = i * Math.PI / 180
-            x = Math.round(Math.cos(angle) * constants["robot_radius"] * ratio_w * 0.93)
-            y = Math.round(Math.sin(angle) * constants["robot_radius"] * ratio_w * 0.93)
+        for (let i = -30; i < -30 + 120 * 3; i += 120) {
+            const angle = i * Math.PI / 180
+            const x = Math.round(Math.cos(angle) * constants["robot_radius"] * ratio_w * 0.93)
+            const y = Math.round(Math.sin(angle) * constants["robot_radius"] * ratio_w * 0.93)
             context.beginPath()
-            gradient = context.createRadialGradient(x, y, 0, x, y, 70);
+            const gradient = context.createRadialGradient(x, y, 0, x, y, 70);
             gradient.addColorStop(0.05, "rgba(" + color + ",1)");
             gradient.addColorStop(0.1, "rgba(" + color + ",0.5)");
             gradient.addColorStop(0.25, "rgba(" + color + ",0)");
@@ -59,9 +63,9 @@ function createFieldRenderer(constants) {
     }
 
     function drawBall(position) {
-        ball = transformViewToSim(position)
-        ballCanvas = document.getElementById("ball")
-        ballRadius = constants["ball_radius"] * ratio_w
+        const ball = transformViewToSim(position)
+        const ballCanvas = document.getElementById("ball")
+        const ballRadius = constants["ball_radius"] * ratio_w
         drawCircle(ball, ballRadius, "orange", ballCanvas, true)
     }
 
@@ -90,9 +94,9 @@ function createFieldRenderer(constants) {
 
         // Draw present Robot
         for (var entry in presentMarker) {
-            robot = presentMarker[entry]
+            const robot = presentMarker[entry]
             if (!robot) continue
-            robotPos = transformViewToSim(robot.position, robot.orientation)
+            const robotPos = transformViewToSim(robot.position, robot.orientation)
 
             // Context placement
             context.resetTransform()
@@ -137,8 +141,7 @@ function createFieldRenderer(constants) {
         canvas.getContext("2d").drawImage(canvas.offscreenCanvas, 0, 0)
 
         //Draw Ball and placement circle 
-        ballCanvas = document.getElementById("ball")
-        ballContext = ballCanvas.getContext("2d")
+        const ballCanvas = document.getElementById("ball")
 
         if (state.ball != null) {
             drawBall(state.ball)
@@ -150,7 +153,7 @@ function createFieldRenderer(constants) {
         }
 
         if (displaySettings["landmark"]?.["value"]) {
-            center = [ballCanvas.width / 2, ballCanvas.height / 2]
+            const center = [ballCanvas.width / 2, ballCanvas.height / 2]
             drawline(center, [center[0], center[1] - 100], ballCanvas, "green")
             drawline(center, [center[0] + 100, center[1]], ballCanvas, "red")
         }

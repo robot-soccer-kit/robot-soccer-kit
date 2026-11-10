@@ -1,3 +1,8 @@
+"""
+Backend of the Game Controller: its public methods are the API used by the interface (see
+api.py and game_controller.py)
+"""
+
 from . import (
     api,
     state,
@@ -16,6 +21,13 @@ from . import (
 
 
 class Backend:
+    """
+    Backend of the Game Controller. Its public methods are the commands of the API used by the
+    interface (see api.py): most of them only forward the call to the referee, the control, the
+    robots or the video, whose methods are documented. The type hints of their arguments are
+    used to convert the JSON arguments
+    """
+
     def __init__(self, simulated=False, competition=False, scheduler="", replay=""):
         super().__init__()
         robots.Robots.protocols["serial"] = robot_serial.RobotSerial
@@ -124,8 +136,11 @@ class Backend:
     def get_video(self, with_image: bool) -> dict:
         return self._video().get_video(with_image)
 
-    def enableVideoDebug(self, enable=True) -> bool:
-        self._video().debug = enable
+    def enableVideoDebug(self, enable: bool = True) -> None:
+        # The image is annotated while at least one page asks for it (pages that don't show the
+        # image don't ask for it)
+        if enable:
+            self._video().request_debug()
 
     def lens_calibration_status(self) -> dict:
         return self._video().lens_calibration_status()
@@ -246,7 +261,7 @@ class Backend:
     def set_team_name(self, team: str, name: str):
         self.referee.set_team_name(team, name)
 
-    def swap_team_sides(self) -> str:
+    def swap_team_sides(self) -> None:
         self.referee.swap_team_sides()
 
     def start_half_time(self):
@@ -255,10 +270,10 @@ class Backend:
     def start_second_half_time(self):
         self.referee.start_second_half_time()
 
-    def add_penalty(self, duration: int, robot: str):
+    def add_penalty(self, duration: float, robot: str):
         self.referee.add_penalty(duration, robot)
 
-    def cancel_penalty(self, robot) -> str:
+    def cancel_penalty(self, robot: str) -> None:
         self.referee.cancel_penalty(robot)
 
     def get_game_state(self) -> dict:

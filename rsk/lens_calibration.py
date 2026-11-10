@@ -45,6 +45,9 @@ def is_supported() -> bool:
 
 
 def make_board():
+    """
+    :return: the ChArUco board used for the calibration
+    """
     dictionary = cv2.aruco.getPredefinedDictionary(DICTIONARY)
     return cv2.aruco.CharucoBoard(
         BOARD_SQUARES, SQUARE_LENGTH, MARKER_LENGTH, dictionary
@@ -261,6 +264,9 @@ class ViewCollector:
         return False
 
     def reset(self):
+        """
+        Forgets the views collected
+        """
         self.views, self.keys, self.points = [], [], []
         self.previous_points = None
 
@@ -366,4 +372,7 @@ class ViewCollector:
                 )
 
     def calibrate(self) -> dict:
+        """
+        :return dict: the calibration computed from the views collected (see calibrate())
+        """
         return calibrate(self.views, self.image_size)

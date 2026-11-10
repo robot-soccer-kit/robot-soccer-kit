@@ -1,3 +1,8 @@
+"""
+Control of the robots: orders of the teams (ZMQ requests, port 7558), checked against the
+referee (preemption by tasks, see tasks.py), and the robots kept on the field
+"""
+
 import numpy as np
 import json as jsonlib
 import math
@@ -25,10 +30,16 @@ def number_in_range(number, number_type: type, min, max):
 
 
 def float_in_range(number, min: float, max: float):
+    """
+    :return bool: whether number is a float (or int) in [min, max]
+    """
     return number_in_range(number, float, min, max)
 
 
 def int_in_range(number, min: int, max: int):
+    """
+    :return bool: whether number is an int in [min, max]
+    """
     return number_in_range(number, int, min, max)
 
 
@@ -73,7 +84,8 @@ class Control:
 
         :return list: list of (str) available robots
         """
-        return self.robots.robots_by_marker.keys()
+        # A copy: the robots can be changed meanwhile by another thread
+        return list(self.robots.robots_by_marker.keys())
 
     def add_task(self, task: tasks.ControlTask):
         """
@@ -114,6 +126,14 @@ class Control:
             return list(self.tasks.values())
 
     def process_command(self, marker: str, command: list, is_master: bool) -> list:
+        """
+        Runs a command of a client for a robot (control, kick, leds, teleport in simulation...)
+
+        :param str marker: the robot (e.g. "green1")
+        :param list command: [name, *parameters]
+        :param bool is_master: whether the command comes from the control itself (master key)
+        :return list: [success, message] (success: True, False, or 2 if the robot is preempted)
+        """
         response: list = [False, "Unknown error"]
 
         try:
@@ -357,7 +377,7 @@ class Control:
             self.allow_team_control(team, False)
 
         # Sending a stop moving order to all robots
-        for port in self.robots.robots:
+        for port in list(self.robots.robots):
             self.robots.robots[port].control(0, 0, 0)
 
     def set_key(self, team: str, key: str):
@@ -385,7 +405,9 @@ class Control:
                 task_name = "out-of-game-%s" % utils.robot_list2str(team, number)
 
                 if out_of_field:
-                    # Creating a top priority task to recover the robot
+                    # Creating a top priority task to recover the robot. It can be out of the
+                    # view of the camera: it is driven back from its last known position
+                    # (skip_old=False)
                     task = tasks.GoToTask(
                         task_name,
                         team,
@@ -429,7 +451,13 @@ class Control:
                     except client.ClientError as e:
                         self.logger.error(f"Error in control's client: {e}")
 
-            if task.finished(self.client, available_robots):
+            # Some tasks send orders when checking if they are finished
+            try:
+                finished = task.finished(self.client, available_robots)
+            except client.ClientError as e:
+                self.logger.error(f"Error in control's client: {e}")
+                finished = False
+            if finished:
                 to_delete.append(task)
 
         # Removing finished tasks (unless they were replaced by a new task with the same name
@@ -449,7 +477,7 @@ class Control:
         """
         try:
             new_robots_color = {}
-            for robot_id in self.robots.robots_by_marker:
+            for robot_id in list(self.robots.robots_by_marker):
                 robot = utils.robot_str2list(robot_id)
                 color = "preempted" if robot in robots_ticked else robot[0]
 
@@ -477,8 +505,13 @@ class Control:
         self.client = client.Client(key=self.master_key, wait_ready=False)
 
         while self.running:
-            self.ensure_robots_on_field()
-            robots_ticked = self.tick_tasks()
-            self.update_robots_colors(robots_ticked)
+            # An unexpected error should never stop the control of the robots (stops,
+            # penalties, placements): it is logged and the loop goes on
+            try:
+                self.ensure_robots_on_field()
+                robots_ticked = self.tick_tasks()
+                self.update_robots_colors(robots_ticked)
+            except Exception:
+                self.logger.exception("Error in the control thread")
 
             time.sleep(0.01)

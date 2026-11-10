@@ -4,6 +4,8 @@ function scheduler_initialize(backend, url) {
     let games = [];
     let currentGame = null;
     let currentPublished = false;
+    // Games published from this page (they stay published when the games are refreshed)
+    let publishedGames = new Set();
 
     function gameById(gameId) {
         return games.find(game => String(game.id) == String(gameId)) || null;
@@ -16,7 +18,7 @@ function scheduler_initialize(backend, url) {
 
     function setCurrentGame(gameId) {
         currentGame = gameById(gameId);
-        currentPublished = false;
+        currentPublished = currentGame !== null && publishedGames.has(String(currentGame.id));
         $('.scheduler-game-row').removeClass('scheduler-game-row-selected');
 
         if (currentGame) {
@@ -100,6 +102,7 @@ function scheduler_initialize(backend, url) {
             $.get(url + '/publish/' + gameId + '/' + scoreBlue + '/' + scoreGreen, function (data) {
                 if (data === true) {
                     backend.stop_game();
+                    publishedGames.add(String(gameId));
                     row(gameId).find('.scheduler-actions').html('<span class="badge text-bg-success">Published</span>');
                     uploadReplay(gameId);
                     if (currentGame && String(currentGame.id) == String(gameId)) {
@@ -144,6 +147,9 @@ function scheduler_initialize(backend, url) {
                 html = '<tr><td colspan="6" class="text-center text-body-secondary py-4">No games scheduled</td></tr>';
             }
             $('.scheduler-teams').html(html);
+            for (let gameId of publishedGames) {
+                row(gameId).find('.scheduler-actions').html('<span class="badge text-bg-success">Published</span>');
+            }
 
             if (currentGame) {
                 setCurrentGame(currentGame.id);

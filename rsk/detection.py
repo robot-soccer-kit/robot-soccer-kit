@@ -1,3 +1,8 @@
+"""
+Detection on the camera images: markers of the field (calibration, see field.py) and of the
+robots, and the ball (see Detection)
+"""
+
 import numpy as np
 import cv2
 import time
@@ -5,10 +10,17 @@ from .field import Field
 from . import constants, config, replay_logger
 import os
 
+# Windows (Media Foundation backend of OpenCV): without the hardware transforms, the cameras open
+# much faster. Read by OpenCV when a camera is opened
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 
 class Detection:
+    """
+    Detection of the field markers, the robots markers (ArUco) and the ball (orange) on the
+    images of the camera, and annotations drawn on the image shown to the user
+    """
+
     def __init__(self):
         self.state = None
         self.referee = None
@@ -84,7 +96,7 @@ class Detection:
         Aruco API changed slightly in opencv >= 4.7, see:
         https://stackoverflow.com/questions/74964527/attributeerror-module-cv2-aruco-has-no-attribute-dictionary-get
 
-        We check OpenCV version and assume
+        :return bool: whether the OpenCV version is 4.7 or newer (new ArUco API)
         """
         (major, minor, _) = cv2.__version__.split(".")
 
@@ -95,32 +107,55 @@ class Detection:
             # OpenCV > 4.6
             return True
 
-    def should_display(self, entry: list) -> bool:
+    def should_display(self, entry: str) -> bool:
+        """
+        :param str entry: a display setting (e.g. "aruco")
+        :return bool: whether it is drawn on the image
+        """
         return self.displaySettings[entry]["value"]
 
     def set_display_setting(self, entry: str, value: bool):
+        """
+        Sets and saves a display setting
+
+        :param str entry: the display setting
+        :param bool value: whether it is drawn on the image
+        """
         self.displaySettings[entry]["value"] = value
         self.save_display_settings()
 
     def reset_display_settings(self):
+        """
+        Display settings to their defaults
+        """
         for entry in self.displaySettings:
             self.displaySettings[entry]["value"] = self.displaySettings[entry][
                 "default"
             ]
 
     def get_display_settings(self, reset=False):
+        """
+        :param bool reset: whether the settings are reset to their defaults (and saved) first
+        :return dict: the display settings (label, default, value)
+        """
         if reset:
             self.reset_display_settings()
             self.save_display_settings()
         return self.displaySettings
 
     def save_display_settings(self):
+        """
+        Saves the display settings in the configuration
+        """
         config.config["display_settings"] = {
             key: self.displaySettings[key]["value"] for key in self.displaySettings
         }
         config.save()
 
     def calibrate_camera(self):
+        """
+        Asks for a new calibration of the field (on the next image where its markers are seen)
+        """
         self.field.should_calibrate = True
         self.field.is_calibrated = False
 
@@ -403,8 +438,10 @@ class Detection:
         Centers of the orange areas of the image: centroids of the areas of at least min_pixels
         pixels (8-connected).
 
-        The areas are found with their contours (cv2.connectedComponentsWithStats labels the
-        whole image: about 5 times slower with one thread, for the same centroids)
+        The areas are found with their contours: cv2.connectedComponentsWithStats labels the whole
+        image, it is about 5 times slower with one thread. The centroids are the same, except
+        for an orange area inside a hole of another one (merged with it), and the candidates
+        kept when there are more than max_candidates are not the same ones (no order)
 
         :param mask: the mask of the orange pixels (uint8, 0 or 255)
         :param int min_pixels: minimum number of pixels of an area
@@ -487,6 +524,10 @@ class Detection:
         self.state.set_ball(self.ball)
 
     def get_detection(self):
+        """
+        :return dict: what is detected (ball, markers), whether the field is calibrated and fully
+            seen, and the game state of the referee (also registered for the replays)
+        """
         det_info = {
             "ball": self.ball,
             "markers": dict(self.state.markers) if self.state is not None else {},

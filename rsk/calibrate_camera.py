@@ -68,6 +68,9 @@ def generate_board(filename: str) -> None:
 
 
 def print_result(result: dict) -> None:
+    """
+    Prints a calibration result (see lens_calibration.calibrate)
+    """
     print()
     print("Calibration result")
     print("==================")
@@ -103,13 +106,16 @@ def print_result(result: dict) -> None:
 
 def open_camera(index: int, resolution: tuple):
     """
-    Opens the camera with the same settings as the Game Controller (video.py)
+    Opens the camera with the same format and focus as the Game Controller (video.py): the lens
+    is measured with the focus the vision uses (autofocus disabled)
     """
     capture = video.open_camera(index)
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
     capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
     capture.set(cv2.CAP_PROP_FPS, 30)
+    capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+    capture.set(cv2.CAP_PROP_FOCUS, 0)
     if not capture.isOpened():
         raise RuntimeError(f"Can't open camera {index}")
     return capture
@@ -214,6 +220,9 @@ def views_from_images(patterns: list) -> tuple:
 
 
 def main(argv=None):
+    """
+    Command line tool (python -m rsk.calibrate_camera --help)
+    """
     parser = argparse.ArgumentParser(
         description="Camera calibration (focal, principal point, lens distortion) with a ChArUco board"
     )

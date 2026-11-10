@@ -469,7 +469,7 @@ def test_phone_referee_without_scrolling(open_page, size):
         ".start-game",
         ".stop-game",
         ".half-time",
-        "[data-bs-toggle=offcanvas][data-bs-target='#history-panel']",
+        ".open-history",
     ]
     controls += [
         f".place[data-configuration={c}]" for c in ("side", "standard", "dots")
@@ -494,7 +494,7 @@ def test_phone_referee_without_scrolling(open_page, size):
     assert field["y"] + field["height"] <= height
 
     # The history is a panel opened with its button
-    page.click("[data-bs-toggle=offcanvas][data-bs-target='#history-panel']")
+    page.click(".open-history")
     expect(page.locator("#history-panel #RefereeHistory")).to_be_visible()
     page.click("#history-panel .btn-close")
     expect(page.locator("#history-panel #RefereeHistory")).to_be_hidden()

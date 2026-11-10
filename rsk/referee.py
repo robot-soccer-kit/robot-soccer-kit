@@ -1,3 +1,7 @@
+"""
+Referee: game state (timer, scores, pauses, half time), goals, sideline crosses and penalties
+"""
+
 import math
 import copy
 import numpy as np
@@ -17,26 +21,24 @@ class Referee:
 
         self.control: control.Control = control.Control()
 
-        # Info from detection
-        self._state_info = None
+        # Detection state (markers, ball), read by the referee thread
         self.state: state.State = state
 
         # Last actions
         self.referee_history = []
 
-        # Timestamp when the timer started
+        # Is the game timer counting down?
         self.chrono_is_running: bool = False
-        self.start_timer = 0.0
 
-        # Set when a goal validation is pending
-        self.goal_validated = None
         # Team that scored the goal waiting for validation (None if no goal is pending)
         self.pending_goal_team = None
 
-        # Position where we wait for the ball to be
+        # Position where we wait for the ball to be placed to resume the game (None if no
+        # placement is expected), and time since when the ball is there (None if it is not)
         self.wait_ball_position = None
+        self.wait_ball_timestamp = None
 
-        # Timers to penalize robots staying in te
+        # Timers to penalize robots staying in the timed circle (around the ball)
         self.timed_circle_timers = {robot: 0 for robot in utils.all_robots()}
 
         # Game state structure
@@ -84,17 +86,12 @@ class Referee:
         )
         self.referee_thread.start()
 
-    def set_state_info(self, info: dict) -> None:
-        """
-        Sets internal detection info
-
-        :param dict info: detection infos
-        """
-        self.lock.acquire()
-        self._state_info = info
-        self.lock.release()
-
     def get_game_state(self, full: bool = True) -> dict:
+        """
+        :param bool full: whether the last entries of the history are included (else the state
+            message is removed: the compact state, e.g. recorded with the detection)
+        :return dict: the game state, with the status of each robot (penalty, preemption)
+        """
         game_state = copy.deepcopy(self.game_state)
 
         # Updating robot statuses
@@ -145,6 +142,8 @@ class Referee:
         :param tuple target_position: the target position for the ball, defaults to (0.0, 0.0)
         """
         self.wait_ball_position = target_position
+        # The ball should stay one second at this position (see tick())
+        self.wait_ball_timestamp = None
         self.game_state["game_paused"] = True
         self.game_state["game_state_msg"] = "Place the ball on the dot"
         # The wait is managed in the referee thread
@@ -161,7 +160,6 @@ class Referee:
         self.pending_goal_team = None
         self.reset_score()
         self.pause_game("game-start")
-        self.start_timer = 0
         self.chrono_is_running = False
         self.wait_for_ball_placement()
 
@@ -189,6 +187,7 @@ class Referee:
         self.game_state["game_paused"] = False
         self.game_state["game_state_msg"] = "Game is running..."
         self.wait_ball_position = None
+        self.wait_ball_timestamp = None
 
         if self.control.has_task("game-start"):
             self.chrono_is_running = True
@@ -214,7 +213,6 @@ class Referee:
         self.chrono_is_running = False
         self.wait_ball_position = None
         self.pending_goal_team = None
-        self.start_timer = 0.0
 
         self.reset_penalties()
         self.control.remove_task("manually-paused")
@@ -240,6 +238,10 @@ class Referee:
         self.game_state["game_state_msg"] = "Half Time"
         self.add_referee_history("neutral", "Half time")
         self.pending_goal_team = None
+        # A ball placement that was expected (e.g. after a goal) would resume the game during the
+        # break
+        self.wait_ball_position = None
+        self.wait_ball_timestamp = None
 
         task = tasks.StopAllTask("half-time")
         self.control.add_task(task)
@@ -314,7 +316,7 @@ class Referee:
 
         :param str team: the team
         :param str action: action
-        :return list: the referee history entry created
+        :return list: the whole referee history (with the new entry)
         """
         timestamp = math.ceil(self.game_state["timer"])
         i = len(self.referee_history)
@@ -379,7 +381,7 @@ class Referee:
         :param str robot: the penalized robot
         :param tuple position: the robot position (x, y)
         :param dict markers: detected markers
-        :return int: the penalty spot index
+        :return int: the penalty spot index, None if all the spots are assigned
         """
         best_index, best_score = None, None
 
@@ -450,7 +452,7 @@ class Referee:
         Can a given robot be penalized?
         It can be penalized if:
         * It is not already penalized
-        * Its grace time is not expired
+        * It is not in its grace time (after a previous penalty)
         * It has no other tasks to do (it is not preempted)
 
         :param str robot: robot
@@ -465,6 +467,9 @@ class Referee:
         )
 
     def set_team_name(self, team: str, name: str):
+        """
+        Sets the name of a team (green or blue)
+        """
         self.game_state["teams"][team]["name"] = name
 
     def swap_team_sides(self):
@@ -507,10 +512,8 @@ class Referee:
                 self.force_place("game_green_positive", end_buzz=True)
 
             self.wait_for_ball_placement()
-            self.goal_validated = True
         else:
             self.increment_score(goal_team, -1)
-            self.goal_validated = False
             self.resume_game()
 
     def check_line_crosses(self, ball_coord: np.ndarray, ball_coord_old: np.ndarray):
@@ -577,6 +580,8 @@ class Referee:
         )
 
         if intersect_field_out and not intersect_goal and not self.ball_out_field:
+            # Paused before asking for the ball placement (pause_game() sets its own message)
+            self.pause_game("sideline-crossed")
             for intersection in (
                 intersect_field_Upline_out,
                 intersect_field_DownLine_out,
@@ -592,7 +597,6 @@ class Referee:
                     self.wait_for_ball_placement(target)
             self.ball_out_field = True
             self.add_referee_history("neutral", "Sideline crossed")
-            self.pause_game("sideline-crossed")
 
         # Verification that the ball has been inside a smaller field (field-10cm margin) at least once before a new goal or a sideline foul is detected
         if self.ball_out_field and utils.in_rectangle(
@@ -647,12 +651,14 @@ class Referee:
                         self.positive_team != team
                     )
 
-                    # This is penalizing robots for abusive attack (suspended)
+                    # Abusive attack: a robot in the defense area of the opponent
                     if utils.in_rectangle(robot_position, *opponent_defense_area):
                         self.add_penalty(
                             constants.default_penalty, marker, "abusive_attack"
                         )
 
+                    # Abusive defense: two robots of a team in their defense area. The one
+                    # farther from the goal line (smaller |x|) is penalized
                     if utils.in_rectangle(robot_position, *my_defense_area):
                         if team in defender:
                             other_robot, other_robot_position = defender[team]
@@ -750,8 +756,6 @@ class Referee:
                     if self.wait_ball_timestamp is None:
                         self.wait_ball_timestamp = time.time()
                     elif time.time() - self.wait_ball_timestamp >= 1:
-                        self.game_state["game_state_msg"] = "Game is running..."
-                        self.goal_validated = None
                         self.resume_game()
                 else:
                     self.wait_ball_timestamp = None

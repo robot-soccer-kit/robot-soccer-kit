@@ -1,3 +1,8 @@
+"""
+Command line tool showing the referee information sent by the Game Controller:
+python -m rsk.dump_referee
+"""
+
 import yaml
 import rsk
 import sys
@@ -5,7 +10,6 @@ import time
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--team", "-t", type=str, default="side")
 parser.add_argument("--game-controller", "-g", type=str, default="127.0.0.1")
 args = parser.parse_args()
 

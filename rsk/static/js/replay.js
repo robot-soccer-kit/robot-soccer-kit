@@ -37,7 +37,6 @@ function replay_initialize(backend, constants) {
                 
                 const ledsIndexes = { green1: 0, green2: 0, blue1: 0, blue2: 0 }
                 const refereeIndexes = { game_is_running: 0, game_paused: 0, timer: 0, game_state_msg: 0, teams: 0, validate_goal: 0 }
-                const detectionIndexes = { green1: 0, green2: 0, blue1: 0, blue2: 0, c1: 0, c2: 0, c3: 0, c4: 0 }
                 const commandsIndexes = { green1: 0, green2: 0, blue1: 0, blue2: 0 }
 
                 // Calculate start and end timestamps from the unified positions array
@@ -53,12 +52,15 @@ function replay_initialize(backend, constants) {
 
                 let speed = 1
 
-                // Clean up referee_history_sliced
-                while(logs.referee?.referee_history_sliced[0]?.data?.length !== 0) {
-                    logs.referee.referee_history_sliced.shift()
+                // The beginning of the record can contain the history of the previous game (recorded
+                // before this game was started, which empties the history): it is skipped
+                const sliced = logs.referee?.referee_history_sliced
+                if (Array.isArray(sliced)) {
+                    const start = sliced.findIndex(entry => entry?.data?.length === 0)
+                    if (start > 0) {
+                        sliced.splice(0, start)
+                    }
                 }
-
-                $('.replay-progress-grp').removeClass("d-none")
 
                 $('#next-speed').click(function () {
                     speed = 2
@@ -405,7 +407,6 @@ function replay_initialize(backend, constants) {
                     // Seek other indexes as before
                     seekSeriesIndexes(ledsIndexes, key => logs.leds_state?.[key], t)
                     seekSeriesIndexes(refereeIndexes, key => logs.referee?.[key], t)
-                    seekSeriesIndexes(detectionIndexes, key => logs.detection_markers?.[key], t)
                     seekSeriesIndexes(commandsIndexes, key => logs.command_received?.[key], t)
 
                     refereeIndexes.validate_goal = 0
@@ -454,7 +455,6 @@ function replay_initialize(backend, constants) {
                     positionIndex = 0
                     Object.keys(ledsIndexes).forEach(k => ledsIndexes[k] = 0)
                     Object.keys(refereeIndexes).forEach(k => refereeIndexes[k] = 0)
-                    Object.keys(detectionIndexes).forEach(k => detectionIndexes[k] = 0)
                     Object.keys(commandsIndexes).forEach(k => commandsIndexes[k] = 0)
 
                     updateProgressBar()
@@ -470,8 +470,6 @@ function replay_initialize(backend, constants) {
 
                     $('.commands-tab .command').html('...')
 
-                    $('.detection-tab .detected td').html('...')
-                        .removeClass("text-bg-danger").removeClass("text-bg-success")
                 }
 
                 function updateProgressBar() {

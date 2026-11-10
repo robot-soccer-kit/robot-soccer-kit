@@ -1,3 +1,7 @@
+"""
+Robots reached through a serial port (USB / Bluetooth dongle, see the protocol in packets.py)
+"""
+
 import threading
 import time
 import serial
@@ -53,6 +57,9 @@ class RobotSerial(robot.Robot):
         self.thread.start()
 
     def available_urls() -> list:
+        """
+        :return list: the serial ports of the computer
+        """
         return [entry.device for entry in list_ports.comports()]
 
     def monitor(self, frequency: int) -> None:
@@ -183,9 +190,9 @@ class RobotSerial(robot.Robot):
         """
         Sets the robot LEDs
 
-        :param int r: R intensity (0-255)
-        :param int g: G intensity (0-255)
-        :param int b: B intensity (0-255)
+        :param int red: red intensity (0-255)
+        :param int green: green intensity (0-255)
+        :param int blue: blue intensity (0-255)
         """
         super().leds(red, green, blue)
 
@@ -226,7 +233,7 @@ class RobotSerial(robot.Robot):
                     time.sleep(0.1)
                     self.bt.write(b"rhock\r\nrhock\r\nrhock\r\n")
                     time.sleep(0.1)
-                    self.monitor(5)
+                    # The monitor status is asked below (at 1 Hz)
                     self.control(0, 0, 0)
                     self.beep(880, 250)
                     packet_reader.reset()
@@ -256,12 +263,10 @@ class RobotSerial(robot.Robot):
                     packet = self.pop_packet()
 
             except (OSError, serial.serialutil.SerialException) as e:
-                # In case of exception, we re-init the connection
+                # In case of exception, we re-init the connection, after a while (e.g. the port
+                # doesn't exist: not retried continuously)
                 logger.error(f"Error: {e}")
-
-                if "FileNotFoundError" in str(e):
-                    time.sleep(1.0)
-
+                time.sleep(1.0)
                 self.init = True
 
             # If we didn't receive a message for more than 5s, we re-init the connection

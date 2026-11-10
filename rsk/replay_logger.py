@@ -1,3 +1,7 @@
+"""
+Recording of the games (positions, referee, commands...) to replay them
+"""
+
 import time
 import os
 from datetime import datetime
@@ -40,6 +44,9 @@ recording = False
 
 
 def log_data() -> None:
+    """
+    Writes the recorded data in a new file (gzipped JSON) of the recordings directory
+    """
     json_str = json.dumps(datas_to_log) + "\n"
     json_bytes = json_str.encode("utf-8")
 
@@ -57,6 +64,14 @@ def log_data() -> None:
 
 
 def register_info(key: str, data, prev_key: str = "", allow_repeat=False) -> None:
+    """
+    Records a value (with its time), when recording, if it changed (or if allow_repeat)
+
+    :param str key: name of the value
+    :param data: the value
+    :param str prev_key: group of the value (e.g. "detection_markers"), empty for none
+    :param bool allow_repeat: whether the value is recorded even if it didn't change
+    """
     if recording and key != "constants":
         lock.acquire()
 
@@ -97,6 +112,9 @@ def register_infos(
     exclude: list[str] = [],
     allow_repeat=False,
 ) -> None:
+    """
+    Records the values of datas whose keys are in keys (and not in exclude), see register_info
+    """
     for k in keys:
         if k in datas.keys() and k not in exclude:
             register_info(k, datas[k], prev_key, allow_repeat)
@@ -132,6 +150,9 @@ def register_position_frame(markers: dict, ball) -> None:
 
 
 def register_detection_info(aruco_ids):
+    """
+    Records which ArUco markers are detected (aruco_ids: the ids detected, None if none)
+    """
     try:
         for i in range(len(ARUCO_MARKERS_IDS)):
             register_info(ARUCO_MARKERS_IDS[i], i in aruco_ids, "detection_markers")
@@ -140,11 +161,17 @@ def register_detection_info(aruco_ids):
 
 
 def register_command_info(key: str, data, prev_key: str = "", allow_repeat=False):
+    """
+    Records a command sent to a robot, when the commands are recorded (see register_info)
+    """
     if record_commands:
         register_info(key, data, prev_key, allow_repeat)
 
 
 def set_ready_to_record(ready: bool) -> None:
+    """
+    Sets whether the games should be recorded (when they are running, see set_recording)
+    """
     global ready_to_record
     lock.acquire()
     ready_to_record = ready
@@ -152,11 +179,18 @@ def set_ready_to_record(ready: bool) -> None:
 
 
 def set_record_commands(yes_no: bool):
+    """
+    Sets whether the commands sent to the robots are recorded
+    """
     global record_commands
     record_commands = yes_no
 
 
 def set_recording(rec: bool) -> None:
+    """
+    Starts (if ready to record) or stops the recording: when it stops, the data is written
+    (see log_data)
+    """
     lock.acquire()
     global recording
     was_recording = recording
@@ -170,6 +204,9 @@ def set_recording(rec: bool) -> None:
 
 
 def reset_record_data() -> None:
+    """
+    Forgets the recorded data
+    """
     global datas_to_log
     lock.acquire()
     datas_to_log = {"constants": USEFUL_CANVAS_CONSTANTS}
@@ -177,6 +214,9 @@ def reset_record_data() -> None:
 
 
 def reset_filename() -> None:
+    """
+    Forgets the file of the last recording
+    """
     global filepath
     lock.acquire()
     filepath = ""

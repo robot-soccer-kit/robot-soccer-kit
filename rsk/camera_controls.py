@@ -33,7 +33,14 @@ POWER_LINE_FREQUENCIES = {0: 0, 50: 1, 60: 2}
 V4L2_CTRL_FLAG_DISABLED = 0x0001
 
 
+# Structures of the Linux kernel (linux/videodev2.h), their size is part of the ioctl numbers
+
+
 class v4l2_queryctrl(ctypes.Structure):
+    """
+    Range and default of a control (VIDIOC_QUERYCTRL)
+    """
+
     _fields_ = [
         ("id", ctypes.c_uint32),
         ("type", ctypes.c_uint32),
@@ -48,10 +55,18 @@ class v4l2_queryctrl(ctypes.Structure):
 
 
 class v4l2_control(ctypes.Structure):
+    """
+    Value of a control (VIDIOC_S_CTRL)
+    """
+
     _fields_ = [("id", ctypes.c_uint32), ("value", ctypes.c_int32)]
 
 
 class v4l2_fmtdesc(ctypes.Structure):
+    """
+    An image format of the camera (VIDIOC_ENUM_FMT)
+    """
+
     _fields_ = [
         ("index", ctypes.c_uint32),
         ("type", ctypes.c_uint32),
@@ -64,6 +79,10 @@ class v4l2_fmtdesc(ctypes.Structure):
 
 
 class v4l2_frmsizeenum(ctypes.Structure):
+    """
+    An image size of a format (VIDIOC_ENUM_FRAMESIZES)
+    """
+
     # The union of the discrete and stepwise sizes is read as 6 integers
     _fields_ = [
         ("index", ctypes.c_uint32),
@@ -75,6 +94,10 @@ class v4l2_frmsizeenum(ctypes.Structure):
 
 
 class v4l2_frmivalenum(ctypes.Structure):
+    """
+    A frame interval of an image size (VIDIOC_ENUM_FRAMEINTERVALS)
+    """
+
     # The union of the discrete and stepwise intervals is read as 6 integers (fractions)
     _fields_ = [
         ("index", ctypes.c_uint32),
@@ -93,6 +116,10 @@ V4L2_FRMIVAL_TYPE_DISCRETE = 1
 
 
 def fourcc(code: str) -> int:
+    """
+    :param str code: a format name of 4 characters (e.g. "MJPG")
+    :return int: its V4L2 code
+    """
     return sum(ord(c) << (8 * i) for i, c in enumerate(code))
 
 

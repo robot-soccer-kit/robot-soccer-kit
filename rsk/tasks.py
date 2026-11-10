@@ -1,3 +1,8 @@
+"""
+Tasks run by the control (see control.py) to drive the robots on behalf of the referee: stops,
+placements, speeds...
+"""
+
 from . import client, utils
 
 
@@ -9,16 +14,29 @@ class ControlTask:
     def __init__(self, name: str, priority: int = 0):
         self.name: str = name
         self.priority: int = priority
-        # Available robots (passed by control)
-        self.robots_filter = []
 
     def robots(self) -> list:
+        """
+        :return list: the robots (team, number) driven by this task (they are preempted: the
+            teams can't control them)
+        """
         return []
 
     def tick(self, robot: client.ClientRobot) -> None:
+        """
+        Drives a robot of this task (called about every 10 ms, for the robots not driven by a
+        task of higher priority)
+
+        :param client.ClientRobot robot: the robot
+        """
         raise NotImplementedError("Task not implemented")
 
     def finished(self, client: client.Client, available_robots: list) -> bool:
+        """
+        :param client.Client client: the client of the control
+        :param list available_robots: the robots available (markers)
+        :return bool: whether the task is finished (it is then removed)
+        """
         return False
 
 

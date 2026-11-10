@@ -1,3 +1,13 @@
+"""
+Capture of the camera images and vision: the camera (its settings, saved for each camera), the
+processing of the images (detection of the markers and the ball, see detection.py), the preview
+of a camera before starting the vision, the automatic settings (exposure, crop) and the lens
+calibration (see lens_calibration.py).
+
+The images are captured and processed by the video thread (Video.thread), the other methods are
+called by the API (other threads).
+"""
+
 import time
 import numpy as np
 import cv2
@@ -32,9 +42,10 @@ is_linux = sys.platform.startswith("linux")
 
 def open_camera(index: int) -> cv2.VideoCapture:
     """
-    Opens a camera. On Linux, the V4L2 backend is used: the index is the one of /dev/videoN.
-    Otherwise, when V4L2 can't open an index (e.g. the metadata device of a camera), OpenCV tries
+    Opens a camera. On Linux, the V4L2 backend is forced: the index is the one of /dev/videoN.
+    Without it, when V4L2 can't open an index (e.g. the metadata device of a camera), OpenCV tries
     other backends that number the cameras differently, and the same camera appears several times.
+    On other systems (Windows), OpenCV chooses the backend.
 
     :param int index: the camera index
     :return cv2.VideoCapture: the capture
@@ -82,14 +93,19 @@ AUTO_EXPOSURE_MEAN_TARGET = 118
 # at 30 fps. Elsewhere (Windows), OpenCV uses log2 of the exposure in seconds: from 1/2048 s to
 # 1/32 s
 AUTO_EXPOSURE_MAX_V4L2 = 333
+AUTO_EXPOSURE_RANGE_LOG2 = (-11, -5)
 # The lights flicker at twice the frequency of the power line: an exposure that is not a multiple
 # of this period makes horizontal bands on the image (the lines of the image are not exposed at
-# the same time). With V4L2, the exposure is rounded to a multiple of this period [100 µs]
+# the same time). With V4L2, the exposure is rounded to a multiple of this period, computed with
+# the number of exposure units (100 µs) per second
 V4L2_EXPOSURE_UNITS_PER_SECOND = 10000
-AUTO_EXPOSURE_RANGE_LOG2 = (-11, -5)
 # The preview of a camera (before starting the vision) is stopped when it is not retrieved for this
 # duration (e.g. the page is closed), to release the camera [s]
 PREVIEW_TIMEOUT = 5.0
+
+# The annotated image (markers, ball...) is made while a page asked for it during this duration
+# (several pages can be opened, on different tabs) [s]
+DEBUG_REQUEST_DURATION = 1.0
 
 # Number of new images to wait for after a change of the camera settings
 AUTO_SETTLE_FRAMES = 5
@@ -147,7 +163,9 @@ class Video:
         self.image = None
         # Debug output
         self.debug = False
-        # Ask main thread to stop capture
+        # Time of the last request of an annotated image by a page (see request_debug)
+        self.debug_requested = 0.0
+        # Asks the video thread to stop the capture (it releases the camera)
         self.should_stop_capture = False
         # Time of the last image received from the camera (None if no capture is running)
         self.last_image_time = None
@@ -180,6 +198,9 @@ class Video:
         # the current camera (None before a camera is opened)
         self.cameras_settings = {}
         self.camera_key = None
+        # Settings of a previous configuration (not saved for each camera): (camera index,
+        # settings), see __init__
+        self.previous_settings = None
         self.favourite_index = None
         self.resolution = len(resolutions) - 1
 
@@ -209,12 +230,16 @@ class Video:
             self.cameras_settings = config.config["camera"].get("cameras", {})
 
             # Previous configuration, without the settings of each camera: they are the ones of
-            # the favourite camera
+            # the favourite camera. They are given to it when it is opened (its name is known
+            # then, even if it was unplugged when starting), see use_camera()
             if not self.cameras_settings and self.favourite_index is not None:
-                self.cameras_settings[camera_key(self.favourite_index)] = {
-                    "settings": dict(self.settings),
-                    "lens_calibration": self.lens_calibration,
-                }
+                self.previous_settings = (
+                    self.favourite_index,
+                    {
+                        "settings": dict(self.settings),
+                        "lens_calibration": self.lens_calibration,
+                    },
+                )
 
             # The previous default focal was saved in the configuration of all users
             for entry in [{"settings": self.settings}, *self.cameras_settings.values()]:
@@ -332,6 +357,16 @@ class Video:
         if key == self.camera_key:
             return
         self.store_camera_settings()
+        # The settings of a previous configuration, when the camera is known (on Linux, its name
+        # is unknown when it is unplugged; on Windows, the cameras are known by their index)
+        if (
+            self.previous_settings is not None
+            and self.previous_settings[0] == index
+            and (camera_name(index) or not is_linux)
+        ):
+            if key not in self.cameras_settings:
+                self.cameras_settings[key] = self.previous_settings[1]
+            self.previous_settings = None
         shared = {
             name: self.settings[name]
             for name in SHARED_SETTINGS
@@ -417,7 +452,9 @@ class Video:
     def preview_stream(self):
         """
         The images of the preview, as they come from the camera (full size, all the images), to
-        be sent as a MJPEG stream. Ends when the preview stops or changes.
+        be sent as a MJPEG stream. Ends when the preview stops or changes, when the camera gives
+        no image for PREVIEW_TIMEOUT, or when the video is stopped. While it is retrieved, the
+        preview is not stopped (see PREVIEW_TIMEOUT).
 
         :return: a generator of JPEG images (bytes)
         """
@@ -474,7 +511,8 @@ class Video:
 
         :param int index: the camera index to use
         :param int resolution: the resolution index to use
-        :return bool: whether the capture started
+        :return bool: whether an image was already received (after 0.1 s: often not, the
+            capture goes on)
         """
         if self.preview is not None:
             self.release_capture()
@@ -563,14 +601,16 @@ class Video:
             return exposure
         maximum = self.controls["exposure"]["max"]
         count = min(max(1, round(exposure / period)), max(1, int(maximum / period)))
-        return round(count * period)
+        # Never more than the maximum of the camera (even if it is shorter than one period)
+        return min(round(count * period), maximum)
 
     def set_camera_settings(self, settings: dict, save: bool = True):
         """
         Set camera settings, save and apply them. Only the settings that changed are applied
-        (they can be set many times per second, e.g. while a slider is moved)
+        (they can be set many times per second, e.g. while a slider is moved). The exposure is
+        rounded to avoid the flickering of the lights (see flicker_free_exposure)
 
-        :param dict settings: settings
+        :param dict settings: all the settings (they replace the current ones)
         :param bool save: whether the configuration is saved (e.g. not while a slider is moved)
         """
         previous = self.settings
@@ -579,14 +619,14 @@ class Video:
             self.settings["exposure"] = self.flicker_free_exposure(
                 self.settings["exposure"]
             )
-        if save:
-            self.save_config()
         names = {name for name in settings if previous.get(name) != settings[name]}
         self.apply_camera_settings(names)
-        if "focal" in names:
-            # The field is calibrated with the focal (a change of the crop or rescale is detected
-            # by the video thread)
+        if names & {"focal", "rescale", "crop_x", "crop_y"}:
+            # The field is calibrated with the focal (which depends on the rescale), after it was
+            # updated (the video thread may have calibrated it with the previous one)
             self.detection.calibrate_camera()
+        if save:
+            self.save_config()
 
     def thread(self):
         """
@@ -631,7 +671,8 @@ class Video:
                         height, width, channels = image_captured.shape
                         self.update_lens_intrinsics((width, height))
 
-                        # The settings are read once: they can be changed meanwhile
+                        # The crop and rescale are read once for this image: they can be changed
+                        # meanwhile
                         crop_x = self.settings.get("crop_x", 100)
                         crop_y = self.settings.get("crop_y", 100)
                         rescale = self.settings.get("rescale", 100)
@@ -667,7 +708,9 @@ class Video:
                         self.frame_count += 1
 
                         # Process the image
-                        if self.debug:
+                        if self.debug or (
+                            time.time() - self.debug_requested < DEBUG_REQUEST_DURATION
+                        ):
                             image_debug = image_captured.copy()
                         self.detection.detect_markers(image_captured, image_debug)
                         self.detection.detect_ball(image_captured, image_debug)
@@ -691,18 +734,25 @@ class Video:
 
                     if self.should_stop_capture:
                         self.should_stop_capture = False
-                        self.capture.release()
-                        del self.capture
-                        self.capture = None
+                        # Cleared before the capture: release_capture() returns as soon as the
+                        # capture is None, a new preview or capture can then be started
                         self.preview = None
                         self.image = None
                         self.last_frame = None
+                        capture, self.capture = self.capture, None
+                        capture.release()
                 except Exception:
                     # An error should never stop the video
                     logger.exception("Error in video processing")
                     time.sleep(0.1)
             else:
                 time.sleep(0.1)
+
+    def request_debug(self) -> None:
+        """
+        A page shows the image: it is annotated (markers, ball...) for DEBUG_REQUEST_DURATION
+        """
+        self.debug_requested = time.time()
 
     def camera_controls(self) -> dict:
         """
@@ -829,6 +879,13 @@ class Video:
         return float(np.mean(gray)) / AUTO_EXPOSURE_MEAN_TARGET
 
     def set_exposure_and_measure(self, exposure: int, on_field: bool) -> float:
+        """
+        Sets an exposure, waits for images taken with it and measures their brightness
+
+        :param int exposure: the exposure (in the units of the camera)
+        :param bool on_field: see measure_brightness
+        :return float: the brightness divided by its target
+        """
         self.settings["exposure"] = int(exposure)
         if self.capture is not None:
             self.capture.set(cv2.CAP_PROP_EXPOSURE, int(exposure))
@@ -863,7 +920,10 @@ class Video:
             # there is a lot of light, one period is used, even if the image is a bit brighter
             if period is None:
                 return exposure
-            return round(max(1, int(exposure / period)) * period)
+            return min(
+                round(max(1, int(exposure / period)) * period),
+                self.controls["exposure"]["max"],
+            )
 
         enough_light = True
         if self.set_exposure_and_measure(high, on_field) < 1:
@@ -872,6 +932,8 @@ class Video:
             exposure = low
         else:
             # Brightness at low < target <= brightness at high
+            # V4L2 exposures (linear, from 1 to hundreds): searched geometrically. Windows ones
+            # (log2 of seconds, a few integers): searched linearly
             logarithmic = "exposure" in self.controls
             while high - low > (max(1, low * 0.05) if logarithmic else 1):
                 middle = (

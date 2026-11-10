@@ -1,3 +1,8 @@
+"""
+Path finding (A*) between two points of the field, avoiding circular obstacles (the other
+robots): used to place the robots
+"""
+
 import math
 
 import astar
@@ -58,9 +63,11 @@ class PathFinder(astar.AStar):
         :param y: y coordinate of the node
         :return: node index
         """
-        # Clipping nodes to the carpet
-        x = min(max(x, -constants.carpet_length / 2), constants.carpet_length / 2)
-        y = min(max(y, -constants.carpet_width / 2), constants.carpet_width / 2)
+        # Clipping nodes to the carpet (Python floats, see distance_between)
+        x = min(
+            max(float(x), -constants.carpet_length / 2), constants.carpet_length / 2
+        )
+        y = min(max(float(y), -constants.carpet_width / 2), constants.carpet_width / 2)
 
         self.nodes.append([x, y])
 
@@ -130,8 +137,8 @@ class PathFinder(astar.AStar):
         :param n2: node 2 index
         :return: distance between the two nodes
         """
-        # Computed with Python floats: called for all the pairs of nodes, numpy functions on
-        # single numbers are much slower
+        # Computed with Python floats (the nodes and obstacles are stored as Python floats): called
+        # for all the pairs of nodes, numpy functions on single numbers are much slower
         x1, y1 = self.nodes[n1]
         x2, y2 = self.nodes[n2]
         segment_dx = float(x2 - x1)

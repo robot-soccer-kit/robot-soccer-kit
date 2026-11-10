@@ -10,8 +10,8 @@ function simulator_initialize(backend, constants, isSimulated) {
         markers[marker].image.src = 'static/imgs/robot' + marker + '.png';
     }
 
-    // Display settings of the simulated view (in real mode, the display settings are the vision
-    // ones, see video.js)
+    // Display settings of the simulated view. In simulation, they are set in the settings panel;
+    // in real mode, they follow the vision ones (center landmark, timed circle, see video.js)
     let displaySettings = {
         landmark: { label: 'Center landmark', default: true },
         timed_circle: { label: 'Timed circle (around the ball)', default: false },
@@ -32,6 +32,14 @@ function simulator_initialize(backend, constants, isSimulated) {
         $('.display-settings').html(html);
         $('.sim-display-setting').change(function () {
             displaySettings[$(this).attr('rel')].value = $(this).is(':checked');
+        });
+    } else {
+        $(document).on('rsk:display-settings', function (event, settings) {
+            for (let name in displaySettings) {
+                if (settings[name]) {
+                    displaySettings[name].value = settings[name].value;
+                }
+            }
         });
     }
 
@@ -102,7 +110,6 @@ function simulator_initialize(backend, constants, isSimulated) {
 
         let selected = null;
         let dragType = null;
-        let start = null;
 
         function teleport(event) {
             let x = event.offsetX, y = event.offsetY;
@@ -135,7 +142,6 @@ function simulator_initialize(backend, constants, isSimulated) {
                 selected = null;
                 return;
             }
-            start = [event.offsetX, event.offsetY];
             canvas.style.cursor = 'grabbing';
             teleport(event);
         });

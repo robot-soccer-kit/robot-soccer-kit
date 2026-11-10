@@ -13,8 +13,8 @@ class APIBackend {
                         callback = args.pop();
                     }
 
-                    // Some commands take time on the backend (cameras listing, robots identification)
-                    let timeout = { cameras: 10000, identify: 60000 }[name] || 3000;
+                    // Some commands take time on the backend (cameras listing and opening, robots identification)
+                    let timeout = { cameras: 10000, identify: 60000, start_capture: 10000, start_preview: 10000 }[name] || 3000;
                     $.get({
                         url: url,
                         data: { command: name, args: JSON.stringify(args) },

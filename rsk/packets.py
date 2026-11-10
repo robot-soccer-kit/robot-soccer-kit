@@ -1,16 +1,24 @@
+"""
+Binary protocol with the robots (as implemented by their firmware): packets
+0xFF 0xAA [destination] type size payload checksum
+"""
+
 import numpy as np
 
-# Constants for binary protocol
+# Types of the packets
 PACKET_ACK = 0
 PACKET_MONITOR = 1
 PACKET_HEARTBEAT = 7
 PACKET_ROBOT = 80
+PACKET_MONITOR_DATA = 5
+
+# Commands to the robots: first byte of the payload of a PACKET_ROBOT packet (they can have the
+# same values as the packet types)
 PACKET_ROBOT_CONTROL = 2
 PACKET_ROBOT_BEEP = 3
 PACKET_ROBOT_LEDS_CUSTOM = 7
 PACKET_ROBOT_LEDS_BREATH = 8
 PACKET_ROBOT_KICK = 12
-PACKET_MONITOR_DATA = 5
 
 
 def encode_control(dx: float, dy: float, dturn: float) -> tuple:
@@ -49,9 +57,15 @@ class Packet:
         self.dest = dest
 
     def available(self):
+        """
+        :return int: number of bytes of the payload not read yet
+        """
         return len(self.payload)
 
     def append_byte(self, char):
+        """
+        Appends a byte (int) or bytes to the payload
+        """
         char = char & 0xFF
         if type(char) is int:
             self.payload += bytearray((char,))
@@ -59,12 +73,18 @@ class Packet:
             self.payload += bytearray(char)
 
     def append_short(self, short):
+        """
+        Appends a 16 bits integer (big endian)
+        """
         b1 = (short >> 8) & 0xFF
         b2 = short & 0xFF
 
         self.payload += bytearray((b1, b2))
 
     def append_int(self, short):
+        """
+        Appends a 32 bits integer (big endian)
+        """
         b1 = (short >> 24) & 0xFF
         b2 = (short >> 16) & 0xFF
         b3 = (short >> 8) & 0xFF
@@ -73,18 +93,30 @@ class Packet:
         self.payload += bytearray((b1, b2, b3, b4))
 
     def appendFloat(self, f):
-        self.append_int(f * 1000.0)
+        """
+        Appends a float as a 32 bits integer of thousandths (see read_float)
+        """
+        self.append_int(int(f * 1000.0))
 
     def appendSmallFloat(self, f):
-        self.append_short(f * 10.0)
+        """
+        Appends a float as a 16 bits integer of tenths (see read_small_float)
+        """
+        self.append_short(int(f * 10.0))
 
     def readByte(self):
+        """
+        Reads (and removes) the first byte of the payload
+        """
         byte = self.payload[0]
         self.payload = self.payload[1:]
 
         return byte
 
     def read_int(self):
+        """
+        Reads a signed 32 bits integer (big endian)
+        """
         n = self.readByte() << 24
         n = n | (self.readByte() << 16)
         n = n | (self.readByte() << 8)
@@ -94,18 +126,30 @@ class Packet:
         return n - (1 << 32) if n & (1 << 31) else n
 
     def read_short(self):
+        """
+        Reads a signed 16 bits integer (big endian)
+        """
         n = (self.readByte() << 8) | self.readByte()
 
         # Two's complement (signed 16 bits)
         return n - (1 << 16) if n & (1 << 15) else n
 
     def read_float(self):
+        """
+        Reads a float sent as a 32 bits integer of thousandths
+        """
         return self.read_int() / 1000.0
 
     def read_small_float(self):
+        """
+        Reads a float sent as a 16 bits integer of tenths
+        """
         return self.read_short() / 10.0
 
     def to_raw(self):
+        """
+        :return bytearray: the packet, as sent
+        """
         raw = bytearray()
         raw += bytearray((0xFF, 0xAA))
         if self.dest is not None:
@@ -117,11 +161,21 @@ class Packet:
         return raw
 
     def checksum(self):
+        """
+        :return int: the checksum of the payload (sum modulo 256)
+        """
         return sum(self.payload) % 256
 
 
 class PacketReader:
+    """
+    Reads the packets from a stream of bytes (push the bytes, then pop the packets)
+    """
+
     def __init__(self, dest=None):
+        """
+        :param dest: not None if the packets have a destination byte (packets to the robots)
+        """
         self.reset()
         self.packets = []
         self.dest = dest
@@ -142,6 +196,9 @@ class PacketReader:
             self.STATE_CHECKSUM = 5
 
     def reset(self):
+        """
+        Forgets the packet being read (waits for the next header)
+        """
         self.state = 0
         self.type_, self.length, self.packet_dest, self.payload = (
             0,
@@ -151,6 +208,9 @@ class PacketReader:
         )
 
     def push(self, byte: int):
+        """
+        Reads a byte of the stream (a packet is available when it is complete and valid)
+        """
         if self.state == self.STATE_HEADER1:  # First header
             if byte == 0xFF:
                 self.state += 1
@@ -182,7 +242,13 @@ class PacketReader:
             self.reset()
 
     def has_packet(self):
+        """
+        :return bool: whether a packet was read
+        """
         return len(self.packets) > 0
 
     def pop_packet(self) -> Packet:
+        """
+        :return Packet: the oldest packet read (removed)
+        """
         return self.packets.pop(0)

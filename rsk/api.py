@@ -1,9 +1,16 @@
+"""
+API of the web interface: the methods of the backend are called with JSON arguments, converted
+with their type hints
+"""
+
 import typing
 import inspect
 import logging
 import math
 import os
 
+# Windows (Media Foundation backend of OpenCV): without the hardware transforms, the cameras open
+# much faster. Read by OpenCV when a camera is opened
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 methods = {}
@@ -17,6 +24,10 @@ class APIError(Exception):
 
 
 def register(obj):
+    """
+    Registers the public methods of an object (the backend) as API commands, with the type hints
+    of their arguments (used to convert the JSON arguments, see convert_argument)
+    """
     global methods
 
     for name, func in inspect.getmembers(obj):

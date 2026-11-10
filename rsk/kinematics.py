@@ -1,11 +1,11 @@
-import numpy as np
-from . import constants
-
 """
 This file provide IK/FK kinematics for the robot. Note that there is an equivalent code embedded in
 the robots themselfs, allowing them to compute their own kinematics. This is only intended in the case
 we need to do some simulations.
 """
+
+import numpy as np
+from . import constants
 
 
 # Wheel drive direction orientations [deg]

@@ -607,11 +607,30 @@ def test_settings_of_a_previous_configuration(make_video, two_cameras):
         }
     )
     v.detection.state = QuietState()
-    assert v.cameras_settings["USB Live camera"]["settings"]["contrast"] == 7
 
-    # The favourite camera is started automatically
+    # The favourite camera is started automatically: the settings are given to it
     assert wait_until(lambda: v.capture is not None)
     assert (v.settings["brightness"], v.settings["contrast"]) == (5, 7)
+    assert v.cameras_settings["USB Live camera"]["settings"]["contrast"] == 7
+
+
+def test_previous_configuration_with_the_camera_unplugged(
+    make_video, two_cameras, monkeypatch
+):
+    # The favourite camera is unplugged when starting (Linux: its name is unknown): its
+    # settings are given to it when it is plugged and opened (its name is known then)
+    monkeypatch.setattr(video, "is_linux", True)
+    monkeypatch.setattr(video, "camera_name", lambda index: "")
+    v = make_video({"favourite_index": 2, "resolution": 0, "settings": {"contrast": 7}})
+    assert wait_until(lambda: v.camera_key is not None)
+    v.release_capture()
+    assert v.previous_settings is not None
+
+    monkeypatch.setattr(video, "camera_name", lambda index: CAMERA_NAMES.get(index, ""))
+    v.start_preview(2, 0)
+    assert v.settings["contrast"] == 7
+    assert "USB Live camera" in v.cameras_settings
+    assert v.previous_settings is None
 
 
 def test_camera_without_name(make_video, two_cameras):
@@ -714,3 +733,11 @@ def test_focal_change_calibrates_the_field_again(make_video, monkeypatch):
 
     v.set_camera_settings(dict(v.settings, focal=v.settings["focal"] + 10))
     assert v.detection.field.should_calibrate
+
+
+def test_exposure_under_the_maximum_of_the_camera(make_video):
+    # The longest exposure of the camera is shorter than one flickering period (10 ms)
+    v = make_video()
+    v.controls = {"exposure": {"min": 1, "max": 50, "step": 1, "default": 20}}
+    v.set_camera_settings(dict(v.settings, power_line=50, exposure=200))
+    assert v.settings["exposure"] == 50

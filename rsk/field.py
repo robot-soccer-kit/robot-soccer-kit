@@ -1,9 +1,16 @@
+"""
+Calibration of the field: the pose of the camera is computed from the markers of the field
+corners, then the pixels of the image are converted to positions on the field (and back)
+"""
+
 import numpy as np
 import cv2
 import logging
 from . import constants
 import os
 
+# Windows (Media Foundation backend of OpenCV): without the hardware transforms, the cameras open
+# much faster. Read by OpenCV when a camera is opened
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 
@@ -113,14 +120,14 @@ class Field:
         Sets the position of a corner
 
         :param str corner: the corner name (c1, c2, c3 or c4)
-        :param list corners: the corner position
+        :param list corners: the 4 corners of the marker on the image [px]
         """
         self.corner_gfx_positions[corner] = corners
 
     def update_calibration(self, image):
         """
         If the field should be calibrated, compute a calibration from the detected corners.
-        This will use corner positions previously passed with set_corner_positions.
+        This will use corner positions previously passed with set_corner_position.
 
         :param image: the (OpenCV) image used for calibration
         """
@@ -129,6 +136,10 @@ class Field:
             and self.should_calibrate
             and (self.focal is not None or self.lens_intrinsics is not None)
         ):
+            # Cleared before the calibration: a new request meanwhile (e.g. the focal changed,
+            # from another thread) calibrates again on the next image
+            self.should_calibrate = False
+
             # Computing point-to-point correspondance
             object_points = []
             graphics_positions = []
@@ -177,7 +188,6 @@ class Field:
 
             # We are now calibrated
             self.is_calibrated = True
-            self.should_calibrate = False
             self.errors = 0
 
             # Checking if we can see the whole fields
@@ -199,7 +209,7 @@ class Field:
                 ):
                     self.see_whole_field = False
 
-        # We check that calibration is consistent, this can happen be done with only a few corners
+        # We check that the calibration is consistent (this can be done with only 3 field markers)
         # The goal is to avoid recalibrating everytime for performance reasons
         if len(self.corner_gfx_positions) >= 3:
             if self.is_calibrated:
@@ -287,9 +297,10 @@ class Field:
 
     def pixel_to_position(self, pixel: list, z: float = 0) -> list:
         """
-        Transforms a pixel on the image to a 3D point on the field, given a z
+        Transforms a pixel on the image to the point of the field seen at this pixel, at a given
+        height z
 
-        :param list pos: pixel
+        :param list pixel: the pixel (x, y) on the image
         :param float z: the height to intersect with, defaults to 0
         :return list: point coordinates (x, y)
         """

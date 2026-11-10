@@ -1,9 +1,10 @@
-import numpy as np
-
 """
 This file contains all relevant constants. It can be dimension of items or values from
 the rules.
 """
+
+import numpy as np
+
 
 # Field dimension
 field_length: float = 1.84  # [m] (x axis)
@@ -15,6 +16,7 @@ carpet_width: float = 1.84  # [m] (y axis)
 
 # Goals size
 goal_width: float = 0.6  # [m]
+# Height of the goals, as drawn on the camera image (the goals are only lines) [m]
 goal_virtual_height: float = 0.1  # [m]
 
 # Side of the (green) border we should be able to see around the field
@@ -60,8 +62,9 @@ grace_time: float = 3.0  # [s]
 
 # Number of penalty spots
 penalty_spots: int = 8
+# A penalty spot left by a robot is not given to another robot during this duration [s]
 penalty_spot_lock_time: int = 1
-# Parameters
+# Number of the last entries of the referee history sent with the game state
 referee_history_size: int = 3
 
 # For simulation
@@ -116,11 +119,12 @@ def field_corners(margin: float = 0) -> np.ndarray:
     ]
 
 
-def defense_area(x_positive: bool = True) -> np.ndarray:
+def defense_area(x_positive: bool = True) -> list:
     """
-    Returns the coordinates of the defense area
+    Returns the coordinates of the defense area (it extends defense_area_length behind the goal
+    line too, for the robots partially out of the field)
     :param x_positive: True if the goal is on the positive x axis, False otherwise
-    :return: The coordinates of the defense area
+    :return: [bottom left corner, top right corner] (x, y) [m]
     """
     if x_positive:
         return [

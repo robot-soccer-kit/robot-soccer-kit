@@ -176,8 +176,8 @@ function createRefereeView(constants) {
     }
 
     // Renders the referee history: list of [number, timer, team, event]. Goal decisions are shown
-    // on the goal they concern. pendingGoal: the last goal is waiting for validation (buttons are
-    // shown). outcomes: decisions known otherwise (old replays), by goal number.
+    // on the goal they concern. pendingGoal: the last goal is waiting for validation (a "Pending"
+    // badge is shown, the buttons are in the game controls). outcomes: decisions known otherwise (old replays), by goal number.
     function renderHistory(history, options = {}) {
         let container = $('#RefereeHistory');
         let outcomes = Object.assign({}, options.outcomes || {});

@@ -1402,6 +1402,10 @@ body:not(.sim-view) .field-wrapper {
     background: var(--rsk-image-background);
 }
 
+.vision-image-card .vision-image-area .camera-image:not([src]) {
+    visibility: hidden;
+}
+
 .vision-image-card .vision-image-area .camera-image {
     position: absolute;
     inset: 0;
@@ -1477,10 +1481,6 @@ body:not(.sim-view) .field-wrapper {
     grid-column: 2 / -1;
 }
 
-.camera-setting-row .form-label {
-    font-size: 0.9rem;
-}
-
 .camera-setting-row .form-range {
     min-width: 0;
 }
@@ -1505,7 +1505,7 @@ body:not(.sim-view) .field-wrapper {
 }
 
 .camera-settings .form-label {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     margin-bottom: 0.1rem;
     color: var(--bs-secondary-color);
 }

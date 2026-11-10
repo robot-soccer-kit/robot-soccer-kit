@@ -141,3 +141,19 @@ def test_ball_teleport_without_simulator(backend, monkeypatch):
     )
 
     assert response == [False, "The ball can only be teleported in simulation"]
+
+
+def test_control_thread_survives_errors(control, monkeypatch):
+    # An unexpected error in the control loop is logged, the loop goes on (stops, penalties...)
+    calls = []
+
+    def failing():
+        calls.append(1)
+        raise ValueError("unexpected")
+
+    monkeypatch.setattr(control, "ensure_robots_on_field", failing)
+    time.sleep(0.3)
+    count = len(calls)
+    time.sleep(0.3)
+    assert count > 0
+    assert len(calls) > count

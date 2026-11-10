@@ -1,3 +1,8 @@
+"""
+Simulation of the robots and the ball (kinematics, collisions, kicks), as close as possible to
+the real robots. The positions are published as the vision does
+"""
+
 import threading
 import time
 import logging
@@ -13,6 +18,11 @@ logger: logging.Logger = logging.getLogger("simulator")
 
 
 class SimulatedObject:
+    """
+    A simulated object (robot or ball): a disc with a position (x, y, orientation), a velocity,
+    a mass and a deceleration (rolling friction)
+    """
+
     def __init__(
         self,
         marker: str,
@@ -36,10 +46,17 @@ class SimulatedObject:
         self.sim: Simulator = None
 
     def add_action(self, action: Callable) -> None:
+        """
+        Adds an action (e.g. a kick) to be executed by the simulator thread, at the end of the next
+        step
+        """
         with self.actions_lock:
             self.pending_actions.append(action)
 
     def execute_actions(self) -> None:
+        """
+        Executes the pending actions (simulator thread)
+        """
         with self.actions_lock:
             actions, self.pending_actions = self.pending_actions, []
 
@@ -47,10 +64,22 @@ class SimulatedObject:
             action()
 
     def teleport(self, x: float, y: float, turn: float):
-        self.position = np.array((x, y, turn), dtype=float)
-        self.velocity = np.array([0.0, 0.0, 0.0])
+        """
+        Moves the object (simulation only), stopped. Called by other threads (API, control): not
+        during a step of the simulation
+        """
+        if self.sim is not None:
+            with self.sim.lock:
+                self.position = np.array((x, y, turn), dtype=float)
+                self.velocity = np.array([0.0, 0.0, 0.0])
+        else:
+            self.position = np.array((x, y, turn), dtype=float)
+            self.velocity = np.array([0.0, 0.0, 0.0])
 
     def update_velocity(self, dt) -> None:
+        """
+        Updates the velocity during a step: decelerates (rolling friction)
+        """
         self.velocity[:2] = utils.update_limit_variation(
             self.velocity[:2], np.array([0.0, 0.0]), self.deceleration * dt
         )
@@ -70,13 +99,17 @@ class SimulatedObject:
         return np.vstack((normal, tangent))
 
     def collision(self, obj) -> None:
+        """
+        Updates the velocities of this object and another one colliding with it
+        """
         R_collision_world = self.collision_R(obj)
 
         # Velocities expressed in the collision frame
         self_velocity_collision = R_collision_world @ self.velocity[:2]
         obj_velocity_collision = R_collision_world @ obj.velocity[:2]
 
-        # Updating velocities using elastic collision
+        # Updating velocities with a partially inelastic collision (Cr: coefficient of
+        # restitution, 1 for an elastic collision, 0 for a perfectly inelastic one)
         u1 = self_velocity_collision[0]
         u2 = obj_velocity_collision[0]
         m1 = self.mass
@@ -100,6 +133,11 @@ class SimulatedObject:
 
 
 class SimulatedRobot(SimulatedObject):
+    """
+    A simulated robot: its velocity follows the orders, with the accelerations limits of the real
+    robots
+    """
+
     def __init__(self, name: str, position: np.ndarray) -> None:
         super().__init__(
             name, position, constants.robot_radius, 0, constants.robot_mass
@@ -108,6 +146,11 @@ class SimulatedRobot(SimulatedObject):
         self.leds = None  # [R,G,B] (0-255) None for off
 
     def compute_kick(self, power: float) -> None:
+        """
+        Kicks the ball, if it is in front of the kicker
+
+        :param float power: kick power (0-1)
+        """
         # Robot to ball vector, expressed in world
         ball_world = self.sim.objects["ball"].position[:2]
         T_world_robot = utils.frame(tuple(self.position))
@@ -133,6 +176,10 @@ class SimulatedRobot(SimulatedObject):
             )
 
     def update_velocity(self, dt: float) -> None:
+        """
+        Updates the velocity during a step: toward the order (in the robot frame), with the
+        acceleration limits
+        """
         target_velocity_robot = self.control_cmd
 
         T_world_robot = utils.frame(tuple(self.position))
@@ -150,10 +197,17 @@ class SimulatedRobot(SimulatedObject):
         )
 
     def control_leds(self, r: int, g: int, b: int) -> None:
+        """
+        Sets the LEDs color
+        """
         self.leds = [r, g, b]
 
 
 class RobotSim(robot.Robot):
+    """
+    A robot of the simulation (protocol sim://), driving a SimulatedRobot
+    """
+
     def __init__(self, robots: Robots, url: str):
         super().__init__(robots, url)
         self.set_marker(url)
@@ -161,6 +215,9 @@ class RobotSim(robot.Robot):
         self.object: SimulatedRobot = None
 
     def initialize(self, position: np.ndarray) -> None:
+        """
+        Creates the simulated robot at a position (x, y, orientation)
+        """
         self.object = SimulatedRobot(self.marker, position)
 
     def teleport(self, x: float, y: float, turn: float) -> None:
@@ -174,11 +231,17 @@ class RobotSim(robot.Robot):
         self.object.teleport(x, y, turn)
 
     def control(self, dx: float, dy: float, dturn: float) -> None:
+        """
+        Controls the robot velocity, in the robot frame [m/s, m/s, rad/s]
+        """
         # Orders are truncated as they would be when sent to a real robot
         order = packets.decode_control(*packets.encode_control(dx, dy, dturn))
         self.object.control_cmd = kinematics.clip_target_order(np.array(order))
 
     def kick(self, power: float = 1.0) -> None:
+        """
+        Kicks (at the end of the next step of the simulation)
+        """
         self.object.add_action(lambda: self.object.compute_kick(power))
 
     def leds(self, red: int, green: int, blue: int) -> None:
@@ -195,6 +258,10 @@ class RobotSim(robot.Robot):
 
 
 class Simulator:
+    """
+    Simulation of the robots and the ball, run by a thread at fps_limit steps per second
+    """
+
     def __init__(
         self, robots: robots.Robots, state: state.State = None, run_thread=True
     ):
@@ -202,6 +269,8 @@ class Simulator:
         self.robots: robots.Robots = robots
         self.last_publish = time.time()
         self.publish_period = 1 / 30.0
+        # Held during a step of the simulation (objects are teleported by other threads)
+        self.lock = threading.RLock()
 
         # Creating the robots
         for configuration in client.configurations["game_green_positive"]:
@@ -233,6 +302,9 @@ class Simulator:
             self.run_thread()
 
     def run_thread(self):
+        """
+        Starts the simulator thread
+        """
         self.run = True
         self.simu_thread: threading.Thread = threading.Thread(
             target=lambda: self.thread(), daemon=True, name="SimulatorThread"
@@ -240,20 +312,30 @@ class Simulator:
         self.simu_thread.start()
 
     def add_object(self, object: SimulatedObject) -> None:
+        """
+        Adds an object to the simulation
+        """
         self.objects[object.marker] = object
         object.sim = self
 
     def add_robot_objects(self) -> None:
+        """
+        Adds the simulated robots of the robots manager
+        """
         for rob in self.robots.robots_by_marker.values():
             self.add_object(rob.object)
 
     def thread(self) -> None:
+        """
+        Simulator thread: a step every 1 / fps_limit s (the duration of each step is measured)
+        """
         last_time = time.time()
         while self.run:
             self.dt = -last_time + (last_time := time.time())
             # An unexpected error should never stop the simulation: we log it and keep going
             try:
-                self.loop(self.dt)
+                with self.lock:
+                    self.loop(self.dt)
             except Exception:
                 logger.exception("Error in simulator loop")
 
@@ -265,15 +347,16 @@ class Simulator:
                     time.sleep(remaining)
 
     def loop(self, dt):
-        # Simulator proceed in two steps:
-        # 1) We handle future collisions as elastic collisions and change the velocity vectors
-        #    accordingly.
-        # 2) We apply the object velocities, removing all the components in the velocities that would
-        #    create collision.
+        """
+        A step of the simulation. It proceeds in two steps:
+        1) Future collisions are handled as (partially inelastic) collisions, changing the
+           velocities accordingly.
+        2) The velocities are applied, removing their components that would create a collision.
+        Then the actions (e.g. kick) are executed and the positions are published.
 
+        :param float dt: duration of the step [s]
+        """
         for obj in self.objects.values():
-            # Execute actions (e.g: kick)
-
             # Update object velocity (e.g: deceleration, taking commands in account)
             obj.update_velocity(dt)
 
@@ -353,18 +436,26 @@ class Simulator:
                 break
 
     def push(self) -> None:
+        """
+        Gives the positions to the state, published at the rate of the vision (30 Hz)
+        """
         if self.state is not None:
             for marker in self.objects:
                 pos = self.objects[marker].position
                 if marker == "ball":
                     self.state.set_ball(pos[:2].tolist())
                 else:
-                    self.state.set_marker(marker, pos[:2].tolist(), pos[2])
+                    # In [-pi, pi], as given by the vision
+                    self.state.set_marker(
+                        marker, pos[:2].tolist(), float(utils.angle_wrap(pos[2]))
+                    )
 
         # Simulating the fact that state is published at a fixed frequency
-        if (
-            self.state is not None
-            and time.time() - self.last_publish > self.publish_period
-        ):
+        now = time.time()
+        if self.state is not None and now - self.last_publish >= self.publish_period:
             self.state.publish()
-            self.last_publish = time.time()
+            # The next publication one period after this one should have been (not after now):
+            # 30 Hz on average, with steps of 10 ms. If late, not several publications at once
+            self.last_publish = max(
+                self.last_publish + self.publish_period, now - self.publish_period
+            )

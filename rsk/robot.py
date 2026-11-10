@@ -1,10 +1,23 @@
-class RobotError(Exception): ...
+"""
+A robot (base class of the robots of each protocol)
+"""
+
+
+class RobotError(Exception):
+    """
+    An operation not supported by a robot
+    """
 
 
 from .robots import Robots
 
 
 class Robot:
+    """
+    A robot, controlled through a protocol (see the subclasses: RobotWifi, RobotSerial,
+    RobotSim). By default, the operations are not supported
+    """
+
     def __init__(self, robots: Robots, url: str):
         # Robots manager
         self.robots = robots
@@ -25,10 +38,15 @@ class Robot:
         self.marker = None
 
     def available_urls() -> list:
+        """
+        :return list: the urls of the robots that can be added with this protocol
+        """
         return []
 
     def close(self) -> None:
-        pass
+        """
+        Stops the communication with the robot (when it is removed)
+        """
 
     def set_marker(self, marker: str) -> None:
         """
@@ -65,8 +83,8 @@ class Robot:
         :param int red: red brightness (0-255)
         :param int green: green brightness (0-255)
         :param int blue: blue brightness (0-255)
-        :raises RobotError: if the operation is not supported
         """
+        # Recorded in the state (shown by the interface), sent by the subclasses
         if self.marker is not None:
             self.robots.state.set_leds(self.marker, (red, green, blue))
 
@@ -76,9 +94,8 @@ class Robot:
 
         :param int frequency: frequency (Hz)
         :param int duration: duration (ms)
-        :raises RobotError: if the operation is not supported
         """
-        ...
+        # Nothing by default (e.g. no buzzer)
 
     def teleport(self, x: float, y: float, theta: float) -> None:
         """

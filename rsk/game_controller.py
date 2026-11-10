@@ -1,3 +1,8 @@
+"""
+Game Controller: the backend (vision or simulation, referee, control) and the web interface
+(python -m rsk.game_controller --help)
+"""
+
 import os
 import argparse
 import webbrowser
@@ -15,6 +20,9 @@ static = os.path.dirname(__file__) + "/static/"
 
 
 def parse_args(argv=None) -> argparse.Namespace:
+    """
+    Arguments of the command line (python -m rsk.game_controller --help)
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--ip",
@@ -52,6 +60,9 @@ def parse_args(argv=None) -> argparse.Namespace:
 
 
 def send_file_response(filepath, mimetype, gzip=False):
+    """
+    A response sending a file (gzip: the file is gzipped, the browser decompresses it)
+    """
     directory = os.path.dirname(os.path.abspath(filepath))
     filename = os.path.basename(filepath)
     response = make_response(
@@ -153,6 +164,9 @@ def create_app(backend: Backend) -> Flask:
 
 
 def start_and_serve(argv=None):
+    """
+    Starts the backend and serves the web interface (until Ctrl+C)
+    """
     # Setting up the logger
     logging.basicConfig(
         format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s",

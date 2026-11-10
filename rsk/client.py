@@ -1,3 +1,8 @@
+"""
+Client API used by the teams to control their robots and get the positions of the robots and
+the ball (see the documentation)
+"""
+
 import signal
 import numpy as np
 import zmq
@@ -61,10 +66,18 @@ configurations = {
 
 
 class ClientError(Exception):
-    pass
+    """
+    Error returned by the Game Controller for a command (e.g. unknown robot, robot preempted by
+    the referee, wrong key)
+    """
 
 
 class ClientTracked:
+    """
+    An object tracked by the vision: its position (x, y) [m], pose (x, y, orientation),
+    orientation [rad] and the time of its last update
+    """
+
     def __init__(self):
         self.position = None
         self.pose = None
@@ -94,7 +107,7 @@ class ClientRobot(ClientTracked):
 
     def ball(self):
         """
-        Returns the ball position in the robot frame.
+        Returns the ball position (x, y) in the field frame [m], None if it is not seen
         """
         return self.client.ball
 
@@ -169,6 +182,9 @@ class ClientRobot(ClientTracked):
         Compute the order to send to the robot to go to the given target.
         :param target: The target to go to. Can be a tuple (x, y, orientation) or a function returning such a tuple.
         :param skip_old: If True, returns False if the position is older than 1 second.
+        :param avoid_obstacles: If True, the other robots are avoided (path finding)
+        :return: (arrived, order): whether the robot is at the target, and the order to send
+            (dx, dy, dturn) in the robot frame
         """
         if not self.has_position(skip_old):
             return False, (0.0, 0.0, 0.0)
@@ -221,6 +237,8 @@ class ClientRobot(ClientTracked):
         :param target: The target to go to. Can be a tuple (x, y, orientation) or a function returning such a tuple.
         :param wait: If True, waits for the robot to arrive at the target.
         :param skip_old: If True, returns False if the position is older than 1 second.
+        :param avoid_obstacles: If True, the other robots are avoided (path finding)
+        :return: whether the robot arrived at the target (always True if wait is True)
         """
         if wait:
             while not self.goto(
@@ -242,13 +260,23 @@ class Client:
     """
 
     def __init__(self, host="127.0.0.1", key="", wait_ready=True):
+        """
+        Connects to the Game Controller
+
+        :param host: address of the computer running the Game Controller
+        :param key: the key of the team (if the Game Controller asks for one)
+        :param wait_ready: if True, waits for the first state from the Game Controller (the
+            positions given by the vision) before returning
+        """
         logging.basicConfig(
             format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s",
             level=logging.INFO,
         )
         self.logger: logging.Logger = logging.getLogger("client")
 
-        self.error_management = "raise"  # "ignore", "print", "raise"
+        # What to do when a robot is preempted by the referee (e.g. penalized): "raise" a
+        # ClientError, "print" a warning or "ignore" it. Other errors always raise a ClientError
+        self.error_management = "raise"
         self.running = True
         self.key = key
         self.lock = threading.Lock()
@@ -284,13 +312,12 @@ class Client:
         self.sub.subscribe("")
         self.on_update = None
         self.sub_packets = 0
+        # Informations from referee (set before the thread receiving them is started)
+        self.referee = None
         self.sub_thread = threading.Thread(
             target=lambda: self.sub_process(), daemon=True, name="Client-SubThread"
         )
         self.sub_thread.start()
-
-        # Informations from referee
-        self.referee = None
 
         # Creating request connection
         self.req = self.context.socket(zmq.REQ)
@@ -315,6 +342,9 @@ class Client:
                 )
 
     def sigint(self, signal_received, frame):
+        """
+        Ctrl+C: the robots that were moved are stopped before exiting
+        """
         self.stop()
         sys.exit(0)
 
@@ -380,6 +410,9 @@ class Client:
                 pass
 
     def stop_motion(self):
+        """
+        Stops the robots that were moved by this client
+        """
         for color in self.robots:
             robots = self.robots[color]
             for index in robots:
@@ -390,9 +423,15 @@ class Client:
                         pass
 
     def em(self):
+        """
+        Emergency: stops the robots that were moved by this client (see stop_motion)
+        """
         self.stop_motion()
 
     def stop(self):
+        """
+        Stops the robots that were moved by this client, and the client
+        """
         self.stop_motion()
         self.running = False
 
@@ -435,9 +474,12 @@ class Client:
         self, configuration_name="side", wait=False, avoid_obstacles=True
     ):
         """
-        Go to the given configuration.
-        :param configuration_name: The name of the configuration to go to.
-        :param wait: If True, waits for the robots to arrive at their targets.
+        Go to the given configuration, and returns when all the robots arrived.
+        Warning: a robot that is not seen by the camera never arrives (this never returns).
+        :param configuration_name: The name of the configuration to go to (see configurations).
+        :param wait: If True, the robots go to their targets one after the other, else all
+            together.
+        :param avoid_obstacles: If True, the robots avoid each other (path finding)
         """
         targets = configurations[configuration_name]
 

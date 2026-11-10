@@ -1,3 +1,7 @@
+"""
+Robots reached through WiFi (UDP, see the protocol in packets.py)
+"""
+
 from . import robot
 from threading import Thread, Lock
 import time
@@ -21,30 +25,53 @@ logger: logging.Logger = logging.getLogger("robot_wifi")
 
 
 class RobotWifi(robot.Robot):
+    """
+    A robot reached through WiFi (UDP). The packets of all the robots are sent by one thread
+    (service_loop), at most at broadcast_frequency: the orders given meanwhile to a robot are
+    coalesced (only the last one of each type is sent)
+    """
+
     udp_port: int = 7600
+    # Maximum rate of the packets sent to each robot [Hz] (the WiFi bands are often saturated)
     broadcast_frequency: float = 60
 
     thread_broadcast: Thread = None
     thread_local: Thread = None
     pending_packets: dict = {}
     lock: Lock = Lock()
+    # IP => time of the last message received, for the robots found on the network
     statuses: dict = {}
+    # IP => RobotWifi, for the robots added (class attribute, the instance attribute
+    # self.robots is the Robots manager)
     robots: dict = {}
 
     def start_service():
+        """
+        Starts the thread sending and receiving the packets of the robots
+        """
         RobotWifi.thread_broadcast = Thread(
             target=lambda: RobotWifi.service_loop(), daemon=True, name="RobotWifiThread"
         )
         RobotWifi.thread_broadcast.start()
 
     def ip_to_int(ip: str) -> int:
+        """
+        :return int: the IP address as an integer
+        """
         packedIP = socket.inet_aton(ip)
         return struct.unpack("!L", packedIP)[0]
 
     def int_to_ip(ip: int) -> str:
+        """
+        :return str: the IP address of an integer
+        """
         return socket.inet_ntoa(struct.pack("!L", ip))
 
     def service_loop():
+        """
+        Thread receiving the packets of the robots, and sending them the pending packets (at
+        broadcast_frequency at most), and a heartbeat every second
+        """
         # Create UDP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -120,9 +147,15 @@ class RobotWifi(robot.Robot):
                         print(f"WARNING: Can't send unicast to {ip}")
 
     def available_urls() -> list:
+        """
+        :return list: the IP addresses of the robots found on the network
+        """
         return RobotWifi.robots_ips()
 
     def robots_ips() -> list:
+        """
+        :return list: the IP addresses of the robots that sent a message during the last 10 s
+        """
         ips = []
         RobotWifi.lock.acquire()
         for ip in RobotWifi.statuses:
@@ -141,17 +174,23 @@ class RobotWifi(robot.Robot):
         self.ip = url
         self.last_sent_message = None
         self.last_received_message = None
-        self.packet_lock = True
 
         RobotWifi.lock.acquire()
         RobotWifi.robots[url] = self
         RobotWifi.lock.release()
 
     def close(self):
+        """
+        The robot is not reached anymore
+        """
         with RobotWifi.lock:
             RobotWifi.robots.pop(self.url, None)
 
     def process(self, data: bytes):
+        """
+        Processes data received from the robot (monitor packets: time and battery). The robot
+        beeps when it is reached again after 10 s
+        """
         if (
             self.last_received_message is None
             or (time.time() - self.last_received_message) > 10.0
@@ -175,6 +214,13 @@ class RobotWifi(robot.Robot):
                 self.state["battery"] = [packet.readByte() / 10.0]
 
     def add_packet(self, type_: str, packet: Packet, lock: bool = True):
+        """
+        Adds a packet to send: it replaces a pending packet of the same type
+
+        :param str type_: type of the packet (e.g. "control")
+        :param Packet packet: the packet
+        :param bool lock: whether RobotWifi.lock is taken (False when it is already held)
+        """
         if lock:
             RobotWifi.lock.acquire()
         RobotWifi.pending_packets[f"{self.id}/{type_}"] = (self, self.ip, packet)
@@ -186,7 +232,7 @@ class RobotWifi(robot.Robot):
         Kicks
 
         :param float power: kick power (0-1)
-        :raises RobotError: if the operation is not supported
+        :param bool lock: whether RobotWifi.lock is taken (False when it is already held)
         """
         packet = Packet(PACKET_ROBOT, dest=self.id)
         packet.append_byte(PACKET_ROBOT_KICK)
@@ -200,7 +246,7 @@ class RobotWifi(robot.Robot):
         :param float dx: x axis (robot frame) velocity [m/s]
         :param float dy: y axis (robot frame) velocity [m/s]
         :param float dturn: rotation (robot frame) velocity [rad/s]
-        :raises RobotError: if the operation is not supported
+        :param bool lock: whether RobotWifi.lock is taken (False when it is already held)
         """
         packet = Packet(PACKET_ROBOT, dest=self.id)
         packet.append_byte(PACKET_ROBOT_CONTROL)
@@ -215,7 +261,7 @@ class RobotWifi(robot.Robot):
         :param int red: red brightness (0-255)
         :param int green: green brightness (0-255)
         :param int blue: blue brightness (0-255)
-        :raises RobotError: if the operation is not supported
+        :param bool lock: whether RobotWifi.lock is taken (False when it is already held)
         """
         super().leds(red, green, blue)
 
@@ -232,7 +278,7 @@ class RobotWifi(robot.Robot):
 
         :param int frequency: frequency (Hz)
         :param int duration: duration (ms)
-        :raises RobotError: if the operation is not supported
+        :param bool lock: whether RobotWifi.lock is taken (False when it is already held)
         """
         packet = Packet(PACKET_ROBOT, dest=self.id)
         packet.append_byte(PACKET_ROBOT_BEEP)

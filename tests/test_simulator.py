@@ -170,3 +170,54 @@ def test_simulation_rate():
         sim.simu_thread.join(timeout=1)
 
     assert 50 <= count <= 105
+
+
+class CountingState:
+    """
+    A state recording the publications and the markers set
+    """
+
+    def __init__(self):
+        self.publications = 0
+        self.markers = {}
+
+    def set_ball(self, position):
+        pass
+
+    def set_marker(self, marker, position, orientation):
+        self.markers[marker] = (position, orientation)
+
+    def publish(self):
+        self.publications += 1
+
+
+def test_state_published_at_the_rate_of_the_vision():
+    # 30 Hz, as the vision (with steps of 10 ms)
+    robots = Robots()
+    robots.save_robots = False
+    Robots.protocols["sim"] = simulator.RobotSim
+    state = CountingState()
+    sim = simulator.Simulator(robots, state, run_thread=False)
+    sim.run_thread()
+    try:
+        time.sleep(0.5)
+        start = state.publications
+        time.sleep(2.0)
+        rate = (state.publications - start) / 2.0
+    finally:
+        sim.run = False
+        sim.simu_thread.join(timeout=1)
+
+    # Low threshold: on Windows with Python < 3.11, the steps last at least ~15.6 ms
+    assert 20 <= rate <= 31
+
+
+def test_published_orientations_are_wrapped(sim):
+    # As given by the vision: in [-pi, pi], even after several turns
+    state = CountingState()
+    sim.state = state
+    sim.objects["green1"].teleport(0.0, 0.0, 17.63)
+    sim.push()
+    orientation = state.markers["green1"][1]
+    assert -math.pi <= orientation <= math.pi
+    assert orientation == pytest.approx(17.63 - 6 * math.pi)

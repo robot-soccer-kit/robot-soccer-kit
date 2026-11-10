@@ -1,3 +1,7 @@
+"""
+Manager of the robots: their urls (protocols), their markers, and their identification
+"""
+
 import numpy as np
 import time
 import copy
@@ -28,7 +32,9 @@ class Robots:
         self.save_robots: bool = True
 
     def load_config(self) -> None:
-        # Loading robots from the configuration
+        """
+        Adds the robots (and their markers) saved in the configuration
+        """
         if "robots" in config.config:
             for url, marker in config.config["robots"]:
                 config_robot = self.add_robot(url)
@@ -45,7 +51,7 @@ class Robots:
         Updates robots_by_marker for it to be consistent with robots
         """
         new_robots_by_marker = {}
-        for url in self.robots:
+        for url in list(self.robots):
             if self.robots[url].marker is not None:
                 new_robots_by_marker[self.robots[url].marker] = self.robots[url]
         self.robots_by_marker = new_robots_by_marker
@@ -67,7 +73,7 @@ class Robots:
         """
         Starts the identification procedure, to detect markers on the top of each robots
         """
-        for url in self.robots:
+        for url in list(self.robots):
             self.logger.info(f"Identifying {url}...")
             # Detection before the robot moves
             before = copy.deepcopy(self.state.get_state())["markers"]
@@ -79,6 +85,8 @@ class Robots:
             self.robots[url].control(0, 0, math.radians(50))
             for _ in range(100):
                 markers = copy.deepcopy(self.state.get_state())["markers"]
+                # First position seen of each marker (the ones already in before are kept),
+                # and last position seen (updated)
                 before = {**markers, **before}
                 after = {**after, **markers}
                 time.sleep(0.01)
@@ -118,7 +126,7 @@ class Robots:
             return
 
         config.config["robots"] = []
-        for url in self.robots:
+        for url in list(self.robots):
             config.config["robots"].append([url, self.robots[url].marker])
         config.save()
 
@@ -126,7 +134,9 @@ class Robots:
         """
         Adds an url to the robots list
 
-        :param str url: the robot's url
+        :param str full_url: the robot's url (protocol://address, e.g. wifi://192.168.0.10)
+        :return: the robot added, None if it can't be added (unknown protocol, bad url, or
+            already added)
         """
         if full_url not in self.robots:
             result = full_url.split("://", 1)
@@ -150,7 +160,7 @@ class Robots:
         :return dict: information about robots
         """
         data = {}
-        for entry in self.robots:
+        for entry in list(self.robots):
             last_detection = None
             if self.robots[entry].marker in self.state.last_updates:
                 last_detection = (
@@ -182,9 +192,9 @@ class Robots:
 
     def remove(self, url: str) -> None:
         """
-        Removes a url from
+        Removes a robot (it is closed)
 
-        :param str url: the url
+        :param str url: the robot's url
         """
         if url in self.robots:
             self.robots[url].close()
@@ -196,5 +206,5 @@ class Robots:
         """
         Closes all the connections
         """
-        for url in self.robots:
+        for url in list(self.robots):
             self.robots[url].close()

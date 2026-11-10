@@ -506,7 +506,7 @@
                                     title="End the game">
                                     <i class="bi bi-stop-fill"></i>&nbsp;End
                                 </button>
-                                <button class="btn btn-outline-secondary btn-lg d-lg-none" type="button"
+                                <button class="btn btn-outline-secondary btn-lg d-lg-none open-history" type="button"
                                     data-bs-toggle="offcanvas" data-bs-target="#history-panel" title="History">
                                     <i class="bi bi-clock-history"></i>
                                 </button>
@@ -541,6 +541,11 @@
 
                     <div class="card replay-mode">
                         <div class="card-body">
+                            <!-- On small screens, the history is a panel opened with this button -->
+                            <button class="btn btn-outline-secondary w-100 mb-2 d-lg-none open-history-replay" type="button"
+                                data-bs-toggle="offcanvas" data-bs-target="#history-panel">
+                                <i class="bi bi-clock-history"></i>&nbsp;History
+                            </button>
                             <button class="btn btn-success btn-lg w-100 start-replay start-replay-grp" type="button">
                                 <i class="bi bi-play-fill"></i>&nbsp;Start replay
                             </button>
