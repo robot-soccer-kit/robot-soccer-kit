@@ -157,7 +157,12 @@ CONTROLS = {
 }
 
 
-def start_field_camera(make_video, monkeypatch, camera, controls=CONTROLS):
+def start_field_camera(
+    make_video, monkeypatch, camera, controls=CONTROLS, windows=False
+):
+    # A V4L2 camera (Linux, exposure in 100 µs) or a Windows one (exposure in log2 of seconds),
+    # whatever the system running the tests
+    monkeypatch.setattr(video, "is_windows", windows)
     monkeypatch.setattr(video, "open_camera", lambda index: camera)
     monkeypatch.setattr(video.camera_controls, "query_controls", lambda index: controls)
     v = make_video()
@@ -478,9 +483,8 @@ class WindowsFieldCamera(FieldCamera):
 
 def test_auto_camera_settings_on_windows(make_video, monkeypatch):
     # On Windows, the ranges of the settings are unknown and the exposure is a power of 2
-    monkeypatch.setattr(video, "is_windows", True)
     camera = WindowsFieldCamera(synthetic.render({}))
-    v = start_field_camera(make_video, monkeypatch, camera, controls={})
+    v = start_field_camera(make_video, monkeypatch, camera, controls={}, windows=True)
     assert wait_until(lambda: v.detection.field.calibrated())
     settings = dict(v.settings)
 
@@ -701,6 +705,8 @@ def test_settings_changed_live(make_video, monkeypatch):
     # As while a slider is moved: many changes, only the setting changed is sent to the camera,
     # the configuration is not saved
     camera = RecordingCamera()
+    # A V4L2 camera (Linux), even when the tests run on Windows
+    monkeypatch.setattr(video, "is_windows", False)
     monkeypatch.setattr(video, "open_camera", lambda index: camera)
     monkeypatch.setattr(video.camera_controls, "query_controls", lambda index: CONTROLS)
     v = make_video()
