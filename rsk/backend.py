@@ -122,21 +122,21 @@ class Backend:
         return self._video().lens_calibration_status()
 
     def start_lens_calibration(self):
-        self._lens_call("start_lens_calibration")
+        self._video_call("start_lens_calibration")
 
     def cancel_lens_calibration(self):
-        self._lens_call("cancel_lens_calibration")
+        self._video_call("cancel_lens_calibration")
 
     def compute_lens_calibration(self):
-        self._lens_call("compute_lens_calibration")
+        self._video_call("compute_lens_calibration")
 
     def apply_lens_calibration(self):
-        self._lens_call("apply_lens_calibration")
+        self._video_call("apply_lens_calibration")
 
     def remove_lens_calibration(self):
-        self._lens_call("remove_lens_calibration")
+        self._video_call("remove_lens_calibration")
 
-    def _lens_call(self, method: str):
+    def _video_call(self, method: str):
         try:
             getattr(self._video(), method)()
         except RuntimeError as e:
@@ -145,6 +145,21 @@ class Backend:
     def cameraSettings(self, settings):
         self._video().set_camera_settings(settings)
         return True
+
+    def camera_controls(self) -> dict:
+        return self._video().camera_controls()
+
+    def auto_camera_settings(self):
+        self._video_call("auto_camera_settings")
+
+    def auto_camera_settings_status(self) -> dict:
+        return self._video().auto_camera_settings_status()
+
+    def auto_crop(self) -> dict:
+        try:
+            return self._video().auto_crop()
+        except RuntimeError as e:
+            raise api.APIError(str(e))
 
     def available_urls(self):
         return self.robots.available_urls()

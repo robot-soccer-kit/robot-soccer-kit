@@ -1344,6 +1344,50 @@ body:not(.sim-view) .field-wrapper {
     flex: 0 0 auto;
 }
 
+/* Camera settings: a slider (when the range is known) and the value of each setting */
+.camera-settings-group+.camera-settings-group {
+    margin-top: 0.9rem;
+}
+
+.camera-settings-group .section-title {
+    margin-bottom: 0.35rem;
+}
+
+.camera-setting-row {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) 6rem 1.9rem;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.15rem 0;
+}
+
+.camera-setting-row .form-label {
+    font-size: 0.9rem;
+}
+
+.camera-setting-row .form-range {
+    min-width: 0;
+}
+
+.camera-setting-row .camera-setting {
+    font-variant-numeric: tabular-nums;
+}
+
+.camera-setting-row .camera-setting-default {
+    padding: 0.1rem 0.3rem;
+    color: var(--bs-secondary-color);
+}
+
+.camera-setting-row .camera-setting-default:hover {
+    color: var(--bs-emphasis-color);
+}
+
+/* While the settings are adjusted automatically */
+.camera-settings.busy {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 .detection-list {
     font-size: 0.9rem;
     font-variant-numeric: tabular-nums;

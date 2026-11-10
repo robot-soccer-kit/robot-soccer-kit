@@ -68,41 +68,186 @@ function video_initialize(backend) {
         backend.get_display_settings(true, renderDisplaySettings);
     });
 
-    // Camera settings
-    let cameraSettingsNames = [];
-    backend.getCameraSettings(function (settings) {
+    // Camera settings, by group. The ranges of the image settings are the ones of the camera, when
+    // they are known (Linux), else these settings are numbers
+    const SETTINGS_GROUPS = [
+        ['Image', ['brightness', 'contrast', 'saturation', 'gain', 'exposure']],
+        ['Framing', ['crop_x', 'crop_y', 'rescale']],
+        ['Lens', ['focal']],
+    ];
+    const SETTINGS = {
+        brightness: { label: 'Brightness' },
+        contrast: { label: 'Contrast' },
+        saturation: { label: 'Saturation' },
+        gain: { label: 'Gain' },
+        exposure: { label: 'Exposure' },
+        crop_x: { label: 'Crop width', min: 10, max: 100, unit: '%' },
+        crop_y: { label: 'Crop height', min: 10, max: 100, unit: '%' },
+        rescale: { label: 'Rescale', min: 10, max: 100, unit: '%' },
+        focal: { label: 'Focal', unit: 'px' },
+    };
+    let cameraSettings = {};
+    let cameraControls = {};
+
+    function settingRow(key, value) {
+        let setting = SETTINGS[key] || { label: key.replace('_', ' ') };
+        let range = cameraControls[key] || (setting.min !== undefined ? setting : null);
+        let id = 'camera-setting-' + key;
+        let html = '<div class="camera-setting-row" rel="' + key + '">'
+            + '<label class="form-label mb-0" for="' + id + '">' + escapeHtml(setting.label) + '</label>';
+        if (range) {
+            html += '<input type="range" class="form-range camera-setting-range" rel="' + key + '"'
+                + ' min="' + range.min + '" max="' + range.max + '" step="' + (range.step || 1) + '"'
+                + ' value="' + escapeHtml(value) + '" aria-label="' + escapeHtml(setting.label) + '">';
+        } else {
+            html += '<span></span>';
+        }
+        html += '<div class="input-group input-group-sm">'
+            + '<input type="number" class="form-control camera-setting" id="' + id + '" rel="' + key + '"'
+            + ' value="' + escapeHtml(value) + '">'
+            + (setting.unit ? '<span class="input-group-text">' + setting.unit + '</span>' : '')
+            + '</div>';
+        if (cameraControls[key]) {
+            html += '<button class="btn btn-sm btn-link camera-setting-default" type="button" rel="' + key + '"'
+                + ' title="Default of the camera: ' + cameraControls[key].default + '">'
+                + '<i class="bi bi-arrow-counterclockwise"></i></button>';
+        } else {
+            html += '<span></span>';
+        }
+        return html + '</div>';
+    }
+
+    function renderCameraSettings() {
         let html = '';
-        for (let key in settings) {
-            cameraSettingsNames.push(key);
-            html += '<div class="col-6 col-md-4">'
-                + '<label class="form-label" for="camera-setting-' + key + '">' + escapeHtml(key.replace('_', ' ')) + '</label>'
-                + '<input type="number" class="form-control form-control-sm camera-setting" id="camera-setting-' + key + '" rel="' + key + '" value="' + escapeHtml(settings[key]) + '">'
-                + '</div>';
+        let shown = new Set();
+        for (let [group, keys] of SETTINGS_GROUPS) {
+            let rows = keys.filter(key => key in cameraSettings);
+            if (!rows.length) {
+                continue;
+            }
+            html += '<div class="camera-settings-group"><div class="section-title">' + group + '</div>';
+            for (let key of rows) {
+                html += settingRow(key, cameraSettings[key]);
+                shown.add(key);
+            }
+            if (group == 'Image' && cameraControls.exposure) {
+                html += '<div class="form-text mt-0">Exposure in 0.1 ms: a long exposure blurs the moving robots</div>';
+            }
+            html += '</div>';
+        }
+        let others = Object.keys(cameraSettings).filter(key => !shown.has(key));
+        if (others.length) {
+            html += '<div class="camera-settings-group"><div class="section-title">Other</div>';
+            for (let key of others) {
+                html += settingRow(key, cameraSettings[key]);
+            }
+            html += '</div>';
         }
         $('.camera-settings').html(html);
-    });
+    }
 
-    $('.camera-settings').on('change', '.camera-setting', function () {
+    function loadCameraSettings() {
+        backend.camera_controls(function (controls) {
+            cameraControls = controls || {};
+            backend.getCameraSettings(function (settings) {
+                cameraSettings = settings;
+                renderCameraSettings();
+            });
+        });
+    }
+    loadCameraSettings();
+
+    function sendCameraSettings() {
         // All the values are read from the inputs, since some of them can be updated by the
         // backend (e.g. the focal, by the lens calibration)
-        let settings = {};
-        for (let key of cameraSettingsNames) {
-            settings[key] = parseInt($('.camera-setting[rel="' + key + '"]').val());
-        }
-        backend.cameraSettings(settings);
+        $('.camera-setting').each(function () {
+            let value = parseInt($(this).val());
+            if (!isNaN(value)) {
+                cameraSettings[$(this).attr('rel')] = value;
+            }
+        });
+        backend.cameraSettings(cameraSettings);
         backend.calibrate_camera();
+    }
+
+    function setSettingValue(key, value) {
+        $('.camera-setting[rel="' + key + '"], .camera-setting-range[rel="' + key + '"]').val(value);
+    }
+
+    // Sliders: the value is shown while moving, sent when released
+    $('.camera-settings').on('input', '.camera-setting-range', function () {
+        $('.camera-setting[rel="' + $(this).attr('rel') + '"]').val($(this).val());
+    });
+    $('.camera-settings').on('change', '.camera-setting-range', sendCameraSettings);
+    $('.camera-settings').on('change', '.camera-setting', function () {
+        $('.camera-setting-range[rel="' + $(this).attr('rel') + '"]').val($(this).val());
+        sendCameraSettings();
+    });
+    $('.camera-settings').on('click', '.camera-setting-default', function () {
+        let key = $(this).attr('rel');
+        setSettingValue(key, cameraControls[key].default);
+        sendCameraSettings();
     });
 
     // Refreshing the camera settings (e.g. after a lens calibration)
-    $(document).on('rsk:camera-settings', function () {
-        backend.getCameraSettings(function (settings) {
-            for (let key in settings) {
-                $('.camera-setting[rel="' + key + '"]').val(settings[key]);
+    $(document).on('rsk:camera-settings', loadCameraSettings);
+
+    // Automatic settings
+    function showAutoStatus(kind, html) {
+        $('.auto-settings-status')
+            .removeClass('d-none alert-info alert-success alert-warning alert-danger')
+            .addClass('alert alert-' + kind + ' py-2 px-3 small')
+            .html(html);
+    }
+
+    function pollAutoSettings() {
+        backend.auto_camera_settings_status(function (status) {
+            if (status.state == 'running') {
+                setTimeout(pollAutoSettings, 300);
+                return;
             }
+            $('.auto-camera-settings').prop('disabled', false);
+            $('.camera-settings').removeClass('busy');
+            if (status.state == 'done') {
+                let dark = status.message.includes('more light');
+                showAutoStatus(dark ? 'warning' : 'success',
+                    '<i class="bi ' + (dark ? 'bi-exclamation-triangle' : 'bi-check-circle') + '"></i> '
+                    + escapeHtml(status.message));
+            } else if (status.state == 'error') {
+                showAutoStatus('danger', '<i class="bi bi-x-circle"></i> ' + escapeHtml(status.message));
+            } else {
+                $('.auto-settings-status').addClass('d-none');
+            }
+            loadCameraSettings();
+        });
+    }
+
+    $('.auto-camera-settings').click(function () {
+        $(this).prop('disabled', true);
+        $('.camera-settings').addClass('busy');
+        showAutoStatus('info', '<span class="spinner-border spinner-border-sm"></span> '
+            + 'Adjusting the camera settings: keep the field visible...');
+        // On an error (e.g. no image), the error is notified and the state stays idle
+        backend.auto_camera_settings();
+        setTimeout(pollAutoSettings, 500);
+    });
+
+    $('.auto-crop').click(function () {
+        backend.auto_crop(function (crop) {
+            if (crop.too_small) {
+                showAutoStatus('warning', '<i class="bi bi-exclamation-triangle"></i> The field and its border are '
+                    + 'not entirely in the camera image: the camera should see a larger area');
+            } else {
+                showAutoStatus('success', '<i class="bi bi-check-circle"></i> Image cropped to '
+                    + crop.crop_x + ' % x ' + crop.crop_y + ' %, keeping a border around the field '
+                    + 'to see the robots leaving it');
+            }
+            loadCameraSettings();
         });
     });
 
     // Video status and images
+    let wasRunning = false;
     function updateStatus(video) {
         let running = video.running;
         let detection = video.detection;
@@ -129,6 +274,13 @@ function video_initialize(backend) {
                 + 'the four field markers should be visible';
         }
         $('.vision-status').removeClass('ok warning error').addClass(status).attr('title', title);
+        $('.auto-crop').prop('disabled', !(running && detection.calibrated));
+
+        // The ranges of the settings are known once the camera is opened
+        if (running && !wasRunning) {
+            loadCameraSettings();
+        }
+        wasRunning = running;
         $('.calibrated').html(message);
         $('.fps').text(running ? 'FPS: ' + Math.round(video.fps) : 'FPS: -');
 

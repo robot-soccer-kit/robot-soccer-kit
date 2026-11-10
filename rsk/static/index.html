@@ -169,10 +169,23 @@
                             </div>
                         </div>
 
-                        <div class="card">
-                            <div class="card-header"><i class="bi bi-sliders"></i>&nbsp;Camera settings</div>
+                        <div class="card camera-settings-card">
+                            <div class="card-header d-flex align-items-center gap-2">
+                                <span><i class="bi bi-sliders"></i>&nbsp;Camera settings</span>
+                                <div class="ms-auto d-flex gap-2">
+                                    <button class="btn btn-sm btn-primary auto-camera-settings" type="button"
+                                        title="Image settings to the defaults of the camera, then the exposure for a bright field without saturation">
+                                        <i class="bi bi-magic"></i>&nbsp;Auto
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary auto-crop" type="button" disabled
+                                        title="Crops the image to the field and the border around it (the four field markers should be visible)">
+                                        <i class="bi bi-crop"></i>&nbsp;Auto crop
+                                    </button>
+                                </div>
+                            </div>
                             <div class="card-body">
-                                <div class="row g-2 camera-settings"></div>
+                                <div class="auto-settings-status d-none"></div>
+                                <div class="camera-settings"></div>
                             </div>
                         </div>
 

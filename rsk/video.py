@@ -6,7 +6,7 @@ import base64
 import sys
 import threading
 import logging
-from . import detection, config, lens_calibration
+from . import detection, config, lens_calibration, constants, camera_controls
 
 resolutions = [
     (320, 240),
@@ -69,6 +69,23 @@ logger: logging.Logger = logging.getLogger("video")
 # If the camera gives no image for this duration, a warning is shown [s]
 NO_IMAGE_TIMEOUT = 2.0
 
+# Automatic exposure, when the field is calibrated: the brightest parts of the field (white lines,
+# white of the markers, the green of the carpet) should be bright but not saturated. 98th
+# percentile targeted of the highest color channel of the pixels of the field (a channel can be
+# saturated before the luminance is high) [0-255]
+AUTO_EXPOSURE_TARGET = 225
+AUTO_EXPOSURE_PERCENTILE = 98
+# When the field is not calibrated: the mean luminance of the image is the middle gray (18 %
+# reflectance in sRGB), as the automatic exposure of cameras (lamps in the image don't matter)
+AUTO_EXPOSURE_MEAN_TARGET = 118
+# Exposures tried. On Linux (V4L2), the exposure is in 100 µs units: up to the duration of a frame
+# at 30 fps. Elsewhere (Windows), OpenCV uses log2 of the exposure in seconds: from 1/2048 s to
+# 1/32 s
+AUTO_EXPOSURE_MAX_V4L2 = 333
+AUTO_EXPOSURE_RANGE_LOG2 = (-11, -5)
+# Number of new images to wait for after a change of the camera settings
+AUTO_SETTLE_FRAMES = 5
+
 
 class Video:
     """
@@ -93,6 +110,18 @@ class Video:
         self.no_image_warned = False
 
         self.detection = detection.Detection()
+
+        # Last processed image (without annotations) and number of images processed, used by the
+        # automatic settings
+        self.last_frame = None
+        self.frame_count = 0
+        # Geometry of the last processed image (see thread())
+        self.image_geometry = None
+        # Ranges and defaults of the controls of the current camera (see camera_controls.py)
+        self.controls = {}
+        # Automatic camera settings
+        self.auto_state = "idle"
+        self.auto_message = ""
 
         self.settings = {
             "brightness": 0,
@@ -208,6 +237,7 @@ class Video:
         self.last_image_time = None
         self.no_image_warned = False
         self.capture = open_camera(index)
+        self.controls = camera_controls.query_controls(index)
         w, h = resolutions[resolution]
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, w)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
@@ -310,36 +340,41 @@ class Video:
                     elif image_captured is not None:
                         height, width, channels = image_captured.shape
                         self.update_lens_intrinsics((width, height))
-                        frame_size = np.array([width, height])
-                        if "crop_x" in self.settings and "crop_y" in self.settings:
-                            if (
-                                self.settings["crop_x"] < 100
-                                or self.settings["crop_y"] < 100
-                            ):
-                                frame_size[0] = round(
-                                    frame_size[0] * self.settings["crop_x"] / 100.0
-                                )
-                                frame_size[1] = round(
-                                    frame_size[1] * self.settings["crop_y"] / 100.0
-                                )
-                                x_offset = round((width - frame_size[0]) / 2.0)
-                                y_offset = round((height - frame_size[1]) / 2.0)
-                                image_captured = image_captured[
-                                    y_offset : y_offset + frame_size[1],
-                                    x_offset : x_offset + frame_size[0],
-                                ]
 
-                        if (
-                            "rescale" in self.settings
-                            and self.settings["rescale"] < 100
-                            and self.settings["rescale"] > 0
-                        ):
-                            new_size = frame_size * self.settings["rescale"] / 100.0
+                        # The settings are read once: they can be changed meanwhile
+                        crop_x = self.settings.get("crop_x", 100)
+                        crop_y = self.settings.get("crop_y", 100)
+                        rescale = self.settings.get("rescale", 100)
+
+                        # When the image geometry changes (resolution, crop, rescale), the field
+                        # is calibrated again, with an image having the new geometry
+                        geometry = (width, height, crop_x, crop_y, rescale)
+                        if geometry != self.image_geometry:
+                            if self.image_geometry is not None:
+                                self.detection.calibrate_camera()
+                            self.image_geometry = geometry
+
+                        frame_size = np.array([width, height])
+                        if crop_x < 100 or crop_y < 100:
+                            frame_size[0] = round(frame_size[0] * crop_x / 100.0)
+                            frame_size[1] = round(frame_size[1] * crop_y / 100.0)
+                            x_offset = round((width - frame_size[0]) / 2.0)
+                            y_offset = round((height - frame_size[1]) / 2.0)
+                            image_captured = image_captured[
+                                y_offset : y_offset + frame_size[1],
+                                x_offset : x_offset + frame_size[0],
+                            ]
+
+                        if 0 < rescale < 100:
+                            new_size = frame_size * rescale / 100.0
                             image_captured = cv2.resize(
                                 image_captured,
                                 (int(new_size[0]), int(new_size[1])),
                                 cv2.INTER_LINEAR,
                             )
+
+                        self.last_frame = image_captured
+                        self.frame_count += 1
 
                         # Process the image
                         if self.debug:
@@ -370,12 +405,254 @@ class Video:
                         del self.capture
                         self.capture = None
                         self.image = None
+                        self.last_frame = None
                 except Exception:
                     # An error should never stop the video
                     logger.exception("Error in video processing")
                     time.sleep(0.1)
             else:
                 time.sleep(0.1)
+
+    def camera_controls(self) -> dict:
+        """
+        Ranges and defaults of the controls of the current camera, when they are known
+
+        :return dict: setting name => {"min", "max", "step", "default"}
+        """
+        return self.controls
+
+    def field_outline(self, margin: float, z: float = 0.0) -> np.ndarray:
+        """
+        Outline of the field with a margin around it, on the processed image (the field should be
+        calibrated). Points are taken along the sides, since they are curved by the lens
+        distortion.
+
+        :param float margin: margin around the field [m]
+        :param float z: height [m]
+        :return np.ndarray: the points (N x 2) [px]
+        """
+        x = constants.field_length / 2 + margin
+        y = constants.field_width / 2 + margin
+        corners = [(-x, -y), (x, -y), (x, y), (-x, y)]
+        points = []
+        for (x1, y1), (x2, y2) in zip(corners, corners[1:] + corners[:1]):
+            for t in np.linspace(0, 1, 12, endpoint=False):
+                points.append(
+                    self.detection.field.position_to_pixel(
+                        [x1 + t * (x2 - x1), y1 + t * (y2 - y1), z]
+                    )
+                )
+        return np.array(points, dtype=np.float64)
+
+    def auto_crop(self) -> dict:
+        """
+        Crops the image to the field, with the border around it that should be visible (robots
+        leaving the field should be seen, to bring them back). The crop is centered on the image.
+
+        :return dict: the crop settings set
+        """
+        if self.capture is None or self.raw_size is None:
+            raise RuntimeError("The vision is not running")
+        if not self.detection.field.calibrated():
+            raise RuntimeError(
+                "The field is not calibrated: the four field markers should be visible"
+            )
+
+        # The border on the ground, and the top of the robots in it
+        outline = np.vstack(
+            [
+                self.field_outline(constants.border_size),
+                self.field_outline(constants.border_size, constants.robot_height),
+            ]
+        )
+
+        # From the processed image to the raw image of the camera
+        width, height = self.raw_size
+        crop_x = self.settings.get("crop_x", 100)
+        crop_y = self.settings.get("crop_y", 100)
+        rescale = self.settings.get("rescale", 100)
+        cropped = np.array(
+            [round(width * crop_x / 100.0), round(height * crop_y / 100.0)]
+            if crop_x < 100 or crop_y < 100
+            else [width, height]
+        )
+        offset = np.round((np.array([width, height]) - cropped) / 2.0)
+        if 0 < rescale < 100:
+            outline = outline * 100.0 / rescale
+        outline = outline + offset
+
+        # Smallest centered crop containing the outline
+        center = np.array([width, height]) / 2.0
+        half = np.max(np.abs(outline - center), axis=0)
+        new_crop = np.ceil(200.0 * half / np.array([width, height])) + 1
+        new_crop = np.clip(new_crop, 10, 100).astype(int)
+
+        settings = dict(self.settings)
+        settings["crop_x"], settings["crop_y"] = int(new_crop[0]), int(new_crop[1])
+        # The field is calibrated again by the video thread, on the cropped image
+        self.set_camera_settings(settings)
+
+        return {
+            "crop_x": settings["crop_x"],
+            "crop_y": settings["crop_y"],
+            # The field and its border are not entirely in the image of the camera
+            "too_small": bool(np.any(half > center)),
+        }
+
+    def wait_frames(self, count: int, timeout: float = 3.0) -> bool:
+        """
+        Waits for new images from the camera
+
+        :param int count: number of new images
+        :param float timeout: maximum duration [s]
+        :return bool: whether the images were received
+        """
+        target = self.frame_count + count
+        start = time.time()
+        while self.frame_count < target:
+            if time.time() - start > timeout or self.capture is None:
+                return False
+            time.sleep(0.01)
+        return True
+
+    def measure_brightness(self, on_field: bool) -> float:
+        """
+        Brightness of the image, compared to the target of the automatic exposure
+
+        :param bool on_field: whether the field is used (it should be calibrated), see
+            AUTO_EXPOSURE_TARGET, else the whole image, see AUTO_EXPOSURE_MEAN_TARGET
+        :return float: the brightness divided by its target (1: the target is reached)
+        """
+        if on_field:
+            highest = np.max(self.last_frame, axis=2)
+            mask = np.zeros(highest.shape, np.uint8)
+            outline = self.field_outline(0.0).astype(np.int32)
+            cv2.fillPoly(mask, [outline], 255)
+            values = highest[mask > 0] if np.count_nonzero(mask) >= 1000 else highest
+            return (
+                float(np.percentile(values, AUTO_EXPOSURE_PERCENTILE))
+                / AUTO_EXPOSURE_TARGET
+            )
+
+        gray = cv2.cvtColor(self.last_frame, cv2.COLOR_BGR2GRAY)
+        return float(np.mean(gray)) / AUTO_EXPOSURE_MEAN_TARGET
+
+    def set_exposure_and_measure(self, exposure: int, on_field: bool) -> float:
+        self.settings["exposure"] = int(exposure)
+        if self.capture is not None:
+            self.capture.set(cv2.CAP_PROP_EXPOSURE, int(exposure))
+        if not self.wait_frames(AUTO_SETTLE_FRAMES):
+            raise RuntimeError("No image from the camera")
+        return self.measure_brightness(on_field)
+
+    def auto_exposure(self) -> tuple:
+        """
+        Searches the exposure that makes the brightest parts of the field bright, but not
+        saturated, or the image of a medium brightness if the field is not calibrated (the
+        brightness grows with the exposure)
+
+        :return tuple: the exposure, whether there is enough light to reach the target, and
+            whether the field was used
+        """
+        on_field = self.detection.field.calibrated()
+        if "exposure" in self.controls:
+            low = max(1, self.controls["exposure"]["min"])
+            high = min(self.controls["exposure"]["max"], AUTO_EXPOSURE_MAX_V4L2)
+            logarithmic = True
+        elif is_windows:
+            low, high = AUTO_EXPOSURE_RANGE_LOG2
+            logarithmic = False
+        else:
+            return None, True, on_field
+
+        if self.set_exposure_and_measure(high, on_field) < 1:
+            return high, False, on_field
+        if self.set_exposure_and_measure(low, on_field) >= 1:
+            return low, True, on_field
+
+        # Brightness at low < target <= brightness at high
+        while high - low > (max(1, low * 0.05) if logarithmic else 1):
+            middle = round((low * high) ** 0.5) if logarithmic else (low + high) // 2
+            middle = min(max(middle, low + 1), high - 1)
+            if self.set_exposure_and_measure(middle, on_field) < 1:
+                low = middle
+            else:
+                high = middle
+
+        self.set_exposure_and_measure(low, on_field)
+        return low, True, on_field
+
+    def auto_camera_settings(self) -> None:
+        """
+        Starts the automatic camera settings: the image settings (brightness, contrast, saturation,
+        gain) are set to the defaults of the camera (when they are known), then the exposure is
+        searched. Runs in the background, see auto_camera_settings_status()
+        """
+        if self.capture is None or self.last_frame is None:
+            raise RuntimeError("The vision is not running")
+        if self.auto_state == "running":
+            return
+        if self.lens_collector is not None:
+            raise RuntimeError("A lens calibration is in progress")
+
+        self.auto_state = "running"
+        self.auto_message = "Adjusting the camera settings..."
+
+        def run():
+            try:
+                messages = []
+                defaults = {
+                    name: self.controls[name]["default"]
+                    for name in ("brightness", "contrast", "saturation", "gain")
+                    if name in self.controls
+                }
+                if defaults:
+                    self.settings.update(defaults)
+                    self.apply_camera_settings()
+                    self.wait_frames(AUTO_SETTLE_FRAMES)
+                    messages.append(
+                        ", ".join(defaults) + " set to the defaults of the camera"
+                    )
+
+                exposure, enough_light, on_field = self.auto_exposure()
+                if exposure is not None:
+                    if "exposure" in self.controls:
+                        duration = f"{exposure / 10:.1f} ms"
+                    else:
+                        duration = f"1/{round(2 ** (-exposure))} s"
+                    messages.append(f"exposure {exposure} ({duration})")
+                    if not on_field:
+                        messages.append(
+                            "the field was not calibrated: once its four markers are "
+                            "visible, Auto again adjusts the exposure to the field"
+                        )
+                    if not enough_light:
+                        messages.append(
+                            "the image is still dark: more light is needed (a longer "
+                            "exposure would blur the moving robots)"
+                        )
+                elif not defaults:
+                    messages.append(
+                        "the settings of this camera can't be adjusted automatically"
+                    )
+
+                self.save_config()
+                self.auto_message = messages[0][0].upper() + "; ".join(messages)[1:]
+                self.auto_state = "done"
+            except Exception as error:
+                logger.exception("Error in the automatic camera settings")
+                self.auto_message = str(error)
+                self.auto_state = "error"
+
+        threading.Thread(target=run, daemon=True).start()
+
+    def auto_camera_settings_status(self) -> dict:
+        """
+        Status of the automatic camera settings
+
+        :return dict: the state (idle, running, done or error) and a message
+        """
+        return {"state": self.auto_state, "message": self.auto_message}
 
     def update_lens_intrinsics(self, raw_size: tuple) -> None:
         """

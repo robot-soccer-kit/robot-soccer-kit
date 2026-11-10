@@ -1,7 +1,9 @@
 import time
 
+import cv2
 import numpy as np
 import pytest
+import synthetic
 
 from rsk import video
 from rsk.state import State
@@ -118,3 +120,156 @@ def test_camera_without_images_is_reported(make_video, monkeypatch):
     camera.readable = True
     time.sleep(0.3)
     assert not v.get_video(False)["no_image"]
+
+
+class FieldCamera(FakeCamera):
+    """
+    A camera filming the synthetic field, whose image gets brighter with the exposure (saturated
+    beyond 255). Records the settings set.
+    """
+
+    def __init__(self, image, full_exposure=100.0):
+        super().__init__()
+        self.image = image.astype(np.float32)
+        self.full_exposure = full_exposure
+        self.properties = {}
+
+    def read(self):
+        exposure = self.properties.get(cv2.CAP_PROP_EXPOSURE, self.full_exposure)
+        image = self.image * exposure / self.full_exposure
+        return True, np.clip(image, 0, 255).astype(np.uint8)
+
+    def set(self, prop, value):
+        self.properties[prop] = value
+        return True
+
+
+CONTROLS = {
+    "brightness": {"min": 0, "max": 255, "step": 1, "default": 128},
+    "contrast": {"min": 0, "max": 100, "step": 1, "default": 32},
+    "saturation": {"min": 0, "max": 100, "step": 1, "default": 64},
+    "exposure": {"min": 2, "max": 1250, "step": 1, "default": 156},
+}
+
+
+def start_field_camera(make_video, monkeypatch, camera, controls=CONTROLS):
+    monkeypatch.setattr(video, "open_camera", lambda index: camera)
+    monkeypatch.setattr(video.camera_controls, "query_controls", lambda index: controls)
+    v = make_video()
+    v.detection.state = QuietState()
+    v.start_capture(0, len(video.resolutions) - 1)
+    return v
+
+
+def wait_until(condition, timeout=10.0):
+    start = time.time()
+    while not condition():
+        if time.time() - start > timeout:
+            return False
+        time.sleep(0.05)
+    return True
+
+
+def test_auto_camera_settings(make_video, monkeypatch):
+    # The green of the field (BGR 40, 120, 40) reaches 225 (the target) for an exposure of 187
+    camera = FieldCamera(synthetic.render({}))
+    v = start_field_camera(make_video, monkeypatch, camera)
+    assert wait_until(lambda: v.detection.field.calibrated())
+
+    v.auto_camera_settings()
+    assert wait_until(lambda: v.auto_camera_settings_status()["state"] != "running", 30)
+
+    status = v.auto_camera_settings_status()
+    assert status["state"] == "done", status["message"]
+    assert "not calibrated" not in status["message"]
+    # The image settings are the defaults of the camera
+    assert v.settings["brightness"] == 128
+    assert v.settings["contrast"] == 32
+    assert v.settings["saturation"] == 64
+    assert camera.properties[cv2.CAP_PROP_CONTRAST] == 32
+    # The brightest parts of the field are bright, not saturated
+    assert 178 <= v.settings["exposure"] <= 187
+    assert "exposure" in status["message"]
+    # Saved
+    assert (
+        video.config.config["camera"]["settings"]["exposure"] == v.settings["exposure"]
+    )
+
+
+def test_auto_camera_settings_in_the_dark(make_video, monkeypatch):
+    # Even with the longest exposure, the image stays dark
+    camera = FieldCamera(synthetic.render({}), full_exposure=5000)
+    v = start_field_camera(make_video, monkeypatch, camera)
+    assert wait_until(lambda: v.last_frame is not None)
+
+    v.auto_camera_settings()
+    assert wait_until(lambda: v.auto_camera_settings_status()["state"] != "running", 30)
+
+    status = v.auto_camera_settings_status()
+    assert status["state"] == "done"
+    assert v.settings["exposure"] == video.AUTO_EXPOSURE_MAX_V4L2
+    assert "more light" in status["message"]
+
+
+def test_auto_camera_settings_without_the_field(make_video, monkeypatch):
+    # No field: the mean brightness of the image is the middle gray (118), lamps don't matter.
+    # A gray of 59 with 4.8 % of saturated lamps: the target is reached for an exposure of ~188
+    image = np.full((1080, 1920, 3), 59, np.uint8)
+    image[:100, :1000] = 255
+    camera = FieldCamera(image)
+    v = start_field_camera(make_video, monkeypatch, camera)
+    assert wait_until(lambda: v.last_frame is not None)
+
+    v.auto_camera_settings()
+    assert wait_until(lambda: v.auto_camera_settings_status()["state"] != "running", 30)
+
+    status = v.auto_camera_settings_status()
+    assert status["state"] == "done", status["message"]
+    assert 178 <= v.settings["exposure"] <= 188
+    assert "not calibrated" in status["message"]
+
+
+def test_auto_camera_settings_needs_images(make_video):
+    with pytest.raises(RuntimeError):
+        make_video().auto_camera_settings()
+
+
+def test_auto_crop(make_video, monkeypatch):
+    camera = FieldCamera(synthetic.render({}, cam=synthetic.camera(height=2.6)))
+    v = start_field_camera(make_video, monkeypatch, camera)
+    assert wait_until(lambda: v.detection.field.calibrated())
+
+    crop = v.auto_crop()
+
+    assert crop["crop_x"] < 100 and crop["crop_y"] < 100
+    assert not crop["too_small"]
+    assert v.settings["crop_x"] == crop["crop_x"]
+    # The field is calibrated again on the cropped image, the border around it is visible
+    assert wait_until(lambda: v.last_frame.shape[1] < 1920)
+    assert wait_until(lambda: v.detection.field.calibrated())
+    assert v.detection.field.see_whole_field
+    height, width = v.last_frame.shape[:2]
+    for z in (0.0, video.constants.robot_height):
+        outline = v.field_outline(video.constants.border_size, z)
+        assert np.all(outline >= -1) and np.all(outline <= [width + 1, height + 1])
+    # The crop is tight: the border touches a side of the image
+    outline = v.field_outline(video.constants.border_size, video.constants.robot_height)
+    margins = [
+        outline[:, 0].min(),
+        outline[:, 1].min(),
+        width - outline[:, 0].max(),
+        height - outline[:, 1].max(),
+    ]
+    assert min(margins) < 0.03 * width
+
+    # Again: the crop doesn't change
+    assert v.auto_crop()["crop_x"] == crop["crop_x"]
+
+
+def test_auto_crop_needs_the_field(make_video, monkeypatch):
+    camera = FieldCamera(np.full((1080, 1920, 3), 120, np.uint8))
+    v = start_field_camera(make_video, monkeypatch, camera)
+    assert wait_until(lambda: v.last_frame is not None)
+
+    with pytest.raises(RuntimeError, match="not calibrated"):
+        v.auto_crop()
