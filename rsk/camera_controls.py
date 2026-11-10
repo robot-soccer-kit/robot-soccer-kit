@@ -25,6 +25,11 @@ CONTROLS = {
     "exposure": V4L2_CID_CAMERA_CLASS_BASE + 2,
 }
 
+# Anti-flicker of the camera for the lights (0: disabled, 1: 50 Hz, 2: 60 Hz), by frequency of the
+# power line (0: lights that don't flicker). Only used by the automatic exposure of the camera
+V4L2_CID_POWER_LINE_FREQUENCY = V4L2_CID_BASE + 24
+POWER_LINE_FREQUENCIES = {0: 0, 50: 1, 60: 2}
+
 V4L2_CTRL_FLAG_DISABLED = 0x0001
 
 
@@ -42,12 +47,47 @@ class v4l2_queryctrl(ctypes.Structure):
     ]
 
 
+class v4l2_control(ctypes.Structure):
+    _fields_ = [("id", ctypes.c_uint32), ("value", ctypes.c_int32)]
+
+
 def _iowr(group: str, number: int, size: int) -> int:
     # _IOWR macro of the Linux kernel (asm-generic/ioctl.h)
     return (3 << 30) | (size << 16) | (ord(group) << 8) | number
 
 
 VIDIOC_QUERYCTRL = _iowr("V", 36, ctypes.sizeof(v4l2_queryctrl))
+VIDIOC_S_CTRL = _iowr("V", 28, ctypes.sizeof(v4l2_control))
+
+
+def set_power_line_frequency(index: int, frequency: int) -> bool:
+    """
+    Sets the frequency of the anti-flicker of the camera (Linux only)
+
+    :param int index: the camera index (/dev/videoN on Linux)
+    :param int frequency: the frequency of the power line (50 or 60, 0 for no flickering) [Hz]
+    :return bool: whether it was set
+    """
+    if not is_linux or frequency not in POWER_LINE_FREQUENCIES:
+        return False
+
+    import fcntl
+
+    try:
+        fd = os.open(f"/dev/video{int(index)}", os.O_RDWR | os.O_NONBLOCK)
+    except OSError:
+        return False
+    try:
+        control = v4l2_control(
+            id=V4L2_CID_POWER_LINE_FREQUENCY,
+            value=POWER_LINE_FREQUENCIES[frequency],
+        )
+        fcntl.ioctl(fd, VIDIOC_S_CTRL, control)
+        return True
+    except OSError:
+        return False
+    finally:
+        os.close(fd)
 
 
 def query_controls(index: int) -> dict:

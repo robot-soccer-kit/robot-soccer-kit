@@ -82,6 +82,10 @@ AUTO_EXPOSURE_MEAN_TARGET = 118
 # at 30 fps. Elsewhere (Windows), OpenCV uses log2 of the exposure in seconds: from 1/2048 s to
 # 1/32 s
 AUTO_EXPOSURE_MAX_V4L2 = 333
+# The lights flicker at twice the frequency of the power line: an exposure that is not a multiple
+# of this period makes horizontal bands on the image (the lines of the image are not exposed at
+# the same time). With V4L2, the exposure is rounded to a multiple of this period [100 µs]
+V4L2_EXPOSURE_UNITS_PER_SECOND = 10000
 AUTO_EXPOSURE_RANGE_LOG2 = (-11, -5)
 # Number of new images to wait for after a change of the camera settings
 AUTO_SETTLE_FRAMES = 5
@@ -133,6 +137,9 @@ class Video:
             "rescale": 100,
             "exposure": -7 if is_windows else 100,
             "focal": DEFAULT_FOCAL,
+            # Frequency of the power line, for the flickering of the lights (0: lights that don't
+            # flicker) [Hz]
+            "power_line": 50,
         }
         self.favourite_index = None
         self.resolution = len(resolutions) - 1
@@ -285,6 +292,10 @@ class Video:
             self.capture.set(cv2.CAP_PROP_FOCUS, 0)
             self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)
             self.capture.set(cv2.CAP_PROP_EXPOSURE, self.settings["exposure"])
+            if self.favourite_index is not None:
+                camera_controls.set_power_line_frequency(
+                    self.favourite_index, self.settings.get("power_line", 50)
+                )
 
             if self.resolution is not None:
                 w, h = resolutions[self.resolution]
@@ -294,6 +305,33 @@ class Video:
                     * (self.settings["rescale"] / 100.0)
                 )
 
+    def flicker_period(self):
+        """
+        Flickering period of the lights, in the exposure units, when the exposure of the camera
+        can be a multiple of it (V4L2)
+
+        :return: the period [100 µs], or None
+        """
+        frequency = self.settings.get("power_line", 50)
+        if "exposure" not in self.controls or not frequency:
+            return None
+        return V4L2_EXPOSURE_UNITS_PER_SECOND / (2 * frequency)
+
+    def flicker_free_exposure(self, exposure: int) -> int:
+        """
+        The nearest exposure that is a multiple of the flickering period of the lights (to avoid
+        bands on the image), at least one period
+
+        :param int exposure: the exposure
+        :return int: the exposure
+        """
+        period = self.flicker_period()
+        if period is None:
+            return exposure
+        maximum = self.controls["exposure"]["max"]
+        count = min(max(1, round(exposure / period)), max(1, int(maximum / period)))
+        return round(count * period)
+
     def set_camera_settings(self, settings: dict):
         """
         Set camera settings, save and apply them
@@ -301,6 +339,10 @@ class Video:
         :param dict settings: settings
         """
         self.settings = settings
+        if "exposure" in self.settings:
+            self.settings["exposure"] = self.flicker_free_exposure(
+                self.settings["exposure"]
+            )
         self.save_config()
         self.apply_camera_settings()
 
@@ -558,29 +600,44 @@ class Video:
         if "exposure" in self.controls:
             low = max(1, self.controls["exposure"]["min"])
             high = min(self.controls["exposure"]["max"], AUTO_EXPOSURE_MAX_V4L2)
-            logarithmic = True
+            # Flickering period of the lights [100 µs] (None if they don't flicker)
+            period = self.flicker_period()
         elif is_windows:
+            # The exposure can't be a multiple of the flickering period (powers of 2)
             low, high = AUTO_EXPOSURE_RANGE_LOG2
-            logarithmic = False
+            period = None
         else:
             return None, True, on_field
 
+        def flicker_free(exposure):
+            # A multiple of the flickering period of the lights, to avoid bands on the image. When
+            # there is a lot of light, one period is used, even if the image is a bit brighter
+            if period is None:
+                return exposure
+            return round(max(1, int(exposure / period)) * period)
+
+        enough_light = True
         if self.set_exposure_and_measure(high, on_field) < 1:
-            return high, False, on_field
-        if self.set_exposure_and_measure(low, on_field) >= 1:
-            return low, True, on_field
+            exposure, enough_light = high, False
+        elif self.set_exposure_and_measure(low, on_field) >= 1:
+            exposure = low
+        else:
+            # Brightness at low < target <= brightness at high
+            logarithmic = "exposure" in self.controls
+            while high - low > (max(1, low * 0.05) if logarithmic else 1):
+                middle = (
+                    round((low * high) ** 0.5) if logarithmic else (low + high) // 2
+                )
+                middle = min(max(middle, low + 1), high - 1)
+                if self.set_exposure_and_measure(middle, on_field) < 1:
+                    low = middle
+                else:
+                    high = middle
+            exposure = low
 
-        # Brightness at low < target <= brightness at high
-        while high - low > (max(1, low * 0.05) if logarithmic else 1):
-            middle = round((low * high) ** 0.5) if logarithmic else (low + high) // 2
-            middle = min(max(middle, low + 1), high - 1)
-            if self.set_exposure_and_measure(middle, on_field) < 1:
-                low = middle
-            else:
-                high = middle
-
-        self.set_exposure_and_measure(low, on_field)
-        return low, True, on_field
+        exposure = flicker_free(exposure)
+        self.set_exposure_and_measure(exposure, on_field)
+        return exposure, enough_light, on_field
 
     def auto_camera_settings(self) -> None:
         """

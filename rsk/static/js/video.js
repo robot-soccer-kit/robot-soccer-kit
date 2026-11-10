@@ -71,7 +71,7 @@ function video_initialize(backend) {
     // Camera settings, by group. The ranges of the image settings are the ones of the camera, when
     // they are known (Linux), else these settings are numbers
     const SETTINGS_GROUPS = [
-        ['Image', ['brightness', 'contrast', 'saturation', 'gain', 'exposure']],
+        ['Image', ['brightness', 'contrast', 'saturation', 'gain', 'power_line', 'exposure']],
         ['Framing', ['crop_x', 'crop_y', 'rescale']],
         ['Lens', ['focal']],
     ];
@@ -81,6 +81,10 @@ function video_initialize(backend) {
         saturation: { label: 'Saturation' },
         gain: { label: 'Gain' },
         exposure: { label: 'Exposure' },
+        power_line: {
+            label: 'Lights',
+            options: { 50: '50 Hz (Europe...)', 60: '60 Hz (Americas...)', 0: "None (lights that don't flicker)" },
+        },
         crop_x: { label: 'Crop width', min: 10, max: 100, unit: '%' },
         crop_y: { label: 'Crop height', min: 10, max: 100, unit: '%' },
         rescale: { label: 'Rescale', min: 10, max: 100, unit: '%' },
@@ -89,12 +93,50 @@ function video_initialize(backend) {
     let cameraSettings = {};
     let cameraControls = {};
 
+    // Flickering period of the lights, in exposure units (0.1 ms), when the exposure can be a
+    // multiple of it (the range of the exposure is known), else null
+    function flickerPeriod() {
+        let frequency = parseInt(cameraSettings.power_line);
+        if (!cameraControls.exposure || !frequency) {
+            return null;
+        }
+        return 10000 / (2 * frequency);
+    }
+
+    // The nearest exposure that is a multiple of the flickering period (as in video.py)
+    function flickerFreeExposure(exposure) {
+        let period = flickerPeriod();
+        if (!period) {
+            return exposure;
+        }
+        let maximum = Math.max(1, Math.floor(cameraControls.exposure.max / period));
+        return Math.round(Math.min(Math.max(1, Math.round(exposure / period)), maximum) * period);
+    }
+
     function settingRow(key, value) {
         let setting = SETTINGS[key] || { label: key.replace('_', ' ') };
         let range = cameraControls[key] || (setting.min !== undefined ? setting : null);
+        if (key == 'exposure' && flickerPeriod()) {
+            // Only the multiples of the flickering period of the lights
+            let period = flickerPeriod();
+            range = {
+                min: period,
+                max: Math.floor(cameraControls.exposure.max / period) * period,
+                step: period,
+            };
+        }
         let id = 'camera-setting-' + key;
         let html = '<div class="camera-setting-row" rel="' + key + '">'
             + '<label class="form-label mb-0" for="' + id + '">' + escapeHtml(setting.label) + '</label>';
+        if (setting.options) {
+            html += '<select class="form-select form-select-sm camera-setting camera-setting-select" id="' + id
+                + '" rel="' + key + '">';
+            for (let option in setting.options) {
+                html += '<option value="' + option + '"' + (option == value ? ' selected' : '') + '>'
+                    + escapeHtml(setting.options[option]) + '</option>';
+            }
+            return html + '</select></div>';
+        }
         if (range) {
             html += '<input type="range" class="form-range camera-setting-range" rel="' + key + '"'
                 + ' min="' + range.min + '" max="' + range.max + '" step="' + (range.step || 1) + '"'
@@ -121,7 +163,9 @@ function video_initialize(backend) {
         let html = '';
         let shown = new Set();
         for (let [group, keys] of SETTINGS_GROUPS) {
-            let rows = keys.filter(key => key in cameraSettings);
+            // The lights only matter when the exposure can be set precisely (its range is known)
+            let rows = keys.filter(key => key in cameraSettings
+                && (key != 'power_line' || cameraControls.exposure));
             if (!rows.length) {
                 continue;
             }
@@ -131,7 +175,10 @@ function video_initialize(backend) {
                 shown.add(key);
             }
             if (group == 'Image' && cameraControls.exposure) {
-                html += '<div class="form-text mt-0">Exposure in 0.1 ms: a long exposure blurs the moving robots</div>';
+                let period = flickerPeriod();
+                html += '<div class="form-text mt-0">Exposure in 0.1 ms: a long exposure blurs the moving robots'
+                    + (period ? '. Multiples of ' + (period / 10).toFixed(period % 10 ? 2 : 0)
+                        + ' ms only, to avoid bands of light on the image' : '') + '</div>';
             }
             html += '</div>';
         }
@@ -161,11 +208,14 @@ function video_initialize(backend) {
         // All the values are read from the inputs, since some of them can be updated by the
         // backend (e.g. the focal, by the lens calibration)
         $('.camera-setting').each(function () {
-            let value = parseInt($(this).val());
+            let value = Math.round(parseFloat($(this).val()));
             if (!isNaN(value)) {
                 cameraSettings[$(this).attr('rel')] = value;
             }
         });
+        // The exposure follows the lights (the inputs are updated with the value used)
+        cameraSettings.exposure = flickerFreeExposure(cameraSettings.exposure);
+        setSettingValue('exposure', cameraSettings.exposure);
         backend.cameraSettings(cameraSettings);
         backend.calibrate_camera();
     }
@@ -176,12 +226,16 @@ function video_initialize(backend) {
 
     // Sliders: the value is shown while moving, sent when released
     $('.camera-settings').on('input', '.camera-setting-range', function () {
-        $('.camera-setting[rel="' + $(this).attr('rel') + '"]').val($(this).val());
+        $('.camera-setting[rel="' + $(this).attr('rel') + '"]').val(Math.round($(this).val()));
     });
     $('.camera-settings').on('change', '.camera-setting-range', sendCameraSettings);
     $('.camera-settings').on('change', '.camera-setting', function () {
         $('.camera-setting-range[rel="' + $(this).attr('rel') + '"]').val($(this).val());
         sendCameraSettings();
+        if ($(this).attr('rel') == 'power_line') {
+            // The exposure slider and its help follow the lights
+            renderCameraSettings();
+        }
     });
     $('.camera-settings').on('click', '.camera-setting-default', function () {
         let key = $(this).attr('rel');

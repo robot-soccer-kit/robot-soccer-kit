@@ -187,8 +187,9 @@ def test_auto_camera_settings(make_video, monkeypatch):
     assert v.settings["contrast"] == 32
     assert v.settings["saturation"] == 64
     assert camera.properties[cv2.CAP_PROP_CONTRAST] == 32
-    # The brightest parts of the field are bright, not saturated
-    assert 178 <= v.settings["exposure"] <= 187
+    # The brightest parts of the field are bright, not saturated (exposure of 187), with a
+    # multiple of the flickering period of the lights at 50 Hz (10 ms): 100
+    assert v.settings["exposure"] == 100
     assert "exposure" in status["message"]
     # Saved
     assert (
@@ -207,7 +208,8 @@ def test_auto_camera_settings_in_the_dark(make_video, monkeypatch):
 
     status = v.auto_camera_settings_status()
     assert status["state"] == "done"
-    assert v.settings["exposure"] == video.AUTO_EXPOSURE_MAX_V4L2
+    # The longest exposure that is a multiple of the flickering period of the lights
+    assert v.settings["exposure"] == 300
     assert "more light" in status["message"]
 
 
@@ -225,8 +227,33 @@ def test_auto_camera_settings_without_the_field(make_video, monkeypatch):
 
     status = v.auto_camera_settings_status()
     assert status["state"] == "done", status["message"]
-    assert 178 <= v.settings["exposure"] <= 188
+    assert v.settings["exposure"] == 100
     assert "not calibrated" in status["message"]
+
+
+def test_auto_exposure_with_60_hz_lights(make_video, monkeypatch):
+    camera = FieldCamera(synthetic.render({}))
+    v = start_field_camera(make_video, monkeypatch, camera)
+    v.settings["power_line"] = 60
+    assert wait_until(lambda: v.detection.field.calibrated())
+
+    v.auto_camera_settings()
+    assert wait_until(lambda: v.auto_camera_settings_status()["state"] != "running", 30)
+
+    # Target reached for an exposure of 187: two flickering periods at 60 Hz (8.33 ms)
+    assert v.settings["exposure"] == 167
+
+
+def test_auto_exposure_with_a_lot_of_light(make_video, monkeypatch):
+    # The target is reached with a very short exposure: one flickering period is used
+    camera = FieldCamera(synthetic.render({}), full_exposure=10)
+    v = start_field_camera(make_video, monkeypatch, camera)
+    assert wait_until(lambda: v.detection.field.calibrated())
+
+    v.auto_camera_settings()
+    assert wait_until(lambda: v.auto_camera_settings_status()["state"] != "running", 30)
+
+    assert v.settings["exposure"] == 100
 
 
 def test_auto_camera_settings_needs_images(make_video):
@@ -273,3 +300,28 @@ def test_auto_crop_needs_the_field(make_video, monkeypatch):
 
     with pytest.raises(RuntimeError, match="not calibrated"):
         v.auto_crop()
+
+
+@pytest.mark.parametrize(
+    "power_line, exposure, expected",
+    [
+        (50, 140, 100),
+        (50, 160, 200),
+        (50, 20, 100),
+        (60, 140, 167),
+        (60, 6000, 5000),
+        (0, 140, 140),
+    ],
+)
+def test_exposure_follows_the_lights(make_video, power_line, exposure, expected):
+    v = make_video()
+    v.controls = {"exposure": {"min": 1, "max": 5000, "step": 1, "default": 157}}
+    v.set_camera_settings(dict(v.settings, power_line=power_line, exposure=exposure))
+    assert v.settings["exposure"] == expected
+
+
+def test_exposure_is_free_when_its_range_is_unknown(make_video):
+    # E.g. on Windows: the exposure is a power of 2, it can't follow the lights
+    v = make_video()
+    v.set_camera_settings(dict(v.settings, power_line=50, exposure=-6))
+    assert v.settings["exposure"] == -6

@@ -1361,6 +1361,10 @@ body:not(.sim-view) .field-wrapper {
     padding: 0.15rem 0;
 }
 
+.camera-setting-row .camera-setting-select {
+    grid-column: 2 / -1;
+}
+
 .camera-setting-row .form-label {
     font-size: 0.9rem;
 }
